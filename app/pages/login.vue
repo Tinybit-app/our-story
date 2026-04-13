@@ -33,7 +33,7 @@
       </div>
 
       <!-- Email form -->
-      <form class="mt-1.5" @submit.prevent="submitEmail">
+      <form v-if="!sent" class="mt-1.5" @submit.prevent="submitEmail">
         <input
           v-model="email"
           type="email"
@@ -50,8 +50,13 @@
         </button>
       </form>
 
+      <!-- Error message -->
+      <p v-if="authError" class="mt-4 text-sm text-center text-destructive font-medium">
+        {{ authError }}
+      </p>
+
       <!-- Success state -->
-      <p v-if="sent" class="mt-4 text-sm text-center text-accent font-medium">
+      <p v-if="sent" class="mt-4 text-sm text-center text-foreground font-medium">
         Check your inbox — we sent you a sign-in link.
       </p>
 
@@ -71,21 +76,30 @@ const supabase = useSupabaseClient()
 const email = ref('')
 const loading = ref(false)
 const sent = ref(false)
+const authError = ref<string | null>(null)
 
 async function submitEmail() {
   loading.value = true
+  authError.value = null
   const { error } = await supabase.auth.signInWithOtp({
     email: email.value,
     options: { emailRedirectTo: `${window.location.origin}/confirm` },
   })
-  if (!error) sent.value = true
+  if (error) {
+    authError.value = error.message
+  } else {
+    sent.value = true
+  }
   loading.value = false
 }
 
 async function signInWithGoogle() {
-  await supabase.auth.signInWithOAuth({
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: `${window.location.origin}/confirm` },
   })
+  if (error) {
+    authError.value = error.message
+  }
 }
 </script>
