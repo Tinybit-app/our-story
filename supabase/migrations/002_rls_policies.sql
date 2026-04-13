@@ -3,17 +3,18 @@
 -- Policies that reference FamilyMember from any table — including
 -- FamilyMember itself — would cause infinite recursion. These
 -- functions run as the table owner and bypass RLS safely.
+-- SET search_path = '' prevents search_path injection attacks.
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.get_my_family_ids()
 RETURNS SETOF UUID
-LANGUAGE sql SECURITY DEFINER STABLE AS $$
-  SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid();
+LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '' AS $$
+  SELECT family_id FROM public.familymember WHERE user_id = auth.uid();
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_my_family_ids_as_role(required_roles TEXT[])
 RETURNS SETOF UUID
-LANGUAGE sql SECURITY DEFINER STABLE AS $$
-  SELECT family_id FROM public.FamilyMember
+LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '' AS $$
+  SELECT family_id FROM public.familymember
   WHERE user_id = auth.uid() AND role = ANY(required_roles);
 $$;
 
@@ -28,15 +29,17 @@ ALTER TABLE public.MemoryMedia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.MemoryComment ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.MemoryReaction ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.NotificationPreference ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.FeatureFlag ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- USER
+-- auth.uid() wrapped in (SELECT ...) so Postgres evaluates it
+-- once per query rather than once per row.
 -- ============================================================
-CREATE POLICY "users can read own profile"
-  ON public.User FOR SELECT USING (id = auth.uid());
-
-CREATE POLICY "users can read family members profiles"
+CREATE POLICY "users can read own or family member profiles"
   ON public.User FOR SELECT USING (
+    id = (SELECT auth.uid())
+    OR
     id IN (
       SELECT fm.user_id FROM public.FamilyMember fm
       WHERE fm.family_id IN (SELECT public.get_my_family_ids())
@@ -44,7 +47,7 @@ CREATE POLICY "users can read family members profiles"
   );
 
 CREATE POLICY "users can update own profile"
-  ON public.User FOR UPDATE USING (id = auth.uid());
+  ON public.User FOR UPDATE USING (id = (SELECT auth.uid()));
 
 -- ============================================================
 -- FAMILY
@@ -55,7 +58,7 @@ CREATE POLICY "members can read their families"
   );
 
 CREATE POLICY "authenticated users can create families"
-  ON public.Family FOR INSERT WITH CHECK (created_by = auth.uid());
+  ON public.Family FOR INSERT WITH CHECK (created_by = (SELECT auth.uid()));
 
 CREATE POLICY "owner can update family"
   ON public.Family FOR UPDATE USING (
@@ -84,34 +87,31 @@ CREATE POLICY "owner and admin can remove members"
 -- ACCOUNT STORAGE
 -- ============================================================
 CREATE POLICY "users can read own storage"
-  ON public.AccountStorage FOR SELECT USING (user_id = auth.uid());
+  ON public.AccountStorage FOR SELECT USING (user_id = (SELECT auth.uid()));
 
 -- ============================================================
 -- MEMORY
 -- ============================================================
 CREATE POLICY "members can read family memories"
   ON public.Memory FOR SELECT USING (
-    -- family memories: must be a member
     (visibility = 'family' AND family_id IN (SELECT public.get_my_family_ids()))
     OR
-    -- private memories: only the owner
-    (visibility = 'private' AND owner_user_id = auth.uid())
+    (visibility = 'private' AND owner_user_id = (SELECT auth.uid()))
   );
 
 CREATE POLICY "members can insert memories"
   ON public.Memory FOR INSERT WITH CHECK (
-    owner_user_id = auth.uid() AND
+    owner_user_id = (SELECT auth.uid()) AND
     family_id IN (SELECT public.get_my_family_ids())
   );
 
 CREATE POLICY "owner can update own memory"
-  ON public.Memory FOR UPDATE USING (owner_user_id = auth.uid());
+  ON public.Memory FOR UPDATE USING (owner_user_id = (SELECT auth.uid()));
 
-CREATE POLICY "owner can delete own memory"
-  ON public.Memory FOR DELETE USING (owner_user_id = auth.uid());
-
-CREATE POLICY "admin can delete any memory in their family"
+CREATE POLICY "owner or admin can delete memory"
   ON public.Memory FOR DELETE USING (
+    owner_user_id = (SELECT auth.uid())
+    OR
     family_id IN (SELECT public.get_my_family_ids_as_role(ARRAY['owner', 'admin']))
   );
 
@@ -126,7 +126,7 @@ CREATE POLICY "members can read media for accessible memories"
 CREATE POLICY "uploader can insert media"
   ON public.MemoryMedia FOR INSERT WITH CHECK (
     memory_id IN (
-      SELECT id FROM public.Memory WHERE owner_user_id = auth.uid()
+      SELECT id FROM public.Memory WHERE owner_user_id = (SELECT auth.uid())
     )
   );
 
@@ -140,12 +140,12 @@ CREATE POLICY "members can read comments on accessible memories"
 
 CREATE POLICY "members can post comments"
   ON public.MemoryComment FOR INSERT WITH CHECK (
-    user_id = auth.uid() AND
+    user_id = (SELECT auth.uid()) AND
     memory_id IN (SELECT id FROM public.Memory)
   );
 
 CREATE POLICY "users can delete own comments"
-  ON public.MemoryComment FOR DELETE USING (user_id = auth.uid());
+  ON public.MemoryComment FOR DELETE USING (user_id = (SELECT auth.uid()));
 
 -- ============================================================
 -- REACTIONS
@@ -157,9 +157,9 @@ CREATE POLICY "members can read reactions"
 
 CREATE POLICY "members can add reactions"
   ON public.MemoryReaction FOR INSERT WITH CHECK (
-    user_id = auth.uid() AND
+    user_id = (SELECT auth.uid()) AND
     memory_id IN (SELECT id FROM public.Memory)
   );
 
 CREATE POLICY "users can remove own reactions"
-  ON public.MemoryReaction FOR DELETE USING (user_id = auth.uid());
+  ON public.MemoryReaction FOR DELETE USING (user_id = (SELECT auth.uid()));

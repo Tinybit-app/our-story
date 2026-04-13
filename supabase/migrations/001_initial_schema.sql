@@ -29,7 +29,7 @@ BEGIN
   full_name := TRIM(NEW.raw_user_meta_data->>'full_name');
   space_pos := POSITION(' ' IN full_name);
 
-  INSERT INTO public.User (id, email, first_name, last_name, avatar_url)
+  INSERT INTO public.user (id, email, first_name, last_name, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
@@ -39,7 +39,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -106,10 +106,10 @@ CREATE TABLE public.AccountStorage (
 CREATE OR REPLACE FUNCTION public.handle_new_account_storage()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.AccountStorage (user_id) VALUES (NEW.id);
+  INSERT INTO public.accountstorage (user_id) VALUES (NEW.id);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER on_user_created_storage
   AFTER INSERT ON public.User
@@ -123,7 +123,7 @@ CREATE TABLE public.Memory (
   owner_user_id UUID NOT NULL REFERENCES public.User(id),
   family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
   visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family', 'group')),
-  group_id UUID,  -- FK to Group table added in a later migration
+  group_id UUID,  -- FK added after Group table
   note TEXT,
   alt_text TEXT,
   memory_date TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -157,7 +157,7 @@ CREATE TABLE public.MemoryMedia (
 );
 
 -- ============================================================
--- COMMENTS
+-- COMMENTS + REACTIONS
 -- ============================================================
 CREATE TABLE public.MemoryComment (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -167,9 +167,6 @@ CREATE TABLE public.MemoryComment (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ============================================================
--- REACTIONS
--- ============================================================
 CREATE TABLE public.MemoryReaction (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   memory_id UUID NOT NULL REFERENCES public.Memory(id) ON DELETE CASCADE,
