@@ -59,6 +59,9 @@ export default {
           foreground: 'hsl(var(--card-foreground))',
         },
       },
+      fontFamily: {
+        display: ['Georgia', 'ui-serif', '"Times New Roman"', 'serif'],
+      },
       borderRadius: {
         xl: 'calc(var(--radius) + 4px)',
         lg: 'var(--radius)',
