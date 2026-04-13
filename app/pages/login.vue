@@ -61,7 +61,7 @@
       </p>
 
       <!-- Footer note -->
-      <p v-else class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
+      <p v-else-if="!authError" class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
         We'll send you a sign-in link — no password needed.
       </p>
 
@@ -94,6 +94,7 @@ async function submitEmail() {
 }
 
 async function signInWithGoogle() {
+  authError.value = null
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: `${window.location.origin}/confirm` },
