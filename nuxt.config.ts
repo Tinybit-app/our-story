@@ -1,9 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  ssr: false,
+
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
   css: ["~/assets/css/globals.css"],
+
+  components: [{ path: "~/components", extensions: ["vue"] }],
 
   modules: [
     "@nuxtjs/supabase",
@@ -13,6 +17,7 @@ export default defineNuxtConfig({
   ],
 
   supabase: {
+    types: "~/types/database.ts",
     redirectOptions: {
       login: "/login",
       callback: "/confirm",
