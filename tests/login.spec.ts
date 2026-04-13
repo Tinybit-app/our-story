@@ -19,7 +19,7 @@ test.describe('Login page', () => {
 
   test('shows success message after valid email submission', async ({ page }) => {
     // Intercept the Supabase OTP request so we don't need real credentials
-    await page.route('**/auth/v1/otp**', route => route.fulfill({ status: 200, body: '{}' }))
+    await page.route('**/auth/v1/otp**', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }))
 
     await page.getByPlaceholder('your@email.com').fill('test@example.com')
     await page.getByRole('button', { name: /continue with email/i }).click()
