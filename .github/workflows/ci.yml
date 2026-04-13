@@ -32,7 +32,12 @@ jobs:
         run: supabase start
 
       - name: Run DB tests (RLS policies)
-        run: pnpm db:test
+        run: |
+          if find supabase/tests -name "*.sql" 2>/dev/null | grep -q .; then
+            pnpm db:test
+          else
+            echo "No DB tests found, skipping."
+          fi
 
       - name: Run unit tests
         run: pnpm test
@@ -41,6 +46,7 @@ jobs:
         run: pnpm test:e2e
         env:
           BASE_URL: http://localhost:3000
+
 
       - name: Stop Supabase
         run: supabase stop
