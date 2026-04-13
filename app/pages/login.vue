@@ -62,6 +62,13 @@
         <p class="text-xs text-muted-foreground leading-relaxed">
           We sent a sign-in link to <span class="text-foreground font-medium">{{ email }}</span>
         </p>
+        <button
+          type="button"
+          class="mt-3 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+          @click="sent = false; authError = null"
+        >
+          Try a different way
+        </button>
       </div>
 
       <!-- Footer note -->
