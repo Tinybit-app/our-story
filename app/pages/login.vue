@@ -26,7 +26,7 @@
       </button>
 
       <!-- Divider -->
-      <div class="flex items-center gap-3 my-1.5 text-xs text-muted-foreground">
+      <div v-if="!sent" class="flex items-center gap-3 my-1.5 text-xs text-muted-foreground">
         <div class="flex-1 h-px bg-border" />
         or
         <div class="flex-1 h-px bg-border" />
@@ -95,6 +95,7 @@ async function submitEmail() {
 
 async function signInWithGoogle() {
   authError.value = null
+  sent.value = false
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: `${window.location.origin}/confirm` },
