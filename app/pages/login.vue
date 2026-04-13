@@ -17,6 +17,7 @@
 
       <!-- Google -->
       <button
+        v-if="!sent"
         type="button"
         class="w-full flex items-center gap-3 bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm font-medium text-foreground shadow-sm hover:bg-secondary transition-colors mb-2.5"
         @click="signInWithGoogle"
@@ -56,9 +57,12 @@
       </p>
 
       <!-- Success state -->
-      <p v-if="sent" class="mt-4 text-sm text-center text-foreground font-medium">
-        Check your inbox — we sent you a sign-in link.
-      </p>
+      <div v-if="sent" class="mt-6 rounded-[12px] bg-card border border-border px-5 py-4 text-center">
+        <p class="text-sm font-semibold text-foreground mb-1">Check your inbox</p>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          We sent a sign-in link to <span class="text-foreground font-medium">{{ email }}</span>
+        </p>
+      </div>
 
       <!-- Footer note -->
       <p v-else-if="!authError" class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
