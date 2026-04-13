@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in to Our Story</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f1ee; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1ee; padding:48px 24px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+
+          <!-- Wordmark -->
+          <tr>
+            <td style="padding-bottom:32px;">
+              <p style="margin:0; font-size:11px; font-weight:700; letter-spacing:0.12em; color:#2c2420; text-transform:uppercase;">
+                Our Story
+              </p>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#ffffff; border-radius:16px; padding:40px 36px; border:1px solid #e8e4df;">
+
+              <!-- Headline -->
+              <p style="margin:0 0 8px; font-family:Georgia,'Times New Roman',serif; font-size:22px; font-weight:700; color:#2c2420; line-height:1.3;">
+                Your sign-in link
+              </p>
+              <p style="margin:0 0 32px; font-size:14px; color:#8a7f74; line-height:1.6;">
+                Click the button below to sign in. This link expires in 1 hour and can only be used once.
+              </p>
+
+              <!-- CTA button -->
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block; background-color:#2c2420; color:#f4f1ee; text-decoration:none; font-size:14px; font-weight:600; padding:14px 32px; border-radius:12px; letter-spacing:0.01em;">
+                      Sign in to Our Story
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <table cellpadding="0" cellspacing="0" width="100%" style="margin:32px 0;">
+                <tr>
+                  <td style="border-top:1px solid #e8e4df;"></td>
+                </tr>
+              </table>
+
+              <!-- Fallback link -->
+              <p style="margin:0 0 8px; font-size:12px; color:#8a7f74;">
+                Button not working? Copy and paste this link into your browser:
+              </p>
+              <p style="margin:0; font-size:12px; color:#c8a882; word-break:break-all;">
+                {{ .ConfirmationURL }}
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding-top:24px; text-align:center;">
+              <p style="margin:0; font-size:11px; color:#8a7f74; line-height:1.6;">
+                You received this because a sign-in was requested for your account.<br/>
+                If you didn't request this, you can safely ignore it.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
