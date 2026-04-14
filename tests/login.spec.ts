@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test'
 test.describe('Login page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
+    // Wait for Vue to finish rendering (SPA — client-side only)
+    await page.getByPlaceholder('your@email.com').waitFor({ timeout: 20_000 })
   })
 
   test('shows wordmark, headline and subtitle', async ({ page }) => {
