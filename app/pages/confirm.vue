@@ -23,7 +23,7 @@ watchEffect(async () => {
 
   // Check if user has any family membership — if not, onboard them
   const { data: membership } = await supabase
-    .from("FamilyMember")
+    .from("familymember")
     .select("id")
     .eq("user_id", user.value.id)
     .limit(1)
