@@ -33,17 +33,21 @@ jobs:
 
       - name: Export Supabase env vars
         run: |
-          # Parse supabase status output explicitly
-          SUPABASE_URL=$(supabase status 2>/dev/null | grep 'API URL' | awk '{print $NF}')
-          SUPABASE_KEY=$(supabase status 2>/dev/null | grep 'anon key' | awk '{print $NF}')
-          SUPABASE_SERVICE_ROLE_KEY=$(supabase status 2>/dev/null | grep 'service_role key' | awk '{print $NF}')
-          echo "SUPABASE_URL=$SUPABASE_URL" >> $GITHUB_ENV
-          echo "SUPABASE_KEY=$SUPABASE_KEY" >> $GITHUB_ENV
-          echo "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY" >> $GITHUB_ENV
+          # Capture structured output and echo it for debugging
+          STATUS_ENV=$(supabase status --output env 2>&1)
+          echo "=== supabase status --output env ==="
+          echo "$STATUS_ENV"
+          echo "==="
+          # Extract values and export with the NUXT_ names the app expects
+          SUPABASE_URL=$(echo "$STATUS_ENV" | grep '^SUPABASE_URL=' | cut -d= -f2-)
+          SUPABASE_ANON_KEY=$(echo "$STATUS_ENV" | grep '^SUPABASE_ANON_KEY=' | cut -d= -f2-)
+          SUPABASE_SERVICE_ROLE_KEY=$(echo "$STATUS_ENV" | grep '^SUPABASE_SERVICE_ROLE_KEY=' | cut -d= -f2-)
+          echo "NUXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL" >> $GITHUB_ENV
+          echo "NUXT_PUBLIC_SUPABASE_KEY=$SUPABASE_ANON_KEY" >> $GITHUB_ENV
+          echo "NUXT_SUPABASE_SECRET_KEY=$SUPABASE_SERVICE_ROLE_KEY" >> $GITHUB_ENV
           echo "JWT_SECRET=ci-placeholder-secret-not-used-in-tests" >> $GITHUB_ENV
-          # Debug: confirm values are populated
-          echo "SUPABASE_URL=$SUPABASE_URL"
-          echo "SUPABASE_KEY starts with: ${SUPABASE_KEY:0:20}"
+          echo "Exported: NUXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL"
+          echo "Exported: NUXT_PUBLIC_SUPABASE_KEY starts: ${SUPABASE_ANON_KEY:0:20}"
 
       - name: Run DB tests (RLS policies)
         run: |
