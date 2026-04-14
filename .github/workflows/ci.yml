@@ -38,11 +38,11 @@ jobs:
           ANON_KEY=$(echo "$STATUS_ENV" | grep 'PUBLISHABLE_KEY=' | cut -d= -f2-)
           SERVICE_KEY=$(echo "$STATUS_ENV" | grep 'SECRET_KEY=' | cut -d= -f2-)
           # URL is always fixed for local Supabase
-          echo "NUXT_PUBLIC_SUPABASE_URL=http://localhost:54321" >> $GITHUB_ENV
+          echo "NUXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
           echo "NUXT_PUBLIC_SUPABASE_KEY=$ANON_KEY" >> $GITHUB_ENV
           echo "NUXT_SUPABASE_SECRET_KEY=$SERVICE_KEY" >> $GITHUB_ENV
           echo "JWT_SECRET=ci-placeholder-secret-not-used-in-tests" >> $GITHUB_ENV
-          echo "NUXT_PUBLIC_SUPABASE_URL=http://localhost:54321"
+          echo "NUXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321"
           echo "NUXT_PUBLIC_SUPABASE_KEY starts: ${ANON_KEY:0:20}"
 
       - name: Run DB tests (RLS policies)
