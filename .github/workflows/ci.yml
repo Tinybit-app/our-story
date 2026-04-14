@@ -31,6 +31,14 @@ jobs:
       - name: Start local Supabase
         run: supabase start
 
+      - name: Export Supabase env vars
+        run: |
+          supabase status -o env >> $GITHUB_ENV
+          # @nuxtjs/supabase reads SUPABASE_KEY; CLI outputs SUPABASE_ANON_KEY — bridge them
+          echo "SUPABASE_KEY=$(supabase status | grep 'anon key' | awk '{print $NF}')" >> $GITHUB_ENV
+          # Dummy secrets so Nuxt starts without crashing (not used in E2E tests)
+          echo "JWT_SECRET=ci-placeholder-secret-not-used-in-tests" >> $GITHUB_ENV
+
       - name: Run DB tests (RLS policies)
         run: |
           if find supabase/tests -name "*.sql" 2>/dev/null | grep -q .; then
@@ -47,8 +55,6 @@ jobs:
 
       - name: Run E2E tests
         run: pnpm test:e2e
-        env:
-          BASE_URL: http://localhost:3000
 
 
       - name: Stop Supabase
