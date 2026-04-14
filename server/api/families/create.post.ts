@@ -15,14 +15,22 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (error || !family) {
-    throw createError({ statusCode: 500, message: error?.message ?? "Failed to create family" })
+    console.error("[create-family] family insert failed:", error?.message)
+    throw createError({ statusCode: 500, message: "Failed to create family. Please try again." })
   }
 
-  await supabase.from("familymember").insert({
+  const { error: memberError } = await supabase.from("familymember").insert({
     user_id: user.sub,
     family_id: family.id,
     role: "owner",
   })
+
+  if (memberError) {
+    console.error("[create-family] familymember insert failed:", memberError.message)
+    // Roll back the family row so the user can try again
+    await supabase.from("family").delete().eq("id", family.id)
+    throw createError({ statusCode: 500, message: "Failed to create family. Please try again." })
+  }
 
   return { familyId: family.id }
 })
