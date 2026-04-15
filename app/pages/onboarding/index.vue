@@ -50,6 +50,12 @@ const selected = ref('')
 const router = useRouter()
 const circleTypeCookie = useCookie('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
 
+// Guard: profile must be complete before onboarding can proceed
+onMounted(async () => {
+  const { needsProfile } = await $fetch<{ needsProfile: boolean }>('/api/auth/membership')
+  if (needsProfile) router.replace('/onboarding/profile')
+})
+
 const circleTypes = [
   { value: 'parents',    label: 'New parents',   description: 'Baby milestones & growth' },
   { value: 'couple',     label: 'Couple',         description: 'Relationship milestones' },
