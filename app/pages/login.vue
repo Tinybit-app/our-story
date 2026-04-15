@@ -86,9 +86,10 @@ definePageMeta({ auth: false })
 const user = useSupabaseUser()
 const router = useRouter()
 
-// Session restores async in SPA mode — redirect once it's available
+// Session restores async in SPA mode (or arrives via another tab) —
+// always route through /confirm so onboarding checks run properly
 watchEffect(() => {
-  if (user.value) router.replace('/')
+  if (user.value) router.replace('/confirm')
 })
 
 const supabase = useSupabaseClient()
