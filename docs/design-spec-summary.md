@@ -1,0 +1,312 @@
+# Our Story — Design Spec Summary
+
+**"A private space where your circle builds a shared story."**
+
+---
+
+## What It Is
+
+A circle-first photo & video memory app. Not storage — storytelling.
+The wedge: Google Photos is built for one person. This is built for any meaningful group — families, friend groups, couples, adult siblings, travel groups.
+
+---
+
+## Terminology
+
+| UI (users see) | Code / DB (internal) |
+|---|---|
+| Circle | Family |
+| Create a Circle | Create a Family |
+| Circle members | FamilyMember |
+
+Zero schema impact — UX language change only.
+
+---
+
+## Core Loop
+
+Upload → Add note → Share to circle timeline → Circle reacts
+
+---
+
+## Competitive Advantage
+
+| Advantage | Why it matters |
+|---|---|
+| Circle-first, not individual-first | Google Photos, iCloud, Amazon Photos are all individual-first. This is the only app built around a shared group narrative. |
+| Storytelling over storage | Notes, milestones, reactions turn photos into memories with context. |
+| Works for any meaningful group | Families, friend groups, couples, adult siblings, travel groups — no code changes needed. |
+| Privacy as a feature | No ads, no AI training, invite-only. Real selling point for any group sharing personal moments. |
+| Inclusive UX | Magic link login, view-only mode — designed for non-technical members. |
+| Emotional lock-in | 2 years of milestones, notes, reactions, time capsules = enormous switching cost. The strongest moat. |
+| Better than FamilyAlbum (free) | FamilyAlbum stores photos. Our Story stores meaning — notes, milestones, reactions, and time capsules FamilyAlbum doesn't have. |
+
+---
+
+## Key Features
+
+### Phase 1 (ship these)
+- Shared family timeline (photos + short videos)
+- Milestones (first steps, birthday, school, etc.)
+- Notes, comments, emoji reactions on memories
+- Personal vs family visibility per memory
+- Invite-only family with magic link grandparent view
+- On This Day daily push notification
+- Early retention hooks (months 1–6): weekly digest, milestone suggestions, first-memory anniversary, quiet-circle nudge
+- Mobile-responsive PWA (no app download required for Phase 1)
+- Invite email (Resend + React Email — emotionally crafted, not transactional)
+
+### Phase 2
+- Albums & collections, search, memory date override
+- Stripe billing + storage quotas
+- Notification preferences, weekly email digest
+- Native app (Capacitor — iOS + Android, App Store submission)
+- Background upload, offline queue
+- Media deduplication (pHash)
+
+### Phase 3 (growth features)
+- Guest contributor / event QR code
+- Time capsule ("open on Mia's 18th birthday")
+- Collaborative memory (one event, many contributors)
+- Pregnancy journey tracker
+- Baby / child development tracking (WHO milestones)
+- Family map (EXIF GPS, shareable)
+- Family challenges (weekly prompts)
+- Private family newsletter (outward to non-members)
+- Referral program (+5 GB bonus)
+- Year in Review (Spotify Wrapped for families)
+- Caregiver mode, memorial / legacy mode
+- Video / voice reactions
+- Optional per-circle E2EE (client-side AES-256-GCM, opt-in)
+
+---
+
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Frontend | Nuxt |
+| Backend | Supabase (Auth, DB, Storage, Realtime) |
+| Mobile | Capacitor (iOS + Android) |
+| Email | Resend + React Email |
+| Payments | Stripe + Customer Portal |
+| Analytics | PostHog (self-hosted, privacy-first) |
+| Error tracking | Sentry |
+| Rate limiting | Upstash Redis |
+| CI/CD | GitHub Actions + Vercel |
+| Hosting | our-story.tinybit.app |
+| Storage (Phase 3) | S3 + CloudFront + MediaConvert |
+
+---
+
+## Data Model (core tables)
+
+```
+User (stripe_customer_id, stripe_subscription_id, subscription_status, platform_role, referral_code, referred_by_user_id)
+Family (subscription_status, grace_period_until, circle_type, e2ee_enabled)
+FamilyMember (role: owner | admin | member | caregiver)
+Group, GroupMember
+Memory (visibility: private | family | group, memory_date, is_collaborative, alt_text)
+MemoryMedia (phash, lat, lng, location_name, is_live_photo)
+MemoryContribution (for collaborative memories)
+MemoryComment, MemoryReaction (type: emoji | voice | video)
+AccountStorage (total_quota_bytes, total_used_bytes, bonus_bytes)
+FamilyInvite, EventUploadToken (guest uploads)
+Album, AlbumMemory
+NotificationPreference (push, email digest, quiet hours, family mute)
+TimeCapsule, PregnancyJourney, PregnancyEntry
+ChildProfile, DevelopmentEntry
+FamilyChallenge, ChallengeEntry
+NewsletterRecipient
+Referral, ExportJob, FeatureFlag, BackupLog
+```
+
+---
+
+## Key Architecture Decisions
+
+| Decision | Choice | Why |
+|---|---|---|
+| Storage quota | Per account | Prevents family-spam exploit |
+| Media access | Signed URLs (1h expiry) | RLS protects DB, not files |
+| Timeline ordering | `memory_date` (not `created_at`) | Old photos insert at correct position |
+| Timeline loading | Cursor-based pagination + virtual scroll | Stable + performant at scale |
+| Auth | Supabase + magic link | Zero-friction for grandparents |
+| View-only access | Stateless signed JWT | No account needed, revocable |
+| Guest uploads | `EventUploadToken` (UUID) | Auth without an account |
+| Mobile Phase 1 | PWA (mobile-responsive web) | Invite-based growth — App Store not needed for first 200 users |
+| Mobile Phase 2 | Capacitor | Reuses Nuxt, native push + camera + background upload |
+| Live Photos (MVP) | Strip to JPEG | Simple, low storage |
+| Live Photos (Phase 2) | LivePhotosKit JS | Full motion support |
+| Storage (MVP→2) | Supabase Storage | RLS just works |
+| Storage (Phase 3) | S3 + CloudFront + MediaConvert | Video at scale |
+| Search | PostgreSQL tsvector + GIN | Zero extra infra |
+| Notifications | Supabase Realtime + FCM/APNs + Resend | In-app + push + email |
+| Deduplication | pHash + Hamming distance | Robust to compression/re-saves |
+| Backup | Supabase → S3 → Glacier | 3-location, 50-year guarantee |
+| E2EE | Opt-in per circle, Phase 3 | Breaks thumbnails/dedup/search if default — honest privacy policy covers Phase 1–2 |
+| Subscription model | Per account (owner pays) | One Stripe subscription per user; owner's tier determines their circles' features |
+
+---
+
+## Roles
+
+| Role | Key permissions |
+|---|---|
+| Owner | Billing, delete family, transfer ownership |
+| Admin | Invite/remove members, delete any memory |
+| Member | Upload, comment, react, delete own memories |
+| Caregiver | Upload + view family timeline only |
+| Platform admin | Unlimited storage (developer account, DB-only) |
+
+---
+
+## Pricing Tiers
+
+| Plan | Price | Storage | Key unlock |
+|---|---|---|---|
+| Free | $0 | 5 GB | 1 circle owned, 5 members, basic timeline |
+| Plus | $4.99/mo | 50 GB | Unlimited circles owned, 20 members, albums, search, On This Day |
+| Pro | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, Year in Review, collaborative memory, pregnancy tracker, voice/video reactions |
+
+**Philosophy:** Sell the story, not the storage. Feature gates drive upgrades — users pay for what they *want*, not because they hit a byte limit.
+
+**Subscription model:** One subscription per user account. Owner's tier determines their circles' features. Members inherit circle-level features but their private storage is governed by their own tier.
+
+### Upgrade triggers
+- 6th member joins → "Upgrade to Plus"
+- Time capsule attempted → "Upgrade to Pro"
+- Storage at 80% → "Your story space is almost full"
+- Year in Review → blurred preview on Free/Plus → "Unlock your year"
+
+### Realistic MRR targets
+- 500 Plus + 0 Pro = $2,495/mo
+- 1,000 Plus + 200 Pro = $6,980/mo
+- 3,000 Plus + 500 Pro = $19,970/mo
+
+---
+
+## Privacy Model
+
+**Phase 1–2:** Invite-only privacy, not zero-knowledge. Private bucket + signed URLs + RLS. Developer has infrastructure access — honest privacy policy covers this.
+
+**Phase 3 (opt-in):** Per-circle AES-256-GCM client-side encryption. Keys in IndexedDB, never leave device in plaintext. Breaks server-side thumbnails and dedup — implemented as opt-in toggle only.
+
+**Audit logging (Phase 2):** Supabase audit logs + AWS CloudTrail on media bucket. Every internal access traceable.
+
+---
+
+## Performance Targets
+
+| Metric | Target |
+|---|---|
+| Timeline first image visible | < 1.0s on 4G |
+| Timeline LCP | < 2.5s on 4G |
+| Upload feedback visible | < 200ms after tap |
+| Memory open (lightbox) | < 300ms |
+| Push → app → memory | < 2s |
+
+---
+
+## Testing Strategy
+
+| Layer | Tool | Priority |
+|---|---|---|
+| RLS policies | pgTAP | Highest — privacy breach risk |
+| Upload quota + Edge Functions | Vitest | Billing correctness |
+| Stripe webhook handlers | Vitest | Subscription state |
+| Invite token flow | Vitest | Acquisition path |
+| Critical E2E paths | Playwright | Onboarding + invite activation |
+
+All tests run in CI on every PR. Broken RLS tests block merge.
+
+---
+
+## Growth Strategy (priority order)
+
+| # | Mechanic | Type |
+|---|---|---|
+| 1 | On This Day notifications | Retention |
+| 2 | Beautiful invite email | Acquisition |
+| 3 | Invited member activation (upload in first session) | Retention |
+| 4 | Shareable memory cards (branded) | Viral |
+| 5 | Year in Review | Viral |
+| 6 | Referral program (+5 GB) | Acquisition |
+
+**Rule: nail retention (#1–3) before viral (#4–6).**
+
+---
+
+## Onboarding (3 entry paths)
+
+**Path A — Circle creator:** Sign up → Pick circle type → Name circle → Invite member → Upload memory → Add note → Share → "Your story has begun"
+
+**Path B — Solo mode:** Sign up → "Just me for now" → Upload private memory → Add note → Persistent CTA to invite later → Solo-to-circle upgrade when first member joins (existing memories preserved)
+
+**Path C — Invited member:** Accept invite → Welcome screen with recent memories → "Add your first memory →"
+
+**Grandparent (view-only):** Click view-only link → No account needed → See timeline → "Join to participate →"
+
+### Circle type picker (onboarding step)
+- 👶 New parents → baby milestone templates
+- 👫 Couples → relationship milestone templates
+- 👨‍👩‍👧‍👦 Family → general family templates
+- 👯 Friend group → friendship milestone templates
+- 🧓 Caregiving family → health/life event templates
+- 🌍 Travel group → trip/destination templates
+- 📔 Just me → solo, personal templates
+- ✏️ Other → blank, fully custom
+
+Stored as `Family.circle_type` — drives milestone suggestions, empty state copy, push notification language.
+
+---
+
+## Launch GTM (First 50 Users)
+
+1. **New parent communities** — r/beyondthebump, r/NewParents, birth month Facebook groups
+2. **Personal network** — 5–10 friends/family as beta testers
+3. **Couples + friend groups** — r/relationships, r/LongDistance, Discord servers
+4. **Maker communities** — Indie Hackers build-in-public (feedback, not users)
+5. **Invite email as distribution** — every invite is free acquisition
+
+No paid ads, no Product Hunt, no press until retention is proven.
+
+---
+
+## Rollout Phases
+
+| Phase | Users | Target segment | Exit criteria |
+|---|---|---|---|
+| 1 | 0 → 50 | New parents | One external circle uses it weekly for 4 consecutive weeks |
+| 2 | 50 → 200 | All families, couples, adult siblings | 20+ paying circles, churn < 5%/mo |
+| 3 | 200+ | Friend groups, travel groups, any group | Organic signups exceed invited signups, net revenue positive |
+
+---
+
+## Pre-Launch Checklist (before Phase 1 goes live)
+
+- [ ] SPF, DKIM, DMARC records on tinybit.app DNS (Resend)
+- [ ] Test invite email in Gmail + Hotmail — confirm inbox delivery
+- [ ] RLS policy tests passing (`supabase db test`)
+- [ ] Privacy policy + Terms of Service live
+- [ ] Stripe webhook handlers tested
+- [ ] Sentry error tracking active
+- [ ] At least one non-developer family using it in staging
+
+---
+
+## What NOT to Build (ever / yet)
+
+- Custom SSO (use Supabase Auth)
+- AI tagging / face recognition (compete on story, not AI)
+- Unlimited storage (compete on meaning, not bytes)
+- Per-user storage limits (breaks collaboration)
+- Complex RBAC beyond 4 roles
+- RTL language support (Phase 3+ at earliest)
+
+---
+
+## Files
+
+- [Full design spec](design-spec.md)
+- [Description & research](description.md)

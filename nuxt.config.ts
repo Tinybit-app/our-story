@@ -21,7 +21,14 @@ export default defineNuxtConfig({
     "@nuxtjs/tailwindcss",
     "@vueuse/nuxt",
     "@sentry/nuxt/module",
+    "@nuxtjs/color-mode",
   ],
+
+  colorMode: {
+    classSuffix: '',
+    preference: 'system',
+    fallback: 'light',
+  },
 
   supabase: {
     types: "~/types/database.ts",
