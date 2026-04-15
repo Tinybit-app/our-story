@@ -7,6 +7,7 @@ CREATE TABLE public.User (
   first_name TEXT,
   last_name TEXT,
   avatar_url TEXT,
+  locale TEXT CHECK (locale IN ('en', 'zh-Hans')),
   platform_role TEXT NOT NULL DEFAULT 'user' CHECK (platform_role IN ('user', 'platform_admin')),
   -- Subscription (one per user — owner's tier determines their circles' features)
   stripe_customer_id TEXT UNIQUE,
@@ -60,6 +61,10 @@ CREATE TABLE public.Family (
   challenge_streak INT NOT NULL DEFAULT 0,
   e2ee_enabled BOOL NOT NULL DEFAULT false,
   e2ee_enabled_at TIMESTAMPTZ,
+  quiet_nudge_count INT NOT NULL DEFAULT 0,
+  quiet_nudge_last_sent_at TIMESTAMPTZ,
+  deleted_at TIMESTAMPTZ,
+  deletion_initiated_by UUID REFERENCES public.User(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -122,8 +127,7 @@ CREATE TABLE public.Memory (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES public.User(id),
   family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
-  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family', 'group')),
-  group_id UUID,  -- FK added after Group table
+  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family')),
   note TEXT,
   alt_text TEXT,
   memory_date TIMESTAMPTZ NOT NULL DEFAULT now(),

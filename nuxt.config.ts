@@ -46,6 +46,17 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    "/api/**": {
+      cors: false, // handled manually in security-headers middleware
+      headers: {
+        "Access-Control-Allow-Origin": process.env.APP_URL ?? "https://our-story.tinybit.app",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    },
+  },
+
   runtimeConfig: {
     resendApiKey: process.env.RESEND_API_KEY,
     upstashRedisUrl: process.env.UPSTASH_REDIS_REST_URL,

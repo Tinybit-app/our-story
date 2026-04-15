@@ -17,10 +17,18 @@ Always check the build plan progress tracker before starting work to see what's 
 - **Analytics:** PostHog
 - **Tests:** Vitest (unit), Playwright (E2E), pgTAP (RLS)
 
+## Terminology
+
+- **UI / copy:** "Circle", "Create a Circle", "Circle members"
+- **Code / DB:** `Family`, `FamilyMember` — zero schema impact, UX language only
+
 ## Rules
 
 - Never return `storage_path` in any API response — signed URLs only
 - Every API route validates auth with `serverSupabaseUser` before touching data
 - Validate all user input with `zod` — never use raw request body
+- Never expose raw `error.message` to the client — log server-side, return a safe human-readable message
 - All schema changes go through migration files — never edit schema in Supabase dashboard
+- Migrations must be additive first — never drop a column in the same PR as the feature that removes it
 - RLS tests must pass before merging any migration
+- Timeline queries order by `memory_date` (not `created_at`) — this drives correct chronological position for old photos uploaded today

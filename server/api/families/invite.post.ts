@@ -1,13 +1,21 @@
 import { Resend } from "resend"
 import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { z } from "zod"
+
+const schema = z.object({
+  familyId: z.uuid(),
+  email: z.email(),
+})
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
-  const { familyId, email } = await readBody(event)
 
   if (!user?.sub) throw createError({ statusCode: 401 })
-  if (!familyId || !email) throw createError({ statusCode: 400, message: "familyId and email are required" })
+
+  const result = schema.safeParse(await readBody(event))
+  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request" })
+  const { familyId, email } = result.data
 
   // Verify sender is owner or admin
   const { data: membership } = await supabase

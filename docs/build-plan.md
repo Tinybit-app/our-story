@@ -14,7 +14,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 1.3 GitHub repo + Vercel deployment
 - [x] 1.4 CI/CD pipeline (GitHub Actions)
 - [x] 1.5 Sentry error tracking
-- [ ] 1.6 Security hardening baseline (headers, zod, CORS, Dependabot, audit CI)
+- [x] 1.6 Security hardening baseline (headers, zod, CORS, Dependabot, audit CI)
 - [ ] 1.7 PostHog analytics setup
 
 ### Milestone 2: Database Schema & RLS
@@ -29,7 +29,20 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 3.3 Auth middleware (protect routes)
 - [ ] 3.4 Profile setup page (first_name + last_name collection for magic link users)
 - [ ] 3.5 Linked login methods (connect Google OAuth as fallback for magic link users)
-- [ ] 3.6 Account deletion (soft-delete + 30-day hard purge) + data export (ExportJob)
+- [ ] 3.6 Account deletion flow:
+  - Member deletion: content choice ("keep as Former member" vs "remove from circles"), reactions always removed
+  - Owner deletion: resolve ownership first (auto-promote admin, force transfer, or delete circle)
+  - 30-day soft delete + daily hard purge cron
+- [ ] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
+- [ ] 3.8 Data export (ExportJob): members export own uploads only; owners export full circle
+
+### Milestone 3.9: Landing Page (Cold Discovery)
+- [ ] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
+- [ ] 3.9.2 Hero: headline, subhead, single CTA ("Start your circle — free")
+- [ ] 3.9.3 Below fold: product screenshot, 3-step explainer, privacy proof, pricing summary
+- [ ] 3.9.4 SEO: `<title>`, meta description, OG tags targeting "private photo sharing for family"
+- Note: single focused page — not a multi-page marketing site; lives inside the Nuxt app
+- Note: see design spec §Cold Discovery Strategy for full page structure and SEO targets
 
 ### Milestone 4: Onboarding & Family Creation
 - [x] 4.1 Onboarding flow (circle type picker → name → invite)
@@ -51,6 +64,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 ### Milestone 7: Memory Features
 - [ ] 7.1 Share to family (visibility toggle)
 - [ ] 7.2 Milestones (picker + custom milestone)
+- [ ] 7.2.1 Milestone share card — after saving a milestone, offer a branded canvas card (Instagram Stories / WhatsApp format) with "Made with Our Story" CTA — primary acquisition channel for new parents
 - [ ] 7.3 Quick note (text-only memory, no photo required)
 - [ ] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
 - [ ] 7.5 Media download & share (save to device, shareable card with watermark)
@@ -59,10 +73,26 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 8.1 Comments (post, read, delete own)
 - [ ] 8.2 Emoji reactions (toggle on/off)
 
+### Milestone 8.5: Localization (i18n — English + Chinese)
+- [ ] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-Hans` locales (lazy-loaded JSON files)
+- [ ] 8.5.2 Extract all UI strings to `locales/en.json` — replace every hardcoded string with `t('key')`
+- [ ] 8.5.3 Translate `locales/zh-Hans.json` (Simplified Chinese)
+- [ ] 8.5.4 Language toggle in settings (persisted to user profile)
+- Note: use `Intl.DateTimeFormat` for all dates from day one — never hardcode `MM/DD/YYYY`
+- Note: see design spec §Localization for full setup code and priority language rationale
+
 ### Milestone 9: Viewer-Role Access
 - [ ] 9.1 Generate view-only JWT link
 - [ ] 9.2 View-only page (no auth required)
 - Note: tech-savvy family members should be invited as full members — viewer role is for anyone who won't create an account, not a grandparent-specific path
+
+### Milestone 9.5: Guest Contributor / Event QR Code
+- [ ] 9.5.1 Circle owner generates a guest upload token (scoped to one event, expires in 7 days)
+- [ ] 9.5.2 Guest upload page at `/event?token=abc` — name entry + photo upload, no account required
+- [ ] 9.5.3 Uploaded photos appear on the timeline tagged as guest contributions
+- [ ] 9.5.4 Post-upload CTA: "Want your own family circle? Create one free →"
+- Note: every event (wedding, birthday, reunion) becomes an acquisition moment — guests experience the product before being asked to sign up
+- Note: see design spec §Guest Contributor for full token flow
 
 ### Milestone 10: Push Notifications & On This Day
 - [ ] 10.1 Basic push (new upload, comment, reaction)
@@ -78,7 +108,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 12.1 Weekly digest email — grandparent-first design, one-tap email reactions
 - [ ] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3 follow-up), auto-calculated from ChildProfile.date_of_birth
 - [ ] 12.3 First-memory anniversary (30-day cron)
-- [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push)
+- [ ] 12.3.1 "Your first month" recap email — sent 30 days after first upload, shows memory count, milestone highlights, and top reaction; simpler than Year in Review but creates a felt delight moment early
+- [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Family table)
 - [ ] 12.5 Family streak (circle-level weekly streak, Sunday evening nudge, shareable milestone cards at 4/12/52 weeks)
 
 ### Milestone 13: Pre-Launch Checklist
@@ -93,6 +124,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] UX: Lighthouse ≥ 80, axe-core zero critical violations
 - [ ] Email: SPF / DKIM / DMARC configured + inbox delivery verified
 - [ ] Legal: privacy policy + ToS live, age gate, GDPR deletion tested
+- [ ] UX: privacy dashboard in settings — "Your photos are stored privately. 0 third parties have access. No ads. No AI training." — something users can screenshot and share as social proof
 - [ ] Monitoring: Sentry, Better Uptime, Vercel alerts all configured
 - [ ] Support: Crisp working, support email confirmed
 

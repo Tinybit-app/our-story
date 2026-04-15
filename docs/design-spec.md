@@ -196,12 +196,26 @@ AlbumMemory
 - Watermark = free growth: recipients see the branding and can tap to download
 - Share targets: WhatsApp, iMessage, Instagram, copy link
 
+### 7.5. "Your First Month" Recap Email
+
+Sent 30 days after a circle's first memory upload. Simpler than Year in Review — no video, no complex generation — just a warm, personal email that surfaces:
+- Number of memories uploaded
+- Any milestones marked
+- The most-reacted memory (if reactions exist)
+- A CTA to invite someone who hasn't joined yet
+
+**Why Phase 1:** Creates a felt delight moment before Year in Review exists. Users who receive this email are significantly more likely to still be active at 90 days. It also gives new parents a sharable moment early — "look what our first month looks like" — without waiting a full year.
+
+**Implementation:** Scheduled Edge Function checks for circles where `first_memory_created_at` is between 29–31 days ago → compile stats → send via Resend. Reuses the same email design system as the weekly digest.
+
+---
+
 ### 8. Annual Recap / Year in Review
 - Auto-generated at year end: "2026: The Year in Our Story"
 - Slideshow/video of top memories, milestone highlights, most-reacted moments
-- Free core feature (not paywalled) — shareable = organic growth
-- Massively emotional = retention anchor for the following year
-- Implementation: scheduled Edge Function in December → compile top memories → generate slideshow via client-side canvas or server-side video (Phase 2: use Remotion)
+- **Shareable card: free for all tiers** — this is the Spotify Wrapped growth mechanic. Gating it kills virality. Every user gets a beautiful branded card to share to Instagram/WhatsApp with "Made with Our Story."
+- **Full in-app slideshow/video: Pro only** — the immersive in-app experience is Pro. Free/Plus users see a blurred preview with "Unlock your year →"
+- Implementation: scheduled Edge Function in December → compile top memories → generate shareable card via server-side canvas (free) → generate slideshow via Remotion (Pro, Phase 2)
 
 #### Shareable card (Spotify Wrapped equivalent)
 The Year in Review must produce a shareable card designed specifically for Instagram Stories and WhatsApp — not just an in-app experience. The card IS the acquisition channel.
@@ -256,9 +270,10 @@ A new parent sharing their Year in Review to Instagram Stories is seen by 200–
 - A user can belong to multiple families (e.g. "Dao Family", "Extended Family")
 - Recommended internal cap: ~10 families per account (not user-visible)
 
-### Groups (within a family)
-- Sub-groups for scoped sharing: "Partner only", "Grandparents", "Parents"
-- Visibility types: `family` | `group` | `private`
+### Visibility within a circle
+- Two levels: `private` (only you) | `family` (everyone in the circle)
+- Access control within a circle is intentionally not supported — it creates hidden content in a shared space, which breeds confusion and suspicion in family contexts
+- If you need a different audience, create a separate circle — that's a clean boundary with no awkwardness
 
 ### Invitation System
 - **Magic link** (recommended): generate invite token → `yourapp.com/invite?token=abc123`
@@ -267,7 +282,7 @@ A new parent sharing their Year in Review to Instagram Stories is seen by 200–
 
 ### Roles
 - **Owner** — family creator, manages billing, can transfer ownership, can delete family
-- **Admin** — can invite/remove members, manage sub-groups, delete any memory
+- **Admin** — can invite/remove members, delete any memory
 - **Member** — can upload, comment, react, delete own memories
 
 ### Ownership rules
@@ -287,6 +302,7 @@ User
   - first_name
   - last_name
   - avatar_url (nullable)
+  - locale: "en" | "zh-Hans" (nullable — falls back to browser language, then "en")
   - platform_role: "user" | "platform_admin"
   - referral_code (unique)
   - referred_by_user_id (nullable)
@@ -312,15 +328,9 @@ FamilyMember
   - memorial_date (nullable)
   - memorial_message (nullable)
 
-Group
-  - id, family_id, name
-GroupMember
-  - group_id, user_id
-
 Memory
   - id, owner_user_id, family_id
-  - visibility: "private" | "family" | "group"
-  - group_id (nullable)
+  - visibility: "private" | "family"
   - file_size
   - memory_date (user-set or EXIF — drives timeline order)
   - created_at (upload timestamp — never changes)
@@ -588,7 +598,7 @@ Passkeys (Face ID / Touch ID / Windows Hello) are the long-term answer for frict
 | Delete own memory | Yes | Yes | Yes |
 | Invite members | Yes | Yes | No |
 | Remove members | Yes | Yes | No |
-| Create sub-groups | Yes | Yes | No |
+| Create albums | Yes | Yes | Yes |
 | Edit family name/settings | Yes | Yes | No |
 | Delete any memory | Yes | Yes | No |
 | Manage billing | Yes | No | No |
@@ -821,6 +831,14 @@ One subscription per user account. The subscription tier determines what feature
 
 **"Owner pays" rule:** The owner of a circle is responsible for that circle's feature tier. If an owner is on Free, their circle is Free regardless of whether members are on Plus. Members inherit the circle's tier for that circle only — their own private storage quota is determined by their own subscription.
 
+**Plus member in a Free circle — billing clarity:**
+A member's Plus subscription benefits their own circles and private storage. It does not upgrade circles they've been invited into. This distinction must be surfaced clearly in the UI — never show a generic "Upgrade to Plus" button to a member who is already a Plus subscriber.
+
+Feature gate prompt for a Plus member hitting a limit in a Free owner's circle:
+> *"[Circle name] is on Free. Albums and search are available when the circle owner upgrades. [Ask owner to upgrade →]"*
+
+The "Ask owner to upgrade" CTA opens a pre-filled share sheet with a message the member can send directly to the owner. Never redirect a paying member to the upgrade/pricing page — they've already paid.
+
 **Stripe model:**
 ```
 User → Stripe Customer (1:1)
@@ -839,7 +857,7 @@ This means: a Free user who is a member of a Plus circle can use albums and sear
 |---|---|---|---|
 | **Free** | $0 | 5 GB | 1 circle owned, up to 5 members, basic timeline, milestones, comments, reactions |
 | **Plus** | $4.99/mo | 50 GB | Unlimited circles owned, up to 20 members per circle, albums, search, On This Day, notification preferences, offline upload |
-| **Pro** | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review, priority support, caregiver mode, voice/video reactions |
+| **Pro** | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review full slideshow/video, priority support, caregiver mode, voice/video reactions |
 
 ### Stripe schema
 ```sql
@@ -864,13 +882,14 @@ On upgrade/downgrade: Stripe webhook → update `User.subscription_status` → u
 - Pro (500 GB): ~15+ years of active use for most circles. Feels genuinely generous at $9.99 — removes storage anxiety entirely for Pro users. At $9.99/mo, 200 GB felt weak against Google One's 2 TB at the same price, even if we're not competing on storage.
 
 ### Feature gate logic (what drives upgrades)
-| Trigger | Upgrade prompt |
-|---|---|
-| 6th member tries to join a Free circle | "Upgrade to Plus to invite more people →" |
-| User tries to create a time capsule on Free/Plus | "Time capsules are a Pro feature →" |
-| Storage at 80% on Free | "Your story space is almost full — upgrade to keep going →" |
-| Year in Review generated (Pro only) | Shown as blurred preview on Free/Plus — "Unlock your year →" |
-| Collaborative memory on Free | "Upgrade to Plus to let everyone contribute →" |
+| Trigger | Who sees it | Prompt |
+|---|---|---|
+| Owner tries to send 6th invite on Free | Owner only | "You've reached the 5-member limit. Upgrade to Plus to invite more. [Start free trial →]" — blocked at invite-send time, not accept time |
+| Plus member hits feature gate in a Free circle | Member (already paying) | "[Circle name] is on Free. Albums and search are available when the circle owner upgrades. [Ask owner to upgrade →]" — never show upgrade CTA to a paying member |
+| Free member hits feature gate in any circle | Member | "This feature needs Plus. [Upgrade →]" |
+| User tries to create a time capsule on Free/Plus | Owner | "Time capsules are a Pro feature →" |
+| Storage at 80% on Free | Owner | "Your story space is almost full — upgrade to keep going →" |
+| Collaborative memory on Free | Owner | "Upgrade to Plus to let everyone contribute →" |
 
 ### Secondary revenue streams (Phase 3)
 - **Physical products** — auto-generated photo books, printed timelines ($20–60 one-time)
@@ -1152,17 +1171,59 @@ ON User FOR SELECT
 USING (deleted_at IS NULL OR id = auth.uid());
 ```
 
-### Deletion flow
-1. User requests deletion → set `deleted_at = now()` → revoke active sessions
-2. If user is a family owner → block deletion, prompt: transfer ownership or delete family first
-3. Memories uploaded by deleted user remain in family timeline, `owner_user_id` retained but display name becomes "Deleted Member"
-4. Scheduled Edge Function runs daily:
+### Member account deletion flow
+
+1. User requests deletion in settings
+2. If they are a circle owner → block, show ownership resolution screen (see below)
+3. If they are a member (not owner) → show content choice:
+
+> *"What should happen to your photos in shared circles?"*
+> - **Keep them as part of the story** (default) — your name becomes "Former member", memories stay
+> - **Remove them from all circles** — your photos and voice memos are deleted from shared timelines
+
+4. Reactions: always removed regardless of choice (tied to identity, low-stakes)
+5. Set `deleted_at = now()` → revoke active sessions → 30-day soft delete window
+6. Scheduled Edge Function runs daily:
+
 ```
 SELECT * FROM User WHERE deleted_at < now() - INTERVAL '30 days'
-→ delete storage objects (Supabase Storage API)
-→ delete personal memories
+→ If "remove" chosen: delete storage objects, delete memories from shared timelines
+→ If "keep" chosen: anonymise display name to "Former member", retain media
 → delete FamilyMember records
 → hard delete User row
+```
+
+### Circle owner account deletion flow
+
+Block deletion until ownership is resolved. Present in order:
+
+1. **Has admins** → auto-promote oldest admin to owner, then proceed with account deletion
+2. **Has members but no admins** → force transfer screen: *"Select a new owner for [circle name] before continuing"*
+3. **Sole member of a circle** → ask: *"Delete [circle name] too, or leave it empty?"*
+4. Once all circles are resolved → proceed with standard member deletion flow above
+
+### Circle deletion (owner-initiated)
+
+Owners can delete a circle. Make it hard to do accidentally:
+
+**Step 1 — Warning screen:**
+> *"This will permanently delete [N] memories and remove all [N] members. Members will be notified and have 30 days to export their own photos."*
+> [Cancel] [Delete circle →]
+
+**Step 2 — Confirmation:**
+> Type *"[circle name]"* to confirm
+
+**Step 3 — 30-day soft delete:**
+- Circle is hidden from all members immediately
+- Day 1: email all members — *"[Owner] has deleted [circle name]. You have 30 days to export your own photos before they're gone. [Export my photos →]"*
+- Owner can recover within 30 days from their account settings
+- Day 30: hard purge — all memories, media, and member records permanently deleted
+
+**DB addition:**
+```sql
+Family
+  - deleted_at TIMESTAMPTZ  -- soft delete timestamp
+  - deletion_initiated_by UUID REFERENCES public.user(id)
 ```
 
 ### DB schema addition
@@ -1206,9 +1267,13 @@ ExportJob
   - created_at
 ```
 
+### Export scope
+- **Members** can export only their own uploads (GDPR portability applies to data you provided, not data others uploaded)
+- **Owners** can export the full circle — all members' memories, with attribution in metadata
+
 ### Export contents
 - Original media files (photos + videos)
-- `metadata.json` per memory: `{ date, note, milestone_label, visibility, family_name }`
+- `metadata.json` per memory: `{ date, note, milestone_label, visibility, family_name, uploaded_by }`
 - Folder structure: `/YYYY-MM/memory-id/photo.jpg + metadata.json`
 
 ### Limits
@@ -1486,6 +1551,9 @@ Family
   - grace_period_until (nullable timestamp)
 ```
 
+Two distinct grace periods:
+
+**Payment failed (7 days):**
 ```
 invoice.payment_failed webhook
   → UPDATE Family SET subscription_status = "grace",
@@ -1495,6 +1563,29 @@ Middleware check on upload:
   if status = "grace" AND grace_period_until < now()
     → downgrade to free, block if over free quota
 ```
+
+**Voluntary cancellation (30 days):**
+```
+customer.subscription.deleted webhook
+  → UPDATE Family SET subscription_status = "grace",
+      grace_period_until = now() + INTERVAL '30 days'
+  → Email all members: "[Circle name]'s Plus plan ends in 30 days.
+     Your photos are safe. New uploads may be restricted after that date.
+     [Export your memories →]"
+```
+
+**Content rules after downgrade — existing content is never hidden or deleted due to a plan change:**
+
+| Content | During grace period | After downgrade to Free |
+|---------|--------------------|-----------------------|
+| Photos/videos already uploaded | Full access | Full access — viewable forever |
+| Voice memos already recorded | Full access | Still playable — grandfathered in |
+| Reactions already made | Full access | Full access |
+| New uploads (if over 5 GB quota) | Allowed | Blocked until under quota |
+| New voice memos | Allowed | Blocked (Pro feature) |
+| Members over 5 | All keep access | All keep access — no forced removal, just can't invite more |
+
+Downgrade restricts future actions, never past content. Hiding existing memories because of a billing change = immediate trust destruction for a family app.
 
 ### Error state summary
 | State | Trigger | UX |
@@ -1694,6 +1785,25 @@ Current model (Phase 1–2): **invite-only privacy, not zero-knowledge.**
 
 What this does NOT guarantee: the developer (you) with Supabase dashboard or AWS credentials can browse the storage bucket and view photos. So can Supabase as a company. This is also true of Google Photos, iCloud (without Advanced Data Protection), and Dropbox.
 
+### Privacy Dashboard (in-app)
+
+A dedicated screen in Settings that makes the privacy commitment *felt*, not just stated. Shows:
+
+```
+Your photos are stored privately.
+0 third parties can access them.
+No ads. No AI training. No data selling.
+
+Storage: Supabase (EU region) — invite-only, encrypted at rest
+Last accessed: Never (only you and your circle)
+```
+
+Users who trust the product share it. A privacy dashboard is something a parent screenshots and sends to a skeptical grandparent. It turns "we say we're private" into "here's the proof." Competitors don't have this — they bury privacy claims in a ToS.
+
+**Implementation:** Static settings page. No backend required — just honest copy and the Supabase region info from `runtimeConfig`.
+
+---
+
 **Privacy policy must be honest about this:** "Your photos are stored in a private, invite-only space. We do not sell your data, use it for advertising, or train AI on it. As with all cloud storage, your data resides on infrastructure we manage. We do not access your content except as required to operate the service (e.g. generating thumbnails, sending notifications)."
 
 This is defensible, honest, and consistent with your positioning. Do not claim zero-knowledge unless you implement it.
@@ -1886,6 +1996,19 @@ posthog.init(process.env.POSTHOG_KEY, {
 ## Offline Support
 
 ### Problem
+### Phase 1 web: upload failure handling
+
+For Phase 1 (web-only, no Capacitor), the upload failure UX is intentionally simple:
+
+- On failure: show a toast — *"Upload failed. Tap to retry."* — and mark the item visually as failed in the upload list
+- Never silently drop a failed upload — always surface it to the user
+- No automatic retry queue in Phase 1 (added in Phase 2 with Capacitor)
+- If the entire batch fails, show a single failure message rather than one per item
+
+---
+
+### Phase 2+: Offline upload queue
+
 Mobile photo apps are used in low-connectivity situations — hospital, travel, remote areas. Without offline support, uploads fail silently and users lose trust.
 
 ### Solution: Upload queue in IndexedDB (Capacitor)
@@ -3019,8 +3142,8 @@ t("timeline.empty")
 | Language | Reason |
 |---|---|
 | English | Default |
+| Chinese (Simplified) | **Must-have** — primary motivation is enabling the developer's own parents to use the app; non-negotiable before personal launch |
 | French | Canadian bilingual requirement |
-| Chinese (Simplified) | Large diaspora family use case |
 
 ### Key i18n considerations
 - **Date formats**: always use `Intl.DateTimeFormat` — never hardcode `MM/DD/YYYY`
@@ -3175,7 +3298,23 @@ If no uploads in 14 days, send a soft nudge to the owner only (not all members �
 
 ```
 if last_memory_created_at < now() - INTERVAL '14 days'
+  AND nudge_count_this_period < 3
   → push to owner only: "Your story has been quiet — add something this week?"
+  → increment nudge_count, record nudge_sent_at
+```
+
+**Hard rules to prevent guilt-tripping:**
+- Max 3 nudges total before permanently stopping for that circle — families that go quiet don't want to be badgered
+- Minimum 14 days between nudges (never more than monthly)
+- Hard stop after 3 consecutive non-engaged nudges — if they've ignored 3, they've made their decision
+- Reset nudge count if a new memory is uploaded (circle is active again)
+- Never send to members — owner only
+
+**DB addition:**
+```sql
+Family
+  - quiet_nudge_count INT NOT NULL DEFAULT 0
+  - quiet_nudge_last_sent_at TIMESTAMPTZ
 ```
 
 ### Hook 5: Family streak
@@ -3466,6 +3605,45 @@ Every circle creator who invites a member is doing marketing for you. The invite
 
 ### Exit criteria
 First 50 users acquired, at least 10 from channels you don't personally control (community posts, invite chain).
+
+---
+
+## Cold Discovery Strategy
+
+Everything else in the growth section assumes someone gets invited. This section addresses how the very first person in any family network finds the app.
+
+### The problem
+The invite model is efficient but it has no cold start. If no one in a family has heard of Our Story, no invite gets sent. Word-of-mouth only compounds — it doesn't start the chain.
+
+### The landing page as the cold discovery path
+
+The app root (`our-story.tinybit.app/`) serves as the landing page for unauthenticated visitors. It is the single coldest entry point and must do one job: convert a curious stranger into someone who creates their first circle.
+
+**Primary search moment to target:** "private photo sharing for family" — high intent, low competition, no dominant brand owns it.
+
+**Page structure:**
+```
+Headline:   A private space where your circle builds a shared story.
+Subhead:    No ads. No AI training. Invite-only.
+CTA:        Start your circle — free  →
+
+Below fold:
+  — What it looks like (screenshot of timeline with milestone card)
+  — How it works: invite → upload → remember (3 steps)
+  — "Who uses it": new parents / grandparents / friend groups / couples
+  — Privacy proof: "Your photos never leave your circle."
+  — Pricing: free to start
+```
+
+**SEO targets (Phase 1):**
+- "private photo sharing for family"
+- "family memory app"
+- "private baby photo sharing grandparents"
+- "photo sharing app no ads"
+
+**What this is NOT:** a marketing site with multiple pages, blog, or complex content. It's a single focused page. Build it inside the Nuxt app as the `/` route — unauthenticated visitors land here, authenticated users are redirected to `/timeline`.
+
+**`tinybit.app`** is the company page (separate site) listing both products. The Our Story landing page lives inside the Our Story app.
 
 ---
 

@@ -1,12 +1,20 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { z } from "zod"
+
+const schema = z.object({
+  name: z.string().min(1).max(100),
+  circleType: z.string().min(1).max(50),
+})
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
-  const { name, circleType } = await readBody(event)
 
   if (!user?.sub) throw createError({ statusCode: 401 })
-  if (!name || !circleType) throw createError({ statusCode: 400, message: "name and circleType are required" })
+
+  const result = schema.safeParse(await readBody(event))
+  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request" })
+  const { name, circleType } = result.data
 
   const { data: family, error } = await supabase
     .from("family")

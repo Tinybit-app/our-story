@@ -1,12 +1,20 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { z } from "zod"
+
+const querySchema = z.object({
+  familyId: z.uuid(),
+  cursor: z.string().optional(),
+})
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
-  const { familyId, cursor } = getQuery(event) as { familyId?: string; cursor?: string }
 
   if (!user?.sub) throw createError({ statusCode: 401 })
-  if (!familyId) throw createError({ statusCode: 400, message: "familyId is required" })
+
+  const result = querySchema.safeParse(getQuery(event))
+  if (!result.success) throw createError({ statusCode: 400, message: "familyId is required" })
+  const { familyId, cursor } = result.data
 
   // Verify the requesting user belongs to this family
   const { data: membership } = await supabase
