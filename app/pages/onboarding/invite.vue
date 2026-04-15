@@ -103,7 +103,17 @@ async function sendInvite() {
   }
 }
 
-function finish() {
+async function finish() {
+  if (familyIdCookie.value) {
+    try {
+      await $fetch('/api/onboarding/complete', {
+        method: 'POST',
+        body: { familyId: familyIdCookie.value },
+      })
+    } catch {
+      // Non-fatal — proceed to home regardless
+    }
+  }
   circleTypeCookie.value = null
   familyIdCookie.value = null
   router.push('/')

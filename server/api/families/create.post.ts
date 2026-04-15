@@ -10,7 +10,13 @@ export default defineEventHandler(async (event) => {
 
   const { data: family, error } = await supabase
     .from("family")
-    .insert({ name, circle_type: circleType, created_by: user.sub })
+    .insert({
+      name,
+      circle_type: circleType,
+      created_by: user.sub,
+      // Solo circles skip the invite step — mark onboarding complete immediately
+      ...(circleType === "solo" ? { onboarding_completed_at: new Date().toISOString() } : {}),
+    })
     .select()
     .single()
 

@@ -74,6 +74,7 @@ export type Database = {
           grace_period_until: string | null
           id: string
           name: string
+          onboarding_completed_at: string | null
           subscription_status: string
         }
         Insert: {
@@ -86,6 +87,7 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           name: string
+          onboarding_completed_at?: string | null
           subscription_status?: string
         }
         Update: {
@@ -98,6 +100,7 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           name?: string
+          onboarding_completed_at?: string | null
           subscription_status?: string
         }
         Relationships: [
@@ -541,7 +544,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_family_ids: { Args: never; Returns: string[] }
+      get_my_family_ids_as_role: {
+        Args: { required_roles: string[] }
+        Returns: string[]
+      }
     }
     Enums: {
       [_ in never]: never
