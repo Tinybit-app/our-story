@@ -2,6 +2,13 @@
 export default defineNuxtConfig({
   ssr: false,
 
+  app: {
+    head: {
+      title: 'Our Story',
+      meta: [{ name: 'description', content: 'Your circle of memories.' }],
+    },
+  },
+
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
