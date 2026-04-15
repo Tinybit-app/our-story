@@ -59,14 +59,18 @@
           </div>
 
           <!-- Group date (batch only) -->
-          <div v-if="items.length > 1" class="px-5 py-3 border-b border-border flex-shrink-0 flex items-center gap-3">
-            <span class="text-xs text-muted-foreground flex-shrink-0">Set all to</span>
+          <div v-if="items.length > 1" class="px-5 py-3 border-b border-border flex-shrink-0 flex items-center gap-2">
             <input
               v-model="groupDate"
               type="date"
               class="flex-1 bg-card border border-border rounded-[10px] px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              @change="applyGroupDate"
             />
+            <button
+              class="flex-shrink-0 bg-secondary hover:bg-border transition-colors text-foreground text-xs font-medium px-3 py-1.5 rounded-[10px]"
+              @click="applyGroupDate"
+            >
+              Apply to all
+            </button>
           </div>
 
           <!-- Scrollable content -->
