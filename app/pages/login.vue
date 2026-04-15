@@ -83,6 +83,14 @@
 <script setup lang="ts">
 definePageMeta({ auth: false })
 
+const user = useSupabaseUser()
+const router = useRouter()
+
+// Session restores async in SPA mode — redirect once it's available
+watchEffect(() => {
+  if (user.value) router.replace('/')
+})
+
 const supabase = useSupabaseClient()
 const email = ref('')
 const loading = ref(false)
