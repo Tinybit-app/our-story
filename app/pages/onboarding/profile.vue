@@ -42,6 +42,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: 'onboarding' })
+
 const router = useRouter()
 const firstName = ref('')
 const lastName = ref('')
@@ -59,7 +61,8 @@ async function save() {
       body: { firstName: firstName.value, lastName: lastName.value },
     })
 
-    const { hasMembership } = await $fetch<{ hasMembership: boolean; needsProfile: boolean }>('/api/auth/membership')
+    const { refresh } = useUserState()
+    const { hasMembership } = await refresh()
     router.push(hasMembership ? '/' : '/onboarding')
   } catch (err: any) {
     errorMsg.value = err?.data?.message ?? 'Something went wrong. Please try again.'

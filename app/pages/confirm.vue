@@ -29,10 +29,8 @@ const errorMsg = ref<string | null>(null)
 async function checkMembership() {
   errorMsg.value = null
   try {
-    const { hasMembership, needsProfile } = await $fetch<{
-      hasMembership: boolean
-      needsProfile: boolean
-    }>("/api/auth/membership")
+    const { refresh } = useUserState()
+    const { hasMembership, needsProfile } = await refresh()
 
     if (needsProfile) {
       router.push("/onboarding/profile")

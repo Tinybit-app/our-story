@@ -46,14 +46,15 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: 'onboarding' })
+
 const selected = ref('')
 const router = useRouter()
 const circleTypeCookie = useCookie('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
 
-// Guard: profile must be complete before onboarding can proceed
-onMounted(async () => {
-  const { needsProfile } = await $fetch<{ needsProfile: boolean }>('/api/auth/membership')
-  if (needsProfile) router.replace('/onboarding/profile')
+// Clear any stale cookies from a previous partial flow
+onMounted(() => {
+  circleTypeCookie.value = null
 })
 
 const circleTypes = [

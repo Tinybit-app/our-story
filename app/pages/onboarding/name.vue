@@ -49,6 +49,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: 'onboarding' })
+
 const router = useRouter()
 const name = ref('')
 const loading = ref(false)
@@ -56,12 +58,6 @@ const errorMsg = ref('')
 
 const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
 const familyIdCookie = useCookie<string | null>('onboarding_family_id', { maxAge: 60 * 60 * 2 })
-
-onMounted(async () => {
-  const { needsProfile } = await $fetch<{ needsProfile: boolean }>('/api/auth/membership')
-  if (needsProfile) { router.replace('/onboarding/profile'); return }
-  if (!circleTypeCookie.value) router.replace('/onboarding')
-})
 
 const placeholder = computed(() => {
   const map: Record<string, string> = {
@@ -87,6 +83,9 @@ async function createFamily() {
     })
 
     familyIdCookie.value = familyId
+
+    const { refresh } = useUserState()
+    await refresh()
 
     if (circleTypeCookie.value === 'solo') {
       circleTypeCookie.value = null

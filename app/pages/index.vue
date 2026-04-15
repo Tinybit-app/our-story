@@ -8,11 +8,19 @@
           <p class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Our Story</p>
           <p class="text-sm font-semibold text-foreground leading-tight">{{ family?.name ?? '…' }}</p>
         </div>
-        <UploadMemory
-          v-if="familyId"
-          :family-id="familyId"
-          @uploaded="onUploaded"
-        />
+        <div class="flex items-center gap-2">
+          <UploadMemory
+            v-if="familyId"
+            :family-id="familyId"
+            @uploaded="onUploaded"
+          />
+          <button
+            @click="logout"
+            class="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+          >
+            Log out
+          </button>
+        </div>
       </div>
     </header>
 
@@ -52,19 +60,22 @@
 </template>
 
 <script setup lang="ts">
+const supabase = useSupabaseClient()
 const router = useRouter()
+
+async function logout() {
+  const { clear } = useUserState()
+  await supabase.auth.signOut()
+  clear()
+  router.replace('/login')
+}
 
 // Guard: ensure profile + onboarding are complete before showing the timeline
 onMounted(async () => {
-  const { hasMembership, needsProfile, onboardingComplete } = await $fetch<{
-    hasMembership: boolean
-    needsProfile: boolean
-    onboardingComplete: boolean
-  }>('/api/auth/membership')
-
+  const { ensure } = useUserState()
+  const { hasMembership, needsProfile } = await ensure()
   if (needsProfile) { router.replace('/onboarding/profile'); return }
   if (!hasMembership) { router.replace('/onboarding'); return }
-  if (!onboardingComplete) { router.replace('/onboarding/invite'); return }
 })
 
 const { data: familiesData } = await useFetch<{ families: any[] }>('/api/families')

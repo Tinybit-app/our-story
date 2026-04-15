@@ -54,8 +54,8 @@
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+definePageMeta({ middleware: 'onboarding' })
+
 const email = ref('')
 const loading = ref(false)
 const sent = ref(false)
@@ -64,30 +64,6 @@ const router = useRouter()
 
 const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
 const familyIdCookie = useCookie<string | null>('onboarding_family_id', { maxAge: 60 * 60 * 2 })
-
-onMounted(async () => {
-  const { needsProfile } = await $fetch<{ needsProfile: boolean }>('/api/auth/membership')
-  if (needsProfile) { router.replace('/onboarding/profile'); return }
-
-  // Restore familyId from DB if cookie was lost on refresh
-  if (familyIdCookie.value) return
-  if (!user.value) return
-
-  const { data } = await supabase
-    .from('familymember')
-    .select('family_id')
-    .eq('user_id', user.value.id)
-    .eq('role', 'owner')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (data) {
-    familyIdCookie.value = data.family_id
-  } else {
-    router.replace('/onboarding')
-  }
-})
 
 async function sendInvite() {
   loading.value = true
