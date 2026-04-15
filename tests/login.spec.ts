@@ -8,7 +8,7 @@ test.describe('Login page', () => {
   })
 
   test('shows wordmark, headline and subtitle', async ({ page }) => {
-    await expect(page.getByText('Our Story', { exact: false })).toBeVisible()
+    await expect(page.locator('p').filter({ hasText: 'Our Story' })).toBeVisible()
     await expect(page.getByRole('heading', { name: /every moment worth keeping/i })).toBeVisible()
     await expect(page.getByText('For you, your family, your friends.')).toBeVisible()
   })
