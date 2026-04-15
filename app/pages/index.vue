@@ -52,6 +52,21 @@
 </template>
 
 <script setup lang="ts">
+const router = useRouter()
+
+// Guard: ensure profile + onboarding are complete before showing the timeline
+onMounted(async () => {
+  const { hasMembership, needsProfile, onboardingComplete } = await $fetch<{
+    hasMembership: boolean
+    needsProfile: boolean
+    onboardingComplete: boolean
+  }>('/api/auth/membership')
+
+  if (needsProfile) { router.replace('/onboarding/profile'); return }
+  if (!hasMembership) { router.replace('/onboarding'); return }
+  if (!onboardingComplete) { router.replace('/onboarding/invite'); return }
+})
+
 const { data: familiesData } = await useFetch<{ families: any[] }>('/api/families')
 
 const family = computed(() => familiesData.value?.families?.[0] ?? null)

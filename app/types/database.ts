@@ -74,7 +74,6 @@ export type Database = {
           grace_period_until: string | null
           id: string
           name: string
-          onboarding_completed_at: string | null
           subscription_status: string
         }
         Insert: {
@@ -87,7 +86,6 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           name: string
-          onboarding_completed_at?: string | null
           subscription_status?: string
         }
         Update: {
@@ -100,7 +98,6 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           name?: string
-          onboarding_completed_at?: string | null
           subscription_status?: string
         }
         Relationships: [

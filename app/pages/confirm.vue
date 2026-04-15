@@ -29,20 +29,15 @@ const errorMsg = ref<string | null>(null)
 async function checkMembership() {
   errorMsg.value = null
   try {
-    const { hasMembership, needsProfile, onboardingComplete } = await $fetch<{
+    const { hasMembership, needsProfile } = await $fetch<{
       hasMembership: boolean
       needsProfile: boolean
-      onboardingComplete: boolean
     }>("/api/auth/membership")
 
     if (needsProfile) {
       router.push("/onboarding/profile")
-    } else if (!hasMembership) {
-      router.push("/onboarding")
-    } else if (!onboardingComplete) {
-      router.push("/onboarding/invite")
     } else {
-      router.push("/")
+      router.push(hasMembership ? "/" : "/onboarding")
     }
   } catch {
     errorMsg.value = "Something went wrong. Please try again."

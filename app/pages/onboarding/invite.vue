@@ -65,8 +65,11 @@ const router = useRouter()
 const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
 const familyIdCookie = useCookie<string | null>('onboarding_family_id', { maxAge: 60 * 60 * 2 })
 
-// Restore familyId from DB if cookie was lost on refresh
 onMounted(async () => {
+  const { needsProfile } = await $fetch<{ needsProfile: boolean }>('/api/auth/membership')
+  if (needsProfile) { router.replace('/onboarding/profile'); return }
+
+  // Restore familyId from DB if cookie was lost on refresh
   if (familyIdCookie.value) return
   if (!user.value) return
 
@@ -103,17 +106,7 @@ async function sendInvite() {
   }
 }
 
-async function finish() {
-  if (familyIdCookie.value) {
-    try {
-      await $fetch('/api/onboarding/complete', {
-        method: 'POST',
-        body: { familyId: familyIdCookie.value },
-      })
-    } catch {
-      // Non-fatal — proceed to home regardless
-    }
-  }
+function finish() {
   circleTypeCookie.value = null
   familyIdCookie.value = null
   router.push('/')
