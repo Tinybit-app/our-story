@@ -292,8 +292,10 @@ jobs:
         run: pnpm install
 
       - name: Security audit
-        run: npm audit --audit-level=high
-        # Use npm audit, not pnpm audit — pnpm targets retired npm audit endpoints as of v10
+        run: npm i --package-lock-only --ignore-scripts && npm audit --audit-level=high
+        # Use npm audit, not pnpm audit — pnpm targets retired npm audit endpoints as of v10.
+        # npm i --package-lock-only generates package-lock.json without installing node_modules
+        # (the project uses pnpm so only pnpm-lock.yaml exists; npm audit requires package-lock.json)
 
       - uses: supabase/setup-cli@v1
         with:
@@ -460,9 +462,9 @@ updates:
 **Security audit in CI** — add to `.github/workflows/ci.yml`:
 ```yaml
 - name: Security audit
-  run: npm audit --audit-level=high
+  run: npm i --package-lock-only --ignore-scripts && npm audit --audit-level=high
 ```
-> Use `npm audit`, not `pnpm audit` — pnpm targets retired npm audit endpoints as of v10. The CI workflow already uses `npm audit`.
+> Use `npm audit`, not `pnpm audit` — pnpm targets retired npm audit endpoints as of v10. The project uses pnpm so only `pnpm-lock.yaml` exists; `npm i --package-lock-only` generates `package-lock.json` without installing `node_modules`, enabling `npm audit` to run.
 
 **Error messages** — never expose internals to client. Always log server-side:
 ```ts
@@ -1650,10 +1652,10 @@ export default defineEventHandler(async (event) => {
 // 1. Mark job as processing
 await supabase.from("ExportJob").update({ status: "processing" }).eq("id", job.id)
 
-// 2. Fetch all memories for user
+// 2. Fetch all memories for user — join Family for family_name, User for uploaded_by
 const { data: memories } = await supabase
   .from("Memory")
-  .select("*, MemoryMedia(*)")
+  .select("*, MemoryMedia(*), Family!family_id(name), User!owner_user_id(first_name, last_name)")
   .eq("owner_user_id", job.user_id)
 
 // 3. Build zip: /YYYY-MM/memory-id/photo.jpg + metadata.json per memory
@@ -1662,11 +1664,16 @@ const zip = new JSZip()
 
 for (const memory of memories ?? []) {
   const folder = zip.folder(`${memory.memory_date.slice(0, 7)}/${memory.id}`)!
+  const uploadedBy = memory.User
+    ? `${memory.User.first_name ?? ""} ${memory.User.last_name ?? ""}`.trim()
+    : "Unknown"
   const meta = {
     date: memory.memory_date,
     note: memory.note,
     milestone_label: memory.milestone_label,
     visibility: memory.visibility,
+    family_name: memory.Family?.name ?? null,  // per design spec export metadata
+    uploaded_by: uploadedBy,                   // per design spec export metadata
   }
   folder.file("metadata.json", JSON.stringify(meta, null, 2))
 
@@ -1697,16 +1704,366 @@ await supabase.from("ExportJob").update({
   expires_at: expiresAt,
 }).eq("id", job.id)
 
+// Email lives in auth.users — use admin client to fetch (Edge Function has no user session)
+const { data: authUser } = await supabase.auth.admin.getUserById(job.user_id)
+const userEmail = authUser?.user?.email
+
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
-await resend.emails.send({
-  from: "Our Story <hello@our-story.tinybit.app>",
-  to: user.email,
-  subject: "Your Our Story export is ready",
-  html: `<p>Your data export is ready. <a href="${signedUrl?.signedUrl}">Download your memories</a> — link expires in 24 hours.</p>`,
-})
+if (userEmail) {
+  await resend.emails.send({
+    from: "Our Story <hello@our-story.tinybit.app>",
+    to: userEmail,
+    subject: "Your Our Story export is ready",
+    html: `<p>Your data export is ready. <a href="${signedUrl?.signedUrl}">Download your memories</a> — link expires in 24 hours.</p>`,
+  })
+}
 ```
 
 **Definition of done:** Request export from account settings → "Export started" message → email arrives within 5 minutes with download link → zip contains original media + metadata.json per memory. Requesting a second export while one is in-progress returns a clear error.
+
+---
+
+### Step 3.7 — Circle deletion (owner-only)
+
+Warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30. `Family.deleted_at` and `Family.deletion_initiated_by` are already in the initial schema — no new migration needed.
+
+**`pages/circle/[id]/settings/delete.vue`** — two-phase confirmation UI:
+
+```vue
+<script setup lang="ts">
+const route = useRoute()
+const { family, members } = await useFamilySettings(route.params.id)
+const confirmText = ref("")
+const isConfirming = ref(false)
+
+const canConfirm = computed(
+  () => confirmText.value === family.value.name
+)
+
+async function initiateDelete() {
+  await $fetch(`/api/circles/${family.value.id}/delete`, { method: "POST" })
+  navigateTo("/")
+}
+</script>
+
+<template>
+  <div v-if="!isConfirming">
+    <!-- Step 1: Warning screen -->
+    <p>
+      This will permanently delete {{ family.memoriesCount }} memories and
+      remove all {{ members.length }} members. Members will be notified and
+      have 30 days to export their own photos.
+    </p>
+    <Button variant="ghost" @click="navigateTo(`/circle/${family.id}/settings`)">
+      Cancel
+    </Button>
+    <Button variant="destructive" @click="isConfirming = true">
+      Delete circle →
+    </Button>
+  </div>
+
+  <div v-else>
+    <!-- Step 2: Type-to-confirm -->
+    <p>Type <strong>{{ family.name }}</strong> to confirm deletion.</p>
+    <Input v-model="confirmText" placeholder="Circle name" />
+    <Button variant="destructive" :disabled="!canConfirm" @click="initiateDelete">
+      Permanently delete
+    </Button>
+  </div>
+</template>
+```
+
+**`server/api/circles/[id]/delete.post.ts`**:
+
+```ts
+import { serverSupabaseUser, serverSupabaseServiceRole } from "#supabase/server"
+import { z } from "zod"
+
+export default defineEventHandler(async (event) => {
+  const user = await serverSupabaseUser(event)
+  if (!user) throw createError({ statusCode: 401, message: "Unauthorized" })
+
+  const familyId = z.string().uuid().parse(getRouterParam(event, "id"))
+  const supabase = await serverSupabaseServiceRole(event)
+
+  // Verify caller is the circle owner — ownership lives in FamilyMember.role, NOT on Family
+  // Family has no owner_user_id column; the owner is the FamilyMember with role = "owner"
+  const { data: ownerMembership } = await supabase
+    .from("FamilyMember")
+    .select("role, User!user_id(first_name, last_name)")
+    .eq("family_id", familyId)
+    .eq("user_id", user.id)
+    .single()
+
+  if (!ownerMembership || ownerMembership.role !== "owner")
+    throw createError({ statusCode: 403, message: "Only the circle owner can delete it" })
+
+  const ownerName = ownerMembership.User
+    ? `${ownerMembership.User.first_name ?? ""} ${ownerMembership.User.last_name ?? ""}`.trim()
+    : "The circle owner"
+
+  const { data: family } = await supabase
+    .from("Family")
+    .select("id, name, deleted_at")
+    .eq("id", familyId)
+    .single()
+
+  if (!family) throw createError({ statusCode: 404 })
+
+  if (family.deleted_at)
+    throw createError({ statusCode: 409, message: "Circle is already scheduled for deletion" })
+
+  // Soft-delete: set deleted_at and record initiating owner
+  await supabase
+    .from("Family")
+    .update({
+      deleted_at: new Date().toISOString(),
+      deletion_initiated_by: user.id,
+    })
+    .eq("id", familyId)
+
+  // Email all active members (Day 1 notification)
+  const { data: members } = await supabase
+    .from("FamilyMember")
+    .select("user_id, User!user_id(email, first_name, last_name)")
+    .eq("family_id", familyId)
+    .eq("memorial_status", "active")
+
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  for (const member of members ?? []) {
+    await resend.emails.send({
+      from: "Our Story <hello@our-story.tinybit.app>",
+      to: member.User.email,
+      subject: `${family.name} has been deleted — export your photos within 30 days`,
+      html: `<p>${ownerName} has deleted ${family.name}. You have 30 days to export your own photos before they're gone. <a href="${process.env.NUXT_PUBLIC_SITE_URL}/circle/${familyId}/export">Export my photos →</a></p>`,
+    })
+  }
+
+  return { ok: true }
+})
+```
+
+**`supabase/functions/purge-deleted-circles/index.ts`** — daily cron, hard purge at day 30:
+
+```ts
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+)
+
+Deno.serve(async () => {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: families } = await supabase
+    .from("Family")
+    .select("id")
+    .not("deleted_at", "is", null)
+    .lte("deleted_at", thirtyDaysAgo)
+
+  for (const family of families ?? []) {
+    // Delete storage objects for all memories
+    const { data: media } = await supabase
+      .from("MemoryMedia")
+      .select("storage_path")
+      .eq("family_id", family.id)
+
+    for (const item of media ?? []) {
+      await supabase.storage.from("memories").remove([item.storage_path])
+    }
+
+    // Hard delete cascades to Memory, MemoryMedia, FamilyMember via ON DELETE CASCADE
+    await supabase.from("Family").delete().eq("id", family.id)
+  }
+
+  return new Response("ok")
+})
+```
+
+**Recovery (within 30 days):** Owner can cancel deletion from account settings — clears `deleted_at` and `deletion_initiated_by`:
+
+```ts
+// server/api/circles/[id]/restore.post.ts
+// Verify ownership via FamilyMember (Family has no owner_user_id column)
+const { data: ownerCheck } = await supabase
+  .from("FamilyMember")
+  .select("role")
+  .eq("family_id", familyId)
+  .eq("user_id", user.id)
+  .single()
+if (!ownerCheck || ownerCheck.role !== "owner")
+  throw createError({ statusCode: 403 })
+
+await supabase
+  .from("Family")
+  .update({ deleted_at: null, deletion_initiated_by: null })
+  .eq("id", familyId)
+```
+
+**RLS:** Add a filter to every `Family` SELECT policy: `.is("deleted_at", null)` — soft-deleted circles are invisible to all members immediately.
+
+**Definition of done:** Owner taps "Delete circle" → sees memory count and member count → types circle name → circle disappears from all members' dashboards immediately → all members receive deletion email with export link → after 30 days the daily cron deletes all media and DB rows → circle cannot be restored after day 30.
+
+---
+
+### Step 3.8 — Data export: owner full-circle scope
+
+The Step 3.6 export function queries `owner_user_id = job.user_id`, which exports only the requesting user's own uploads. Design spec: *"Owners can export the full circle — all members' memories, with attribution in metadata."* This step upgrades `process-export` to check the user's role and include the full circle when they are an owner.
+
+**No schema change needed** — `ExportJob` already stores `user_id`. The role check is done at processing time.
+
+**Modified `supabase/functions/process-export/index.ts`:**
+
+```ts
+// 1. Mark job as processing
+await supabase.from("ExportJob").update({ status: "processing" }).eq("id", job.id)
+
+// 2. Determine scope: owned families → full circle; non-owned families → own uploads only
+const { data: memberships } = await supabase
+  .from("FamilyMember")
+  .select("family_id, role")
+  .eq("user_id", job.user_id)
+  .eq("memorial_status", "active")
+
+const ownedFamilyIds = (memberships ?? [])
+  .filter(m => m.role === "owner")
+  .map(m => m.family_id)
+
+// 3a. Full-circle export for owned families — all contributors, family name + attribution in metadata
+let circleMemories: any[] = []
+if (ownedFamilyIds.length > 0) {
+  const { data } = await supabase
+    .from("Memory")
+    .select("*, MemoryMedia(*), User!owner_user_id(first_name, last_name), Family!family_id(name)")
+    .in("family_id", ownedFamilyIds)
+  circleMemories = data ?? []
+}
+
+// 3b. Own-uploads-only for families where the user is not the owner
+// Include Family and User joins so metadata.json has family_name + uploaded_by (per design spec)
+// If ownedFamilyIds is empty, this returns all of the user's own memories (no exclusion needed)
+let ownMemoriesQuery = supabase
+  .from("Memory")
+  .select("*, MemoryMedia(*), Family!family_id(name), User!owner_user_id(first_name, last_name)")
+  .eq("owner_user_id", job.user_id)
+
+if (ownedFamilyIds.length > 0) {
+  // Exclude memories already captured in the full-circle export above
+  ownMemoriesQuery = ownMemoriesQuery.not("family_id", "in", `(${ownedFamilyIds.join(",")})`)
+}
+const { data: ownMemories } = await ownMemoriesQuery
+
+// 4. Build zip
+const JSZip = (await import("jszip")).default
+const zip = new JSZip()
+
+// Owner section: organised by circle → date → memory; includes family_name + uploaded_by
+for (const memory of circleMemories) {
+  const uploadedBy = memory.User
+    ? `${memory.User.first_name ?? ""} ${memory.User.last_name ?? ""}`.trim()
+    : "Unknown"
+  const folder = zip.folder(
+    `circles/${memory.family_id}/${memory.memory_date.slice(0, 7)}/${memory.id}`
+  )!
+  folder.file(
+    "metadata.json",
+    JSON.stringify(
+      {
+        date: memory.memory_date,
+        note: memory.note,
+        milestone_label: memory.milestone_label,
+        visibility: memory.visibility,
+        family_name: memory.Family?.name ?? null,  // per design spec export metadata
+        uploaded_by: uploadedBy,                    // per design spec export metadata
+      },
+      null,
+      2
+    )
+  )
+  for (const media of memory.MemoryMedia ?? []) {
+    const { data: file } = await supabase.storage
+      .from("memories-private")
+      .download(media.storage_path)
+    if (file) {
+      const ext = media.storage_path.split(".").pop()
+      folder.file(`media.${ext}`, await file.arrayBuffer())
+    }
+  }
+}
+
+// Member section: user's own uploads from circles they don't own
+for (const memory of ownMemories ?? []) {
+  const uploadedBy = memory.User
+    ? `${memory.User.first_name ?? ""} ${memory.User.last_name ?? ""}`.trim()
+    : "Unknown"
+  const folder = zip.folder(
+    `my-memories/${memory.memory_date.slice(0, 7)}/${memory.id}`
+  )!
+  folder.file(
+    "metadata.json",
+    JSON.stringify(
+      {
+        date: memory.memory_date,
+        note: memory.note,
+        milestone_label: memory.milestone_label,
+        visibility: memory.visibility,
+        family_name: memory.Family?.name ?? null,  // per design spec export metadata
+        uploaded_by: uploadedBy,                    // per design spec export metadata
+      },
+      null,
+      2
+    )
+  )
+  for (const media of memory.MemoryMedia ?? []) {
+    const { data: file } = await supabase.storage
+      .from("memories-private")
+      .download(media.storage_path)
+    if (file) {
+      const ext = media.storage_path.split(".").pop()
+      folder.file(`media.${ext}`, await file.arrayBuffer())
+    }
+  }
+}
+
+// 5. Write zip to temp storage, generate signed URL (24h expiry)
+const zipBuffer = await zip.generateAsync({ type: "arraybuffer" })
+const exportPath = `exports/${job.user_id}/${job.id}.zip`
+await supabase.storage
+  .from("memories-private")
+  .upload(exportPath, zipBuffer, { contentType: "application/zip" })
+const { data: signedUrl } = await supabase.storage
+  .from("memories-private")
+  .createSignedUrl(exportPath, 86400)
+
+// 6. Fetch user email — email lives in auth.users, not public.User; use admin client
+const { data: authUser } = await supabase.auth.admin.getUserById(job.user_id)
+const userEmail = authUser?.user?.email
+
+// 7. Update job + email link
+const expiresAt = new Date(Date.now() + 86400 * 1000).toISOString()
+await supabase
+  .from("ExportJob")
+  .update({
+    status: "complete",
+    download_url: signedUrl?.signedUrl,
+    expires_at: expiresAt,
+  })
+  .eq("id", job.id)
+
+if (userEmail) {
+  await resend.emails.send({
+    from: "Our Story <hello@our-story.tinybit.app>",
+    to: userEmail,
+    subject: "Your Our Story export is ready",
+    html: `<p>Your data export is ready. <a href="${signedUrl?.signedUrl}">Download your memories</a> — link expires in 24 hours.</p>`,
+  })
+}
+```
+
+> **Note:** `process-export` in Step 3.6 ends after step 4 (zip write + email). Replace that body with the implementation above — the Step 3.6 export API endpoint (`server/api/account/export.post.ts`) is unchanged; only the Edge Function body changes.
+
+**Definition of done:** Member requests export → zip contains only their own uploads in `my-memories/`. Owner requests export → zip contains `circles/<family-id>/` folders with every member's memories, each `metadata.json` includes `contributor_name`. Both paths confirmed manually before launch.
 
 ---
 
@@ -2539,12 +2896,18 @@ Deno.serve(async (req) => {
   // Verify user is a member of this family
   const { data: membership } = await supabase
     .from("FamilyMember")
-    .select("id")
+    .select("id, role")  // role needed to enforce caregiver visibility rule below
     .eq("user_id", user.id)
     .eq("family_id", familyId)
     .single()
 
   if (!membership) return new Response("Forbidden", { status: 403 })
+
+  // Caregivers must always upload as family-visible — spec: "uploads by caregiver: always
+  // visibility='family', cannot set private." The RESTRICTIVE "caregiver cannot read private
+  // memories" RLS policy would also make a private caregiver upload invisible to the caregiver
+  // themselves, so this is both a spec requirement and a correctness requirement.
+  const effectiveVisibility = membership.role === "caregiver" ? "family" : "private"
 
   // Upload file to private storage bucket
   const ext = file.name.split(".").pop()
@@ -2555,7 +2918,10 @@ Deno.serve(async (req) => {
     .from("memories-private")
     .upload(storagePath, fileBuffer, { contentType: file.type })
 
-  if (uploadError) return Response.json({ error: uploadError.message }, { status: 500 })
+  if (uploadError) {
+    console.error("[upload-media] storage upload failed", uploadError)
+    return Response.json({ error: "Upload failed. Please try again." }, { status: 500 })
+  }
 
   // Insert Memory row
   const { data: memory } = await supabase
@@ -2563,7 +2929,7 @@ Deno.serve(async (req) => {
     .insert({
       owner_user_id: user.id,
       family_id: familyId,
-      visibility: "private",  // default private; user shares explicitly
+      visibility: effectiveVisibility,  // "family" for caregivers; "private" for all others (shared explicitly)
       note: note ?? null,
       memory_date: memoryDate ?? new Date().toISOString(),
     })
@@ -2832,7 +3198,7 @@ export default defineEventHandler(async (event) => {
 
   let dbQuery = supabase
     .from("Memory")
-    .select("*, MemoryMedia(*), User!owner_user_id(name, avatar_url), MemoryReaction(*), MemoryComment(count)")
+    .select("*, MemoryMedia(*), User!owner_user_id(first_name, last_name, avatar_url), MemoryReaction(*), MemoryComment(count)")
     .eq("family_id", familyId)
     .in("visibility", ["family"])  // private memories handled separately
     .order("memory_date", { ascending: false })
@@ -2846,7 +3212,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const { data: memories, error } = await dbQuery
-  if (error) throw createError({ statusCode: 500, message: error.message })
+  if (error) {
+    console.error("[timeline] query failed", error)
+    throw createError({ statusCode: 500, message: "Failed to load timeline. Please try again." })
+  }
 
   // Generate signed URLs for all media — never return storage_path
   const memoriesWithUrls = await Promise.all(
@@ -2959,13 +3328,14 @@ onUnmounted(() => stop())
 Add to `MemoryCard.vue`:
 ```vue
 <button
-  v-if="memory.visibility === 'private' && memory.owner_user_id === currentUser.id"
+  v-if="memory.visibility === 'private' && memory.owner_user_id === currentUser.id && currentUserRole !== 'caregiver'"
   @click="shareToFamily"
   class="text-sm text-blue-600 font-medium"
 >
   Share to circle
 </button>
 ```
+> **Note:** The `currentUserRole !== 'caregiver'` guard is required because the upload Edge Function (Step 5.1) forces caregiver uploads to `visibility: "family"` — the button would never appear for caregivers in practice, but the guard makes the invariant explicit and prevents regressions if the check moves.
 
 `server/api/memories/[id]/share.post.ts`:
 ```ts
@@ -3005,10 +3375,11 @@ if (!isQuickNote) {
 }
 
 // Memory insert runs regardless — note + memoryDate always saved
-const { data: memory } = await supabase.from("memory").insert({
+// effectiveVisibility already derived above (caregiver → "family", others → "private")
+const { data: memory } = await supabase.from("Memory").insert({
   owner_user_id: user.id,
   family_id: familyId,
-  visibility: "private",
+  visibility: effectiveVisibility,
   note: note || null,
   memory_date: memoryDate ?? new Date().toISOString(),
 }).select().single()
@@ -3324,7 +3695,7 @@ Show a bottom sheet prompt:
     <div v-for="comment in comments" :key="comment.id" class="flex gap-2 py-2">
       <img :src="comment.User.avatar_url" class="w-7 h-7 rounded-full" />
       <div>
-        <span class="font-medium text-sm">{{ comment.User.name }}</span>
+        <span class="font-medium text-sm">{{ comment.User.first_name }} {{ comment.User.last_name }}</span>
         <p class="text-sm text-gray-700">{{ comment.body }}</p>
       </div>
     </div>
@@ -3372,6 +3743,167 @@ export default defineEventHandler(async (event) => {
 ```
 
 **Definition of done:** Can comment on a memory, comment appears in real-time via Supabase Realtime. Can react with emoji, reaction toggles on/off.
+
+---
+
+## Milestone 8.5: Localization (i18n)
+
+### Step 8.5.1 — Install and configure @nuxtjs/i18n
+
+```bash
+pnpm add @nuxtjs/i18n
+```
+
+`nuxt.config.ts` addition:
+```ts
+modules: ["@nuxtjs/i18n"],
+i18n: {
+  locales: [
+    { code: "en", file: "en.json", name: "English" },
+    { code: "zh-Hans", file: "zh-Hans.json", name: "中文（简体）" },
+    { code: "fr", file: "fr.json", name: "Français" },
+  ],
+  defaultLocale: "en",
+  strategy: "prefix_except_default",
+  lazy: true,
+  langDir: "locales/",
+},
+```
+
+Create empty locale files: `locales/en.json`, `locales/zh-Hans.json`, `locales/fr.json` (each starting as `{}`).
+
+**Definition of done:** `pnpm dev` runs without errors. `useI18n()` is available in all components.
+
+---
+
+### Step 8.5.2 — Extract all UI strings to `locales/en.json`
+
+Replace every hardcoded UI string with `t('key')`. Work component by component — do not batch all at once (one broken key breaks the whole UI).
+
+```ts
+// In any component:
+const { t } = useI18n()
+// Then in template: {{ t('timeline.empty') }} instead of "Upload your first memory"
+```
+
+Key entries to include (non-exhaustive — add every string you encounter):
+```json
+{
+  "timeline.empty": "Upload your first memory",
+  "timeline.empty.parents": "Your baby's story starts here. Upload your first memory — grandparents are waiting.",
+  "memory.share": "Add to family story",
+  "memory.milestone.label": "Milestone (optional)",
+  "upload.note.placeholder": "Add a note... (optional)",
+  "upload.date.label": "When was this?",
+  "storage.full": "Your storage is full — upgrade to continue uploading",
+  "storage.near_limit": "Your story space is almost full",
+  "invite.expired": "This invite link has expired — ask the circle owner for a new one",
+  "milestone.first_steps": "First steps",
+  "milestone.first_word": "First word",
+  "milestone.first_birthday": "First birthday",
+  "milestone.first_day_of_school": "First day of school"
+}
+```
+
+Note: always use `Intl.DateTimeFormat` for dates — never hardcode `MM/DD/YYYY`. Example:
+```ts
+new Intl.DateTimeFormat(locale.value, { month: "long", day: "numeric", year: "numeric" }).format(new Date(memory.memory_date))
+```
+
+**Definition of done:** No hardcoded English strings remain in any `.vue` file. All strings route through `t()`.
+
+---
+
+### Step 8.5.3 — Translate `locales/zh-Hans.json`
+
+Copy every key from `en.json` and provide Simplified Chinese translations. This is a must-have — developer's own parents need to use the app.
+
+```json
+{
+  "timeline.empty": "上传您的第一段记忆",
+  "memory.share": "添加到家庭故事",
+  "upload.note.placeholder": "添加备注...（可选）",
+  "storage.full": "存储空间已满 — 升级以继续上传"
+}
+```
+
+**Definition of done:** Switching to `zh-Hans` locale shows all UI strings in Simplified Chinese. No English strings visible.
+
+---
+
+### Step 8.5.4 — Translate `locales/fr.json`
+
+Copy every key from `en.json` and provide French translations. Required for Canadian bilingual compliance.
+
+```json
+{
+  "timeline.empty": "Téléchargez votre premier souvenir",
+  "memory.share": "Ajouter à l'histoire familiale",
+  "upload.note.placeholder": "Ajouter une note... (facultatif)",
+  "storage.full": "Votre espace est plein — passez à la version supérieure pour continuer"
+}
+```
+
+**Definition of done:** Switching to `fr` locale shows all UI strings in French. No English strings visible.
+
+---
+
+### Step 8.5.5 — Language toggle in settings (persisted to `User.locale`)
+
+Add to `pages/settings/account.vue`:
+
+```vue
+<template>
+  <!-- Add inside the existing settings page, e.g. after login methods section -->
+  <div>
+    <h2 class="text-lg font-semibold mb-1">Language</h2>
+    <select
+      :value="locale"
+      @change="changeLocale(($event.target as HTMLSelectElement).value)"
+      class="border rounded-lg px-3 py-2 text-sm w-full max-w-xs"
+    >
+      <option value="en">English</option>
+      <option value="zh-Hans">中文（简体）</option>
+      <option value="fr">Français</option>
+    </select>
+  </div>
+</template>
+
+<script setup lang="ts">
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
+const { locale, setLocale } = useI18n()
+
+async function changeLocale(code: string) {
+  await setLocale(code)
+  await supabase
+    .from("User")
+    .update({ locale: code })
+    .eq("id", user.value!.id)
+}
+</script>
+```
+
+On app load, read `User.locale` and apply it. Add to `app.vue` (runs once after auth):
+
+```ts
+// app.vue <script setup>
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
+const { setLocale } = useI18n()
+
+watch(user, async (u) => {
+  if (!u) return
+  const { data } = await supabase
+    .from("User")
+    .select("locale")
+    .eq("id", u.id)
+    .single()
+  if (data?.locale) await setLocale(data.locale)
+}, { immediate: true })
+```
+
+**Definition of done:** User selects French in settings → UI switches to French immediately → on next login the French locale is restored automatically. `User.locale` column holds the persisted value. The three locale codes in the select (`en`, `zh-Hans`, `fr`) must match the DB CHECK constraint exactly.
 
 ---
 
@@ -3622,6 +4154,20 @@ SELECT cron.schedule(
 - If count = 0 and family is < 90 days old: send re-engagement nudge
 - Check `NotificationPreference.email_digest_frequency` before sending
 - Personalise subject line for viewer-role recipients: `"3 new memories of Mia this week 📸"` (use ChildProfile name if available)
+- **When generating viewer JWTs to embed in email reaction links, include `viewer_name` from `NewsletterRecipient.name`** — this is how the email reaction endpoint attributes the reaction. Without it, `payload.viewer_name` is undefined and every reaction shows as "A family member":
+  ```ts
+  // For each NewsletterRecipient when building email links:
+  const token = await new SignJWT({
+    family_id: familyId,
+    role: "viewer",
+    viewer_name: recipient.name ?? null,  // from NewsletterRecipient.name
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("30d")
+    .sign(secret)
+  // Use in: /api/reactions/email?token=<token>&memoryId=<id>&emoji=❤️
+  ```
+  > Note: the view-only link JWT (Step 9.1) does NOT include `viewer_name` — the owner doesn't know who will open the link. Only digest-generated JWTs carry this field.
 
 **One-tap email reaction endpoint** — add alongside the digest:
 
@@ -3637,7 +4183,9 @@ export default defineEventHandler(async (event) => {
   const { payload } = await jwtVerify(token as string, secret)
   if (!payload.family_id) throw createError({ statusCode: 401 })
 
-  // Insert reaction (guest — no user_id, use guest_name from JWT or cookie)
+  // Insert reaction (guest — no user_id, use guest_name from JWT)
+  // viewer_name is populated by the weekly digest Edge Function from NewsletterRecipient.name
+  // when it generates the JWT embedded in email links — see the digest Edge Function note below.
   await supabase.from("MemoryReaction").upsert({
     memory_id: memoryId,
     user_id: null,          // guest reaction — extend schema to allow null user_id for guests
@@ -3654,12 +4202,12 @@ export default defineEventHandler(async (event) => {
 })
 ```
 
-**Schema extension needed** — `MemoryReaction.user_id` must allow NULL for guest reactions:
+**Schema extension needed** — `MemoryReaction.user_id` must allow NULL for guest reactions. Create `supabase/migrations/004_guest_reactions.sql`:
 ```sql
--- Migration: allow guest reactions
+-- Allow NULL user_id for guest reactions (email digest one-tap ❤)
 ALTER TABLE public.MemoryReaction ALTER COLUMN user_id DROP NOT NULL;
 ALTER TABLE public.MemoryReaction ADD COLUMN guest_name TEXT;
--- Update UNIQUE constraint to handle null user_id
+-- Replace UNIQUE constraint — original assumes non-null user_id
 ALTER TABLE public.MemoryReaction DROP CONSTRAINT memoryreaction_memory_id_user_id_emoji_key;
 CREATE UNIQUE INDEX memoryreaction_unique
   ON public.MemoryReaction (memory_id, emoji, COALESCE(user_id::text, guest_name))
@@ -3694,9 +4242,87 @@ const MILESTONE_AGES_MONTHS = [1, 2, 3, 6, 9, 12, 18, 24, 36, 48, 60]
 
 The T+3 follow-up is the highest-converting nudge. The moment already happened — the user has photos on their camera roll and the memory is fresh. Check `NotificationPreference` before sending all three.
 
-### Step 12.3 — First-memory anniversary
+### Step 12.3 — "Your First Month" recap email
 
-Daily cron that checks families where first memory was uploaded exactly 30 days ago. Send push + email to all members with the original memory.
+> **Note:** This step and "Step 12.3.1" are the same email. `first_month_email_sent` is the single guard flag for both. There is no separate anniversary push — this is email only.
+
+Daily cron (`supabase/functions/first-month-recap/index.ts`) that checks all families where `first_memory_at` is between 29–31 days ago **AND** `first_month_email_sent = false`. The 3-day window (not "exactly 30 days") prevents misses caused by cron skew or deploy gaps.
+
+```ts
+// Find eligible families
+const { data: families } = await supabase
+  .from("Family")
+  .select("id, name, first_memory_at")
+  .eq("first_month_email_sent", false)
+  .gte("first_memory_at", thirtyOneDaysAgo)
+  .lte("first_memory_at", twentyNineDaysAgo)
+
+for (const family of families) {
+  // 1. Fetch oldest memory (hero card)
+  const { data: firstMemory } = await supabase
+    .from("Memory")
+    .select("id, memory_date, note, MemoryMedia(storage_path)")
+    .eq("family_id", family.id)
+    .order("memory_date", { ascending: true })
+    .limit(1)
+    .single()
+
+  // 2. Compile month-in-numbers stats
+  const { count: totalMemories } = await supabase
+    .from("Memory")
+    .select("id", { count: "exact", head: true })
+    .eq("family_id", family.id)
+
+  const { count: totalContributors } = await supabase
+    .from("Memory")
+    .select("owner_user_id", { count: "exact", head: true })
+    .eq("family_id", family.id)
+
+  // 3. Fetch all active members
+  const { data: members } = await supabase
+    .from("FamilyMember")
+    .select("user_id, User!user_id(email, first_name, last_name)")
+    .eq("family_id", family.id)
+    .eq("memorial_status", "active")
+
+  // 4. Generate signed URL for hero card (never expose storage_path)
+  const heroSignedUrl = firstMemory?.MemoryMedia?.[0]
+    ? await getSignedUrl(firstMemory.MemoryMedia[0].storage_path)
+    : null
+
+  // 5. Send recap email to every member
+  for (const member of members) {
+    const recipientName = `${member.User.first_name ?? ''} ${member.User.last_name ?? ''}`.trim()
+    await resend.emails.send({
+      from: "Our Story <hello@our-story.tinybit.app>",
+      to: member.User.email,
+      subject: `${family.name}'s first month — look how far you've come`,
+      react: FirstMonthRecapEmail({
+        recipientName,
+        familyName: family.name,
+        heroImageUrl: heroSignedUrl,
+        heroDate: firstMemory?.memory_date,
+        totalMemories,
+        totalContributors,
+        ctaUrl: `${SITE_URL}/circle/${family.id}/timeline`,
+      }),
+    })
+  }
+
+  // 6. Mark sent — prevents re-send on future cron runs
+  await supabase
+    .from("Family")
+    .update({ first_month_email_sent: true })
+    .eq("id", family.id)
+}
+```
+
+**Email content structure** (`emails/FirstMonthRecapEmail.tsx`):
+1. **Nostalgia hook** — hero card: signed-URL photo (or placeholder if Quick Note) + date of first memory
+2. **Month in numbers** — `X memories saved`, `Y contributors`
+3. **Forward CTA** — "Keep the story going →" links to timeline
+
+**Definition of done:** Family hits 30 days since first memory → exactly one recap email per member → `first_month_email_sent` flips to `true` → no second email sent on day 31.
 
 ### Step 12.5 — Family streak *(Phase 2 — do not build in Phase 1)*
 
@@ -3812,7 +4438,7 @@ for (const family of quietFamilies) {
 }
 ```
 
-**Definition of done:** 7 days after launch, the first weekly digest email arrives. 30 days after a family's first upload, the anniversary notification fires. 14 days after the last upload, the owner gets a quiet nudge.
+**Definition of done:** 7 days after launch, the first weekly digest email arrives. 30 days after a family's first upload, the "Your First Month" recap email arrives (no push — email only, per Step 12.3). 14 days after the last upload, the owner gets a quiet nudge push.
 
 ---
 
@@ -3884,8 +4510,30 @@ for (const family of quietFamilies) {
 - [ ] GDPR data deletion tested: request deletion → `deleted_at` set → hard purge scheduled in 30 days
 
 ### Monitoring & support
+
+**Create health endpoint** — Better Uptime needs a URL to monitor. Without this, the "downtime alert" checklist item below cannot be completed.
+
+`server/api/health.get.ts`:
+```ts
+import { serverSupabaseServiceRole } from "#supabase/server"
+
+export default defineEventHandler(async (event) => {
+  // Use service role to bypass RLS — this is a server-side liveness check only.
+  // The anon client would be blocked by RLS on the User table even when the DB is healthy.
+  const supabase = await serverSupabaseServiceRole(event)
+  const { error } = await supabase.from("User").select("id").limit(1)
+  if (error) {
+    console.error("[health] DB unreachable", error)
+    throw createError({ statusCode: 503, message: "DB unreachable" })
+  }
+  return { status: "ok", timestamp: new Date().toISOString() }
+})
+```
+
+- [ ] Health endpoint live: `GET /api/health` returns `{ status: "ok" }` with HTTP 200
 - [ ] Sentry receiving errors in production (throw a test error, verify it appears)
 - [ ] Sentry alert: error rate > 1% triggers email notification
+- [ ] Better Uptime: monitor `https://our-story.tinybit.app/api/health` — check every 1 minute
 - [ ] Better Uptime status page live at status page URL
 - [ ] Better Uptime: downtime alert configured (email + SMS within 1 minute)
 - [ ] Vercel deployment notifications configured (failed deploy = immediate alert)
