@@ -120,7 +120,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] Auth: verify magic link on device 2 does not invalidate existing session on device 1 — test with two devices simultaneously; if it does, switch to PKCE flow (see design spec §Magic link session behavior)
 - [ ] Security: RLS tests passing + manual privacy breach tests
 - [ ] Security: HTTP headers verified (securityheaders.com)
-- [ ] Security: `npm audit --audit-level=high` zero high/critical vulnerabilities
+- [ ] Security: `pnpm audit --audit-level high` zero high/critical vulnerabilities
 - [ ] Security: OWASP ZAP scan on staging — all critical/high resolved
 - [ ] Security: service role key absent from client code
 - [ ] Data: quota enforcement, memory date ordering, invite single-use
@@ -292,10 +292,9 @@ jobs:
         run: pnpm install
 
       - name: Security audit
-        run: npm i --package-lock-only --ignore-scripts && npm audit --audit-level=high
-        # Use npm audit, not pnpm audit — pnpm targets retired npm audit endpoints as of v10.
-        # npm i --package-lock-only generates package-lock.json without installing node_modules
-        # (the project uses pnpm so only pnpm-lock.yaml exists; npm audit requires package-lock.json)
+        run: pnpm audit --audit-level high
+        # pnpm audit reads pnpm-lock.yaml natively — no package-lock.json needed.
+        # The "retired endpoints" issue was a pnpm v8 regression; fixed in v9+ (CI uses latest).
 
       - uses: supabase/setup-cli@v1
         with:
@@ -462,9 +461,9 @@ updates:
 **Security audit in CI** — add to `.github/workflows/ci.yml`:
 ```yaml
 - name: Security audit
-  run: npm i --package-lock-only --ignore-scripts && npm audit --audit-level=high
+  run: pnpm audit --audit-level high
 ```
-> Use `npm audit`, not `pnpm audit` — pnpm targets retired npm audit endpoints as of v10. The project uses pnpm so only `pnpm-lock.yaml` exists; `npm i --package-lock-only` generates `package-lock.json` without installing `node_modules`, enabling `npm audit` to run.
+> Use `pnpm audit` — it reads `pnpm-lock.yaml` natively, no `package-lock.json` needed. The "retired endpoints" issue was a pnpm v8 regression; fixed in v9+ (CI pins `version: latest`).
 
 **Error messages** — never expose internals to client. Always log server-side:
 ```ts
@@ -4457,7 +4456,7 @@ for (const family of quietFamilies) {
 - [ ] HTTP security headers present on all responses (verify with securityheaders.com)
 - [ ] File upload: attempt to upload a `.exe` renamed as `.jpg` — must be rejected
 - [ ] Invite spam protection active: sending more than 10 pending invites to the same family returns 429 (server-side pending-invite count cap — Phase 1 mechanism; Upstash sliding-window rate limiting is Phase 2)
-- [ ] `npm audit --audit-level=high` passes with zero high/critical vulnerabilities
+- [ ] `pnpm audit --audit-level high` passes with zero high/critical vulnerabilities
 - [ ] All error messages shown to users are human-readable — no stack traces, no raw DB errors
 - [ ] OWASP ZAP basic scan run against staging — all critical/high findings resolved
 - [ ] Service role key confirmed absent from any client-side code (`grep -r "SERVICE_ROLE" src/`)
