@@ -63,7 +63,7 @@ export type Database = {
           },
         ]
       }
-      family: {
+      circle: {
         Row: {
           challenge_streak: number
           circle_type: string
@@ -102,7 +102,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "family_created_by_fkey"
+            foreignKeyName: "circle_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user"
@@ -110,32 +110,32 @@ export type Database = {
           },
         ]
       }
-      familyinvite: {
+      circleinvite: {
         Row: {
+          circle_id: string
           created_at: string
           email: string
           expires_at: string
-          family_id: string
           id: string
           role: string
           status: string
           token: string
         }
         Insert: {
+          circle_id: string
           created_at?: string
           email: string
           expires_at?: string
-          family_id: string
           id?: string
           role?: string
           status?: string
           token?: string
         }
         Update: {
+          circle_id?: string
           created_at?: string
           email?: string
           expires_at?: string
-          family_id?: string
           id?: string
           role?: string
           status?: string
@@ -143,18 +143,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "familyinvite_family_id_fkey"
-            columns: ["family_id"]
+            foreignKeyName: "circleinvite_circle_id_fkey"
+            columns: ["circle_id"]
             isOneToOne: false
-            referencedRelation: "family"
+            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
         ]
       }
-      familymember: {
+      circlemember: {
         Row: {
+          circle_id: string
           created_at: string
-          family_id: string
           id: string
           memorial_date: string | null
           memorial_message: string | null
@@ -163,8 +163,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          circle_id: string
           created_at?: string
-          family_id: string
           id?: string
           memorial_date?: string | null
           memorial_message?: string | null
@@ -173,8 +173,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          circle_id?: string
           created_at?: string
-          family_id?: string
           id?: string
           memorial_date?: string | null
           memorial_message?: string | null
@@ -184,14 +184,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "familymember_family_id_fkey"
-            columns: ["family_id"]
+            foreignKeyName: "circlemember_circle_id_fkey"
+            columns: ["circle_id"]
             isOneToOne: false
-            referencedRelation: "family"
+            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "familymember_user_id_fkey"
+            foreignKeyName: "circlemember_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
@@ -228,7 +228,7 @@ export type Database = {
           alt_text: string | null
           contributions_open: boolean
           created_at: string
-          family_id: string
+          circle_id: string
           group_id: string | null
           id: string
           is_collaborative: boolean
@@ -241,9 +241,9 @@ export type Database = {
         }
         Insert: {
           alt_text?: string | null
+          circle_id: string
           contributions_open?: boolean
           created_at?: string
-          family_id: string
           group_id?: string | null
           id?: string
           is_collaborative?: boolean
@@ -256,9 +256,9 @@ export type Database = {
         }
         Update: {
           alt_text?: string | null
+          circle_id?: string
           contributions_open?: boolean
           created_at?: string
-          family_id?: string
           group_id?: string | null
           id?: string
           is_collaborative?: boolean
@@ -271,10 +271,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "memory_family_id_fkey"
-            columns: ["family_id"]
+            foreignKeyName: "memory_circle_id_fkey"
+            columns: ["circle_id"]
             isOneToOne: false
-            referencedRelation: "family"
+            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
           {
@@ -431,9 +431,9 @@ export type Database = {
       }
       notificationpreference: {
         Row: {
+          circle_id: string
+          circle_muted: boolean
           email_digest_frequency: string
-          family_id: string
-          family_muted: boolean
           id: string
           push_enabled: boolean
           quiet_hours_end: string | null
@@ -441,9 +441,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          circle_id: string
+          circle_muted?: boolean
           email_digest_frequency?: string
-          family_id: string
-          family_muted?: boolean
           id?: string
           push_enabled?: boolean
           quiet_hours_end?: string | null
@@ -451,9 +451,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          circle_id?: string
+          circle_muted?: boolean
           email_digest_frequency?: string
-          family_id?: string
-          family_muted?: boolean
           id?: string
           push_enabled?: boolean
           quiet_hours_end?: string | null
@@ -462,10 +462,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "notificationpreference_family_id_fkey"
-            columns: ["family_id"]
+            foreignKeyName: "notificationpreference_circle_id_fkey"
+            columns: ["circle_id"]
             isOneToOne: false
-            referencedRelation: "family"
+            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
           {
@@ -541,8 +541,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_my_family_ids: { Args: never; Returns: string[] }
-      get_my_family_ids_as_role: {
+      get_my_circle_ids: { Args: never; Returns: string[] }
+      get_my_circle_ids_as_role: {
         Args: { required_roles: string[] }
         Returns: string[]
       }

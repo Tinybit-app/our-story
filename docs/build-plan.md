@@ -45,7 +45,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - Note: single focused pages — not a multi-page marketing site; lives inside the Nuxt app
 - Note: see design spec §Cold Discovery Strategy and §Pricing Page for full structure
 
-### Milestone 4: Onboarding & Family Creation
+### Milestone 4: Onboarding & Circle Creation
 - [x] 4.1 Onboarding flow (circle type picker → name → invite)
 - [x] 4.2 Invite API + email (Resend)
 - [x] 4.3 Invite acceptance flow (token → auto-join)
@@ -63,7 +63,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 6.2 Timeline UI (infinite scroll, skeleton states)
 
 ### Milestone 7: Memory Features
-- [ ] 7.1 Share to family (visibility toggle)
+- [ ] 7.1 Share to circle (visibility toggle)
 - [ ] 7.2 Milestones (picker + custom milestone)
 - [ ] 7.2.1 Milestone share card — after saving a milestone, offer a branded canvas card (Instagram Stories / WhatsApp format) with "Made with Our Story" CTA — primary acquisition channel for new parents
 - [ ] 7.3 Quick note (text-only memory, no photo required)
@@ -114,7 +114,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3 follow-up), auto-calculated from ChildProfile.date_of_birth
 - [ ] 12.3 First-memory anniversary (30-day cron)
 - [ ] 12.3.1 "Your first month" recap email — sent 30 days after first upload, shows memory count, milestone highlights, and top reaction; simpler than Year in Review but creates a felt delight moment early
-- [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Family table)
+- [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Circle table)
 
 ### Milestone 13: Pre-Launch Checklist
 - [ ] Auth: verify magic link on device 2 does not invalidate existing session on device 1 — test with two devices simultaneously; if it does, switch to PKCE flow (see design spec §Magic link session behavior)
@@ -476,7 +476,7 @@ try {
 }
 ```
 
-**Definition of done:** Security headers visible in browser DevTools Network tab. CORS `Access-Control-Allow-Origin` set to your domain. `npm audit --audit-level=high` runs in CI. Dependabot PRs enabled on GitHub.
+**Definition of done:** Security headers visible in browser DevTools Network tab. CORS `Access-Control-Allow-Origin` set to your domain. `pnpm audit --audit-level high` runs in CI. Dependabot PRs enabled on GitHub.
 
 ---
 
@@ -528,11 +528,11 @@ POSTHOG_HOST=https://analytics.our-story.tinybit.app  # or https://app.posthog.c
 | Event | Where to fire | Properties |
 |---|---|---|
 | `user_signed_up` | `confirm.vue` on first redirect | `{ method: "magic_link" \| "google" }` |
-| `family_created` | after Family insert | `{ circle_type }` |
-| `member_invited` | invite API success | `{ family_id }` |
-| `member_joined` | invite acceptance | `{ family_id }` |
+| `circle_created` | after Circle insert | `{ circle_type }` |
+| `member_invited` | invite API success | `{ circle_id }` |
+| `member_joined` | invite acceptance | `{ circle_id }` |
 | `memory_uploaded` | upload Edge Function response | `{ type: "photo" \| "video" \| "quick_note", visibility }` |
-| `memory_shared_to_family` | share API success | — |
+| `memory_shared_to_circle` | share API success | — |
 | `reaction_added` | reaction API success | `{ emoji }` |
 | `milestone_created` | memory insert with milestone | `{ is_custom }` |
 | `subscription_upgraded` | Stripe webhook | `{ plan: "plus" \| "pro" }` |
@@ -598,9 +598,9 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================================
--- FAMILIES (Circles)
+-- CIRCLES
 -- ============================================================
-CREATE TABLE public.Family (
+CREATE TABLE public.Circle (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   circle_type TEXT NOT NULL DEFAULT 'custom' CHECK (circle_type IN (
@@ -627,26 +627,26 @@ CREATE TABLE public.Family (
 );
 
 -- ============================================================
--- FAMILY MEMBERS
+-- CIRCLE MEMBERS
 -- ============================================================
-CREATE TABLE public.FamilyMember (
+CREATE TABLE public.CircleMember (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.User(id) ON DELETE CASCADE,
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member', 'caregiver')),
   memorial_status TEXT NOT NULL DEFAULT 'active' CHECK (memorial_status IN ('active', 'memorial')),
   memorial_date TIMESTAMPTZ,
   memorial_message TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (user_id, family_id)
+  UNIQUE (user_id, circle_id)
 );
 
 -- ============================================================
--- FAMILY INVITES
+-- CIRCLE INVITES
 -- ============================================================
-CREATE TABLE public.FamilyInvite (
+CREATE TABLE public.CircleInvite (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member', 'caregiver')),
@@ -684,8 +684,8 @@ CREATE TRIGGER on_user_created_storage
 CREATE TABLE public.Memory (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES public.User(id),
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
-  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family')),
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
+  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'circle')),
   -- NOTE: 'group' is intentionally absent from the CHECK constraint. The spec requires
   -- that 'group' is added only in the Phase 3 migration when Group/GroupMember tables ship.
   -- Adding it here would allow group-scoped memories to be inserted before any RLS policy exists.
@@ -700,7 +700,7 @@ CREATE TABLE public.Memory (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_memory_family_date ON public.Memory (family_id, memory_date DESC, id DESC);
+CREATE INDEX idx_memory_circle_date ON public.Memory (circle_id, memory_date DESC, id DESC);
 CREATE INDEX idx_memory_owner ON public.Memory (owner_user_id);
 
 -- ============================================================
@@ -751,13 +751,13 @@ CREATE TABLE public.MemoryReaction (
 CREATE TABLE public.NotificationPreference (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.User(id) ON DELETE CASCADE,
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   push_enabled BOOL NOT NULL DEFAULT true,
   email_digest_frequency TEXT NOT NULL DEFAULT 'weekly' CHECK (email_digest_frequency IN ('daily', 'weekly', 'off')),
   quiet_hours_start TIME,
   quiet_hours_end TIME,
-  family_muted BOOL NOT NULL DEFAULT false,
-  UNIQUE (user_id, family_id)
+  circle_muted BOOL NOT NULL DEFAULT false,
+  UNIQUE (user_id, circle_id)
 );
 
 -- ============================================================
@@ -791,7 +791,7 @@ CREATE TABLE public.FeatureFlag (
 -- ============================================================
 CREATE TABLE public.ChildProfile (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   date_of_birth DATE NOT NULL,
   avatar_media_id UUID REFERENCES public.MemoryMedia(id),
@@ -803,7 +803,7 @@ CREATE TABLE public.ChildProfile (
 -- ============================================================
 CREATE TABLE public.NewsletterRecipient (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   added_by UUID NOT NULL REFERENCES public.User(id),
   email TEXT NOT NULL,
   name TEXT,
@@ -815,26 +815,26 @@ CREATE TABLE public.NewsletterRecipient (
   last_clicked_at TIMESTAMPTZ,
   join_prompt_count INT NOT NULL DEFAULT 0,  -- frequency cap on join CTA shown to this recipient
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (family_id, email)
+  UNIQUE (circle_id, email)
 );
 
 -- ============================================================
 -- TRIGGERS
 -- ============================================================
 
--- Update Family timestamps, memory_count, and quiet_nudge_count on Memory insert
+-- Update Circle timestamps, memory_count, and quiet_nudge_count on Memory insert
 -- Used by: free trial activation, "Your First Month" email, quiet-circle nudge cron, weekly digest, On This Day threshold
 CREATE OR REPLACE FUNCTION public.handle_memory_insert()
 RETURNS TRIGGER AS $$
 BEGIN
-  UPDATE public.Family
+  UPDATE public.Circle
   SET
     first_memory_at   = COALESCE(first_memory_at, now()),  -- set once, never updated
     last_memory_at    = now(),                              -- updated on every insert
     memory_count      = memory_count + 1,                  -- incremented on every insert; avoids COUNT() in crons
     quiet_nudge_count = 0                                  -- reset on every upload — the circle is active again
                                                            -- allows a fresh 3-nudge window next time the circle goes quiet
-  WHERE id = NEW.family_id;
+  WHERE id = NEW.circle_id;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -860,9 +860,9 @@ Create `supabase/migrations/002_rls_policies.sql`:
 ```sql
 -- Enable RLS on all tables
 ALTER TABLE public.User ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.Family ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.FamilyMember ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.FamilyInvite ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.Circle ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.CircleMember ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.CircleInvite ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.AccountStorage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.Memory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.MemoryMedia ENABLE ROW LEVEL SECURITY;
@@ -876,12 +876,12 @@ ALTER TABLE public.NotificationPreference ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users can read own profile"
   ON public.User FOR SELECT USING (id = auth.uid());
 
-CREATE POLICY "users can read family members profiles"
+CREATE POLICY "users can read circle members profiles"
   ON public.User FOR SELECT USING (
     id IN (
-      SELECT fm.user_id FROM public.FamilyMember fm
-      WHERE fm.family_id IN (
-        SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid()
+      SELECT fm.user_id FROM public.CircleMember fm
+      WHERE fm.circle_id IN (
+        SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid()
       )
     )
   );
@@ -890,48 +890,48 @@ CREATE POLICY "users can update own profile"
   ON public.User FOR UPDATE USING (id = auth.uid());
 
 -- ============================================================
--- FAMILY
+-- CIRCLE
 -- ============================================================
-CREATE POLICY "members can read their families"
-  ON public.Family FOR SELECT USING (
-    id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+CREATE POLICY "members can read their circles"
+  ON public.Circle FOR SELECT USING (
+    id IN (SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid())
   );
 
-CREATE POLICY "authenticated users can create families"
-  ON public.Family FOR INSERT WITH CHECK (created_by = auth.uid());
+CREATE POLICY "authenticated users can create circles"
+  ON public.Circle FOR INSERT WITH CHECK (created_by = auth.uid());
 
-CREATE POLICY "owner can update family"
-  ON public.Family FOR UPDATE USING (
+CREATE POLICY "owner can update circle"
+  ON public.Circle FOR UPDATE USING (
     id IN (
-      SELECT family_id FROM public.FamilyMember
+      SELECT circle_id FROM public.CircleMember
       WHERE user_id = auth.uid() AND role = 'owner'
     )
   );
 
 -- ============================================================
--- FAMILY MEMBER
+-- CIRCLE MEMBER
 -- ============================================================
-CREATE POLICY "members can read family membership"
-  ON public.FamilyMember FOR SELECT USING (
-    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+CREATE POLICY "members can read circle membership"
+  ON public.CircleMember FOR SELECT USING (
+    circle_id IN (SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid())
   );
--- NOTE: caregivers can read family membership (needed to show parent names) but must only
+-- NOTE: caregivers can read circle membership (needed to show parent names) but must only
 -- see first_name. RLS cannot do column-level filtering, so the member-list API route must
 -- check the requesting user's role and return first_name only when role = 'caregiver'.
--- Enforce this in server/api/families/[id]/members.get.ts, not via RLS.
+-- Enforce this in server/api/circles/[id]/members.get.ts, not via RLS.
 
 CREATE POLICY "owner and admin can insert members"
-  ON public.FamilyMember FOR INSERT WITH CHECK (
-    family_id IN (
-      SELECT family_id FROM public.FamilyMember
+  ON public.CircleMember FOR INSERT WITH CHECK (
+    circle_id IN (
+      SELECT circle_id FROM public.CircleMember
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   );
 
 CREATE POLICY "owner and admin can remove members"
-  ON public.FamilyMember FOR DELETE USING (
-    family_id IN (
-      SELECT family_id FROM public.FamilyMember
+  ON public.CircleMember FOR DELETE USING (
+    circle_id IN (
+      SELECT circle_id FROM public.CircleMember
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   );
@@ -945,11 +945,11 @@ CREATE POLICY "users can read own storage"
 -- ============================================================
 -- MEMORY
 -- ============================================================
-CREATE POLICY "members can read family memories"
+CREATE POLICY "members can read circle memories"
   ON public.Memory FOR SELECT USING (
-    -- family memories: must be a member
-    (visibility = 'family' AND family_id IN (
-      SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid()
+    -- circle memories: must be a member
+    (visibility = 'circle' AND circle_id IN (
+      SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid()
     ))
     OR
     -- private memories: only the owner
@@ -959,7 +959,7 @@ CREATE POLICY "members can read family memories"
 CREATE POLICY "members can insert memories"
   ON public.Memory FOR INSERT WITH CHECK (
     owner_user_id = auth.uid() AND
-    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+    circle_id IN (SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid())
   );
 
 CREATE POLICY "owner can update own memory"
@@ -968,10 +968,10 @@ CREATE POLICY "owner can update own memory"
 CREATE POLICY "owner can delete own memory"
   ON public.Memory FOR DELETE USING (owner_user_id = auth.uid());
 
-CREATE POLICY "admin can delete any memory in their family"
+CREATE POLICY "admin can delete any memory in their circle"
   ON public.Memory FOR DELETE USING (
-    family_id IN (
-      SELECT family_id FROM public.FamilyMember
+    circle_id IN (
+      SELECT circle_id FROM public.CircleMember
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   );
@@ -981,8 +981,9 @@ CREATE POLICY "admin can delete any memory in their family"
 -- policy accidentally grants broader SELECT access to Memory rows, private memories are still protected.
 -- See design spec §RLS enforcement §Notes: "Private memories only readable by owner_user_id — enforced via RESTRICTIVE policy."
 CREATE POLICY "private memories owner only"
-  ON public.Memory FOR SELECT
+  ON public.Memory
   AS RESTRICTIVE
+  FOR SELECT
   USING (visibility != 'private' OR owner_user_id = auth.uid());
 
 -- RESTRICTIVE: blocks caregivers from private memories regardless of any other permissive policy.
@@ -991,15 +992,16 @@ CREATE POLICY "private memories owner only"
 -- Phase 1 scope: caregiver role ships in Phase 1; this policy must ship with it.
 -- See design spec §Caregiver Mode for full rationale.
 CREATE POLICY "caregiver cannot read private memories"
-  ON public.Memory FOR SELECT
+  ON public.Memory
   AS RESTRICTIVE
+  FOR SELECT
   USING (
     NOT (
       visibility = 'private'
       AND EXISTS (
-        SELECT 1 FROM public.FamilyMember
+        SELECT 1 FROM public.CircleMember
         WHERE user_id = auth.uid() AND role = 'caregiver'
-          AND family_id = Memory.family_id
+          AND circle_id = Memory.circle_id
       )
     )
   );
@@ -1058,19 +1060,19 @@ CREATE POLICY "users can remove own reactions"
 -- ============================================================
 ALTER TABLE public.ChildProfile ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "members can read child profiles in their families"
+CREATE POLICY "members can read child profiles in their circles"
   ON public.ChildProfile FOR SELECT USING (
-    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+    circle_id IN (SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid())
   );
 
 CREATE POLICY "members can insert child profiles"
   ON public.ChildProfile FOR INSERT WITH CHECK (
-    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+    circle_id IN (SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid())
   );
 
-CREATE POLICY "members can update child profiles in their families"
+CREATE POLICY "members can update child profiles in their circles"
   ON public.ChildProfile FOR UPDATE USING (
-    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+    circle_id IN (SELECT circle_id FROM public.CircleMember WHERE user_id = auth.uid())
   );
 
 -- ============================================================
@@ -1080,8 +1082,8 @@ ALTER TABLE public.NewsletterRecipient ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "owner and admin can manage newsletter recipients"
   ON public.NewsletterRecipient FOR ALL USING (
-    family_id IN (
-      SELECT family_id FROM public.FamilyMember
+    circle_id IN (
+      SELECT circle_id FROM public.CircleMember
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   );
@@ -1107,30 +1109,30 @@ SELECT is(
   'user_a cannot read user_b private memories'
 );
 
--- Test 2: user can read family memory they belong to
+-- Test 2: user can read circle memory they belong to
 -- (set up fixture data in test, verify count > 0)
 
--- Test 3: user cannot read family they don't belong to
+-- Test 3: user cannot read circle they don't belong to
 SELECT is(
-  (SELECT count(*)::int FROM public.Family
-   WHERE id = 'other-family-uuid'),
+  (SELECT count(*)::int FROM public.Circle
+   WHERE id = 'other-circle-uuid'),
   0,
-  'user cannot read family they are not a member of'
+  'user cannot read circle they are not a member of'
 );
 
 -- Test 4: member cannot invite (only owner/admin can)
--- Test 5: owner can delete any memory in their family
+-- Test 5: owner can delete any memory in their circle
 -- Test 6: platform_role is not readable by other users
 
--- Test 7: non-owner family member cannot read another member's private memory (RESTRICTIVE policy)
+-- Test 7: non-owner circle member cannot read another member's private memory (RESTRICTIVE policy)
 -- This guards against future permissive policy additions accidentally exposing private memories.
 SET LOCAL request.jwt.claims TO '{"sub": "member-uuid"}';
 SELECT is(
   (SELECT count(*)::int FROM public.Memory
-   WHERE family_id = 'family-1-uuid' AND visibility = 'private'
+   WHERE circle_id = 'circle-1-uuid' AND visibility = 'private'
      AND owner_user_id != 'member-uuid'),
   0,
-  'family member cannot read another member private memories (RESTRICTIVE policy)'
+  'circle member cannot read another member private memories (RESTRICTIVE policy)'
 );
 
 -- Test 8: caregiver cannot read private memories (RESTRICTIVE policy)
@@ -1138,17 +1140,17 @@ SELECT is(
 SET LOCAL request.jwt.claims TO '{"sub": "caregiver-uuid"}';
 SELECT is(
   (SELECT count(*)::int FROM public.Memory
-   WHERE family_id = 'family-1-uuid' AND visibility = 'private'),
+   WHERE circle_id = 'circle-1-uuid' AND visibility = 'private'),
   0,
   'caregiver cannot read private memories'
 );
 
--- Test 9: caregiver CAN read family-visibility memories
+-- Test 9: caregiver CAN read circle-visibility memories
 SELECT isnt(
   (SELECT count(*)::int FROM public.Memory
-   WHERE family_id = 'family-1-uuid' AND visibility = 'family'),
+   WHERE circle_id = 'circle-1-uuid' AND visibility = 'circle'),
   0,
-  'caregiver can read family-visibility memories'
+  'caregiver can read circle-visibility memories'
 );
 
 SELECT * FROM finish();
@@ -1541,14 +1543,14 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401 })
 
-  // Block if user is an owner of any family
-  const { count: ownedFamilies } = await supabase
-    .from("FamilyMember")
+  // Block if user is an owner of any circle
+  const { count: ownedCircles } = await supabase
+    .from("CircleMember")
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("role", "owner")
 
-  if ((ownedFamilies ?? 0) > 0) {
+  if ((ownedCircles ?? 0) > 0) {
     throw createError({
       statusCode: 400,
       message: "Transfer ownership or delete your circles before deleting your account.",
@@ -1584,7 +1586,7 @@ for (const user of expiredUsers) {
   // 2. Update family memories: owner_user_id stays, but display name becomes "Deleted Member"
   //    (no action needed — RLS + soft delete on User handles this)
 
-  // 3. Delete FamilyMember records, personal Memory rows, AccountStorage
+  // 3. Delete CircleMember records, personal Memory rows, AccountStorage
   //    Cascade handles most of this via ON DELETE CASCADE
 
   // 4. Hard delete User row (triggers cascade)
@@ -1651,10 +1653,10 @@ export default defineEventHandler(async (event) => {
 // 1. Mark job as processing
 await supabase.from("ExportJob").update({ status: "processing" }).eq("id", job.id)
 
-// 2. Fetch all memories for user — join Family for family_name, User for uploaded_by
+// 2. Fetch all memories for user — join Circle for circle_name, User for uploaded_by
 const { data: memories } = await supabase
   .from("Memory")
-  .select("*, MemoryMedia(*), Family!family_id(name), User!owner_user_id(first_name, last_name)")
+  .select("*, MemoryMedia(*), Circle!circle_id(name), User!owner_user_id(first_name, last_name)")
   .eq("owner_user_id", job.user_id)
 
 // 3. Build zip: /YYYY-MM/memory-id/photo.jpg + metadata.json per memory
@@ -1671,7 +1673,7 @@ for (const memory of memories ?? []) {
     note: memory.note,
     milestone_label: memory.milestone_label,
     visibility: memory.visibility,
-    family_name: memory.Family?.name ?? null,  // per design spec export metadata
+    circle_name: memory.Circle?.name ?? null,  // per design spec export metadata
     uploaded_by: uploadedBy,                   // per design spec export metadata
   }
   folder.file("metadata.json", JSON.stringify(meta, null, 2))
@@ -1724,7 +1726,7 @@ if (userEmail) {
 
 ### Step 3.7 — Circle deletion (owner-only)
 
-Warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30. `Family.deleted_at` and `Family.deletion_initiated_by` are already in the initial schema — no new migration needed.
+Warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30. `Circle.deleted_at` and `Circle.deletion_initiated_by` are already in the initial schema — no new migration needed.
 
 **`pages/circle/[id]/settings/delete.vue`** — two-phase confirmation UI:
 
@@ -1782,15 +1784,15 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401, message: "Unauthorized" })
 
-  const familyId = z.string().uuid().parse(getRouterParam(event, "id"))
+  const circleId = z.string().uuid().parse(getRouterParam(event, "id"))
   const supabase = await serverSupabaseServiceRole(event)
 
-  // Verify caller is the circle owner — ownership lives in FamilyMember.role, NOT on Family
-  // Family has no owner_user_id column; the owner is the FamilyMember with role = "owner"
+  // Verify caller is the circle owner — ownership lives in CircleMember.role, NOT on Circle
+  // Circle has no owner_user_id column; the owner is the CircleMember with role = "owner"
   const { data: ownerMembership } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("role, User!user_id(first_name, last_name)")
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .eq("user_id", user.id)
     .single()
 
@@ -1801,31 +1803,31 @@ export default defineEventHandler(async (event) => {
     ? `${ownerMembership.User.first_name ?? ""} ${ownerMembership.User.last_name ?? ""}`.trim()
     : "The circle owner"
 
-  const { data: family } = await supabase
-    .from("Family")
+  const { data: circle } = await supabase
+    .from("Circle")
     .select("id, name, deleted_at")
-    .eq("id", familyId)
+    .eq("id", circleId)
     .single()
 
-  if (!family) throw createError({ statusCode: 404 })
+  if (!circle) throw createError({ statusCode: 404 })
 
-  if (family.deleted_at)
+  if (circle.deleted_at)
     throw createError({ statusCode: 409, message: "Circle is already scheduled for deletion" })
 
   // Soft-delete: set deleted_at and record initiating owner
   await supabase
-    .from("Family")
+    .from("Circle")
     .update({
       deleted_at: new Date().toISOString(),
       deletion_initiated_by: user.id,
     })
-    .eq("id", familyId)
+    .eq("id", circleId)
 
   // Email all active members (Day 1 notification)
   const { data: members } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("user_id, User!user_id(email, first_name, last_name)")
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .eq("memorial_status", "active")
 
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -1833,8 +1835,8 @@ export default defineEventHandler(async (event) => {
     await resend.emails.send({
       from: "Our Story <hello@our-story.tinybit.app>",
       to: member.User.email,
-      subject: `${family.name} has been deleted — export your photos within 30 days`,
-      html: `<p>${ownerName} has deleted ${family.name}. You have 30 days to export your own photos before they're gone. <a href="${process.env.NUXT_PUBLIC_SITE_URL}/circle/${familyId}/export">Export my photos →</a></p>`,
+      subject: `${circle.name} has been deleted — export your photos within 30 days`,
+      html: `<p>${ownerName} has deleted ${circle.name}. You have 30 days to export your own photos before they're gone. <a href="${process.env.NUXT_PUBLIC_SITE_URL}/circle/${circleId}/export">Export my photos →</a></p>`,
     })
   }
 
@@ -1855,25 +1857,25 @@ const supabase = createClient(
 Deno.serve(async () => {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: families } = await supabase
-    .from("Family")
+  const { data: circles } = await supabase
+    .from("Circle")
     .select("id")
     .not("deleted_at", "is", null)
     .lte("deleted_at", thirtyDaysAgo)
 
-  for (const family of families ?? []) {
+  for (const circle of circles ?? []) {
     // Delete storage objects for all memories
     const { data: media } = await supabase
       .from("MemoryMedia")
-      .select("storage_path")
-      .eq("family_id", family.id)
+      .select("storage_path, Memory!memory_id(circle_id)")
+      .eq("Memory.circle_id", circle.id)
 
     for (const item of media ?? []) {
       await supabase.storage.from("memories").remove([item.storage_path])
     }
 
-    // Hard delete cascades to Memory, MemoryMedia, FamilyMember via ON DELETE CASCADE
-    await supabase.from("Family").delete().eq("id", family.id)
+    // Hard delete cascades to Memory, MemoryMedia, CircleMember via ON DELETE CASCADE
+    await supabase.from("Circle").delete().eq("id", circle.id)
   }
 
   return new Response("ok")
@@ -1884,23 +1886,23 @@ Deno.serve(async () => {
 
 ```ts
 // server/api/circles/[id]/restore.post.ts
-// Verify ownership via FamilyMember (Family has no owner_user_id column)
+// Verify ownership via CircleMember (Circle has no owner_user_id column)
 const { data: ownerCheck } = await supabase
-  .from("FamilyMember")
+  .from("CircleMember")
   .select("role")
-  .eq("family_id", familyId)
+  .eq("circle_id", circleId)
   .eq("user_id", user.id)
   .single()
 if (!ownerCheck || ownerCheck.role !== "owner")
   throw createError({ statusCode: 403 })
 
 await supabase
-  .from("Family")
+  .from("Circle")
   .update({ deleted_at: null, deletion_initiated_by: null })
-  .eq("id", familyId)
+  .eq("id", circleId)
 ```
 
-**RLS:** Add a filter to every `Family` SELECT policy: `.is("deleted_at", null)` — soft-deleted circles are invisible to all members immediately.
+**RLS:** Add a filter to every `Circle` SELECT policy: `.is("deleted_at", null)` — soft-deleted circles are invisible to all members immediately.
 
 **Definition of done:** Owner taps "Delete circle" → sees memory count and member count → types circle name → circle disappears from all members' dashboards immediately → all members receive deletion email with export link → after 30 days the daily cron deletes all media and DB rows → circle cannot be restored after day 30.
 
@@ -1918,38 +1920,38 @@ The Step 3.6 export function queries `owner_user_id = job.user_id`, which export
 // 1. Mark job as processing
 await supabase.from("ExportJob").update({ status: "processing" }).eq("id", job.id)
 
-// 2. Determine scope: owned families → full circle; non-owned families → own uploads only
+// 2. Determine scope: owned circles → full circle; non-owned circles → own uploads only
 const { data: memberships } = await supabase
-  .from("FamilyMember")
-  .select("family_id, role")
+  .from("CircleMember")
+  .select("circle_id, role")
   .eq("user_id", job.user_id)
   .eq("memorial_status", "active")
 
-const ownedFamilyIds = (memberships ?? [])
+const ownedCircleIds = (memberships ?? [])
   .filter(m => m.role === "owner")
-  .map(m => m.family_id)
+  .map(m => m.circle_id)
 
-// 3a. Full-circle export for owned families — all contributors, family name + attribution in metadata
+// 3a. Full-circle export for owned circles — all contributors, circle name + attribution in metadata
 let circleMemories: any[] = []
-if (ownedFamilyIds.length > 0) {
+if (ownedCircleIds.length > 0) {
   const { data } = await supabase
     .from("Memory")
-    .select("*, MemoryMedia(*), User!owner_user_id(first_name, last_name), Family!family_id(name)")
-    .in("family_id", ownedFamilyIds)
+    .select("*, MemoryMedia(*), User!owner_user_id(first_name, last_name), Circle!circle_id(name)")
+    .in("circle_id", ownedCircleIds)
   circleMemories = data ?? []
 }
 
-// 3b. Own-uploads-only for families where the user is not the owner
-// Include Family and User joins so metadata.json has family_name + uploaded_by (per design spec)
-// If ownedFamilyIds is empty, this returns all of the user's own memories (no exclusion needed)
+// 3b. Own-uploads-only for circles where the user is not the owner
+// Include Circle and User joins so metadata.json has circle_name + uploaded_by (per design spec)
+// If ownedCircleIds is empty, this returns all of the user's own memories (no exclusion needed)
 let ownMemoriesQuery = supabase
   .from("Memory")
-  .select("*, MemoryMedia(*), Family!family_id(name), User!owner_user_id(first_name, last_name)")
+  .select("*, MemoryMedia(*), Circle!circle_id(name), User!owner_user_id(first_name, last_name)")
   .eq("owner_user_id", job.user_id)
 
-if (ownedFamilyIds.length > 0) {
+if (ownedCircleIds.length > 0) {
   // Exclude memories already captured in the full-circle export above
-  ownMemoriesQuery = ownMemoriesQuery.not("family_id", "in", `(${ownedFamilyIds.join(",")})`)
+  ownMemoriesQuery = ownMemoriesQuery.not("circle_id", "in", `(${ownedCircleIds.join(",")})`)
 }
 const { data: ownMemories } = await ownMemoriesQuery
 
@@ -1957,13 +1959,13 @@ const { data: ownMemories } = await ownMemoriesQuery
 const JSZip = (await import("jszip")).default
 const zip = new JSZip()
 
-// Owner section: organised by circle → date → memory; includes family_name + uploaded_by
+// Owner section: organised by circle → date → memory; includes circle_name + uploaded_by
 for (const memory of circleMemories) {
   const uploadedBy = memory.User
     ? `${memory.User.first_name ?? ""} ${memory.User.last_name ?? ""}`.trim()
     : "Unknown"
   const folder = zip.folder(
-    `circles/${memory.family_id}/${memory.memory_date.slice(0, 7)}/${memory.id}`
+    `circles/${memory.circle_id}/${memory.memory_date.slice(0, 7)}/${memory.id}`
   )!
   folder.file(
     "metadata.json",
@@ -1973,7 +1975,7 @@ for (const memory of circleMemories) {
         note: memory.note,
         milestone_label: memory.milestone_label,
         visibility: memory.visibility,
-        family_name: memory.Family?.name ?? null,  // per design spec export metadata
+        circle_name: memory.Circle?.name ?? null,  // per design spec export metadata
         uploaded_by: uploadedBy,                    // per design spec export metadata
       },
       null,
@@ -2007,7 +2009,7 @@ for (const memory of ownMemories ?? []) {
         note: memory.note,
         milestone_label: memory.milestone_label,
         visibility: memory.visibility,
-        family_name: memory.Family?.name ?? null,  // per design spec export metadata
+        circle_name: memory.Circle?.name ?? null,  // per design spec export metadata
         uploaded_by: uploadedBy,                    // per design spec export metadata
       },
       null,
@@ -2062,11 +2064,11 @@ if (userEmail) {
 
 > **Note:** `process-export` in Step 3.6 ends after step 4 (zip write + email). Replace that body with the implementation above — the Step 3.6 export API endpoint (`server/api/account/export.post.ts`) is unchanged; only the Edge Function body changes.
 
-**Definition of done:** Member requests export → zip contains only their own uploads in `my-memories/`. Owner requests export → zip contains `circles/<family-id>/` folders with every member's memories, each `metadata.json` includes `contributor_name`. Both paths confirmed manually before launch.
+**Definition of done:** Member requests export → zip contains only their own uploads in `my-memories/`. Owner requests export → zip contains `circles/<circle-id>/` folders with every member's memories, each `metadata.json` includes `contributor_name`. Both paths confirmed manually before launch.
 
 ---
 
-## Milestone 4: Onboarding & Family Creation
+## Milestone 4: Onboarding & Circle Creation
 
 ### Step 4.1 — Onboarding flow pages
 
@@ -2087,9 +2089,9 @@ if (user.value) {
     return
   }
 
-  // Step 2: check for existing family membership
+  // Step 2: check for existing circle membership
   const { data: membership } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("id")
     .eq("user_id", user.value.id)
     .limit(1)
@@ -2228,7 +2230,7 @@ function next() {
       autofocus
     />
 
-    <button @click="createFamily" :disabled="!name || loading" class="w-full bg-black text-white rounded-lg py-3">
+    <button @click="createCircle" :disabled="!name || loading" class="w-full bg-black text-white rounded-lg py-3">
       {{ loading ? "Creating..." : "Create circle" }}
     </button>
   </div>
@@ -2252,7 +2254,7 @@ const placeholder = computed(() => {
   return map[circleType.value] ?? "Our Circle"
 })
 
-async function createFamily() {
+async function createCircle() {
   loading.value = true
 
   // Enforce tier-based circle ownership limit (Free = 1 circle owned)
@@ -2264,7 +2266,7 @@ async function createFamily() {
 
   if (userRecord?.subscription_status === "free") {
     const { count } = await supabase
-      .from("FamilyMember")
+      .from("CircleMember")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.value!.id)
       .eq("role", "owner")
@@ -2276,22 +2278,22 @@ async function createFamily() {
     }
   }
 
-  const { data: family, error } = await supabase
-    .from("Family")
+  const { data: circle, error } = await supabase
+    .from("Circle")
     .insert({ name: name.value, circle_type: circleType.value, created_by: user.value!.id })
     .select()
     .single()
 
-  if (error || !family) { loading.value = false; return }
+  if (error || !circle) { loading.value = false; return }
 
   // Insert owner membership
-  await supabase.from("FamilyMember").insert({
+  await supabase.from("CircleMember").insert({
     user_id: user.value!.id,
-    family_id: family.id,
+    circle_id: circle.id,
     role: "owner",
   })
 
-  useState("currentFamilyId").value = family.id
+  useState("currentCircleId").value = circle.id
 
   if (circleType.value === "solo") {
     router.push("/")  // Skip invite step for solo mode — persistent CTA shown on timeline instead
@@ -2304,7 +2306,7 @@ async function createFamily() {
 ```
 
 **Solo mode UX rules** (applies when `circle_type = "solo"`):
-- All memories default to `visibility: "private"` — no family members to share with yet
+- All memories default to `visibility: "private"` — no circle members to share with yet
 - Collaborative features (challenges, guest uploads) are hidden until first member joins
 - On This Day works identically — daily nostalgia for solo users is just as valuable
 - Timeline shows a persistent soft CTA below the upload button: "Invite someone to your story →"
@@ -2312,17 +2314,17 @@ async function createFamily() {
 
 **Solo-to-circle upgrade** — fires when the first member accepts an invite:
 
-`server/api/invites/[token]/accept.post.ts` addition (after FamilyMember insert):
+`server/api/invites/[token]/accept.post.ts` addition (after CircleMember insert):
 ```ts
 // Check if this was previously a solo circle with only one member (the owner)
 const { count: memberCount } = await supabase
-  .from("FamilyMember")
+  .from("CircleMember")
   .select("*", { count: "exact", head: true })
-  .eq("family_id", invite.family_id)
+  .eq("circle_id", invite.circle_id)
 
 if (memberCount === 2) {
   // First member just joined — return upgrade flag so client can show prompt
-  return { ok: true, familyId: invite.family_id, firstMember: true }
+  return { ok: true, circleId: invite.circle_id, firstMember: true }
 }
 ```
 
@@ -2330,9 +2332,9 @@ if (memberCount === 2) {
 ```ts
 const result = await $fetch(`/api/invites/${token}/accept`, { method: "POST" })
 inviteCookie.value = null
-if (result.familyId) {
+if (result.circleId) {
   const welcomeQuery = result.firstMember ? "&firstMember=1" : "&welcome=1"
-  router.push(`/?family=${result.familyId}${welcomeQuery}`)
+  router.push(`/?circle=${result.circleId}${welcomeQuery}`)
 }
 ```
 
@@ -2374,13 +2376,13 @@ if (result.familyId) {
 const email = ref("")
 const loading = ref(false)
 const router = useRouter()
-const familyId = useState("currentFamilyId")
+const circleId = useState("currentCircleId")
 
 async function sendInvite() {
   loading.value = true
-  await $fetch("/api/families/invite", {
+  await $fetch("/api/circles/invite", {
     method: "POST",
-    body: { familyId: familyId.value, email: email.value },
+    body: { circleId: circleId.value, email: email.value },
     // role defaults to "member" — onboarding invite is always a member invite.
     // Caregiver and admin invites are sent from circle settings (post-onboarding),
     // where the invite form includes a role picker: "Member" | "Admin" | "Caregiver".
@@ -2396,7 +2398,7 @@ function skip() { router.push("/onboarding/upload") }
 
 ### Step 4.2 — Invite API + email
 
-`server/api/families/invite.post.ts`:
+`server/api/circles/invite.post.ts`:
 ```ts
 import { Resend } from "resend"
 import { serverSupabaseClient, serverSupabaseServiceRole } from "#supabase/server"
@@ -2404,10 +2406,10 @@ import { serverSupabaseClient, serverSupabaseServiceRole } from "#supabase/serve
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
-  const { familyId, email, role = "member" } = await readBody(event)
+  const { circleId, email, role = "member" } = await readBody(event)
   // role: "admin" | "member" | "caregiver" — defaults to "member"
   // Caregiver invites are a separate UI path (circle settings → "Invite caregiver") but use this same endpoint.
-  // The acceptance flow (Step 4.3) reads invite.role and sets FamilyMember.role — so the role set here IS the role they join with.
+  // The acceptance flow (Step 4.3) reads invite.role and sets CircleMember.role — so the role set here IS the role they join with.
 
   if (!user) throw createError({ statusCode: 401 })
 
@@ -2419,10 +2421,10 @@ export default defineEventHandler(async (event) => {
 
   // Verify sender is owner or admin
   const { data: membership } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("role")
     .eq("user_id", user.id)
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .single()
 
   if (!membership || !["owner", "admin"].includes(membership.role)) {
@@ -2435,48 +2437,48 @@ export default defineEventHandler(async (event) => {
   }
 
   // Enforce per-tier member cap (Free = 10, Plus = 20, Pro = unlimited)
-  const { data: family } = await supabase
-    .from("Family")
+  const { data: circle } = await supabase
+    .from("Circle")
     .select("subscription_status")
-    .eq("id", familyId)
+    .eq("id", circleId)
     .single()
 
   const tierMemberCap: Record<string, number> = { free: 10, plus: 20, pro: Infinity, grace: 20 }
-  const maxMembers = tierMemberCap[family?.subscription_status ?? "free"] ?? 10
+  const maxMembers = tierMemberCap[circle?.subscription_status ?? "free"] ?? 10
 
   const { count: currentMemberCount } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("*", { count: "exact", head: true })
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
 
   if ((currentMemberCount ?? 0) >= maxMembers) {
-    const upgradeMsg = family?.subscription_status === "plus"
+    const upgradeMsg = circle?.subscription_status === "plus"
       ? "This circle has reached the 20-member Plus limit. Upgrade to Pro for unlimited members."
       : "This circle has reached the 10-member Free limit. Upgrade to Plus for up to 20 members."
     throw createError({ statusCode: 403, message: upgradeMsg })
   }
 
-  // Check max pending invites (10 per family)
+  // Check max pending invites (10 per circle)
   const { count } = await supabase
-    .from("FamilyInvite")
+    .from("CircleInvite")
     .select("*", { count: "exact", head: true })
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .eq("status", "pending")
 
   if ((count ?? 0) >= 10) {
-    throw createError({ statusCode: 429, message: "Max 10 pending invites per family" })
+    throw createError({ statusCode: 429, message: "Max 10 pending invites per circle" })
   }
 
-  // Create invite — preserve role so Step 4.3 acceptance inserts the correct FamilyMember.role
+  // Create invite — preserve role so Step 4.3 acceptance inserts the correct CircleMember.role
   const { data: invite } = await supabase
-    .from("FamilyInvite")
-    .insert({ family_id: familyId, email, role })
+    .from("CircleInvite")
+    .insert({ circle_id: circleId, email, role })
     .select()
     .single()
 
-  // Fetch family name + sender name for email
-  // Note: uses a separate variable (familyForEmail) — `family` is already declared above for subscription_status
-  const { data: familyForEmail } = await supabase.from("Family").select("name").eq("id", familyId).single()
+  // Fetch circle name + sender name for email
+  // Note: uses a separate variable (circleForEmail) — `circle` is already declared above for subscription_status
+  const { data: circleForEmail } = await supabase.from("Circle").select("name").eq("id", circleId).single()
   const { data: sender } = await supabase.from("User").select("first_name, last_name").eq("id", user.id).single()
   const senderName = sender ? `${sender.first_name} ${sender.last_name}`.trim() : "Someone"
 
@@ -2488,7 +2490,7 @@ export default defineEventHandler(async (event) => {
     subject: `${senderName} started your story on Our Story`,
     html: buildInviteEmail({
       senderName,
-      circleName: familyForEmail?.name ?? "a circle",
+      circleName: circleForEmail?.name ?? "a circle",
       inviteUrl: `${process.env.APP_URL}/invite/${invite!.token}`,
     }),
   })
@@ -2545,8 +2547,8 @@ onMounted(async () => {
 async function acceptInvite() {
   const result = await $fetch(`/api/invites/${token}/accept`, { method: "POST" })
   inviteCookie.value = null
-  if (result.familyId) {
-    router.push(`/?family=${result.familyId}&welcome=1`)
+  if (result.circleId) {
+    router.push(`/?circle=${result.circleId}&welcome=1`)
   }
 }
 </script>
@@ -2568,7 +2570,7 @@ export default defineEventHandler(async (event) => {
   if (!user) throw createError({ statusCode: 401 })
 
   const { data: invite } = await supabase
-    .from("FamilyInvite")
+    .from("CircleInvite")
     .select("*")
     .eq("token", token)
     .eq("status", "pending")
@@ -2576,20 +2578,20 @@ export default defineEventHandler(async (event) => {
 
   if (!invite) throw createError({ statusCode: 410, message: "invite_expired" })
   if (new Date(invite.expires_at) < new Date()) {
-    await supabase.from("FamilyInvite").update({ status: "expired" }).eq("id", invite.id)
+    await supabase.from("CircleInvite").update({ status: "expired" }).eq("id", invite.id)
     throw createError({ statusCode: 410, message: "invite_expired" })
   }
 
   // Add member
-  await supabase.from("FamilyMember").upsert({
+  await supabase.from("CircleMember").upsert({
     user_id: user.id,
-    family_id: invite.family_id,
+    circle_id: invite.circle_id,
     role: invite.role,
   })
 
-  await supabase.from("FamilyInvite").update({ status: "accepted" }).eq("id", invite.id)
+  await supabase.from("CircleInvite").update({ status: "accepted" }).eq("id", invite.id)
 
-  return { ok: true, familyId: invite.family_id }
+  return { ok: true, circleId: invite.circle_id }
 })
 ```
 
@@ -2604,10 +2606,10 @@ export default defineEventHandler(async (event) => {
         Welcome to {{ familyName }}!
       </h1>
       <p class="text-sm text-muted-foreground mb-6">
-        Here's what the family has been sharing.
+        Here's what the circle has been sharing.
       </p>
 
-      <!-- 3 most recent family memories as a preview carousel -->
+      <!-- 3 most recent circle memories as a preview carousel -->
       <div class="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
         <div
           v-for="memory in recentMemories"
@@ -2651,7 +2653,7 @@ export default defineEventHandler(async (event) => {
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ familyId: string; familyName: string }>()
+const props = defineProps<{ circleId: string; circleName: string }>()
 const emit = defineEmits<{ dismiss: [] }>()
 
 const show = ref(true)
@@ -2662,7 +2664,7 @@ const recentMilestone = computed(() =>
 
 onMounted(async () => {
   const data = await $fetch("/api/timeline", {
-    query: { familyId: props.familyId, limit: 3 }
+    query: { circleId: props.circleId, limit: 3 }
   })
   recentMemories.value = data.memories
 })
@@ -2687,14 +2689,14 @@ function formatDate(date: string) {
 Wire into `pages/index.vue`:
 ```vue
 <InvitedMemberWelcome
-  v-if="route.query.welcome === '1' && currentFamily"
-  :family-id="currentFamilyId"
-  :family-name="currentFamily.name"
+  v-if="route.query.welcome === '1' && currentCircle"
+  :circle-id="currentCircleId"
+  :circle-name="currentCircle.name"
   @dismiss="clearWelcomeQuery"
 />
 ```
 
-**Definition of done:** Invite email arrives, clicking link on a new device → login → auto-joins family → sees welcome screen with 3 most recent memories and any milestone highlights → "Add your first memory" CTA → lands on upload flow.
+**Definition of done:** Invite email arrives, clicking link on a new device → login → auto-joins circle → sees welcome screen with 3 most recent memories and any milestone highlights → "Add your first memory" CTA → lands on upload flow.
 
 ---
 
@@ -2860,7 +2862,7 @@ Deno.serve(async (req) => {
 
   const formData = await req.formData()
   const file = formData.get("file") as File
-  const familyId = formData.get("familyId") as string
+  const circleId = formData.get("circleId") as string
   const note = formData.get("note") as string | null
   const memoryDate = formData.get("memoryDate") as string | null
 
@@ -2892,21 +2894,21 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Verify user is a member of this family
+  // Verify user is a member of this circle
   const { data: membership } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("id, role")  // role needed to enforce caregiver visibility rule below
     .eq("user_id", user.id)
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .single()
 
   if (!membership) return new Response("Forbidden", { status: 403 })
 
-  // Caregivers must always upload as family-visible — spec: "uploads by caregiver: always
-  // visibility='family', cannot set private." The RESTRICTIVE "caregiver cannot read private
+  // Caregivers must always upload as circle-visible — spec: "uploads by caregiver: always
+  // visibility='circle', cannot set private." The RESTRICTIVE "caregiver cannot read private
   // memories" RLS policy would also make a private caregiver upload invisible to the caregiver
   // themselves, so this is both a spec requirement and a correctness requirement.
-  const effectiveVisibility = membership.role === "caregiver" ? "family" : "private"
+  const effectiveVisibility = membership.role === "caregiver" ? "circle" : "private"
 
   // Upload file to private storage bucket
   const ext = file.name.split(".").pop()
@@ -2927,8 +2929,8 @@ Deno.serve(async (req) => {
     .from("Memory")
     .insert({
       owner_user_id: user.id,
-      family_id: familyId,
-      visibility: effectiveVisibility,  // "family" for caregivers; "private" for all others (shared explicitly)
+      circle_id: circleId,
+      visibility: effectiveVisibility,  // "circle" for caregivers; "private" for all others (shared explicitly)
       note: note ?? null,
       memory_date: memoryDate ?? new Date().toISOString(),
     })
@@ -3008,7 +3010,7 @@ Deno.serve(async (req) => {
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ familyId: string }>()
+const props = defineProps<{ circleId: string }>()
 const emit = defineEmits<{ uploaded: [memoryId: string] }>()
 
 const supabase = useSupabaseClient()
@@ -3055,7 +3057,7 @@ async function upload() {
 
   const formData = new FormData()
   formData.append("file", file.value)
-  formData.append("familyId", props.familyId)
+  formData.append("circleId", props.circleId)
   formData.append("note", note.value)
   formData.append("memoryDate", `${memoryDate.value}T00:00:00Z`)
 
@@ -3190,7 +3192,7 @@ export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
   const query = getQuery(event)
-  const familyId = query.familyId as string
+  const circleId = query.circleId as string
   const cursor = query.cursor as string | undefined  // "memory_date,id"
 
   if (!user) throw createError({ statusCode: 401 })
@@ -3198,8 +3200,8 @@ export default defineEventHandler(async (event) => {
   let dbQuery = supabase
     .from("Memory")
     .select("*, MemoryMedia(*), User!owner_user_id(first_name, last_name, avatar_url), MemoryReaction(*), MemoryComment(count)")
-    .eq("family_id", familyId)
-    .in("visibility", ["family"])  // private memories handled separately
+    .eq("circle_id", circleId)
+    .in("visibility", ["circle"])  // private memories handled separately
     .order("memory_date", { ascending: false })
     .order("id", { ascending: false })
     .limit(20)
@@ -3255,8 +3257,8 @@ export default defineEventHandler(async (event) => {
 <template>
   <div class="max-w-2xl mx-auto">
     <header class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-10">
-      <h1 class="font-semibold text-lg">{{ currentFamily?.name ?? "Our Story" }}</h1>
-      <UploadMemory :family-id="currentFamilyId" @uploaded="onUploaded" />
+      <h1 class="font-semibold text-lg">{{ currentCircle?.name ?? "Our Story" }}</h1>
+      <UploadMemory :circle-id="currentCircleId" @uploaded="onUploaded" />
     </header>
 
     <div class="divide-y">
@@ -3278,7 +3280,7 @@ export default defineEventHandler(async (event) => {
 </template>
 
 <script setup lang="ts">
-const currentFamilyId = useState("currentFamilyId")
+const currentCircleId = useState("currentCircleId")
 const memories = ref<any[]>([])
 const nextCursor = ref<string | null>(null)
 const loading = ref(false)
@@ -3289,7 +3291,7 @@ async function fetchTimeline(cursor?: string) {
   loading.value = true
 
   const data = await $fetch("/api/timeline", {
-    query: { familyId: currentFamilyId.value, cursor }
+    query: { circleId: currentCircleId.value, cursor }
   })
 
   if (cursor) {
@@ -3322,19 +3324,19 @@ onUnmounted(() => stop())
 
 ## Milestone 7: Memory Features
 
-### Step 7.1 — Share to family (visibility toggle)
+### Step 7.1 — Share to circle (visibility toggle)
 
 Add to `MemoryCard.vue`:
 ```vue
 <button
   v-if="memory.visibility === 'private' && memory.owner_user_id === currentUser.id && currentUserRole !== 'caregiver'"
-  @click="shareToFamily"
+  @click="shareToCircle"
   class="text-sm text-blue-600 font-medium"
 >
   Share to circle
 </button>
 ```
-> **Note:** The `currentUserRole !== 'caregiver'` guard is required because the upload Edge Function (Step 5.1) forces caregiver uploads to `visibility: "family"` — the button would never appear for caregivers in practice, but the guard makes the invariant explicit and prevents regressions if the check moves.
+> **Note:** The `currentUserRole !== 'caregiver'` guard is required because the upload Edge Function (Step 5.1) forces caregiver uploads to `visibility: "circle"` — the button would never appear for caregivers in practice, but the guard makes the invariant explicit and prevents regressions if the check moves.
 
 `server/api/memories/[id]/share.post.ts`:
 ```ts
@@ -3345,7 +3347,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: memory } = await supabase
     .from("Memory")
-    .select("owner_user_id, family_id")
+    .select("owner_user_id, circle_id")
     .eq("id", memoryId)
     .single()
 
@@ -3353,7 +3355,7 @@ export default defineEventHandler(async (event) => {
 
   await supabase
     .from("Memory")
-    .update({ visibility: "family" })
+    .update({ visibility: "circle" })
     .eq("id", memoryId)
 
   return { ok: true }
@@ -3374,10 +3376,10 @@ if (!isQuickNote) {
 }
 
 // Memory insert runs regardless — note + memoryDate always saved
-// effectiveVisibility already derived above (caregiver → "family", others → "private")
+// effectiveVisibility already derived above (caregiver → "circle", others → "private")
 const { data: memory } = await supabase.from("Memory").insert({
   owner_user_id: user.id,
-  family_id: familyId,
+  circle_id: circleId,
   visibility: effectiveVisibility,
   note: note || null,
   memory_date: memoryDate ?? new Date().toISOString(),
@@ -3436,7 +3438,7 @@ export default defineEventHandler(async (event) => {
   // Verify user has access to this memory (RLS handles this via the select below)
   const { data: memory } = await supabase
     .from("Memory")
-    .select("id, owner_user_id, family_id, memory_date, MemoryMedia(storage_path, media_type)")
+    .select("id, owner_user_id, circle_id, memory_date, MemoryMedia(storage_path, media_type)")
     .eq("id", memoryId)
     .single()
 
@@ -3445,12 +3447,12 @@ export default defineEventHandler(async (event) => {
   const media = memory.MemoryMedia?.[0]
   if (!media) throw createError({ statusCode: 404, message: "No media for this memory" })
 
-  // Verify access: owner OR family member
+  // Verify access: owner OR circle member
   const { data: membership } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("id")
     .eq("user_id", user.id)
-    .eq("family_id", memory.family_id)
+    .eq("circle_id", memory.circle_id)
     .single()
 
   const isOwner = memory.owner_user_id === user.id
@@ -3530,7 +3532,7 @@ export async function shareMemory(thumbnailUrl: string, note: string | null) {
 </div>
 ```
 
-**Definition of done:** Tap download → original-quality file saved to device downloads folder. Tap share → canvas card generated with watermark → Web Share sheet opens (WhatsApp, iMessage, Instagram, copy). On desktop → card downloads as JPEG. Memory owner and family members can both download/share family-visible memories.
+**Definition of done:** Tap download → original-quality file saved to device downloads folder. Tap share → canvas card generated with watermark → Web Share sheet opens (WhatsApp, iMessage, Instagram, copy). On desktop → card downloads as JPEG. Memory owner and circle members can both download/share circle-visible memories.
 
 ---
 
@@ -3672,13 +3674,13 @@ Show a bottom sheet prompt:
 
 `server/api/memories/[id]/comments.get.ts` and `comments.post.ts` — standard CRUD, scoped by RLS.
 
-> **Caregiver restriction:** The RLS `"members can post comments"` policy allows any family member with Memory access to insert a comment — including caregivers. The spec prohibits caregivers from commenting (see design spec §Role-based authorization). Enforce this in `comments.post.ts` at the API level:
+> **Caregiver restriction:** The RLS `"members can post comments"` policy allows any circle member with Memory access to insert a comment — including caregivers. The spec prohibits caregivers from commenting (see design spec §Role-based authorization). Enforce this in `comments.post.ts` at the API level:
 > ```ts
 > const { data: membership } = await supabase
->   .from("FamilyMember")
+>   .from("CircleMember")
 >   .select("role")
 >   .eq("user_id", user.id)
->   .eq("family_id", memory.family_id)  // fetch family_id from Memory first
+>   .eq("circle_id", memory.circle_id)  // fetch circle_id from Memory first
 >   .single()
 >
 > if (membership?.role === "caregiver") {
@@ -3790,7 +3792,7 @@ Key entries to include (non-exhaustive — add every string you encounter):
 {
   "timeline.empty": "Upload your first memory",
   "timeline.empty.parents": "Your baby's story starts here. Upload your first memory — grandparents are waiting.",
-  "memory.share": "Add to family story",
+  "memory.share": "Add to circle story",
   "memory.milestone.label": "Milestone (optional)",
   "upload.note.placeholder": "Add a note... (optional)",
   "upload.date.label": "When was this?",
@@ -3820,7 +3822,7 @@ Copy every key from `en.json` and provide Simplified Chinese translations. This 
 ```json
 {
   "timeline.empty": "上传您的第一段记忆",
-  "memory.share": "添加到家庭故事",
+  "memory.share": "添加到圈子故事",
   "upload.note.placeholder": "添加备注...（可选）",
   "storage.full": "存储空间已满 — 升级以继续上传"
 }
@@ -3837,7 +3839,7 @@ Copy every key from `en.json` and provide French translations. Required for Cana
 ```json
 {
   "timeline.empty": "Téléchargez votre premier souvenir",
-  "memory.share": "Ajouter à l'histoire familiale",
+  "memory.share": "Ajouter à l'histoire du cercle",
   "upload.note.placeholder": "Ajouter une note... (facultatif)",
   "storage.full": "Votre espace est plein — passez à la version supérieure pour continuer"
 }
@@ -3910,19 +3912,19 @@ watch(user, async (u) => {
 
 ### Step 9.1 — Generate view-only JWT
 
-`server/api/families/[id]/view-link.post.ts`:
+`server/api/circles/[id]/view-link.post.ts`:
 ```ts
 import { SignJWT } from "jose"
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
-  const familyId = getRouterParam(event, "id")
+  const circleId = getRouterParam(event, "id")
 
   // Only owner/admin can generate view-only links
   // ... (verify membership role)
 
   const secret = new TextEncoder().encode(useRuntimeConfig().jwtSecret)
-  const token = await new SignJWT({ family_id: familyId, role: "viewer" })
+  const token = await new SignJWT({ circle_id: circleId, role: "viewer" })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("30d")
     .sign(secret)
@@ -3981,8 +3983,8 @@ Deno.serve(async (req) => {
   const payload = await req.json()
   const { table, record } = payload
 
-  // Fetch notification preferences for all family members
-  // Check push_enabled, family_muted, quiet_hours before sending
+  // Fetch notification preferences for all circle members
+  // Check push_enabled, circle_muted, quiet_hours before sending
   // Send via FCM (Android) or APNs (iOS) using Capacitor push tokens
   // For Phase 1 web: use Web Push API
 })
@@ -4148,16 +4150,16 @@ SELECT cron.schedule(
 ```
 
 `supabase/functions/weekly-digest/index.ts`:
-- Query memories uploaded in last 7 days per family
+- Query memories uploaded in last 7 days per circle
 - If count > 0: send digest email with thumbnail grid
-- If count = 0 and family is < 90 days old: send re-engagement nudge
+- If count = 0 and circle is < 90 days old: send re-engagement nudge
 - Check `NotificationPreference.email_digest_frequency` before sending
 - Personalise subject line for viewer-role recipients: `"3 new memories of Mia this week 📸"` (use ChildProfile name if available)
-- **When generating viewer JWTs to embed in email reaction links, include `viewer_name` from `NewsletterRecipient.name`** — this is how the email reaction endpoint attributes the reaction. Without it, `payload.viewer_name` is undefined and every reaction shows as "A family member":
+- **When generating viewer JWTs to embed in email reaction links, include `viewer_name` from `NewsletterRecipient.name`** — this is how the email reaction endpoint attributes the reaction. Without it, `payload.viewer_name` is undefined and every reaction shows as "A circle member":
   ```ts
   // For each NewsletterRecipient when building email links:
   const token = await new SignJWT({
-    family_id: familyId,
+    circle_id: circleId,
     role: "viewer",
     viewer_name: recipient.name ?? null,  // from NewsletterRecipient.name
   })
@@ -4180,7 +4182,7 @@ export default defineEventHandler(async (event) => {
   // Verify viewer JWT (same secret as view-only link)
   const secret = new TextEncoder().encode(useRuntimeConfig().jwtSecret)
   const { payload } = await jwtVerify(token as string, secret)
-  if (!payload.family_id) throw createError({ statusCode: 401 })
+  if (!payload.circle_id) throw createError({ statusCode: 401 })
 
   // Insert reaction (guest — no user_id, use guest_name from JWT)
   // viewer_name is populated by the weekly digest Edge Function from NewsletterRecipient.name
@@ -4190,7 +4192,7 @@ export default defineEventHandler(async (event) => {
     user_id: null,          // guest reaction — extend schema to allow null user_id for guests
     type: "emoji",
     emoji,
-    guest_name: payload.viewer_name ?? "A family member",
+    guest_name: payload.viewer_name ?? "A circle member",
   })
 
   // Notify memory owner
@@ -4245,23 +4247,23 @@ The T+3 follow-up is the highest-converting nudge. The moment already happened �
 
 > **Note:** This step and "Step 12.3.1" are the same email. `first_month_email_sent` is the single guard flag for both. There is no separate anniversary push — this is email only.
 
-Daily cron (`supabase/functions/first-month-recap/index.ts`) that checks all families where `first_memory_at` is between 29–31 days ago **AND** `first_month_email_sent = false`. The 3-day window (not "exactly 30 days") prevents misses caused by cron skew or deploy gaps.
+Daily cron (`supabase/functions/first-month-recap/index.ts`) that checks all circles where `first_memory_at` is between 29–31 days ago **AND** `first_month_email_sent = false`. The 3-day window (not "exactly 30 days") prevents misses caused by cron skew or deploy gaps.
 
 ```ts
-// Find eligible families
-const { data: families } = await supabase
-  .from("Family")
+// Find eligible circles
+const { data: circles } = await supabase
+  .from("Circle")
   .select("id, name, first_memory_at")
   .eq("first_month_email_sent", false)
   .gte("first_memory_at", thirtyOneDaysAgo)
   .lte("first_memory_at", twentyNineDaysAgo)
 
-for (const family of families) {
+for (const circle of circles) {
   // 1. Fetch oldest memory (hero card)
   const { data: firstMemory } = await supabase
     .from("Memory")
     .select("id, memory_date, note, MemoryMedia(storage_path)")
-    .eq("family_id", family.id)
+    .eq("circle_id", circle.id)
     .order("memory_date", { ascending: true })
     .limit(1)
     .single()
@@ -4270,18 +4272,18 @@ for (const family of families) {
   const { count: totalMemories } = await supabase
     .from("Memory")
     .select("id", { count: "exact", head: true })
-    .eq("family_id", family.id)
+    .eq("circle_id", circle.id)
 
   const { count: totalContributors } = await supabase
     .from("Memory")
     .select("owner_user_id", { count: "exact", head: true })
-    .eq("family_id", family.id)
+    .eq("circle_id", circle.id)
 
   // 3. Fetch all active members
   const { data: members } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("user_id, User!user_id(email, first_name, last_name)")
-    .eq("family_id", family.id)
+    .eq("circle_id", circle.id)
     .eq("memorial_status", "active")
 
   // 4. Generate signed URL for hero card (never expose storage_path)
@@ -4295,24 +4297,24 @@ for (const family of families) {
     await resend.emails.send({
       from: "Our Story <hello@our-story.tinybit.app>",
       to: member.User.email,
-      subject: `${family.name}'s first month — look how far you've come`,
+      subject: `${circle.name}'s first month — look how far you've come`,
       react: FirstMonthRecapEmail({
         recipientName,
-        familyName: family.name,
+        circleName: circle.name,
         heroImageUrl: heroSignedUrl,
         heroDate: firstMemory?.memory_date,
         totalMemories,
         totalContributors,
-        ctaUrl: `${SITE_URL}/circle/${family.id}/timeline`,
+        ctaUrl: `${SITE_URL}/circle/${circle.id}/timeline`,
       }),
     })
   }
 
   // 6. Mark sent — prevents re-send on future cron runs
   await supabase
-    .from("Family")
+    .from("Circle")
     .update({ first_month_email_sent: true })
-    .eq("id", family.id)
+    .eq("id", circle.id)
 }
 ```
 
@@ -4321,16 +4323,16 @@ for (const family of families) {
 2. **Month in numbers** — `X memories saved`, `Y contributors`
 3. **Forward CTA** — "Keep the story going →" links to timeline
 
-**Definition of done:** Family hits 30 days since first memory → exactly one recap email per member → `first_month_email_sent` flips to `true` → no second email sent on day 31.
+**Definition of done:** Circle hits 30 days since first memory → exactly one recap email per member → `first_month_email_sent` flips to `true` → no second email sent on day 31.
 
-### Step 12.5 — Family streak *(Phase 2 — do not build in Phase 1)*
+### Step 12.5 — Circle streak *(Phase 2 — do not build in Phase 1)*
 
 > **Phase 2 only.** The streak requires a week of usage data to be meaningful and depends on notification infrastructure (Capacitor push) that ships in Phase 2. Implementation details are preserved here for reference but this step is excluded from the Phase 1 exit criteria. Add it to the Phase 2 build queue after notification preferences and native app are stable.
 
-`supabase/migrations/XXX_family_streak.sql`:
+`supabase/migrations/XXX_circle_streak.sql`:
 ```sql
-CREATE TABLE public.FamilyStreak (
-  family_id UUID PRIMARY KEY REFERENCES public.Family(id) ON DELETE CASCADE,
+CREATE TABLE public.CircleStreak (
+  circle_id UUID PRIMARY KEY REFERENCES public.Circle(id) ON DELETE CASCADE,
   current_streak_weeks INT NOT NULL DEFAULT 0,
   longest_streak_weeks INT NOT NULL DEFAULT 0,
   last_upload_week DATE  -- ISO week start (Monday) of most recent upload
@@ -4339,32 +4341,32 @@ CREATE TABLE public.FamilyStreak (
 
 **Streak update trigger** — fires on every `Memory` INSERT:
 ```sql
-CREATE OR REPLACE FUNCTION public.update_family_streak()
+CREATE OR REPLACE FUNCTION public.update_circle_streak()
 RETURNS TRIGGER AS $$
 DECLARE
   current_week DATE := date_trunc('week', NOW())::DATE;
-  streak_row public.FamilyStreak%ROWTYPE;
+  streak_row public.CircleStreak%ROWTYPE;
 BEGIN
-  SELECT * INTO streak_row FROM public.FamilyStreak WHERE family_id = NEW.family_id;
+  SELECT * INTO streak_row FROM public.CircleStreak WHERE circle_id = NEW.circle_id;
 
   IF streak_row IS NULL THEN
-    INSERT INTO public.FamilyStreak (family_id, current_streak_weeks, longest_streak_weeks, last_upload_week)
-    VALUES (NEW.family_id, 1, 1, current_week);
+    INSERT INTO public.CircleStreak (circle_id, current_streak_weeks, longest_streak_weeks, last_upload_week)
+    VALUES (NEW.circle_id, 1, 1, current_week);
   ELSIF streak_row.last_upload_week = current_week THEN
     NULL; -- already uploaded this week, no change
   ELSIF streak_row.last_upload_week = current_week - INTERVAL '7 days' THEN
     -- consecutive week — increment streak
-    UPDATE public.FamilyStreak SET
+    UPDATE public.CircleStreak SET
       current_streak_weeks = current_streak_weeks + 1,
       longest_streak_weeks = GREATEST(longest_streak_weeks, current_streak_weeks + 1),
       last_upload_week = current_week
-    WHERE family_id = NEW.family_id;
+    WHERE circle_id = NEW.circle_id;
   ELSE
     -- streak broken — reset
-    UPDATE public.FamilyStreak SET
+    UPDATE public.CircleStreak SET
       current_streak_weeks = 1,
       last_upload_week = current_week
-    WHERE family_id = NEW.family_id;
+    WHERE circle_id = NEW.circle_id;
   END IF;
   RETURN NEW;
 END;
@@ -4372,13 +4374,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER on_memory_insert_update_streak
   AFTER INSERT ON public.Memory
-  FOR EACH ROW EXECUTE FUNCTION public.update_family_streak();
+  FOR EACH ROW EXECUTE FUNCTION public.update_circle_streak();
 ```
 
 **Sunday evening streak-saver nudge** — add to the daily cron:
 ```ts
 // Every Sunday at 7pm UTC
-// For each family where:
+// For each circle where:
 //   - current_streak_weeks >= 2 (streak worth saving)
 //   - last_upload_week != this week (no upload yet this week)
 // → push to owner only: "Your {N}-week streak ends tonight — add a quick memory?"
@@ -4398,24 +4400,24 @@ Generate as a canvas card (same approach as milestone cards and Year in Review).
 If no uploads in 14 days, send a soft nudge to the circle owner only (not all members).
 
 ```ts
-// Daily cron — check families with no recent uploads
-// Use Family.last_memory_at (pre-computed by handle_memory_insert trigger).
-// Do NOT query MAX(Memory.created_at) per family — it does not scale.
+// Daily cron — check circles with no recent uploads
+// Use Circle.last_memory_at (pre-computed by handle_memory_insert trigger).
+// Do NOT query MAX(Memory.created_at) per circle — it does not scale.
 // Do NOT filter by visibility — a private upload still means the circle is active.
 const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
 
-const { data: quietFamilies } = await supabase
-  .from("Family")
+const { data: quietCircles } = await supabase
+  .from("Circle")
   .select("id, quiet_nudge_count, quiet_nudge_last_sent_at")
   .or(`last_memory_at.is.null,last_memory_at.lt.${cutoff}`)
   .lt("quiet_nudge_count", 3)                                           // hard stop: max 3 nudges per quiet period
   .or(`quiet_nudge_last_sent_at.is.null,quiet_nudge_last_sent_at.lt.${cutoff}`) // min 14 days between nudges
 
-for (const family of quietFamilies) {
+for (const circle of quietCircles) {
   const { data: owner } = await supabase
-    .from("FamilyMember")
+    .from("CircleMember")
     .select("user_id")
-    .eq("family_id", family.id)
+    .eq("circle_id", circle.id)
     .eq("role", "owner")
     .single()
 
@@ -4428,16 +4430,16 @@ for (const family of quietFamilies) {
 
   // Increment nudge count and record send time so the cron respects the hard stop
   await supabase
-    .from("Family")
+    .from("Circle")
     .update({
-      quiet_nudge_count: family.quiet_nudge_count + 1,
+      quiet_nudge_count: circle.quiet_nudge_count + 1,
       quiet_nudge_last_sent_at: new Date().toISOString(),
     })
-    .eq("id", family.id)
+    .eq("id", circle.id)
 }
 ```
 
-**Definition of done:** 7 days after launch, the first weekly digest email arrives. 30 days after a family's first upload, the "Your First Month" recap email arrives (no push — email only, per Step 12.3). 14 days after the last upload, the owner gets a quiet nudge push.
+**Definition of done:** 7 days after launch, the first weekly digest email arrives. 30 days after a circle's first upload, the "Your First Month" recap email arrives (no push — email only, per Step 12.3). 14 days after the last upload, the owner gets a quiet nudge push.
 
 ---
 
@@ -4450,12 +4452,12 @@ for (const family of quietFamilies) {
 ### Security (highest priority — check these first)
 - [ ] `supabase db test` — all RLS policy tests passing
 - [ ] User A cannot read User B's private memories — manually verified
-- [ ] User A cannot read families they don't belong to — manually verified
+- [ ] User A cannot read circles they don't belong to — manually verified
 - [ ] No raw Supabase Storage paths in any API response — grep all routes for `storage_path`, `media_path`, and any other Storage path columns; only signed URLs may be returned to the client
 - [ ] No secrets, tokens, or internal paths appear in browser console or network tab
 - [ ] HTTP security headers present on all responses (verify with securityheaders.com)
 - [ ] File upload: attempt to upload a `.exe` renamed as `.jpg` — must be rejected
-- [ ] Invite spam protection active: sending more than 10 pending invites to the same family returns 429 (server-side pending-invite count cap — Phase 1 mechanism; Upstash sliding-window rate limiting is Phase 2)
+- [ ] Invite spam protection active: sending more than 10 pending invites to the same circle returns 429 (server-side pending-invite count cap — Phase 1 mechanism; Upstash sliding-window rate limiting is Phase 2)
 - [ ] `pnpm audit --audit-level high` passes with zero high/critical vulnerabilities
 - [ ] All error messages shown to users are human-readable — no stack traces, no raw DB errors
 - [ ] OWASP ZAP basic scan run against staging — all critical/high findings resolved
@@ -4467,16 +4469,16 @@ for (const family of quietFamilies) {
 - [ ] Memory date ordering correct: uploading old photo inserts at historical position
 - [ ] Invite token: single-use confirmed (accepting twice returns error)
 - [ ] Invite token: expired token returns friendly error, not 500
-- [ ] Soft delete: deleted user's memories remain visible in family timeline as "Deleted Member"
+- [ ] Soft delete: deleted user's memories remain visible in circle timeline as "Deleted Member"
 
 ### Testing
 - [ ] `pnpm test` — all unit + integration tests passing
 - [ ] `pnpm test:e2e` — creator onboarding + invited member flows passing
 - [ ] Stripe webhook handlers tested in Stripe test mode — verify correct behavior for each event:
-  - `checkout.session.completed` → `User.subscription_status` upgrades, `Family.subscription_status` mirrors
+  - `checkout.session.completed` → `User.subscription_status` upgrades, `Circle.subscription_status` mirrors
   - `invoice.payment_succeeded` → subscription renewed, status stays at paid tier
-  - `invoice.payment_failed` → `Family.subscription_status = "grace"`, `grace_period_until = now() + 7 days`
-  - `customer.subscription.deleted` → `Family.subscription_status = "grace"`, `grace_period_until = now() + 30 days`; `User.subscription_status` must NOT change to `"free"` yet — voluntary cancellation gets 30-day grace, not immediate downgrade
+  - `invoice.payment_failed` → `Circle.subscription_status = "grace"`, `grace_period_until = now() + 7 days`
+  - `customer.subscription.deleted` → `Circle.subscription_status = "grace"`, `grace_period_until = now() + 30 days`; `User.subscription_status` must NOT change to `"free"` yet — voluntary cancellation gets 30-day grace, not immediate downgrade
 - [ ] On This Day cron tested on seed data — push fires correctly
 
 ### User experience
@@ -4549,7 +4551,7 @@ export default defineEventHandler(async (event) => {
 | 1 | Project foundation + PostHog analytics | Everything |
 | 2 | DB schema + RLS | All data features |
 | 3 | Auth + account deletion + data export | All user features |
-| 4 | Family + invites + VP screens + solo mode + invited member welcome | Timeline, upload |
+| 4 | Circle + invites + VP screens + solo mode + invited member welcome | Timeline, upload |
 | 5 | Upload (single + batch) | Timeline |
 | 6 | Timeline | Memory features |
 | 7 | Memory features (notes, visibility, milestones, quick note, download & share) | Social layer |

@@ -11,10 +11,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // All other onboarding routes require a complete profile
   if (needsProfile) return navigateTo('/onboarding/profile')
 
-  // Invite page: requires the familyId cookie (set after creating a family in /onboarding/name)
+  // Invite page: requires the circleId cookie (set after creating a circle in /onboarding/name)
   if (to.path === '/onboarding/invite') {
-    const familyIdCookie = useCookie('onboarding_family_id')
-    if (!familyIdCookie.value) return navigateTo(hasMembership ? '/' : '/onboarding')
+    const circleIdCookie = useCookie('onboarding_circle_id')
+    if (!circleIdCookie.value) return navigateTo(hasMembership ? '/' : '/onboarding')
     return
   }
 
@@ -25,6 +25,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // /onboarding (index): only accessible before a family has been created
+  // /onboarding (index): only accessible before a circle has been created
   if (hasMembership) return navigateTo('/')
 })

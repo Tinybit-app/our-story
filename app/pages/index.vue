@@ -8,11 +8,11 @@
         <!-- Circle name -->
         <div class="flex-1 min-w-0">
           <p class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase leading-none mb-1">Our Story</p>
-          <p class="text-sm font-semibold text-foreground leading-none truncate">{{ family?.name ?? '…' }}</p>
+          <p class="text-sm font-semibold text-foreground leading-none truncate">{{ circle?.name ?? '…' }}</p>
         </div>
 
         <!-- Add memory -->
-        <UploadMemory v-if="familyId" :family-id="familyId" @uploaded="onUploaded" />
+        <UploadMemory v-if="circleId" :circle-id="circleId" @uploaded="onUploaded" />
 
         <!-- Avatar + dropdown -->
         <div ref="menuRef" class="relative flex-shrink-0">
@@ -184,9 +184,9 @@ onMounted(async () => {
 })
 
 // ── Data ───────────────────────────────────────────────────
-const { data: familiesData } = await useFetch<{ families: any[] }>('/api/families')
-const family = computed(() => familiesData.value?.families?.[0] ?? null)
-const familyId = computed<string | null>(() => family.value?.id ?? null)
+const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
+const circle = computed(() => circlesData.value?.circles?.[0] ?? null)
+const circleId = computed<string | null>(() => circle.value?.id ?? null)
 
 const memories = ref<any[]>([])
 const nextCursor = ref<string | null>(null)
@@ -194,11 +194,11 @@ const loading = ref(false)
 const loadMoreEl = ref<HTMLElement>()
 
 async function fetchTimeline(cursor?: string) {
-  if (loading.value || !familyId.value) return
+  if (loading.value || !circleId.value) return
   loading.value = true
   try {
     const data = await $fetch<{ memories: any[]; nextCursor: string | null }>('/api/timeline', {
-      query: { familyId: familyId.value, ...(cursor ? { cursor } : {}) },
+      query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
     })
     memories.value = cursor ? [...memories.value, ...data.memories] : data.memories
     nextCursor.value = data.nextCursor

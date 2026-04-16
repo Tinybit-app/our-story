@@ -7,20 +7,20 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const { data, error } = await supabase
-    .from("familymember")
-    .select("role, family:family_id(id, name, circle_type)")
+    .from("circlemember")
+    .select("role, circle:circle_id(id, name, circle_type)")
     .eq("user_id", user.sub)
     .order("created_at")
 
   if (error) {
-    console.error("[families] query failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to load families." })
+    console.error("[circles] query failed:", error.message)
+    throw createError({ statusCode: 500, message: "Failed to load circles." })
   }
 
-  const families = (data ?? []).map((m) => ({
-    ...(m.family as any),
+  const circles = (data ?? []).map((m) => ({
+    ...(m.circle as any),
     role: m.role,
   }))
 
-  return { families }
+  return { circles }
 })

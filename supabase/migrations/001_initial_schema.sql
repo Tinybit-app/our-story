@@ -47,9 +47,9 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================================
--- FAMILIES (Circles)
+-- CIRCLES
 -- ============================================================
-CREATE TABLE public.Family (
+CREATE TABLE public.Circle (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   circle_type TEXT NOT NULL DEFAULT 'custom' CHECK (circle_type IN (
@@ -69,26 +69,26 @@ CREATE TABLE public.Family (
 );
 
 -- ============================================================
--- FAMILY MEMBERS
+-- CIRCLE MEMBERS
 -- ============================================================
-CREATE TABLE public.FamilyMember (
+CREATE TABLE public.CircleMember (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.User(id) ON DELETE CASCADE,
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member', 'caregiver')),
   memorial_status TEXT NOT NULL DEFAULT 'active' CHECK (memorial_status IN ('active', 'memorial')),
   memorial_date TIMESTAMPTZ,
   memorial_message TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (user_id, family_id)
+  UNIQUE (user_id, circle_id)
 );
 
 -- ============================================================
--- FAMILY INVITES
+-- CIRCLE INVITES
 -- ============================================================
-CREATE TABLE public.FamilyInvite (
+CREATE TABLE public.CircleInvite (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'caregiver')),
@@ -126,8 +126,8 @@ CREATE TRIGGER on_user_created_storage
 CREATE TABLE public.Memory (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES public.User(id),
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
-  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family')),
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
+  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'circle')),
   note TEXT,
   alt_text TEXT,
   memory_date TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -138,7 +138,7 @@ CREATE TABLE public.Memory (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_memory_family_date ON public.Memory (family_id, memory_date DESC, id DESC);
+CREATE INDEX idx_memory_circle_date ON public.Memory (circle_id, memory_date DESC, id DESC);
 CREATE INDEX idx_memory_owner ON public.Memory (owner_user_id);
 
 -- ============================================================
@@ -189,13 +189,13 @@ CREATE TABLE public.MemoryReaction (
 CREATE TABLE public.NotificationPreference (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.User(id) ON DELETE CASCADE,
-  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  circle_id UUID NOT NULL REFERENCES public.Circle(id) ON DELETE CASCADE,
   push_enabled BOOL NOT NULL DEFAULT true,
   email_digest_frequency TEXT NOT NULL DEFAULT 'weekly' CHECK (email_digest_frequency IN ('daily', 'weekly', 'off')),
   quiet_hours_start TIME,
   quiet_hours_end TIME,
-  family_muted BOOL NOT NULL DEFAULT false,
-  UNIQUE (user_id, family_id)
+  circle_muted BOOL NOT NULL DEFAULT false,
+  UNIQUE (user_id, circle_id)
 );
 
 -- ============================================================

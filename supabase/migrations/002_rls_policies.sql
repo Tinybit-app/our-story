@@ -1,28 +1,28 @@
 -- ============================================================
 -- HELPER FUNCTIONS (SECURITY DEFINER to break RLS recursion)
--- Policies that reference FamilyMember from any table — including
--- FamilyMember itself — would cause infinite recursion. These
+-- Policies that reference CircleMember from any table — including
+-- CircleMember itself — would cause infinite recursion. These
 -- functions run as the table owner and bypass RLS safely.
 -- SET search_path = '' prevents search_path injection attacks.
 -- ============================================================
-CREATE OR REPLACE FUNCTION public.get_my_family_ids()
+CREATE OR REPLACE FUNCTION public.get_my_circle_ids()
 RETURNS SETOF UUID
 LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '' AS $$
-  SELECT family_id FROM public.familymember WHERE user_id = auth.uid();
+  SELECT circle_id FROM public.circlemember WHERE user_id = auth.uid();
 $$;
 
-CREATE OR REPLACE FUNCTION public.get_my_family_ids_as_role(required_roles TEXT[])
+CREATE OR REPLACE FUNCTION public.get_my_circle_ids_as_role(required_roles TEXT[])
 RETURNS SETOF UUID
 LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '' AS $$
-  SELECT family_id FROM public.familymember
+  SELECT circle_id FROM public.circlemember
   WHERE user_id = auth.uid() AND role = ANY(required_roles);
 $$;
 
 -- Enable RLS on all tables
 ALTER TABLE public.User ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.Family ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.FamilyMember ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.FamilyInvite ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.Circle ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.CircleMember ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.CircleInvite ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.AccountStorage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.Memory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.MemoryMedia ENABLE ROW LEVEL SECURITY;
@@ -36,13 +36,13 @@ ALTER TABLE public.FeatureFlag ENABLE ROW LEVEL SECURITY;
 -- auth.uid() wrapped in (SELECT ...) so Postgres evaluates it
 -- once per query rather than once per row.
 -- ============================================================
-CREATE POLICY "users can read own or family member profiles"
+CREATE POLICY "users can read own or circle member profiles"
   ON public.User FOR SELECT USING (
     id = (SELECT auth.uid())
     OR
     id IN (
-      SELECT fm.user_id FROM public.FamilyMember fm
-      WHERE fm.family_id IN (SELECT public.get_my_family_ids())
+      SELECT cm.user_id FROM public.CircleMember cm
+      WHERE cm.circle_id IN (SELECT public.get_my_circle_ids())
     )
   );
 
@@ -50,37 +50,37 @@ CREATE POLICY "users can update own profile"
   ON public.User FOR UPDATE USING (id = (SELECT auth.uid()));
 
 -- ============================================================
--- FAMILY
+-- CIRCLE
 -- ============================================================
-CREATE POLICY "members can read their families"
-  ON public.Family FOR SELECT USING (
-    id IN (SELECT public.get_my_family_ids())
+CREATE POLICY "members can read their circles"
+  ON public.Circle FOR SELECT USING (
+    id IN (SELECT public.get_my_circle_ids())
   );
 
-CREATE POLICY "authenticated users can create families"
-  ON public.Family FOR INSERT WITH CHECK (created_by = (SELECT auth.uid()));
+CREATE POLICY "authenticated users can create circles"
+  ON public.Circle FOR INSERT WITH CHECK (created_by = (SELECT auth.uid()));
 
-CREATE POLICY "owner can update family"
-  ON public.Family FOR UPDATE USING (
-    id IN (SELECT public.get_my_family_ids_as_role(ARRAY['owner']))
+CREATE POLICY "owner can update circle"
+  ON public.Circle FOR UPDATE USING (
+    id IN (SELECT public.get_my_circle_ids_as_role(ARRAY['owner']))
   );
 
 -- ============================================================
--- FAMILY MEMBER
+-- CIRCLE MEMBER
 -- ============================================================
-CREATE POLICY "members can read family membership"
-  ON public.FamilyMember FOR SELECT USING (
-    family_id IN (SELECT public.get_my_family_ids())
+CREATE POLICY "members can read circle membership"
+  ON public.CircleMember FOR SELECT USING (
+    circle_id IN (SELECT public.get_my_circle_ids())
   );
 
 CREATE POLICY "owner and admin can insert members"
-  ON public.FamilyMember FOR INSERT WITH CHECK (
-    family_id IN (SELECT public.get_my_family_ids_as_role(ARRAY['owner', 'admin']))
+  ON public.CircleMember FOR INSERT WITH CHECK (
+    circle_id IN (SELECT public.get_my_circle_ids_as_role(ARRAY['owner', 'admin']))
   );
 
 CREATE POLICY "owner and admin can remove members"
-  ON public.FamilyMember FOR DELETE USING (
-    family_id IN (SELECT public.get_my_family_ids_as_role(ARRAY['owner', 'admin']))
+  ON public.CircleMember FOR DELETE USING (
+    circle_id IN (SELECT public.get_my_circle_ids_as_role(ARRAY['owner', 'admin']))
   );
 
 -- ============================================================
@@ -92,9 +92,9 @@ CREATE POLICY "users can read own storage"
 -- ============================================================
 -- MEMORY
 -- ============================================================
-CREATE POLICY "members can read family memories"
+CREATE POLICY "members can read circle memories"
   ON public.Memory FOR SELECT USING (
-    (visibility = 'family' AND family_id IN (SELECT public.get_my_family_ids()))
+    (visibility = 'circle' AND circle_id IN (SELECT public.get_my_circle_ids()))
     OR
     (visibility = 'private' AND owner_user_id = (SELECT auth.uid()))
   );
@@ -102,7 +102,7 @@ CREATE POLICY "members can read family memories"
 CREATE POLICY "members can insert memories"
   ON public.Memory FOR INSERT WITH CHECK (
     owner_user_id = (SELECT auth.uid()) AND
-    family_id IN (SELECT public.get_my_family_ids())
+    circle_id IN (SELECT public.get_my_circle_ids())
   );
 
 CREATE POLICY "owner can update own memory"
@@ -112,7 +112,7 @@ CREATE POLICY "owner or admin can delete memory"
   ON public.Memory FOR DELETE USING (
     owner_user_id = (SELECT auth.uid())
     OR
-    family_id IN (SELECT public.get_my_family_ids_as_role(ARRAY['owner', 'admin']))
+    circle_id IN (SELECT public.get_my_circle_ids_as_role(ARRAY['owner', 'admin']))
   );
 
 -- ============================================================

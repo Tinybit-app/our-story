@@ -63,6 +63,7 @@ export default defineNuxtConfig({
     upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN,
     jwtSecret: process.env.JWT_SECRET,
     sentryAuthToken: process.env.SENTRY_AUTH_TOKEN,
+    appUrl: process.env.APP_URL,  // used in invite emails and view-only links
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,

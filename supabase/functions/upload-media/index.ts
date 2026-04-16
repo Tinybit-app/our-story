@@ -25,12 +25,12 @@ Deno.serve(async (req) => {
 
   const formData = await req.formData()
   const file = formData.get("file") as File
-  const familyId = formData.get("familyId") as string
+  const circleId = formData.get("circleId") as string
   const note = formData.get("note") as string | null
   const memoryDate = formData.get("memoryDate") as string | null
 
-  if (!file || !familyId) {
-    return Response.json({ error: "file and familyId are required" }, { status: 400 })
+  if (!file || !circleId) {
+    return Response.json({ error: "file and circleId are required" }, { status: 400 })
   }
 
   // File size check
@@ -40,12 +40,12 @@ Deno.serve(async (req) => {
     return Response.json({ error: "file_too_large" }, { status: 413 })
   }
 
-  // Verify user is a member of this family
+  // Verify user is a member of this circle
   const { data: membership } = await supabase
-    .from("familymember")
+    .from("circlemember")
     .select("id")
     .eq("user_id", user.id)
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .maybeSingle()
 
   if (!membership) return new Response("Forbidden", { status: 403 })
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     .from("memory")
     .insert({
       owner_user_id: user.id,
-      family_id: familyId,
+      circle_id: circleId,
       visibility: "private",
       note: note || null,
       memory_date: memoryDate || new Date().toISOString(),

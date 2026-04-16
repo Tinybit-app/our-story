@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(9);
+SELECT plan(11);
 
 -- ============================================================
 -- FIXTURES
@@ -13,31 +13,39 @@ VALUES
 
 -- Trigger creates public.User rows automatically
 
--- Family A: user_a is owner, user_b is member
-INSERT INTO public.Family (id, name, created_by)
-VALUES ('10000000-0000-0000-0000-000000000001', 'Family A', '00000000-0000-0000-0000-000000000001');
+-- Circle A: user_a is owner, user_b is member
+INSERT INTO public.Circle (id, name, created_by)
+VALUES ('10000000-0000-0000-0000-000000000001', 'Circle A', '00000000-0000-0000-0000-000000000001');
 
-INSERT INTO public.FamilyMember (user_id, family_id, role)
+INSERT INTO public.CircleMember (user_id, circle_id, role)
 VALUES
   ('00000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'owner'),
   ('00000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'member');
 
 -- Private memory owned by user_a
-INSERT INTO public.Memory (id, owner_user_id, family_id, visibility)
+INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility)
 VALUES ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
         '10000000-0000-0000-0000-000000000001', 'private');
 
--- Family memory owned by user_a
-INSERT INTO public.Memory (id, owner_user_id, family_id, visibility)
+-- Circle memory owned by user_a
+INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility)
 VALUES ('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001', 'family');
+        '10000000-0000-0000-0000-000000000001', 'circle');
 
--- Family B: user_c is owner (user_a and user_b are NOT members)
-INSERT INTO public.Family (id, name, created_by)
-VALUES ('10000000-0000-0000-0000-000000000002', 'Family B', '00000000-0000-0000-0000-000000000003');
+-- Circle B: user_c is owner (user_a and user_b are NOT members)
+INSERT INTO public.Circle (id, name, created_by)
+VALUES ('10000000-0000-0000-0000-000000000002', 'Circle B', '00000000-0000-0000-0000-000000000003');
 
-INSERT INTO public.FamilyMember (user_id, family_id, role)
+INSERT INTO public.CircleMember (user_id, circle_id, role)
 VALUES ('00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'owner');
+
+-- Circle A: add a caregiver (user_c reused as caregiver in Circle A for test isolation)
+-- Using a 4th user to avoid role confusion with user_c's owner role in Circle B
+INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+VALUES ('00000000-0000-0000-0000-000000000004', 'caregiver@test.com', '', now(), now(), now());
+
+INSERT INTO public.CircleMember (user_id, circle_id, role)
+VALUES ('00000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'caregiver');
 
 -- ============================================================
 -- HELPERS
@@ -64,23 +72,23 @@ SELECT is(
 );
 
 -- ============================================================
--- TEST 2: user_b can read family memory in their family
+-- TEST 2: user_b can read circle memory in their circle
 -- ============================================================
 SELECT is(
   (SELECT count(*)::int FROM public.Memory
-   WHERE id = '20000000-0000-0000-0000-000000000002' AND visibility = 'family'),
+   WHERE id = '20000000-0000-0000-0000-000000000002' AND visibility = 'circle'),
   1,
-  'user_b can read family memory they belong to'
+  'user_b can read circle memory they belong to'
 );
 
 -- ============================================================
--- TEST 3: user_b cannot read Family B (not a member)
+-- TEST 3: user_b cannot read Circle B (not a member)
 -- ============================================================
 SELECT is(
-  (SELECT count(*)::int FROM public.Family
+  (SELECT count(*)::int FROM public.Circle
    WHERE id = '10000000-0000-0000-0000-000000000002'),
   0,
-  'user_b cannot read a family they are not a member of'
+  'user_b cannot read a circle they are not a member of'
 );
 
 -- ============================================================
@@ -96,20 +104,20 @@ SELECT is(
 );
 
 -- ============================================================
--- TEST 5: member (user_b) cannot insert a FamilyMember into Family A
+-- TEST 5: member (user_b) cannot insert a CircleMember into Circle A
 -- (only owner/admin can)
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000002');
 
 SELECT throws_ok(
-  $$INSERT INTO public.FamilyMember (user_id, family_id, role)
+  $$INSERT INTO public.CircleMember (user_id, circle_id, role)
     VALUES ('00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'member')$$,
-  'new row violates row-level security policy for table "familymember"',
-  'member cannot add other users to a family'
+  'new row violates row-level security policy for table "circlemember"',
+  'member cannot add other users to a circle'
 );
 
 -- ============================================================
--- TEST 6: user_c cannot read user_a's profile (different family)
+-- TEST 6: user_c cannot read user_a's profile (different circle)
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000003');
 
@@ -117,11 +125,11 @@ SELECT is(
   (SELECT count(*)::int FROM public.User
    WHERE id = '00000000-0000-0000-0000-000000000001'),
   0,
-  'user_c cannot read user_a profile (not in same family)'
+  'user_c cannot read user_a profile (not in same circle)'
 );
 
 -- ============================================================
--- TEST 7: user_b can read user_a's profile (same family)
+-- TEST 7: user_b can read user_a's profile (same circle)
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000002');
 
@@ -129,7 +137,7 @@ SELECT is(
   (SELECT count(*)::int FROM public.User
    WHERE id = '00000000-0000-0000-0000-000000000001'),
   1,
-  'user_b can read user_a profile (same family)'
+  'user_b can read user_a profile (same circle)'
 );
 
 -- ============================================================
@@ -157,6 +165,29 @@ SELECT is(
    WHERE user_id = '00000000-0000-0000-0000-000000000001'),
   1,
   'user_a can read their own account storage'
+);
+
+-- ============================================================
+-- TEST 10: caregiver cannot read private memories (RESTRICTIVE policy)
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000004');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.Memory
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001' AND visibility = 'private'),
+  0,
+  'caregiver cannot read private memories in their circle'
+);
+
+-- ============================================================
+-- TEST 11: caregiver CAN read circle-visibility memories
+-- ============================================================
+SELECT is(
+  (SELECT count(*)::int FROM public.Memory
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001' AND visibility = 'circle'),
+  1,
+  'caregiver can read circle-visibility memories'
 );
 
 SELECT * FROM finish();

@@ -24,11 +24,11 @@ The wedge: Google Photos is built for one person. This is built for any meaningf
 
 | UI (users see) | Code / DB (internal) |
 |---|---|
-| Circle | Family |
-| Create a Circle | Create a Family |
-| Circle members | FamilyMember |
+| Circle | Circle |
+| Create a Circle | Create a Circle |
+| Circle members | CircleMember |
 
-Zero schema impact — UX language change only.
+Both UI and code/DB now use "Circle" — this is not just a UX rename.
 
 ---
 
@@ -60,8 +60,8 @@ Upload → Add note → Share to circle timeline → Circle reacts
 - **Batch upload** with per-item EXIF date detection and review UI before uploading
 - Milestones (preset templates per circle type + fully custom milestones)
 - Notes, comments, emoji reactions on memories
-- Personal vs family visibility per memory
-- Invite-only family with magic link + view-only mode (no account needed)
+- Personal vs circle visibility per memory
+- Invite-only circle with magic link + view-only mode (no account needed)
 - On This Day daily push notification (free for all in Phase 1 — no tier check until Stripe billing ships in Phase 2; then Plus-gated)
 - Early retention hooks (months 1–6): weekly digest, milestone suggestions, first-memory anniversary, quiet-circle nudge
 - Mobile-responsive PWA (no app download required for Phase 1)
@@ -86,8 +86,8 @@ Upload → Add note → Share to circle timeline → Circle reacts
 - Collaborative memory (one event, many contributors)
 - Pregnancy journey tracker
 - Baby / child development tracking (WHO milestones)
-- Family map (EXIF GPS, shareable)
-- Family challenges (weekly prompts)
+- Circle map (EXIF GPS, shareable)
+- Circle challenges (weekly prompts)
 - Private family newsletter (outward to non-members)
 - Referral program (30-day Pro trial for referrer when referee uploads first memory)
 - Year in Review full slideshow/video (Pro only — Remotion-generated, immersive in-app experience)
@@ -127,9 +127,9 @@ Upload → Add note → Share to circle timeline → Circle reacts
 User (platform_role: "user"|"platform_admin", stripe_customer_id, stripe_subscription_id,
       subscription_status: "free"|"plus"|"pro", subscription_period_end,
       referral_code, referred_by_user_id, deletion_requested_at, deleted_at)
-      -- Stripe credentials on User only — NOT on Family
+      -- Stripe credentials on User only — NOT on Circle
 
-Family (circle_type, subscription_status: "free"|"plus"|"pro"|"grace", grace_period_until,
+Circle (circle_type, subscription_status: "free"|"plus"|"pro"|"grace", grace_period_until,
         challenge_streak, last_challenge_completed_at,
         quiet_nudge_count, quiet_nudge_last_sent_at,
         first_memory_at, last_memory_at, memory_count,
@@ -137,25 +137,25 @@ Family (circle_type, subscription_status: "free"|"plus"|"pro"|"grace", grace_per
         e2ee_enabled, e2ee_enabled_at,
         deleted_at, deletion_initiated_by)
 
-FamilyMember (role: owner | admin | member | caregiver,
+CircleMember (role: owner | admin | member | caregiver,
               memorial_status: "active"|"memorial", memorial_date, memorial_message)
 
 Group, GroupMember
-Memory (visibility: private | family, note, alt_text, memory_date, is_collaborative,
+Memory (visibility: private | circle, note, alt_text, memory_date, is_collaborative,
         contributions_open, milestone_label, milestone_is_custom)
 MemoryMedia (phash, lat, lng, location_name, is_live_photo, still_path, live_path,
              event_token_id, guest_name)
 MemoryContribution (for collaborative memories)
 MemoryComment, MemoryReaction (type: emoji | voice | video)
 AccountStorage (total_quota_bytes, total_used_bytes, bonus_bytes — reserved for future promotions, not referrals)
-FamilyInvite, EventUploadToken (guest uploads; requires_approval bool default true)
+CircleInvite, EventUploadToken (guest uploads; requires_approval bool default true)
 Album, AlbumMemory
 NotificationPreference (push, email digest, quiet hours, family mute)
 TimeCapsule, PregnancyJourney, PregnancyEntry
 ChildProfile (data record only — NOT a user account, cannot login)
 DevelopmentEntry
-FamilyChallenge, ChallengeEntry
-FamilyStreak (Phase 2 — circle-level upload streak: current_streak_weeks, longest_streak_weeks, last_upload_week)
+CircleChallenge, ChallengeEntry
+CircleStreak (Phase 2 — circle-level upload streak: current_streak_weeks, longest_streak_weeks, last_upload_week)
 NewsletterRecipient (open_count, click_count, last_clicked_at, join_prompt_count)
 Referral (pro_trial_granted, pro_trial_ends_at — no separate ReferralReward table), ExportJob, FeatureFlag, BackupLog
 Feedback (user_id nullable, message, page, app_version — in-app submissions; distinct from Crisp support chat)
@@ -167,7 +167,7 @@ Feedback (user_id nullable, message, page, app_version — in-app submissions; d
 
 | Decision | Choice | Why |
 |---|---|---|
-| Storage quota | Per account | Prevents family-spam exploit |
+| Storage quota | Per account | Prevents circle-spam exploit |
 | Media access | Signed URLs (1h expiry) | RLS protects DB, not files |
 | Timeline ordering | `memory_date` (not `created_at`) | Old photos insert at correct position |
 | Timeline loading | Cursor-based pagination + virtual scroll | Stable + performant at scale |
@@ -196,7 +196,7 @@ Feedback (user_id nullable, message, page, app_version — in-app submissions; d
 
 | Role | Key permissions |
 |---|---|
-| Owner | Billing, delete family, transfer ownership |
+| Owner | Billing, delete circle, transfer ownership |
 | Admin | Invite/remove members, delete any memory |
 | Member | Upload, comment, react, delete own memories |
 | Caregiver | Upload to family timeline (always family-visible), view family timeline, react (emoji only) — no comments, no private memories, no member list, no settings |
@@ -217,7 +217,7 @@ Feedback (user_id nullable, message, page, app_version — in-app submissions; d
 **Subscription model:** One subscription per user account. Owner's tier determines their circles' features. Members inherit circle-level features but their private storage is governed by their own tier.
 
 ### Free trial
-New circles get a **14-day Pro trial** starting on first memory upload. No credit card. DB-tracked (`Family.trial_ends_at`). 3-day warning email before expiry. No Stripe subscription created until the user actively upgrades.
+New circles get a **14-day Pro trial** starting on first memory upload. No credit card. DB-tracked (`Circle.trial_ends_at`). 3-day warning email before expiry. No Stripe subscription created until the user actively upgrades.
 
 ### Upgrade triggers
 - 11th member joins → "Upgrade to Plus"
@@ -321,7 +321,7 @@ All tests run in CI on every PR. Broken RLS tests block merge.
 - 📔 Just me → solo, personal templates
 - ✏️ Other → blank, fully custom
 
-Stored as `Family.circle_type` — drives milestone suggestions, empty state copy, push notification language.
+Stored as `Circle.circle_type` — drives milestone suggestions, empty state copy, push notification language.
 
 ---
 

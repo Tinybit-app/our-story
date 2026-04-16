@@ -2,7 +2,7 @@ import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
 
 const querySchema = z.object({
-  familyId: z.uuid(),
+  circleId: z.uuid(),
   cursor: z.string().optional(),
 })
 
@@ -13,15 +13,15 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = querySchema.safeParse(getQuery(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "familyId is required" })
-  const { familyId, cursor } = result.data
+  if (!result.success) throw createError({ statusCode: 400, message: "circleId is required" })
+  const { circleId, cursor } = result.data
 
-  // Verify the requesting user belongs to this family
+  // Verify the requesting user belongs to this circle
   const { data: membership } = await supabase
-    .from("familymember")
+    .from("circlemember")
     .select("id")
     .eq("user_id", user.sub)
-    .eq("family_id", familyId)
+    .eq("circle_id", circleId)
     .maybeSingle()
 
   if (!membership) throw createError({ statusCode: 403 })
@@ -35,9 +35,9 @@ export default defineEventHandler(async (event) => {
       memoryreaction(id, emoji, user_id),
       memorycomment(id)
     `)
-    .eq("family_id", familyId)
-    // Show family-shared memories + the current user's own private memories
-    .or(`visibility.eq.family,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
+    .eq("circle_id", circleId)
+    // Show circle-shared memories + the current user's own private memories
+    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
     .order("memory_date", { ascending: false })
     .order("id", { ascending: false })
     .limit(20)
@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
           const [fullResult, thumbResult] = await Promise.allSettled([
             supabase.storage.from("memories-private").createSignedUrl(storage_path, 3600),
             supabase.storage.from("memories-private").createSignedUrl(storage_path, 86400, {
-              transform: { width: 800, format: "webp", quality: 85 },
+              transform: { width: 800, format: "webp" as "origin", quality: 85 },
             }),
           ])
 

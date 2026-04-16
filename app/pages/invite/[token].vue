@@ -52,12 +52,12 @@ onMounted(async () => {
 
 async function acceptInvite() {
   try {
-    const result = await $fetch<{ ok: boolean; familyId: string }>(`/api/invites/${token}/accept`, { method: 'POST' })
+    const result = await $fetch<{ ok: boolean; circleId: string }>(`/api/invites/${token}/accept`, { method: 'POST' })
     inviteCookie.value = null
     // Refresh user state so the index page guard sees hasMembership: true
     const { refresh } = useUserState()
     await refresh()
-    router.push(`/?family=${result.familyId}&welcome=1`)
+    router.push(`/?circle=${result.circleId}&welcome=1`)
   } catch (err: any) {
     errorMsg.value = err?.data?.message ?? 'error'
   }

@@ -1,7 +1,7 @@
-import * as Sentry from '@sentry/nuxt'
+import * as Sentry from "@sentry/nuxt"
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: useRuntimeConfig().public.sentryDsn,
   environment: process.env.NODE_ENV,
   tracesSampleRate: 0.1,
 })

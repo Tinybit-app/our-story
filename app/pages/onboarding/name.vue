@@ -24,13 +24,13 @@
         :placeholder="placeholder"
         class="w-full bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-4"
         autofocus
-        @keyup.enter="name && !loading && createFamily()"
+        @keyup.enter="name && !loading && createCircle()"
       />
 
       <p v-if="errorMsg" class="mb-4 text-sm text-destructive">{{ errorMsg }}</p>
 
       <button
-        @click="createFamily"
+        @click="createCircle"
         :disabled="!name || loading"
         class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity mb-3"
       >
@@ -57,7 +57,7 @@ const loading = ref(false)
 const errorMsg = ref('')
 
 const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
-const familyIdCookie = useCookie<string | null>('onboarding_family_id', { maxAge: 60 * 60 * 2 })
+const circleIdCookie = useCookie<string | null>('onboarding_circle_id', { maxAge: 60 * 60 * 2 })
 
 const placeholder = computed(() => {
   const map: Record<string, string> = {
@@ -72,24 +72,24 @@ const placeholder = computed(() => {
   return map[circleTypeCookie.value ?? ''] ?? 'Our Circle'
 })
 
-async function createFamily() {
+async function createCircle() {
   loading.value = true
   errorMsg.value = ''
 
   try {
-    const { familyId } = await $fetch<{ familyId: string }>('/api/families/create', {
+    const { circleId } = await $fetch<{ circleId: string }>('/api/circles/create', {
       method: 'POST',
       body: { name: name.value, circleType: circleTypeCookie.value },
     })
 
-    familyIdCookie.value = familyId
+    circleIdCookie.value = circleId
 
     const { refresh } = useUserState()
     await refresh()
 
     if (circleTypeCookie.value === 'solo') {
       circleTypeCookie.value = null
-      familyIdCookie.value = null
+      circleIdCookie.value = null
       router.push('/')
     } else {
       router.push('/onboarding/invite')

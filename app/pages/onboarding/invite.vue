@@ -63,16 +63,16 @@ const errorMsg = ref('')
 const router = useRouter()
 
 const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
-const familyIdCookie = useCookie<string | null>('onboarding_family_id', { maxAge: 60 * 60 * 2 })
+const circleIdCookie = useCookie<string | null>('onboarding_circle_id', { maxAge: 60 * 60 * 2 })
 
 async function sendInvite() {
   loading.value = true
   errorMsg.value = ''
 
   try {
-    await $fetch('/api/families/invite', {
+    await $fetch('/api/circles/invite', {
       method: 'POST',
-      body: { familyId: familyIdCookie.value, email: email.value },
+      body: { circleId: circleIdCookie.value, email: email.value },
     })
     sent.value = true
   } catch (err: any) {
@@ -84,7 +84,7 @@ async function sendInvite() {
 
 function finish() {
   circleTypeCookie.value = null
-  familyIdCookie.value = null
+  circleIdCookie.value = null
   router.push('/')
 }
 </script>

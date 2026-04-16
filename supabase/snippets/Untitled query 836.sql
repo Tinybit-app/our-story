@@ -1,5 +1,5 @@
-select * from family
+select * from circle
 
-select * from familymember
+select * from circlemember
 
 select * from public.user

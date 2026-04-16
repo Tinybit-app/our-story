@@ -6,7 +6,13 @@
 - **Design spec summary:** `docs/design-spec-summary.md` — quick reference (tech stack, pricing, phases)
 - **Build plan:** `docs/build-plan.md` — Phase 1 step-by-step implementation with progress tracker
 
-Always check the build plan progress tracker before starting work to see what's done and what's next.
+**Before every implementation task:**
+1. Check the build plan progress tracker to see what's done and what's next
+2. Read the relevant build plan step(s) in full before writing any code
+3. Cross-reference the design spec for the feature being built — implementation must match the spec exactly
+4. After implementing, verify against the build plan's "Definition of done" for that step
+
+The build plan and design spec are the source of truth. Do not deviate from them without explicitly discussing the trade-off with the user first.
 
 ## Stack
 
@@ -19,8 +25,8 @@ Always check the build plan progress tracker before starting work to see what's 
 
 ## Terminology
 
-- **UI / copy:** "Circle", "Create a Circle", "Circle members"
-- **Code / DB:** `Family`, `FamilyMember` — zero schema impact, UX language only
+- **UI / copy and Code / DB:** "Circle", "CircleMember", "CircleInvite" — consistent throughout
+- Memory visibility values: `'private'` (owner only) and `'circle'` (all circle members)
 
 ## Rules
 
@@ -32,3 +38,14 @@ Always check the build plan progress tracker before starting work to see what's 
 - Migrations must be additive first — never drop a column in the same PR as the feature that removes it
 - RLS tests must pass before merging any migration
 - Timeline queries order by `memory_date` (not `created_at`) — this drives correct chronological position for old photos uploaded today
+- `circle_type` values are: `'parents' | 'couple' | 'family' | 'friends' | 'caregiving' | 'travel' | 'solo' | 'custom'` — validate with `z.enum()`, never `z.string()`
+- Sentry client config must use `useRuntimeConfig().public.sentryDsn` — `process.env.SENTRY_DSN` is not available in the browser SPA bundle
+
+## Tests
+
+Unit tests live in `unit/` (Vitest). Run with `pnpm test`.
+E2E tests live in `tests/` (Playwright). Run with `pnpm test:e2e`.
+RLS tests live in `supabase/tests/` (pgTAP). Run with `pnpm db:test`.
+
+After any migration change: `pnpm db:reset && pnpm db:test`
+After any API route change: `pnpm test`

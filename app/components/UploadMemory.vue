@@ -222,7 +222,7 @@ interface UploadItem {
   error: string
 }
 
-const props = defineProps<{ familyId: string }>()
+const props = defineProps<{ circleId: string }>()
 const emit = defineEmits<{ uploaded: [] }>()
 
 const supabase = useSupabaseClient()
@@ -330,7 +330,7 @@ async function uploadItem(item: UploadItem): Promise<void> {
 
   const formData = new FormData()
   formData.append('file', item.file)
-  formData.append('familyId', props.familyId)
+  formData.append('circleId', props.circleId)
   formData.append('note', item.note)
   formData.append('memoryDate', `${item.date}T00:00:00Z`)
 

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const [{ data: membership }, { data: profile }] = await Promise.all([
-    supabase.from("familymember").select("family_id").eq("user_id", user.sub).limit(1).maybeSingle(),
+    supabase.from("circlemember").select("circle_id").eq("user_id", user.sub).limit(1).maybeSingle(),
     supabase.from("user").select("first_name").eq("id", user.sub).maybeSingle(),
   ])
 
