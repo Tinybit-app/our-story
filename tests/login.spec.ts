@@ -29,8 +29,15 @@ test.describe('Login page', () => {
     await expect(page.getByText(/check your inbox/i)).toBeVisible()
   })
 
-  test('unauthenticated visit to / redirects to /login', async ({ page }) => {
+  test('unauthenticated visit to / shows landing page (not redirected to /login)', async ({ page }) => {
     await page.goto('/')
+    // / is the public landing page — unauthenticated visitors stay here.
+    // Protected routes (/timeline, /circle/*) redirect to /login; / does not.
+    await expect(page).toHaveURL('http://localhost:3000/')
+  })
+
+  test('unauthenticated visit to /timeline redirects to /login', async ({ page }) => {
+    await page.goto('/timeline')
     await expect(page).toHaveURL(/\/login/)
   })
 })
