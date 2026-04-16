@@ -62,15 +62,15 @@ Upload → Add note → Share to circle timeline → Circle reacts
 - Notes, comments, emoji reactions on memories
 - Personal vs family visibility per memory
 - Invite-only family with magic link + view-only mode (no account needed)
-- On This Day daily push notification (Plus tier)
+- On This Day daily push notification (free for all in Phase 1 — no tier check until Stripe billing ships in Phase 2; then Plus-gated)
 - Early retention hooks (months 1–6): weekly digest, milestone suggestions, first-memory anniversary, quiet-circle nudge
 - Mobile-responsive PWA (no app download required for Phase 1)
 - Invite email (Resend + React Email — emotionally crafted, not transactional)
 
 ### Phase 2
 - Albums & collections, search, memory date override
+- **Year in Review shareable card** — free for all tiers, generated client-side (canvas API); 9:16 format for Instagram Stories; public share URL with "Create your family's story →" CTA. This is the Spotify Wrapped acquisition mechanic — ships in Phase 2 because it's lightweight and drives organic growth from day one.
 - Voice memo (audio memory, max 60 seconds, server-side Whisper transcription)
-- Full Live Photos support (LivePhotosKit JS)
 - Stripe billing + storage quotas
 - Notification preferences, weekly email digest
 - Native app (Capacitor — iOS + Android, App Store submission)
@@ -89,10 +89,11 @@ Upload → Add note → Share to circle timeline → Circle reacts
 - Family map (EXIF GPS, shareable)
 - Family challenges (weekly prompts)
 - Private family newsletter (outward to non-members)
-- Referral program (+5 GB bonus)
-- Year in Review (Spotify Wrapped for families — shareable 9:16 card for Instagram Stories)
+- Referral program (30-day Pro trial for referrer when referee uploads first memory)
+- Year in Review full slideshow/video (Pro only — Remotion-generated, immersive in-app experience)
 - Caregiver mode, memorial / legacy mode
 - Video / voice reactions
+- Full Live Photos support (LivePhotosKit JS)
 - Optional per-circle E2EE (client-side AES-256-GCM, opt-in)
 - Physical products (photo books, printed timelines — $20–60 one-time)
 - Extra storage add-on (+100 GB for $2/mo)
@@ -125,31 +126,39 @@ Upload → Add note → Share to circle timeline → Circle reacts
 ```
 User (platform_role: "user"|"platform_admin", stripe_customer_id, stripe_subscription_id,
       subscription_status: "free"|"plus"|"pro", subscription_period_end,
-      referral_code, referred_by_user_id, deleted_at)
+      referral_code, referred_by_user_id, deletion_requested_at, deleted_at)
+      -- Stripe credentials on User only — NOT on Family
 
-Family (subscription_status: "free"|"plus"|"pro"|"grace", grace_period_until,
-        circle_type, e2ee_enabled, challenge_streak)
+Family (circle_type, subscription_status: "free"|"plus"|"pro"|"grace", grace_period_until,
+        challenge_streak, last_challenge_completed_at,
+        quiet_nudge_count, quiet_nudge_last_sent_at,
+        first_memory_at, last_memory_at, memory_count,
+        trial_ends_at, trial_used, first_month_email_sent,
+        e2ee_enabled, e2ee_enabled_at,
+        deleted_at, deletion_initiated_by)
 
 FamilyMember (role: owner | admin | member | caregiver,
               memorial_status: "active"|"memorial", memorial_date, memorial_message)
 
 Group, GroupMember
-Memory (visibility: private | family | group, memory_date, is_collaborative,
-        contributions_open, milestone_label, milestone_is_custom, alt_text)
+Memory (visibility: private | family, note, alt_text, memory_date, is_collaborative,
+        contributions_open, milestone_label, milestone_is_custom)
 MemoryMedia (phash, lat, lng, location_name, is_live_photo, still_path, live_path,
              event_token_id, guest_name)
 MemoryContribution (for collaborative memories)
 MemoryComment, MemoryReaction (type: emoji | voice | video)
-AccountStorage (total_quota_bytes, total_used_bytes, bonus_bytes)
-FamilyInvite, EventUploadToken (guest uploads)
+AccountStorage (total_quota_bytes, total_used_bytes, bonus_bytes — reserved for future promotions, not referrals)
+FamilyInvite, EventUploadToken (guest uploads; requires_approval bool default true)
 Album, AlbumMemory
 NotificationPreference (push, email digest, quiet hours, family mute)
 TimeCapsule, PregnancyJourney, PregnancyEntry
 ChildProfile (data record only — NOT a user account, cannot login)
 DevelopmentEntry
 FamilyChallenge, ChallengeEntry
-NewsletterRecipient
-Referral, ExportJob, FeatureFlag, BackupLog
+FamilyStreak (Phase 2 — circle-level upload streak: current_streak_weeks, longest_streak_weeks, last_upload_week)
+NewsletterRecipient (open_count, click_count, last_clicked_at, join_prompt_count)
+Referral (pro_trial_granted, pro_trial_ends_at — no separate ReferralReward table), ExportJob, FeatureFlag, BackupLog
+Feedback (user_id nullable, message, page, app_version — in-app submissions; distinct from Crisp support chat)
 ```
 
 ---
@@ -179,7 +188,7 @@ Referral, ExportJob, FeatureFlag, BackupLog
 | Backup | Supabase → S3 → Glacier | 3-location, 50-year guarantee |
 | E2EE | Opt-in per circle, Phase 3 | Breaks thumbnails/dedup/search if default — honest privacy policy covers Phase 1–2 |
 | Subscription model | Per account (owner pays) | One Stripe subscription per user; owner's tier determines their circles' features |
-| Year in Review | Pro-only (blurred preview on Free/Plus) | Shareable 9:16 card drives organic acquisition |
+| Year in Review | Phase 2: shareable card (free for all tiers, canvas API). Phase 3: full slideshow/video (Pro only — blurred preview for Free/Plus) | Free card is the Spotify Wrapped acquisition mechanic; Pro video is the upsell |
 
 ---
 
@@ -190,7 +199,7 @@ Referral, ExportJob, FeatureFlag, BackupLog
 | Owner | Billing, delete family, transfer ownership |
 | Admin | Invite/remove members, delete any memory |
 | Member | Upload, comment, react, delete own memories |
-| Caregiver | Upload + view family timeline only |
+| Caregiver | Upload to family timeline (always family-visible), view family timeline, react (emoji only) — no comments, no private memories, no member list, no settings |
 | Platform admin | Unlimited storage (developer account, DB `platform_role` only — never client-exposed) |
 
 ---
@@ -199,18 +208,21 @@ Referral, ExportJob, FeatureFlag, BackupLog
 
 | Plan | Price | Storage | Key unlock |
 |---|---|---|---|
-| Free | $0 | 5 GB | 1 circle owned, 5 members, basic timeline, milestones, comments, reactions |
-| Plus | $4.99/mo | 50 GB | Unlimited circles owned, 20 members, albums, search, On This Day, notification preferences, offline upload |
+| Free | $0 | 5 GB | 1 circle owned, 10 members, basic timeline, milestones, albums, comments, reactions |
+| Plus | $4.99/mo | 50 GB | Unlimited circles owned, 20 members, search, On This Day, notification preferences, offline upload |
 | Pro | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review, priority support, voice/video reactions |
 
 **Philosophy:** Sell the story, not the storage. Feature gates drive upgrades — users pay for what they *want*, not because they hit a byte limit.
 
 **Subscription model:** One subscription per user account. Owner's tier determines their circles' features. Members inherit circle-level features but their private storage is governed by their own tier.
 
+### Free trial
+New circles get a **14-day Pro trial** starting on first memory upload. No credit card. DB-tracked (`Family.trial_ends_at`). 3-day warning email before expiry. No Stripe subscription created until the user actively upgrades.
+
 ### Upgrade triggers
-- 6th member joins → "Upgrade to Plus"
+- 11th member joins → "Upgrade to Plus"
 - Time capsule attempted → "Upgrade to Pro"
-- Collaborative memory on Free → "Upgrade to Plus"
+- Collaborative memory on Free/Plus → "Upgrade to Pro"
 - Storage at 80% → "Your story space is almost full"
 - Year in Review → blurred preview on Free/Plus → "Unlock your year"
 
@@ -243,7 +255,7 @@ Referral, ExportJob, FeatureFlag, BackupLog
 - CORS locked to own domain only
 - File upload: MIME type verified from magic bytes, not just `Content-Type` header
 - Never expose `storage_path`, stack traces, or DB errors to client
-- Dependabot for dependency vulnerability scanning; `pnpm audit --audit-level=high` in CI
+- Dependabot for dependency vulnerability scanning; `npm audit --audit-level=high` in CI (use `npm audit`, not `pnpm audit` — pnpm targets retired audit endpoints as of v10)
 - `platform_role` column readable only by the user themselves (not other family members)
 
 ---
@@ -283,7 +295,7 @@ All tests run in CI on every PR. Broken RLS tests block merge.
 | 3 | Invited member activation (upload in first session) | Retention |
 | 4 | Shareable memory cards (branded) | Viral |
 | 5 | Year in Review (shareable 9:16 card for Instagram Stories) | Viral |
-| 6 | Referral program (+5 GB) | Acquisition |
+| 6 | Referral program (30-day Pro trial for referrer) | Acquisition |
 
 **Rule: nail retention (#1–3) before viral (#4–6).**
 
@@ -341,10 +353,16 @@ No paid ads, no Product Hunt, no press until retention is proven.
 - [ ] Test invite email in Gmail + Hotmail — confirm inbox delivery
 - [ ] RLS policy tests passing (`supabase db test`)
 - [ ] Privacy policy + Terms of Service live
-- [ ] Stripe webhook handlers tested
 - [ ] Sentry error tracking active
 - [ ] Supabase Storage `fileSizeLimit` set to 500 MB (Pro plan required for video uploads)
 - [ ] At least one non-developer family using it in staging
+
+## Pre-Launch Checklist (before Phase 2 / billing goes live)
+
+- [ ] Stripe webhook handlers tested (upgrade, downgrade, cancel, payment failure)
+- [ ] OWASP ZAP scan on staging — all critical/high resolved
+- [ ] App Store / Play Console metadata + privacy policy URL live
+- [ ] Storage quota enforcement tested end-to-end
 
 ---
 

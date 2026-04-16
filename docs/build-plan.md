@@ -36,13 +36,14 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
 - [ ] 3.8 Data export (ExportJob): members export own uploads only; owners export full circle
 
-### Milestone 3.9: Landing Page (Cold Discovery)
+### Milestone 3.9: Landing Page + Pricing Page (Cold Discovery)
 - [ ] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
 - [ ] 3.9.2 Hero: headline, subhead, single CTA ("Start your circle — free")
 - [ ] 3.9.3 Below fold: product screenshot, 3-step explainer, privacy proof, pricing summary
 - [ ] 3.9.4 SEO: `<title>`, meta description, OG tags targeting "private photo sharing for family"
-- Note: single focused page — not a multi-page marketing site; lives inside the Nuxt app
-- Note: see design spec §Cold Discovery Strategy for full page structure and SEO targets
+- [ ] 3.9.5 `/pricing` route — tier comparison table (Free / Plus / Pro "coming soon"), FAQ (cancel, photos on cancel, privacy, grandparents), CTA per tier
+- Note: single focused pages — not a multi-page marketing site; lives inside the Nuxt app
+- Note: see design spec §Cold Discovery Strategy and §Pricing Page for full structure
 
 ### Milestone 4: Onboarding & Family Creation
 - [x] 4.1 Onboarding flow (circle type picker → name → invite)
@@ -73,11 +74,12 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 8.1 Comments (post, read, delete own)
 - [ ] 8.2 Emoji reactions (toggle on/off)
 
-### Milestone 8.5: Localization (i18n — English + Chinese)
-- [ ] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-Hans` locales (lazy-loaded JSON files)
+### Milestone 8.5: Localization (i18n — English + Chinese + French)
+- [ ] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-Hans` + `fr` locales (lazy-loaded JSON files)
 - [ ] 8.5.2 Extract all UI strings to `locales/en.json` — replace every hardcoded string with `t('key')`
-- [ ] 8.5.3 Translate `locales/zh-Hans.json` (Simplified Chinese)
-- [ ] 8.5.4 Language toggle in settings (persisted to user profile)
+- [ ] 8.5.3 Translate `locales/zh-Hans.json` (Simplified Chinese — must-have: developer's own parents)
+- [ ] 8.5.4 Translate `locales/fr.json` (French — Canadian bilingual requirement)
+- [ ] 8.5.5 Language toggle in settings (persisted to `User.locale`)
 - Note: use `Intl.DateTimeFormat` for all dates from day one — never hardcode `MM/DD/YYYY`
 - Note: see design spec §Localization for full setup code and priority language rationale
 
@@ -86,17 +88,20 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 9.2 View-only page (no auth required)
 - Note: tech-savvy family members should be invited as full members — viewer role is for anyone who won't create an account, not a grandparent-specific path
 
-### Milestone 9.5: Guest Contributor / Event QR Code
-- [ ] 9.5.1 Circle owner generates a guest upload token (scoped to one event, expires in 7 days)
-- [ ] 9.5.2 Guest upload page at `/event?token=abc` — name entry + photo upload, no account required
-- [ ] 9.5.3 Uploaded photos appear on the timeline tagged as guest contributions
-- [ ] 9.5.4 Post-upload CTA: "Want your own family circle? Create one free →"
+### Milestone 9.5: Guest Contributor / Event QR Code *(Phase 3 — do not build in Phase 1)*
+
+> **Do not build this in Phase 1.** The spec classifies Guest Contributor as a Phase 3 viral/growth mechanic — it requires active users and events to generate acquisition value. Build Milestone 9 (Viewer-Role) instead. See design spec §Phase 3 build list.
+
+- [ ] 9.5.1 *(Phase 3)* Circle owner generates a guest upload token (scoped to one event, expires in 7 days)
+- [ ] 9.5.2 *(Phase 3)* Guest upload page at `/event?token=abc` — name entry + photo upload, no account required
+- [ ] 9.5.3 *(Phase 3)* Uploaded photos appear on the timeline tagged as guest contributions
+- [ ] 9.5.4 *(Phase 3)* Post-upload CTA: "Want your own family circle? Create one free →"
 - Note: every event (wedding, birthday, reunion) becomes an acquisition moment — guests experience the product before being asked to sign up
 - Note: see design spec §Guest Contributor for full token flow
 
 ### Milestone 10: Push Notifications & On This Day
-- [ ] 10.1 Basic push (new upload, comment, reaction)
-- [ ] 10.2 On This Day daily cron
+- [ ] 10.1 Basic push (new upload, comment, reaction) — default push_enabled = true on join; prompt to configure on first notification received
+- [ ] 10.2 On This Day daily cron — activates at 30+ memories and 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification — build for all users in Phase 1 (no tier check); add Plus gate in Phase 2 alongside Stripe billing
 
 ### Milestone 11: PWA & Mobile Polish
 - [ ] 11.1 PWA manifest + service worker
@@ -110,16 +115,16 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 12.3 First-memory anniversary (30-day cron)
 - [ ] 12.3.1 "Your first month" recap email — sent 30 days after first upload, shows memory count, milestone highlights, and top reaction; simpler than Year in Review but creates a felt delight moment early
 - [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Family table)
-- [ ] 12.5 Family streak (circle-level weekly streak, Sunday evening nudge, shareable milestone cards at 4/12/52 weeks)
 
 ### Milestone 13: Pre-Launch Checklist
+- [ ] Auth: verify magic link on device 2 does not invalidate existing session on device 1 — test with two devices simultaneously; if it does, switch to PKCE flow (see design spec §Magic link session behavior)
 - [ ] Security: RLS tests passing + manual privacy breach tests
 - [ ] Security: HTTP headers verified (securityheaders.com)
-- [ ] Security: `pnpm audit` zero high/critical vulnerabilities
+- [ ] Security: `npm audit --audit-level=high` zero high/critical vulnerabilities
 - [ ] Security: OWASP ZAP scan on staging — all critical/high resolved
 - [ ] Security: service role key absent from client code
 - [ ] Data: quota enforcement, memory date ordering, invite single-use
-- [ ] Testing: unit + E2E passing, Stripe webhooks tested
+- [ ] Testing: unit + E2E passing (Stripe webhook tests belong in Phase 2 pre-launch — no billing in Phase 1)
 - [ ] UX: onboarding tested on real iOS + Android devices
 - [ ] UX: Lighthouse ≥ 80, axe-core zero critical violations
 - [ ] Email: SPF / DKIM / DMARC configured + inbox delivery verified
@@ -146,7 +151,7 @@ cd our-story
 Install core dependencies:
 ```bash
 pnpm install @nuxtjs/supabase @nuxtjs/tailwindcss @vueuse/nuxt
-pnpm install @upstash/ratelimit @upstash/redis
+pnpm install @upstash/ratelimit @upstash/redis  # Phase 2 dependency — installed now so env vars are wired from day one, but no Upstash calls in Phase 1 code. Phase 1 rate limiting uses server-side DB count checks only. You do NOT need to provision an Upstash instance until Phase 2.
 pnpm install resend
 pnpm install -D vitest @vitest/ui playwright @playwright/test
 
@@ -264,9 +269,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   test:
@@ -274,17 +279,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: latest
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+        # Use npm audit, not pnpm audit — pnpm targets retired npm audit endpoints as of v10
 
       - uses: supabase/setup-cli@v1
         with:
@@ -293,19 +302,41 @@ jobs:
       - name: Start local Supabase
         run: supabase start
 
+      - name: Export Supabase env vars
+        run: |
+          STATUS_ENV=$(supabase status --output env 2>&1)
+          # Supabase CLI v2 renamed: ANON_KEY→PUBLISHABLE_KEY, SERVICE_ROLE_KEY→SECRET_KEY
+          ANON_KEY=$(echo "$STATUS_ENV" | grep 'PUBLISHABLE_KEY=' | cut -d= -f2-)
+          SERVICE_KEY=$(echo "$STATUS_ENV" | grep 'SECRET_KEY=' | cut -d= -f2-)
+          echo "NUXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
+          echo "NUXT_PUBLIC_SUPABASE_KEY=$ANON_KEY" >> $GITHUB_ENV
+          echo "NUXT_SUPABASE_SECRET_KEY=$SERVICE_KEY" >> $GITHUB_ENV
+          echo "JWT_SECRET=ci-placeholder-secret-not-used-in-tests" >> $GITHUB_ENV
+
       - name: Run DB tests (RLS policies)
-        run: supabase db test
+        run: |
+          if find supabase/tests -name "*.sql" 2>/dev/null | grep -q .; then
+            pnpm db:test
+          else
+            echo "No DB tests found, skipping."
+          fi
 
       - name: Run unit tests
         run: pnpm test
 
       - name: Install Playwright browsers
-        run: pnpm dlx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
         run: pnpm test:e2e
-        env:
-          BASE_URL: http://localhost:3000
+
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
 
       - name: Stop Supabase
         run: supabase stop
@@ -429,8 +460,9 @@ updates:
 **Security audit in CI** — add to `.github/workflows/ci.yml`:
 ```yaml
 - name: Security audit
-  run: pnpm audit --audit-level=high
+  run: npm audit --audit-level=high
 ```
+> Use `npm audit`, not `pnpm audit` — pnpm targets retired npm audit endpoints as of v10. The CI workflow already uses `npm audit`.
 
 **Error messages** — never expose internals to client. Always log server-side:
 ```ts
@@ -443,7 +475,7 @@ try {
 }
 ```
 
-**Definition of done:** Security headers visible in browser DevTools Network tab. CORS `Access-Control-Allow-Origin` set to your domain. `pnpm audit` runs in CI. Dependabot PRs enabled on GitHub.
+**Definition of done:** Security headers visible in browser DevTools Network tab. CORS `Access-Control-Allow-Origin` set to your domain. `npm audit --audit-level=high` runs in CI. Dependabot PRs enabled on GitHub.
 
 ---
 
@@ -530,6 +562,7 @@ CREATE TABLE public.User (
   first_name TEXT,
   last_name TEXT,
   avatar_url TEXT,
+  locale TEXT CHECK (locale IN ('en', 'zh-Hans', 'fr')),  -- nullable; falls back to browser language then 'en'; expand CHECK as Phase 2+ languages ship
   platform_role TEXT NOT NULL DEFAULT 'user' CHECK (platform_role IN ('user', 'platform_admin')),
   -- Subscription (one per user — owner's tier determines their circles' features)
   stripe_customer_id TEXT UNIQUE,
@@ -576,8 +609,19 @@ CREATE TABLE public.Family (
   subscription_status TEXT NOT NULL DEFAULT 'free' CHECK (subscription_status IN ('free', 'plus', 'pro', 'grace')),
   grace_period_until TIMESTAMPTZ,
   challenge_streak INT NOT NULL DEFAULT 0,
+  last_challenge_completed_at TIMESTAMPTZ,             -- updated on each completed challenge; used for streak logic
+  quiet_nudge_count INT NOT NULL DEFAULT 0,            -- quiet-circle nudge count; hard stop at 3
+  quiet_nudge_last_sent_at TIMESTAMPTZ,                -- prevents nudges < 14 days apart
   e2ee_enabled BOOL NOT NULL DEFAULT false,
   e2ee_enabled_at TIMESTAMPTZ,
+  first_memory_at TIMESTAMPTZ,                       -- set once on first Memory insert
+  last_memory_at TIMESTAMPTZ,                        -- updated on every Memory insert via trigger; used by quiet-circle nudge cron and weekly digest
+  memory_count INT NOT NULL DEFAULT 0,               -- incremented on every Memory insert via trigger; used by On This Day activation threshold
+  trial_ends_at TIMESTAMPTZ,                         -- Pro trial expiry
+  trial_used BOOL NOT NULL DEFAULT false,
+  first_month_email_sent BOOL NOT NULL DEFAULT false,
+  deleted_at TIMESTAMPTZ,                              -- set when owner initiates circle deletion; 30-day soft-delete window
+  deletion_initiated_by UUID REFERENCES public.User(id),  -- records which owner triggered deletion
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -604,7 +648,7 @@ CREATE TABLE public.FamilyInvite (
   family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'caregiver')),
+  role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member', 'caregiver')),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired')),
   expires_at TIMESTAMPTZ NOT NULL DEFAULT now() + INTERVAL '7 days',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -617,7 +661,7 @@ CREATE TABLE public.AccountStorage (
   user_id UUID PRIMARY KEY REFERENCES public.User(id) ON DELETE CASCADE,
   total_quota_bytes BIGINT NOT NULL DEFAULT 5368709120,  -- 5 GB free tier
   total_used_bytes BIGINT NOT NULL DEFAULT 0,
-  bonus_bytes BIGINT NOT NULL DEFAULT 0
+  bonus_bytes BIGINT NOT NULL DEFAULT 0  -- reserved for future storage promotions; referral reward is a Pro trial, not storage
 );
 
 -- Auto-create AccountStorage row on User insert
@@ -640,8 +684,11 @@ CREATE TABLE public.Memory (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES public.User(id),
   family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
-  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family', 'group')),
-  group_id UUID,  -- FK added after Group table
+  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'family')),
+  -- NOTE: 'group' is intentionally absent from the CHECK constraint. The spec requires
+  -- that 'group' is added only in the Phase 3 migration when Group/GroupMember tables ship.
+  -- Adding it here would allow group-scoped memories to be inserted before any RLS policy exists.
+  -- group_id column also ships in Phase 3 only — do NOT add it here.
   note TEXT,
   alt_text TEXT,
   memory_date TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -663,7 +710,7 @@ CREATE TABLE public.MemoryMedia (
   memory_id UUID NOT NULL REFERENCES public.Memory(id) ON DELETE CASCADE,
   storage_path TEXT NOT NULL,   -- NEVER expose to client — serve signed URLs only
   file_size BIGINT NOT NULL,
-  media_type TEXT NOT NULL CHECK (media_type IN ('photo', 'video', 'live_photo')),
+  media_type TEXT NOT NULL CHECK (media_type IN ('photo', 'video', 'live_photo', 'audio')),  -- 'audio' reserved for Phase 2 voice memos; in constraint now so Phase 2 migration is additive
   still_path TEXT,              -- live photos only
   live_path TEXT,               -- live photos only
   phash TEXT,
@@ -734,6 +781,66 @@ CREATE TABLE public.FeatureFlag (
   enabled_user_ids UUID[] NOT NULL DEFAULT '{}',
   enabled_pct INT NOT NULL DEFAULT 0 CHECK (enabled_pct BETWEEN 0 AND 100)
 );
+
+-- ============================================================
+-- CHILD PROFILES (data record only — not a User account)
+-- Phase 1: lightweight record (name + DOB) required for Step 12.2 milestone nudges.
+-- Phase 3: full development tracking UI (DevelopmentEntry, growth charts, WHO milestones)
+--          ships in Phase 3 — do NOT add DevelopmentEntry here.
+-- ============================================================
+CREATE TABLE public.ChildProfile (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  date_of_birth DATE NOT NULL,
+  avatar_media_id UUID REFERENCES public.MemoryMedia(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ============================================================
+-- NEWSLETTER RECIPIENTS (viewer-role digest recipients with no User account)
+-- ============================================================
+CREATE TABLE public.NewsletterRecipient (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  family_id UUID NOT NULL REFERENCES public.Family(id) ON DELETE CASCADE,
+  added_by UUID NOT NULL REFERENCES public.User(id),
+  email TEXT NOT NULL,
+  name TEXT,
+  frequency TEXT NOT NULL DEFAULT 'weekly' CHECK (frequency IN ('weekly', 'monthly')),
+  unsubscribe_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  subscribed BOOL NOT NULL DEFAULT true,
+  open_count INT NOT NULL DEFAULT 0,
+  click_count INT NOT NULL DEFAULT 0,
+  last_clicked_at TIMESTAMPTZ,
+  join_prompt_count INT NOT NULL DEFAULT 0,  -- frequency cap on join CTA shown to this recipient
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (family_id, email)
+);
+
+-- ============================================================
+-- TRIGGERS
+-- ============================================================
+
+-- Update Family timestamps, memory_count, and quiet_nudge_count on Memory insert
+-- Used by: free trial activation, "Your First Month" email, quiet-circle nudge cron, weekly digest, On This Day threshold
+CREATE OR REPLACE FUNCTION public.handle_memory_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public.Family
+  SET
+    first_memory_at   = COALESCE(first_memory_at, now()),  -- set once, never updated
+    last_memory_at    = now(),                              -- updated on every insert
+    memory_count      = memory_count + 1,                  -- incremented on every insert; avoids COUNT() in crons
+    quiet_nudge_count = 0                                  -- reset on every upload — the circle is active again
+                                                           -- allows a fresh 3-nudge window next time the circle goes quiet
+  WHERE id = NEW.family_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_memory_created
+  AFTER INSERT ON public.Memory
+  FOR EACH ROW EXECUTE FUNCTION public.handle_memory_insert();
 ```
 
 Apply migration:
@@ -807,6 +914,10 @@ CREATE POLICY "members can read family membership"
   ON public.FamilyMember FOR SELECT USING (
     family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
   );
+-- NOTE: caregivers can read family membership (needed to show parent names) but must only
+-- see first_name. RLS cannot do column-level filtering, so the member-list API route must
+-- check the requesting user's role and return first_name only when role = 'caregiver'.
+-- Enforce this in server/api/families/[id]/members.get.ts, not via RLS.
 
 CREATE POLICY "owner and admin can insert members"
   ON public.FamilyMember FOR INSERT WITH CHECK (
@@ -864,6 +975,34 @@ CREATE POLICY "admin can delete any memory in their family"
     )
   );
 
+-- RESTRICTIVE: blocks ANY non-owner from reading private memories regardless of other permissive policies.
+-- AS RESTRICTIVE means this is AND'd with all permissive policies, not OR'd — if a future permissive
+-- policy accidentally grants broader SELECT access to Memory rows, private memories are still protected.
+-- See design spec §RLS enforcement §Notes: "Private memories only readable by owner_user_id — enforced via RESTRICTIVE policy."
+CREATE POLICY "private memories owner only"
+  ON public.Memory FOR SELECT
+  AS RESTRICTIVE
+  USING (visibility != 'private' OR owner_user_id = auth.uid());
+
+-- RESTRICTIVE: blocks caregivers from private memories regardless of any other permissive policy.
+-- AS RESTRICTIVE means this is AND'd with all permissive policies, not OR'd — so future permissive
+-- policy additions cannot accidentally expose private memories to caregivers.
+-- Phase 1 scope: caregiver role ships in Phase 1; this policy must ship with it.
+-- See design spec §Caregiver Mode for full rationale.
+CREATE POLICY "caregiver cannot read private memories"
+  ON public.Memory FOR SELECT
+  AS RESTRICTIVE
+  USING (
+    NOT (
+      visibility = 'private'
+      AND EXISTS (
+        SELECT 1 FROM public.FamilyMember
+        WHERE user_id = auth.uid() AND role = 'caregiver'
+          AND family_id = Memory.family_id
+      )
+    )
+  );
+
 -- ============================================================
 -- MEMORY MEDIA
 -- ============================================================
@@ -912,6 +1051,39 @@ CREATE POLICY "members can add reactions"
 
 CREATE POLICY "users can remove own reactions"
   ON public.MemoryReaction FOR DELETE USING (user_id = auth.uid());
+
+-- ============================================================
+-- CHILD PROFILES
+-- ============================================================
+ALTER TABLE public.ChildProfile ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "members can read child profiles in their families"
+  ON public.ChildProfile FOR SELECT USING (
+    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY "members can insert child profiles"
+  ON public.ChildProfile FOR INSERT WITH CHECK (
+    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY "members can update child profiles in their families"
+  ON public.ChildProfile FOR UPDATE USING (
+    family_id IN (SELECT family_id FROM public.FamilyMember WHERE user_id = auth.uid())
+  );
+
+-- ============================================================
+-- NEWSLETTER RECIPIENTS
+-- ============================================================
+ALTER TABLE public.NewsletterRecipient ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "owner and admin can manage newsletter recipients"
+  ON public.NewsletterRecipient FOR ALL USING (
+    family_id IN (
+      SELECT family_id FROM public.FamilyMember
+      WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  );
 ```
 
 **Definition of done:** `supabase db test` passes. Manually verify in Supabase dashboard that RLS is enabled on all tables.
@@ -924,7 +1096,7 @@ Create `supabase/tests/rls.test.sql`:
 
 ```sql
 BEGIN;
-SELECT plan(6);
+SELECT plan(9);
 
 -- Test 1: user cannot read another user's private memory
 SELECT is(
@@ -948,6 +1120,35 @@ SELECT is(
 -- Test 4: member cannot invite (only owner/admin can)
 -- Test 5: owner can delete any memory in their family
 -- Test 6: platform_role is not readable by other users
+
+-- Test 7: non-owner family member cannot read another member's private memory (RESTRICTIVE policy)
+-- This guards against future permissive policy additions accidentally exposing private memories.
+SET LOCAL request.jwt.claims TO '{"sub": "member-uuid"}';
+SELECT is(
+  (SELECT count(*)::int FROM public.Memory
+   WHERE family_id = 'family-1-uuid' AND visibility = 'private'
+     AND owner_user_id != 'member-uuid'),
+  0,
+  'family member cannot read another member private memories (RESTRICTIVE policy)'
+);
+
+-- Test 8: caregiver cannot read private memories (RESTRICTIVE policy)
+-- Switch session to the caregiver user
+SET LOCAL request.jwt.claims TO '{"sub": "caregiver-uuid"}';
+SELECT is(
+  (SELECT count(*)::int FROM public.Memory
+   WHERE family_id = 'family-1-uuid' AND visibility = 'private'),
+  0,
+  'caregiver cannot read private memories'
+);
+
+-- Test 9: caregiver CAN read family-visibility memories
+SELECT isnt(
+  (SELECT count(*)::int FROM public.Memory
+   WHERE family_id = 'family-1-uuid' AND visibility = 'family'),
+  0,
+  'caregiver can read family-visibility memories'
+);
 
 SELECT * FROM finish();
 ROLLBACK;
@@ -1283,7 +1484,8 @@ async function changeEmail() {
   emailSuccess.value = false
   const { error } = await supabase.auth.updateUser({ email: newEmail.value })
   if (error) {
-    emailError.value = error.message
+    console.error("[change-email]", error)  // full error in logs only — never expose to client
+    emailError.value = "Could not update email. Please try again."
   } else {
     emailSuccess.value = true
     newEmail.value = ""
@@ -1823,6 +2025,10 @@ async function sendInvite() {
   await $fetch("/api/families/invite", {
     method: "POST",
     body: { familyId: familyId.value, email: email.value },
+    // role defaults to "member" — onboarding invite is always a member invite.
+    // Caregiver and admin invites are sent from circle settings (post-onboarding),
+    // where the invite form includes a role picker: "Member" | "Admin" | "Caregiver".
+    // Pass role: "caregiver" or role: "admin" from that settings UI to use the same endpoint.
   })
   router.push("/onboarding/upload")
   loading.value = false
@@ -1842,9 +2048,18 @@ import { serverSupabaseClient, serverSupabaseServiceRole } from "#supabase/serve
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
-  const { familyId, email } = await readBody(event)
+  const { familyId, email, role = "member" } = await readBody(event)
+  // role: "admin" | "member" | "caregiver" — defaults to "member"
+  // Caregiver invites are a separate UI path (circle settings → "Invite caregiver") but use this same endpoint.
+  // The acceptance flow (Step 4.3) reads invite.role and sets FamilyMember.role — so the role set here IS the role they join with.
 
   if (!user) throw createError({ statusCode: 401 })
+
+  // Validate role value
+  const validRoles = ["admin", "member", "caregiver"] as const
+  if (!validRoles.includes(role)) {
+    throw createError({ statusCode: 400, message: "Invalid role. Must be admin, member, or caregiver." })
+  }
 
   // Verify sender is owner or admin
   const { data: membership } = await supabase
@@ -1858,15 +2073,20 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: "Only owners and admins can invite" })
   }
 
-  // Enforce per-tier member cap (Free = 5, Plus = 20, Pro = unlimited)
+  // Only owners can send admin invites
+  if (role === "admin" && membership.role !== "owner") {
+    throw createError({ statusCode: 403, message: "Only the circle owner can invite admins." })
+  }
+
+  // Enforce per-tier member cap (Free = 10, Plus = 20, Pro = unlimited)
   const { data: family } = await supabase
     .from("Family")
     .select("subscription_status")
     .eq("id", familyId)
     .single()
 
-  const tierMemberCap: Record<string, number> = { free: 5, plus: 20, pro: Infinity, grace: 20 }
-  const maxMembers = tierMemberCap[family?.subscription_status ?? "free"] ?? 5
+  const tierMemberCap: Record<string, number> = { free: 10, plus: 20, pro: Infinity, grace: 20 }
+  const maxMembers = tierMemberCap[family?.subscription_status ?? "free"] ?? 10
 
   const { count: currentMemberCount } = await supabase
     .from("FamilyMember")
@@ -1876,7 +2096,7 @@ export default defineEventHandler(async (event) => {
   if ((currentMemberCount ?? 0) >= maxMembers) {
     const upgradeMsg = family?.subscription_status === "plus"
       ? "This circle has reached the 20-member Plus limit. Upgrade to Pro for unlimited members."
-      : "This circle has reached the 5-member Free limit. Upgrade to Plus for up to 20 members."
+      : "This circle has reached the 10-member Free limit. Upgrade to Plus for up to 20 members."
     throw createError({ statusCode: 403, message: upgradeMsg })
   }
 
@@ -1891,15 +2111,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 429, message: "Max 10 pending invites per family" })
   }
 
-  // Create invite
+  // Create invite — preserve role so Step 4.3 acceptance inserts the correct FamilyMember.role
   const { data: invite } = await supabase
     .from("FamilyInvite")
-    .insert({ family_id: familyId, email })
+    .insert({ family_id: familyId, email, role })
     .select()
     .single()
 
   // Fetch family name + sender name for email
-  const { data: family } = await supabase.from("Family").select("name").eq("id", familyId).single()
+  // Note: uses a separate variable (familyForEmail) — `family` is already declared above for subscription_status
+  const { data: familyForEmail } = await supabase.from("Family").select("name").eq("id", familyId).single()
   const { data: sender } = await supabase.from("User").select("first_name, last_name").eq("id", user.id).single()
   const senderName = sender ? `${sender.first_name} ${sender.last_name}`.trim() : "Someone"
 
@@ -1911,7 +2132,7 @@ export default defineEventHandler(async (event) => {
     subject: `${senderName} started your story on Our Story`,
     html: buildInviteEmail({
       senderName,
-      circleName: family?.name ?? "a circle",
+      circleName: familyForEmail?.name ?? "a circle",
       inviteUrl: `${process.env.APP_URL}/invite/${invite!.token}`,
     }),
   })
@@ -2969,11 +3190,132 @@ Milestone groups are derived from `circleType` — see design spec for full temp
 
 ---
 
+### Step 7.2.1 — Milestone share card
+
+After a milestone memory is saved, offer a branded canvas card for external sharing (Instagram Stories / WhatsApp). This is the primary organic acquisition channel for new parents — they share milestones constantly.
+
+See design spec §Referral & Sharing Mechanics → "Milestone sharing cards" for full card design and copy rules. Implementation reuses the canvas API approach from Step 7.5.
+
+**Trigger:** Show the share prompt after the upload completes (when `milestoneLabel` is set), not during upload. The moment of upload is never interrupted by a commercial message.
+
+`composables/useMilestoneShareCard.ts`:
+```ts
+export async function shareMilestoneCard({
+  thumbnailUrl,
+  milestoneLabel,
+  childName,       // from ChildProfile (optional — omit if no ChildProfile exists)
+  memoryDate,
+}: {
+  thumbnailUrl: string
+  milestoneLabel: string
+  childName?: string
+  memoryDate: string
+}) {
+  // Canvas: 9:16 for Instagram Stories (1080×1920)
+  const canvas = document.createElement("canvas")
+  canvas.width = 1080
+  canvas.height = 1920
+  const ctx = canvas.getContext("2d")!
+
+  // Draw photo — top two-thirds, soft vignette
+  const img = new Image()
+  img.crossOrigin = "anonymous"
+  await new Promise((resolve) => { img.onload = resolve; img.src = thumbnailUrl })
+  ctx.drawImage(img, 0, 0, 1080, 1280)
+
+  // Vignette overlay
+  const vignette = ctx.createLinearGradient(0, 900, 0, 1280)
+  vignette.addColorStop(0, "rgba(0,0,0,0)")
+  vignette.addColorStop(1, "rgba(0,0,0,0.6)")
+  ctx.fillStyle = vignette
+  ctx.fillRect(0, 0, 1080, 1280)
+
+  // Bottom content area
+  ctx.fillStyle = "#ffffff"
+  ctx.fillRect(0, 1280, 1080, 640)
+
+  // Milestone label
+  const date = new Date(memoryDate)
+  const monthYear = date.toLocaleDateString(undefined, { month: "long", year: "numeric" })
+  ctx.fillStyle = "#111"
+  ctx.font = "bold 64px system-ui"
+  ctx.textAlign = "left"
+  ctx.fillText(childName ? `${childName} · ${milestoneLabel}` : milestoneLabel, 72, 1380)
+
+  ctx.fillStyle = "#888"
+  ctx.font = "40px system-ui"
+  ctx.fillText(monthYear, 72, 1460)
+
+  // Our Story wordmark (bottom-right, small)
+  ctx.fillStyle = "#aaa"
+  ctx.font = "32px system-ui"
+  ctx.textAlign = "right"
+  ctx.fillText("Our Story", 1008, 1870)
+  ctx.fillText("ourstory.tinybit.app", 1008, 1910)
+
+  canvas.toBlob(async (blob) => {
+    if (!blob) return
+    const file = new File([blob], "our-story-milestone.jpg", { type: "image/jpeg" })
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: milestoneLabel })
+    } else {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "our-story-milestone.jpg"
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  }, "image/jpeg", 0.92)
+}
+```
+
+Wire into `UploadMemory.vue` — after successful upload with a milestone:
+```ts
+if (milestoneLabel && result.memoryId) {
+  emit("uploaded", result.memoryId)
+  cancel()
+  // Show share prompt after a short delay — upload complete animation plays first
+  setTimeout(() => showMilestoneSharePrompt.value = true, 500)
+}
+```
+
+Show a bottom sheet prompt:
+```vue
+<div v-if="showMilestoneSharePrompt" class="fixed inset-0 bg-black/50 flex items-end z-50">
+  <div class="bg-white rounded-t-2xl w-full p-6">
+    <p class="font-semibold text-lg mb-1">Share this milestone?</p>
+    <p class="text-sm text-gray-500 mb-6">Create a beautiful card to share with your wider circle.</p>
+    <button @click="doShare" class="w-full bg-black text-white rounded-lg py-3 mb-3">Share milestone card →</button>
+    <button @click="showMilestoneSharePrompt = false" class="w-full text-gray-500 py-2">Not now</button>
+  </div>
+</div>
+```
+
+**Definition of done:** After saving a milestone memory, share prompt appears. Tapping "Share milestone card" generates a 9:16 card with the photo, milestone label, date, and "Our Story" wordmark. Web Share sheet opens on mobile; JPEG downloads on desktop. Prompt does not appear for non-milestone memories.
+
+---
+
 ## Milestone 8: Comments & Reactions
 
 ### Step 8.1 — Comments
 
 `server/api/memories/[id]/comments.get.ts` and `comments.post.ts` — standard CRUD, scoped by RLS.
+
+> **Caregiver restriction:** The RLS `"members can post comments"` policy allows any family member with Memory access to insert a comment — including caregivers. The spec prohibits caregivers from commenting (see design spec §Role-based authorization). Enforce this in `comments.post.ts` at the API level:
+> ```ts
+> const { data: membership } = await supabase
+>   .from("FamilyMember")
+>   .select("role")
+>   .eq("user_id", user.id)
+>   .eq("family_id", memory.family_id)  // fetch family_id from Memory first
+>   .single()
+>
+> if (membership?.role === "caregiver") {
+>   throw createError({ statusCode: 403, message: "Caregivers cannot post comments." })
+> }
+> ```
+> Same enforcement pattern used for member-list first-name filtering (noted in Step 2.2).
 
 `components/MemoryComments.vue`:
 ```vue
@@ -3260,6 +3602,8 @@ Show the prompt after a user has uploaded their second memory ("Add to your home
 
 ### Step 12.1 — Weekly digest email (grandparent-first design)
 
+> **Schema prerequisite:** The viewer-role digest path requires the `NewsletterRecipient` table (created in Step 2.1) to store email addresses for recipients who have no User account (e.g. grandparents on the view-only link). The member-facing digest uses `NotificationPreference` and works without this table. Implement the `NewsletterRecipient` enrollment UI (in circle settings — "Add email recipient") alongside this step.
+
 ```sql
 -- pg_cron: every Monday 9am UTC
 SELECT cron.schedule(
@@ -3354,7 +3698,9 @@ The T+3 follow-up is the highest-converting nudge. The moment already happened �
 
 Daily cron that checks families where first memory was uploaded exactly 30 days ago. Send push + email to all members with the original memory.
 
-### Step 12.5 — Family streak
+### Step 12.5 — Family streak *(Phase 2 — do not build in Phase 1)*
+
+> **Phase 2 only.** The streak requires a week of usage data to be meaningful and depends on notification infrastructure (Capacitor push) that ships in Phase 2. Implementation details are preserved here for reference but this step is excluded from the Phase 1 exit criteria. Add it to the Phase 2 build queue after notification preferences and native app are stable.
 
 `supabase/migrations/XXX_family_streak.sql`:
 ```sql
@@ -3428,18 +3774,23 @@ If no uploads in 14 days, send a soft nudge to the circle owner only (not all me
 
 ```ts
 // Daily cron — check families with no recent uploads
-const { data: quietFamilies } = await supabase
-  .from("Memory")
-  .select("family_id, max(created_at)")
-  .eq("visibility", "family")
-  .groupBy("family_id")
-  .lt("max", new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
+// Use Family.last_memory_at (pre-computed by handle_memory_insert trigger).
+// Do NOT query MAX(Memory.created_at) per family — it does not scale.
+// Do NOT filter by visibility — a private upload still means the circle is active.
+const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
 
-for (const { family_id } of quietFamilies) {
+const { data: quietFamilies } = await supabase
+  .from("Family")
+  .select("id, quiet_nudge_count, quiet_nudge_last_sent_at")
+  .or(`last_memory_at.is.null,last_memory_at.lt.${cutoff}`)
+  .lt("quiet_nudge_count", 3)                                           // hard stop: max 3 nudges per quiet period
+  .or(`quiet_nudge_last_sent_at.is.null,quiet_nudge_last_sent_at.lt.${cutoff}`) // min 14 days between nudges
+
+for (const family of quietFamilies) {
   const { data: owner } = await supabase
     .from("FamilyMember")
     .select("user_id")
-    .eq("family_id", family_id)
+    .eq("family_id", family.id)
     .eq("role", "owner")
     .single()
 
@@ -3449,6 +3800,15 @@ for (const { family_id } of quietFamilies) {
     body: "Add a memory this week to keep the story going →",
     deep_link: "/",
   })
+
+  // Increment nudge count and record send time so the cron respects the hard stop
+  await supabase
+    .from("Family")
+    .update({
+      quiet_nudge_count: family.quiet_nudge_count + 1,
+      quiet_nudge_last_sent_at: new Date().toISOString(),
+    })
+    .eq("id", family.id)
 }
 ```
 
@@ -3466,12 +3826,12 @@ for (const { family_id } of quietFamilies) {
 - [ ] `supabase db test` — all RLS policy tests passing
 - [ ] User A cannot read User B's private memories — manually verified
 - [ ] User A cannot read families they don't belong to — manually verified
-- [ ] `storage_path` never appears in any API response — grep all routes
+- [ ] No raw Supabase Storage paths in any API response — grep all routes for `storage_path`, `media_path`, and any other Storage path columns; only signed URLs may be returned to the client
 - [ ] No secrets, tokens, or internal paths appear in browser console or network tab
 - [ ] HTTP security headers present on all responses (verify with securityheaders.com)
 - [ ] File upload: attempt to upload a `.exe` renamed as `.jpg` — must be rejected
-- [ ] Rate limiting active: spamming invite endpoint returns 429 after 10 requests
-- [ ] `pnpm audit --audit-level=high` passes with zero high/critical vulnerabilities
+- [ ] Invite spam protection active: sending more than 10 pending invites to the same family returns 429 (server-side pending-invite count cap — Phase 1 mechanism; Upstash sliding-window rate limiting is Phase 2)
+- [ ] `npm audit --audit-level=high` passes with zero high/critical vulnerabilities
 - [ ] All error messages shown to users are human-readable — no stack traces, no raw DB errors
 - [ ] OWASP ZAP basic scan run against staging — all critical/high findings resolved
 - [ ] Service role key confirmed absent from any client-side code (`grep -r "SERVICE_ROLE" src/`)
@@ -3487,7 +3847,11 @@ for (const { family_id } of quietFamilies) {
 ### Testing
 - [ ] `pnpm test` — all unit + integration tests passing
 - [ ] `pnpm test:e2e` — creator onboarding + invited member flows passing
-- [ ] Stripe webhook handlers tested in Stripe test mode (all 4 events)
+- [ ] Stripe webhook handlers tested in Stripe test mode — verify correct behavior for each event:
+  - `checkout.session.completed` → `User.subscription_status` upgrades, `Family.subscription_status` mirrors
+  - `invoice.payment_succeeded` → subscription renewed, status stays at paid tier
+  - `invoice.payment_failed` → `Family.subscription_status = "grace"`, `grace_period_until = now() + 7 days`
+  - `customer.subscription.deleted` → `Family.subscription_status = "grace"`, `grace_period_until = now() + 30 days`; `User.subscription_status` must NOT change to `"free"` yet — voluntary cancellation gets 30-day grace, not immediate downgrade
 - [ ] On This Day cron tested on seed data — push fires correctly
 
 ### User experience
@@ -3546,5 +3910,5 @@ for (const { family_id } of quietFamilies) {
 | 9 | Viewer-role access (swipe nav, first-open splash) | — |
 | 10 | Push + On This Day | Retention |
 | 11 | PWA + mobile polish | Launch |
-| 12 | Early retention (digest + email reactions, milestone triple-nudge, anniversary, quiet nudge, streak) | Phase 1 exit criteria |
+| 12 | Early retention (digest + email reactions, milestone triple-nudge, anniversary, quiet nudge) | Phase 1 exit criteria |
 | 13 | Pre-launch checklist | Going live |

@@ -116,8 +116,11 @@ Most consumer apps have no support. Responding to a frustrated user within hours
 |---|---|
 | New parents | First steps, first word, first birthday, first day of school |
 | Couples | First date anniversary, moved in together, engagement, wedding |
+| Family | Family reunion, new home, holiday tradition, family trip |
 | Friend group | Trip together, X years of friendship, reunion |
 | Caregiving family | Moved to new home, health milestone, birthday celebration |
+| Travel group | Trip started, first destination, trip completed, X countries visited |
+| Solo | Personal goal reached, new chapter, anniversary of an important date |
 | Custom | User defines their own label — any text |
 
 #### Data model
@@ -178,7 +181,7 @@ Phase 2 implementation notes when ready:
 - Tech-savvy family members of any age can be invited as full members and get the complete experience
 - Email digest — primary touchpoint for viewers who never open the app directly
 
-### 6. Albums & Collections
+### 6. Albums & Collections *(Phase 2 — Free tier)*
 - User-created albums for grouping by event: "Hawaii Trip 2026", "Christmas 2025"
 - Albums are family-scoped — any member can create, any member can add to
 - Albums sit alongside the main timeline, not separate from it
@@ -198,24 +201,33 @@ AlbumMemory
 
 ### 7.5. "Your First Month" Recap Email
 
-Sent 30 days after a circle's first memory upload. Simpler than Year in Review — no video, no complex generation — just a warm, personal email that surfaces:
-- Number of memories uploaded
-- Any milestones marked
-- The most-reacted memory (if reactions exist)
-- A CTA to invite someone who hasn't joined yet
+Sent 30 days after a circle's first memory upload. One email that combines nostalgia (the original first memory) with a look-back at the month. Gated by `Family.first_month_email_sent` — sent once, never repeated.
+
+**Email content (top to bottom):**
+1. **Nostalgia hook** — show the original first memory as a full-width card: photo, note, date. Copy: "One month ago, [uploader name] added your first memory to [Circle name]."
+2. **Month in numbers** — memories uploaded, any milestones marked, most-reacted memory (if reactions exist)
+3. **Forward CTA** — "Add another memory →" + "Invite someone who hasn't joined yet →"
+
+This is also the implementation of the "first-memory anniversary" retention hook (see Early Retention section Hook 3). They are the same email — not two separate sends. `first_month_email_sent` is the single guard flag for both.
 
 **Why Phase 1:** Creates a felt delight moment before Year in Review exists. Users who receive this email are significantly more likely to still be active at 90 days. It also gives new parents a sharable moment early — "look what our first month looks like" — without waiting a full year.
 
-**Implementation:** Scheduled Edge Function checks for circles where `first_memory_created_at` is between 29–31 days ago → compile stats → send via Resend. Reuses the same email design system as the weekly digest.
+**Implementation:** Scheduled Edge Function checks for circles where `first_memory_at` is between 29–31 days ago AND `first_month_email_sent = false` → compile stats + fetch oldest memory → send via Resend → set `first_month_email_sent = true`. Reuses the same email design system as the weekly digest.
 
 ---
 
 ### 8. Annual Recap / Year in Review
-- Auto-generated at year end: "2026: The Year in Our Story"
-- Slideshow/video of top memories, milestone highlights, most-reacted moments
-- **Shareable card: free for all tiers** — this is the Spotify Wrapped growth mechanic. Gating it kills virality. Every user gets a beautiful branded card to share to Instagram/WhatsApp with "Made with Our Story."
-- **Full in-app slideshow/video: Pro only** — the immersive in-app experience is Pro. Free/Plus users see a blurred preview with "Unlock your year →"
-- Implementation: scheduled Edge Function in December → compile top memories → generate shareable card via server-side canvas (free) → generate slideshow via Remotion (Pro, Phase 2)
+
+**Phase split:**
+- **Phase 2 — Shareable card (free for all tiers):** The Spotify Wrapped growth mechanic. Generated client-side via canvas API. Gating it kills virality — every user gets a beautiful branded 9:16 card to share to Instagram/WhatsApp with "Made with Our Story."
+- **Phase 3 — Full in-app slideshow/video (Pro only):** Immersive experience generated via Remotion. Free/Plus users see a blurred preview with "Unlock your year →"
+
+**Phase 2 implementation:** Scheduled Edge Function in December → compile top memories → share card generated client-side (canvas API) → public share URL created.
+**Phase 3 implementation:** Same Edge Function extended → slideshow generated via Remotion (server-side) → Pro only.
+
+Summary:
+- Highlights: top memories, milestone highlights, most-reacted moments
+- Shareable card format: 9:16 (Instagram Stories), "2026: The Year in Our Story"
 
 #### Shareable card (Spotify Wrapped equivalent)
 The Year in Review must produce a shareable card designed specifically for Instagram Stories and WhatsApp — not just an in-app experience. The card IS the acquisition channel.
@@ -272,8 +284,9 @@ A new parent sharing their Year in Review to Instagram Stories is seen by 200–
 
 ### Visibility within a circle
 - Two levels: `private` (only you) | `family` (everyone in the circle)
-- Access control within a circle is intentionally not supported — it creates hidden content in a shared space, which breeds confusion and suspicion in family contexts
+- Access control within a circle is intentionally not supported in Phase 1–2 — it creates hidden content in a shared space, which breeds confusion and suspicion in family contexts
 - If you need a different audience, create a separate circle — that's a clean boundary with no awkwardness
+- **`group` visibility is Phase 3 only** — the `Group` and `GroupMember` tables are in the schema for future use, but `Memory.visibility` must only accept `"private"` and `"family"` in Phase 1–2. Do not implement group-scoped memories until Phase 3. The DB enum should reflect this: add `"group"` only in the Phase 3 migration.
 
 ### Invitation System
 - **Magic link** (recommended): generate invite token → `yourapp.com/invite?token=abc123`
@@ -284,6 +297,7 @@ A new parent sharing their Year in Review to Instagram Stories is seen by 200–
 - **Owner** — family creator, manages billing, can transfer ownership, can delete family
 - **Admin** — can invite/remove members, delete any memory
 - **Member** — can upload, comment, react, delete own memories
+- **Caregiver** — limited role for nannies, babysitters, daycare workers; can upload (family-visible only) and emoji react; cannot comment, view private memories, invite members, or access settings. See Role-based authorization table for the full permission matrix.
 
 ### Ownership rules
 - Each family has exactly one owner
@@ -302,20 +316,42 @@ User
   - first_name
   - last_name
   - avatar_url (nullable)
-  - locale: "en" | "zh-Hans" (nullable — falls back to browser language, then "en")
+  - locale: "en" | "zh-Hans" | "fr" (nullable — falls back to browser language, then "en")
+    -- "en" = English (default); "zh-Hans" = Simplified Chinese; "fr" = French (Canadian bilingual)
+    -- Expand this set as Phase 2+ languages ship — each new language requires a DB migration to add the value
   - platform_role: "user" | "platform_admin"
+  - stripe_customer_id (nullable)       -- Stripe credentials on User (one subscription per user account)
+  - stripe_subscription_id (nullable)
+  - subscription_status: "free" | "plus" | "pro"  -- source of truth; "grace" lives on Family only
+  - subscription_period_end (nullable)
   - referral_code (unique)
   - referred_by_user_id (nullable)
-  - deleted_at (nullable)
+  - deletion_requested_at (nullable)    -- set when user initiates deletion; 30-day window starts here
+  - deleted_at (nullable)               -- set at hard-purge time (deletion_requested_at + 30 days)
   - created_at
 
 Family
   - id, name, created_by (user_id)
-  - stripe_customer_id (nullable)
-  - stripe_subscription_id (nullable)
-  - subscription_status: "active" | "grace" | "free"
+  - circle_type: "parents" | "couple" | "family" | "friends" | "caregiving" | "travel" | "solo" | "custom"
+    -- set during onboarding circle type picker; drives milestone templates, empty state copy, push notification language
+  - subscription_status: "free" | "plus" | "pro" | "grace"
+    -- denormalised from owner's User.subscription_status for fast RLS checks without joining to User
+    -- Stripe credentials (stripe_customer_id, stripe_subscription_id) live on User, NOT on Family
   - grace_period_until (nullable)
   - challenge_streak (int)
+  - last_challenge_completed_at (nullable timestamp)  -- updated on each completed challenge; used for streak logic
+  - quiet_nudge_count INT (default 0)               -- how many quiet-circle nudges sent; hard stop at 3
+  - quiet_nudge_last_sent_at (nullable timestamp)   -- prevents nudges more than once per 14 days
+  - first_memory_at (nullable timestamp)  -- set once on first Memory insert; drives trial + "Your First Month" email
+  - last_memory_at (nullable timestamp)   -- updated on every Memory insert via trigger; used by quiet-circle nudge and digest features
+  - memory_count INT NOT NULL DEFAULT 0   -- incremented on every Memory insert via trigger; used by On This Day activation threshold (avoids COUNT() queries in cron)
+  - trial_ends_at (nullable timestamp)    -- Pro trial expiry; extended by referral rewards
+  - trial_used (bool, default false)
+  - first_month_email_sent (bool, default false)
+  - e2ee_enabled (bool, default false)              -- Phase 3: opt-in per-circle client-side encryption toggle
+  - e2ee_enabled_at (nullable timestamp)            -- Phase 3: when e2ee was enabled for this circle
+  - deleted_at (nullable)               -- set when owner initiates circle deletion; 30-day soft-delete window
+  - deletion_initiated_by (nullable FK → User)  -- records which owner triggered deletion
 
 FamilyMember
   - user_id, family_id
@@ -323,25 +359,34 @@ FamilyMember
     -- owner:    billing, delete family, transfer ownership
     -- admin:    invite/remove members, delete any memory, manage groups
     -- member:   upload, comment, react, view private memories, delete own
-    -- caregiver: upload + view family timeline only (nanny/babysitter/daycare)
+    -- caregiver: upload to family timeline, view family timeline, react (emoji only)
+    --            cannot: comment, view private memories, invite members, delete any memory,
+    --            see member list details beyond first name, access settings
+    --            use case: nanny, babysitter, daycare worker — they document the child's day
+    --            but should not have social access to the full family feed or member data
+    --            uploads by caregiver: always visibility="family", cannot set private
+    --            displayed in member list as "[Name] · Caregiver"
+    --            on removal: same flow as member deletion (keep or remove their uploads)
   - memorial_status: "active" | "memorial"
   - memorial_date (nullable)
   - memorial_message (nullable)
 
 Memory
   - id, owner_user_id, family_id
-  - visibility: "private" | "family"
-  - file_size
+  - visibility: "private" | "family"  -- Phase 3 adds "group"; do not add earlier
+  - note TEXT (nullable)  -- text content; required for Quick Notes (no media), optional for photo/video memories
+  - alt_text TEXT (nullable)  -- accessibility description; user-provided or auto-suggested; never auto-generated silently
   - memory_date (user-set or EXIF — drives timeline order)
   - created_at (upload timestamp — never changes)
   - is_collaborative (bool)
   - contributions_open (bool)
   - milestone_label (i18n key, e.g. "first_steps" — nullable)
+  - milestone_is_custom (bool, default false)  -- true when milestone_label is free-form text, false when it's an i18n key
 
 MemoryMedia
   - id, memory_id, contribution_id (nullable)
   - storage_path
-  - file_size, media_type: "photo" | "video" | "live_photo"
+  - file_size, media_type: "photo" | "video" | "live_photo" | "audio"  -- "audio" reserved for Phase 2 voice memos; add to CHECK constraint now so the migration is additive when voice memos ship
   - still_path, live_path (nullable — for live photos)
   - phash
   - lat, lng, location_name (nullable — from EXIF GPS)
@@ -357,10 +402,12 @@ MemoryComment
   - id, memory_id, user_id, body, created_at
 
 MemoryReaction
-  - id, memory_id, user_id
+  - id, memory_id
+  - user_id (nullable — NULL for guest reactions from the email digest one-tap link; set in Phase 1 Milestone 12.1 migration)
+  - guest_name (nullable — display name for guest reactors; added in Phase 1 Milestone 12.1 migration alongside the nullable user_id change)
   - type: "emoji" | "voice" | "video"
   - emoji (nullable)
-  - media_path (nullable)
+  - media_path (nullable — Supabase Storage path for voice/video reactions; never return raw to client — generate signed URL server-side, same rule as MemoryMedia.storage_path)
   - duration_seconds (nullable)
   - created_at
 
@@ -368,7 +415,7 @@ AccountStorage
   - user_id
   - total_quota_bytes
   - total_used_bytes
-  - bonus_bytes (from referrals)
+  - bonus_bytes  -- reserved for future storage promotions; NOT used by the referral program (referral reward is a Pro trial, not storage)
 
 Album
   - id, family_id, name, cover_media_id, created_by
@@ -385,14 +432,16 @@ NotificationPreference
 Referral
   - id, referrer_user_id, referee_user_id
   - status: "pending" | "completed"
-  - bonus_granted (bool)
+  - pro_trial_granted (bool, default false)
+  - pro_trial_ends_at (nullable timestamp)  -- set when reward is granted; used to update Family.trial_ends_at
   - created_at
 
 EventUploadToken          -- guest uploads (no account needed)
-  - id, family_id, album_id
+  - id, family_id, album_id (nullable FK → Album)  -- nullable: guests may upload without being scoped to an album
   - token (UUID)
   - expires_at, max_uploads, upload_count
   - created_by, revoked (bool)
+  - requires_approval (bool, default true)  -- when true, guest photos are held in pending state visible to admins only until approved; default true prevents inappropriate content from appearing on the family timeline before review
 
 TimeCapsule
   - id, family_id, created_by
@@ -405,10 +454,14 @@ TimeCapsule
 ChildProfile              -- data record only, NOT a user account, cannot login
   - id, family_id         -- represents a child for milestone/development tracking
   - name, date_of_birth, avatar_media_id (nullable)
+  -- Phase 1: table ships in the initial schema migration (Step 2.1) so Step 12.2
+  --   milestone nudges can query date_of_birth. No UI to create ChildProfiles is
+  --   required in Phase 1 — the cron skips families with no ChildProfile rows.
+  -- Phase 3: full development tracking UI ships alongside DevelopmentEntry below.
   -- Note: when a child grows up and joins the app, they create their own
-  -- User account and are invited as a Member. No link between ChildProfile → User.
+  --   User account and are invited as a Member. No link between ChildProfile → User.
 
-DevelopmentEntry          -- logged milestone/growth for a child
+DevelopmentEntry          -- logged milestone/growth for a child (Phase 3)
   - id, child_profile_id, family_id
   - category: "growth" | "milestone" | "health"
   - label (i18n key, e.g. "first_steps", "weight")
@@ -425,6 +478,12 @@ PregnancyJourney
 PregnancyEntry
   - id, journey_id, week_number (1–40)
   - memory_id (nullable), note, recorded_at
+
+FamilyStreak              -- circle-level upload streak (Phase 2)
+  - family_id (unique)
+  - current_streak_weeks INT (default 0)   -- consecutive ISO weeks with ≥1 upload
+  - longest_streak_weeks INT (default 0)
+  - last_upload_week DATE                  -- ISO Monday of the most recent upload week
 
 FamilyChallenge           -- weekly prompt for all family members to upload
   - id, family_id
@@ -444,6 +503,7 @@ NewsletterRecipient
   - unsubscribe_token (UUID)
   - subscribed (bool)
   - open_count, click_count, last_clicked_at
+  - join_prompt_count INT NOT NULL DEFAULT 0  -- frequency cap on join CTA shown to this recipient
 
 ExportJob
   - id, user_id
@@ -464,9 +524,19 @@ BackupLog
 
 FamilyInvite
   - id, family_id, email, token (UUID)
-  - role: "member" | "caregiver"
+  - role: "admin" | "member" | "caregiver"
+    -- "admin": owner can directly invite a co-parent or trusted adult as admin
+    -- "member": default for all regular invites
+    -- "caregiver": caregiver invite flow (limited permissions, separate UI path)
   - status: "pending" | "accepted" | "expired"
   - expires_at, created_at
+
+Feedback                    -- in-app feedback submissions (distinct from Crisp support chat)
+  - id, user_id (nullable — not required; viewer-role users can submit too)
+  - message TEXT NOT NULL
+  - page TEXT              -- which page/route the user was on
+  - app_version TEXT
+  - created_at
 ```
 
 ---
@@ -559,6 +629,11 @@ const supabase = createClient(url, key, {
 - Explicit logout
 - Admin-forced sign-out (e.g. account compromise)
 
+**Magic link clicked while already logged in on another device:**
+A user already logged in on their phone may click a magic link from a weekly digest email on their laptop. Supabase's default with `detectSessionInUrl: true` issues a new session for the new device without revoking the existing one. This is the correct behaviour — explicitly verify it does not log out the phone session.
+
+Test this before launch: open the app on two devices simultaneously, click a magic link on the second device, confirm the first device session remains active. If Supabase revokes the first session, set `flowType: "pkce"` in the auth config and handle the PKCE flow on the magic link callback.
+
 ### Linked login methods
 
 Users can connect a Google account to their existing magic link account from account settings. This is the recovery path if email access is ever lost — not passwords.
@@ -590,20 +665,24 @@ Passkeys (Face ID / Touch ID / Windows Hello) are the long-term answer for frict
 
 ### Role-based authorization
 
-| Action | Owner | Admin | Member |
-|---|---|---|---|
-| View family timeline | Yes | Yes | Yes |
-| Upload to family timeline | Yes | Yes | Yes |
-| Comment / react | Yes | Yes | Yes |
-| Delete own memory | Yes | Yes | Yes |
-| Invite members | Yes | Yes | No |
-| Remove members | Yes | Yes | No |
-| Create albums | Yes | Yes | Yes |
-| Edit family name/settings | Yes | Yes | No |
-| Delete any memory | Yes | Yes | No |
-| Manage billing | Yes | No | No |
-| Transfer ownership | Yes | No | No |
-| Delete family | Yes | No | No |
+| Action | Owner | Admin | Member | Caregiver |
+|---|---|---|---|---|
+| View family timeline | Yes | Yes | Yes | Yes |
+| Upload to family timeline | Yes | Yes | Yes | Yes (family-visible only — cannot set private) |
+| Comment | Yes | Yes | Yes | No |
+| React (emoji) | Yes | Yes | Yes | Yes |
+| React (voice/video) | Yes | Yes | Yes | No |
+| Delete own memory | Yes | Yes | Yes | No |
+| View private memories | Yes | Yes | Yes | No |
+| View member list | Yes | Yes | Yes | First name only |
+| Invite members | Yes | Yes | No | No |
+| Remove members | Yes | Yes | No | No |
+| Create albums | Yes | Yes | Yes | No |
+| Edit family name/settings | Yes | Yes | No | No |
+| Delete any memory | Yes | Yes | No | No |
+| Manage billing | Yes | No | No | No |
+| Transfer ownership | Yes | No | No | No |
+| Delete family | Yes | No | No | No |
 
 ### RLS enforcement (Supabase)
 
@@ -614,6 +693,31 @@ ON Memory FOR SELECT
 USING (
   family_id IN (
     SELECT family_id FROM FamilyMember WHERE user_id = auth.uid()
+  )
+);
+
+-- Private memories only readable by their owner
+-- (this is RESTRICTIVE — AND'd with permissive policies above)
+CREATE POLICY "private memories owner only"
+ON Memory FOR SELECT
+AS RESTRICTIVE
+USING (
+  visibility != 'private' OR owner_user_id = auth.uid()
+);
+
+-- Caregivers cannot read private memories
+-- (also RESTRICTIVE — must be AND'd, not OR'd, to actually restrict)
+CREATE POLICY "caregiver cannot read private memories"
+ON Memory FOR SELECT
+AS RESTRICTIVE
+USING (
+  NOT (
+    visibility = 'private'
+    AND EXISTS (
+      SELECT 1 FROM FamilyMember
+      WHERE user_id = auth.uid() AND role = 'caregiver'
+        AND family_id = Memory.family_id
+    )
   )
 );
 
@@ -628,15 +732,16 @@ ON Memory FOR DELETE
 USING (
   family_id IN (
     SELECT family_id FROM FamilyMember
-    WHERE user_id = auth.uid() AND role = 'admin'
+    WHERE user_id = auth.uid() AND role IN ('admin', 'owner')
   )
 );
 ```
 
 ### Notes
 - Every DB query is scoped by `auth.uid()` — no client-side trust
-- Private memories (`visibility = 'private'`) only readable by `owner_user_id`
-- Group-scoped memories only readable by `GroupMember` records
+- Private memories only readable by `owner_user_id` — enforced via RESTRICTIVE policy
+- Caregivers blocked from private memories via RESTRICTIVE policy — never use a permissive policy to restrict; it will be OR'd and ineffective
+- Group-scoped memories only readable by `GroupMember` records (Phase 3)
 
 ---
 
@@ -743,10 +848,10 @@ updates:
         update-types: ["version-update:semver-patch"]  # auto-merge patches in CI
 ```
 
-Also run `pnpm audit` in CI — fail the build on high/critical vulnerabilities:
+Also run `npm audit` in CI — fail the build on high/critical vulnerabilities. Use `npm audit` (not `pnpm audit`) — pnpm still targets the retired npm audit endpoints as of v10:
 ```yaml
 - name: Security audit
-  run: pnpm audit --audit-level=high
+  run: npm audit --audit-level=high
 ```
 
 ### Session Security
@@ -835,7 +940,7 @@ One subscription per user account. The subscription tier determines what feature
 A member's Plus subscription benefits their own circles and private storage. It does not upgrade circles they've been invited into. This distinction must be surfaced clearly in the UI — never show a generic "Upgrade to Plus" button to a member who is already a Plus subscriber.
 
 Feature gate prompt for a Plus member hitting a limit in a Free owner's circle:
-> *"[Circle name] is on Free. Albums and search are available when the circle owner upgrades. [Ask owner to upgrade →]"*
+> *"[Circle name] is on Free. Search and On This Day are available when the circle owner upgrades to Plus. [Ask owner to upgrade →]"*
 
 The "Ask owner to upgrade" CTA opens a pre-filled share sheet with a message the member can send directly to the owner. Never redirect a paying member to the upgrade/pricing page — they've already paid.
 
@@ -849,15 +954,15 @@ Family.subscription_status mirrors the owner's subscription
 When a user upgrades to Plus:
 - All circles they own are upgraded to Plus features
 - Their personal storage quota increases to 50 GB
-- Members of their circles get access to Plus features within those circles (albums, search, etc.) — but their own private storage stays at their own tier
+- Members of their circles get access to Plus features within those circles (search, On This Day, etc.) — but their own private storage stays at their own tier
 
-This means: a Free user who is a member of a Plus circle can use albums and search in that circle, but their own private memories are still capped at 5 GB.
+This means: a Free user who is a member of a Plus circle can use search and On This Day in that circle, but their own private memories are still capped at 5 GB.
 
 | Plan | Price | Storage | Features |
 |---|---|---|---|
-| **Free** | $0 | 5 GB | 1 circle owned, up to 5 members, basic timeline, milestones, comments, reactions |
-| **Plus** | $4.99/mo | 50 GB | Unlimited circles owned, up to 20 members per circle, albums, search, On This Day, notification preferences, offline upload |
-| **Pro** | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review full slideshow/video, priority support, caregiver mode, voice/video reactions |
+| **Free** | $0 | 5 GB | 1 circle owned, up to 10 members, basic timeline, milestones, albums, comments, reactions |
+| **Plus** | $4.99/mo | 50 GB | Unlimited circles owned, up to 20 members per circle, search, On This Day, notification preferences, offline upload |
+| **Pro** | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review full slideshow/video, priority support, voice/video reactions |
 
 ### Stripe schema
 ```sql
@@ -876,6 +981,8 @@ Family
 
 On upgrade/downgrade: Stripe webhook → update `User.subscription_status` → update all `Family.subscription_status` rows where `created_by = user_id`.
 
+**Grace state:** When a payment fails, `Family.subscription_status` → `"grace"` and `grace_period_until` is set. `User.subscription_status` stays at the paid tier value (`"plus"` or `"pro"`) during the grace window — it only moves to `"free"` if the user does not resolve payment before `grace_period_until`. Feature enforcement is driven by `Family.subscription_status`, not `User.subscription_status`, so webhook handlers should update `Family` first.
+
 ### Why these storage numbers
 - Free (5 GB): ~3–6 months of active use for a new parent. Enough to get hooked, not enough to stay free forever.
 - Plus (50 GB): ~2 years of active use. Users upgrade to Pro before hitting the limit because they *want* Pro features — the storage limit is a backstop, not the primary driver.
@@ -884,12 +991,54 @@ On upgrade/downgrade: Stripe webhook → update `User.subscription_status` → u
 ### Feature gate logic (what drives upgrades)
 | Trigger | Who sees it | Prompt |
 |---|---|---|
-| Owner tries to send 6th invite on Free | Owner only | "You've reached the 5-member limit. Upgrade to Plus to invite more. [Start free trial →]" — blocked at invite-send time, not accept time |
-| Plus member hits feature gate in a Free circle | Member (already paying) | "[Circle name] is on Free. Albums and search are available when the circle owner upgrades. [Ask owner to upgrade →]" — never show upgrade CTA to a paying member |
+| Owner tries to send 11th invite on Free | Owner only | "You've reached the 10-member limit. Upgrade to Plus to invite more. [Start free trial →]" — blocked at invite-send time, not accept time |
+| Plus member hits feature gate in a Free circle | Member (already paying) | "[Circle name] is on Free. Search and On This Day are available when the circle owner upgrades to Plus. [Ask owner to upgrade →]" — never show upgrade CTA to a paying member |
 | Free member hits feature gate in any circle | Member | "This feature needs Plus. [Upgrade →]" |
 | User tries to create a time capsule on Free/Plus | Owner | "Time capsules are a Pro feature →" |
 | Storage at 80% on Free | Owner | "Your story space is almost full — upgrade to keep going →" |
-| Collaborative memory on Free | Owner | "Upgrade to Plus to let everyone contribute →" |
+| Collaborative memory on Free/Plus | Owner | "Upgrade to Pro to let everyone contribute →" |
+
+### Free trial
+
+> **Phase split:** `first_memory_at` (the timestamp that triggers the trial) is a **Phase 1** column — it's also needed for the "Your First Month" early retention email. Add it to the schema in Phase 1. The trial **activation logic** (check `trial_used`, set `trial_ends_at`, send trial-start email) is **Phase 2**, wired in alongside Stripe billing.
+
+New circles get a **14-day Pro trial** automatically when the owner's first upload happens. No credit card required. The goal is to get every new user to experience the features that drive Pro conversion (time capsule, collaborative memory, Year in Review card) before they decide whether to stay on Free.
+
+**Trial mechanics:**
+- Trial starts on first memory upload in the circle — not on signup (users who don't upload never see a trial end message)
+- Duration: 14 days
+- Scope: full Pro features for that circle — including the unlimited member limit; a Pro trial that caps members at the Free tier is not a Pro experience
+- No credit card at trial start — reduces friction, allows re-engagement if they skip billing
+- At trial end: downgrade to Free automatically. No surprise charges. One email warning 3 days before expiry.
+
+**Trial prompts:**
+| Moment | Copy |
+|--------|------|
+| Trial starts | "Your circle is on a 14-day Pro trial — explore everything, no card needed." |
+| Day 11 (3 days left) | "3 days left on your Pro trial. Like what you see? Keep it for $9.99/mo →" |
+| Day 14 (trial ends) | "Your trial has ended. Your memories are safe. Upgrade anytime to get Pro features back →" |
+
+Never show trial prompts more than once per day. Never show them during upload — the moment of upload is sacred, never interrupt it with a commercial message.
+
+> `first_memory_at`, `trial_ends_at`, `trial_used`, and `first_month_email_sent` are in the canonical `Family` model — see the Data Model section. No migration addition needed here.
+
+`first_memory_at` is the shared trigger for both the auto-trial and the "Your First Month" recap email. Set it once (on the first Memory insert for this family) and never update it. All scheduled jobs that need "first memory date" read from this column rather than querying `MIN(Memory.created_at)` every time.
+
+**Stripe:** No Stripe subscription created at trial start. Only create a subscription when the user actively upgrades. Trials are tracked in the DB, not Stripe.
+
+**Why not a free trial on signup?** A circle with no content has nothing to trial. The trial starts when there's something to protect — when the first memory exists. This also means users who abandon before uploading never receive trial-end emails, reducing noise.
+
+**Trial stacking rules (auto-trial + referral trial):**
+A user can have both the auto-trial (14 days, triggered by their own first upload) and a referral trial (30 days, triggered when their referee uploads). The rules:
+
+| Scenario | Outcome |
+|---|---|
+| Auto-trial active, referral reward arrives | `trial_ends_at = max(current trial_ends_at, now() + 30 days)` — referral extends to 30 days from today, not 30 days added on top |
+| Auto-trial expired, referral reward arrives | `trial_ends_at = now() + 30 days` — fresh 30-day window |
+| Multiple referrals | Each referral extends to `max(current trial_ends_at, now() + 30 days)` — stacking is capped, not additive |
+| User already on Plus/Pro | No trial applied — they're already paying; referral reward is noted but dormant until they downgrade |
+
+**Why not additive stacking?** Additive stacking (14 + 30 = 44 days) is exploitable: a user could coordinate with a friend to get a long free trial without genuine referral intent. The `max()` rule is generous for legitimate referrers (who get 30 days regardless) and removes the exploit incentive.
 
 ### Secondary revenue streams (Phase 3)
 - **Physical products** — auto-generated photo books, printed timelines ($20–60 one-time)
@@ -938,7 +1087,7 @@ On upgrade/downgrade: Stripe webhook → update `User.subscription_status` → u
 |---|---|---|---|
 | Photo | 50 MB | — | Covers RAW/HEIC from modern iPhones |
 | Video | 500 MB | 90 seconds | ~90s at 1080p 30fps H.264 |
-| Live Photo (Phase 2) | 30 MB | 3 seconds | .heic still + .mov clip combined |
+| Live Photo (Phase 3) | 30 MB | 3 seconds | .heic still + .mov clip combined |
 
 Enforced client-side before upload starts (fast UX feedback) and server-side in Edge Function (security).
 
@@ -966,9 +1115,9 @@ iOS Live Photos = `.heic` still + paired `.mov` (1.5s clip). Android Motion Phot
 | Phase | Behaviour |
 |---|---|
 | MVP | Strip to static JPEG on upload — extract best frame via `sharp` in Edge Function. Simple, low storage. |
-| Phase 2 | Full support — store both components, play on long-press using Apple's `LivePhotosKit` JS library. |
+| Phase 3 | Full support — store both components, play on long-press using Apple's `LivePhotosKit` JS library. |
 
-Live Photos are a strong differentiator for a memory app — a baby's first laugh as a Live Photo is more emotional than a still. Worth the storage cost in Phase 2.
+Live Photos are a strong differentiator for a memory app — a baby's first laugh as a Live Photo is more emotional than a still. Worth the storage cost in Phase 3.
 
 **MVP implementation (strip to JPEG):**
 ```ts
@@ -982,7 +1131,7 @@ const jpeg = await sharp(heicBuffer)
 // Store jpeg only, discard .mov
 ```
 
-**Phase 2 implementation (full Live Photo):**
+**Phase 3 implementation (full Live Photo):**
 ```
 Upload: store .heic + .mov as paired objects in Storage
   MemoryMedia
@@ -1110,6 +1259,10 @@ NotificationPreference
   - family_muted (bool) — mute a specific family entirely
 ```
 
+**Default state on join:** `push_enabled = true`, `email_digest_frequency = "weekly"`, `family_muted = false`. Push is opt-out, not opt-in — members who never touch settings still receive activity. A member who accepts an invite and never opens Settings should not silently miss everything.
+
+On the first push notification received, show an in-app prompt: *"Stay in the loop — configure your notification preferences"* with a link to settings. Never show a configuration screen upfront before they've experienced a notification.
+
 All notification send paths check preferences before firing:
 ```ts
 const prefs = await getPrefs(userId, familyId)
@@ -1141,10 +1294,10 @@ if (prefs.email_digest_frequency !== "off") queueDigest(...)
 ## Billing
 
 - **Provider:** Stripe
-- Subscriptions per family (not per user)
+- Subscriptions per account (owner pays) — one active subscription per user; the owner's tier determines their circles' features. See the Monetization section for the full billing model.
 - Stripe webhook → Supabase DB sync on subscription changes (upgrade, downgrade, cancel)
-- On cancellation: downgrade to free tier, retain data, restrict uploads if over free quota
-- On failed payment: grace period (e.g. 7 days) before restricting uploads
+- On voluntary cancellation (`customer.subscription.deleted`): start 30-day grace period — `Family.subscription_status = "grace"`, `grace_period_until = now() + 30 days`. Immediate free downgrade only when `grace_period_until` expires without renewal. Retain all data. See canonical grace period rules in the Error States section.
+- On failed payment (`invoice.payment_failed`): start 7-day grace period — `Family.subscription_status = "grace"`, `grace_period_until = now() + 7 days`. Restrict new uploads only after the 7 days expire without payment resolution.
 
 ### Stripe events to handle
 | Event | Action |
@@ -1152,7 +1305,7 @@ if (prefs.email_digest_frequency !== "off") queueDigest(...)
 | `checkout.session.completed` | Activate paid plan |
 | `invoice.payment_succeeded` | Renew subscription |
 | `invoice.payment_failed` | Start grace period |
-| `customer.subscription.deleted` | Downgrade to free |
+| `customer.subscription.deleted` | Start 30-day grace period (voluntary cancellation) — see canonical grace period rules in the Error States section. Immediate free downgrade only happens when grace_period_until expires without renewal. |
 
 ---
 
@@ -1178,7 +1331,7 @@ USING (deleted_at IS NULL OR id = auth.uid());
 3. If they are a member (not owner) → show content choice:
 
 > *"What should happen to your photos in shared circles?"*
-> - **Keep them as part of the story** (default) — your name becomes "Former member", memories stay
+> - **Keep them as part of the story** (default) — your name becomes "[First name] (no longer in circle)", memories stay
 > - **Remove them from all circles** — your photos and voice memos are deleted from shared timelines
 
 4. Reactions: always removed regardless of choice (tied to identity, low-stakes)
@@ -1188,7 +1341,7 @@ USING (deleted_at IS NULL OR id = auth.uid());
 ```
 SELECT * FROM User WHERE deleted_at < now() - INTERVAL '30 days'
 → If "remove" chosen: delete storage objects, delete memories from shared timelines
-→ If "keep" chosen: anonymise display name to "Former member", retain media
+→ If "keep" chosen: set display name to "[First name] (no longer in circle)", retain media — preserves context for remaining members without exposing personal account details
 → delete FamilyMember records
 → hard delete User row
 ```
@@ -1219,19 +1372,7 @@ Owners can delete a circle. Make it hard to do accidentally:
 - Owner can recover within 30 days from their account settings
 - Day 30: hard purge — all memories, media, and member records permanently deleted
 
-**DB addition:**
-```sql
-Family
-  - deleted_at TIMESTAMPTZ  -- soft delete timestamp
-  - deletion_initiated_by UUID REFERENCES public.user(id)
-```
-
-### DB schema addition
-```
-User
-  - deleted_at (nullable)
-  - deletion_requested_at (nullable)
-```
+> **DB:** `Family.deleted_at`, `Family.deletion_initiated_by`, `User.deleted_at`, and `User.deletion_requested_at` are all in the canonical Data Model. No separate migration needed — they are included in the initial schema.
 
 ### Grace period
 - User can cancel deletion within 30 days (set `deleted_at = NULL`)
@@ -1339,9 +1480,11 @@ No one gets left out."
 |---|---|
 | parents | "Your baby's story starts here. Upload your first memory — grandparents are waiting." |
 | couple | "Your story together starts here. Add your first memory." |
+| family | "Your family's story starts here. Add your first memory together." |
 | friends | "No memories yet. Add the first one — your crew will thank you." |
-| solo | "Your personal story starts here. Just for you, until you're ready to share." |
 | caregiving | "A record of what matters. Add your first memory." |
+| travel | "Your adventure starts here. Upload your first memory from the trip." |
+| solo | "Your personal story starts here. Just for you, until you're ready to share." |
 | custom | "Your circle's story starts here. Add the first memory." |
 
 ---
@@ -1391,6 +1534,10 @@ User taps "Invite someone to your story"
       → User selects which existing memories to make family-visible
   → Circle mode activated — no data lost, full continuity
 ```
+
+**Privacy rule: private memories never auto-share.** When a solo user's first member joins, no existing memories change visibility. Every memory the solo user created stays `visibility: "private"` until they explicitly set it to `"family"`. The sharing prompt is an invitation — not a default. The default must always be "keep private."
+
+This is a trust-critical rule. A user who stored personal memories in solo mode must never discover that a new member can see them because they forgot to check a setting. Implementation must enforce this at the DB level: `Memory.visibility` is never mutated by the invite/join flow. Only an explicit user action (the sharing prompt selection, or later from the memory detail screen) can change visibility to `"family"`.
 
 ### Path C — Invited member
 Already covered above in invite-before-signup flow.
@@ -1453,7 +1600,9 @@ User clicks link (no account)
   → Store token in cookie (httpOnly, 7-day expiry)
   → Redirect to sign up / magic link flow
   → On auth.signUp success → check cookie for pending invite token
-  → Auto-join: INSERT FamilyMember { user_id, family_id, role: "member" }
+  → Fetch invite: SELECT role FROM FamilyInvite WHERE token = $token
+  → Auto-join: INSERT FamilyMember { user_id, family_id, role: invite.role }
+    -- CRITICAL: use invite.role, not a hardcoded "member" — caregiver and admin invites must preserve their role
   → UPDATE FamilyInvite { status: "accepted" }
   → Redirect to family timeline
 ```
@@ -1465,6 +1614,7 @@ FamilyInvite
   - family_id
   - email
   - token (UUID, unique)
+  - role: "admin" | "member" | "caregiver"  -- default "member"; must be read on auto-join
   - status: "pending" | "accepted" | "expired"
   - expires_at
   - created_at
@@ -1488,6 +1638,13 @@ Viewer opens link
 
 - No DB record needed for viewer — stateless JWT
 - Rotate viewer link on demand (owner can revoke and regenerate)
+
+**Expired link UX:**
+A grandparent who bookmarks the view-only link and opens it 31 days later must not see a generic error. On JWT expiry, show:
+> *"This link has expired. Ask [owner first name] for a new one."*
+> [Send a reminder →]
+
+"Send a reminder" opens a pre-written share sheet message the viewer can send directly to the owner (SMS, WhatsApp, etc.) — one tap, no friction. The viewer has no self-service path to regenerate a link, but they shouldn't need one.
 
 #### Viewer-optimised UI
 The view-only page is not just a "timeline with controls removed." It is a separately designed experience for a viewer-role user who may be opening a link on an old Android or iPad with no prior context. The simplified UI is driven by the **viewer role**, not by assumed age or tech ability — a 70-year-old who's comfortable with technology gets the full member experience if they're invited as a member.
@@ -1547,7 +1704,7 @@ Tracked as a column on `Family`, set by Stripe webhook:
 
 ```sql
 Family
-  - subscription_status: "active" | "grace" | "free"
+  - subscription_status: "free" | "plus" | "pro" | "grace"
   - grace_period_until (nullable timestamp)
 ```
 
@@ -1583,7 +1740,7 @@ customer.subscription.deleted webhook
 | Reactions already made | Full access | Full access |
 | New uploads (if over 5 GB quota) | Allowed | Blocked until under quota |
 | New voice memos | Allowed | Blocked (Pro feature) |
-| Members over 5 | All keep access | All keep access — no forced removal, just can't invite more |
+| Members over 10 | All keep access | All keep access — no forced removal, just can't invite more |
 
 Downgrade restricts future actions, never past content. Hiding existing memories because of a billing change = immediate trust destruction for a family app.
 
@@ -1639,7 +1796,7 @@ if (!success) return new Response("Too many requests", { status: 429 })
 - Tokens are UUIDs (unguessable)
 - Expire after 7 days
 - Single-use: mark `status: "accepted"` on first use
-- Max 10 pending invites per family at a time
+- Max 20 pending invites per family at a time (matches Plus member limit; Free tier cap is enforced at send-time by the tier member limit, not the pending invite cap)
 
 ---
 
@@ -1751,11 +1908,7 @@ Especially important — your users include grandparents and non-tech family mem
 - If blank: fallback to `"Photo uploaded by {first_name} {last_name} on {date}"`
 - Videos require captions (optional for MVP, prompted on upload)
 
-**DB schema addition**
-```
-Memory
-  - alt_text (nullable)
-```
+> `alt_text (nullable)` is in the canonical `Memory` model — see the Data Model section. No migration addition needed here.
 
 **Keyboard & screen reader**
 - All interactive elements reachable via keyboard (`Tab`, `Enter`, `Space`)
@@ -1886,11 +2039,7 @@ The hardest problem. If a user loses their only device, circle key is gone and a
 
 **Decision:** Implement as an opt-in per-circle toggle ("Enable private mode"), not the default. Default stays with current signed-URL model. Users who want stronger guarantees can opt in and accept the trade-offs.
 
-```sql
-Family
-  - e2ee_enabled (bool, default false)
-  - e2ee_enabled_at (nullable timestamp)
-```
+> `e2ee_enabled` and `e2ee_enabled_at` are in the canonical `Family` model — see the Data Model section. No migration addition needed here.
 
 ---
 
@@ -2145,7 +2294,7 @@ const memoriesWithUrls = await Promise.all(
 ```
 
 ### Rules
-- Never return `storage_path` to the client — only signed URLs
+- Never return any column that holds a Supabase Storage path to the client — only signed URLs. This applies to every such column regardless of its name: `storage_path` on `MemoryMedia`, `media_path` on `MemoryReaction` and `TimeCapsule`. The field name doesn't change the rule.
 - Signed URLs for thumbnails: longer expiry (24h) since they're cached by CDN
 - Signed URLs for originals: shorter expiry (1h) since they're only fetched on open
 - Video signed URLs: include `Content-Disposition: inline` for browser playback
@@ -2179,11 +2328,13 @@ LIMIT 20;
 {
   memories: Memory[],
   next_cursor: {
-    created_at: "2024-03-15T10:00:00Z",
+    memory_date: "2024-03-15T10:00:00Z",  // matches the sort key — NOT created_at
     id: "uuid-of-last-item"
   } | null  // null = no more pages
 }
 ```
+
+> **Note:** The cursor key is `memory_date`, not `created_at`. The DB query binds `$cursor_memory_date` from this field. Using `created_at` here would silently produce wrong results — the query sorts by `memory_date` and the cursor must encode that same value.
 
 ### Frontend: virtual scroll
 Use `vue-virtual-scroller` to render only visible items — prevents DOM bloat with large timelines.
@@ -2203,15 +2354,19 @@ User scrolls to 80% of current page
 
 ### Index required
 ```sql
+-- Order by memory_date (not created_at) — this drives timeline position
+-- An index on created_at would NOT be used by the timeline query
 CREATE INDEX idx_memory_timeline
-ON Memory (family_id, created_at DESC, id DESC);
+ON Memory (family_id, memory_date DESC, id DESC);
 ```
 
 ---
 
 ## Search
 
-### Phase 1: PostgreSQL full-text search (zero extra infra)
+### PostgreSQL full-text search (zero extra infra)
+> **Product phase: Phase 2** — search ships as a Plus feature alongside Stripe billing. "Phase 1" is the name of this implementation approach (before the Phase 3 Meilisearch upgrade), not the product ship phase.
+
 Supabase supports `tsvector` natively — fast enough for thousands of memories.
 
 ```sql
@@ -2223,7 +2378,8 @@ CREATE FUNCTION update_search_vector() RETURNS trigger AS $$
 BEGIN
   NEW.search_vector := to_tsvector('english',
     coalesce(NEW.note, '') || ' ' ||
-    coalesce(NEW.milestone_label, '')
+    coalesce(NEW.milestone_label, '') || ' ' ||
+    coalesce(NEW.alt_text, '')  -- include alt_text so memories are findable by their accessibility description
   );
   RETURN NEW;
 END;
@@ -2250,10 +2406,10 @@ const { data } = await supabase
 ### Filter options
 | Filter | Implementation |
 |---|---|
-| Date range | `.gte("created_at", from).lte("created_at", to)` |
+| Date range | `.gte("memory_date", from).lte("memory_date", to)` — filter by when the memory happened, not when it was uploaded |
 | Milestone only | `.not("milestone_label", "is", null)` |
 | By uploader | `.eq("owner_user_id", userId)` |
-| Media type | `.eq("media_type", "video")` |
+| Media type | `.select("*, MemoryMedia!inner(*)").eq("MemoryMedia.media_type", "video")` — `media_type` is on `MemoryMedia`, not `Memory`; use an inner join so only memories with matching media are returned |
 
 ### Phase 3 upgrade: Meilisearch
 When full-text search feels limiting (typo tolerance, ranking), self-host Meilisearch and sync Memory rows via Edge Function on insert/update. API is identical to swap in.
@@ -2407,10 +2563,18 @@ describe("stripe webhooks", () => {
     expect(family.grace_period_until).not.toBeNull()
   })
 
-  it("downgrades to free on customer.subscription.deleted", async () => {
+  // customer.subscription.deleted = voluntary cancellation → 30-day grace on Family.
+  // User.subscription_status stays at the paid tier until grace_period_until expires.
+  // An immediate free downgrade here would strip features from users who just cancelled —
+  // violating the contractual 30-day wind-down. See canonical grace period rules in Error States.
+  it("starts 30-day grace period on customer.subscription.deleted (voluntary cancellation)", async () => {
     await handleStripeEvent(subscriptionDeletedEvent({ userId: "user-1" }))
+    const family = await db.from("Family").select().eq("created_by", "user-1").single()
+    expect(family.subscription_status).toBe("grace")
+    expect(family.grace_period_until).not.toBeNull()
+    // User.subscription_status must NOT change to "free" yet — stays at paid tier during grace
     const user = await db.from("User").select().eq("id", "user-1").single()
-    expect(user.subscription_status).toBe("free")
+    expect(user.subscription_status).not.toBe("free")
   })
 })
 ```
@@ -2426,6 +2590,17 @@ describe("invite flow", () => {
     const member = await db.from("FamilyMember").select()
       .eq("family_id", "family-1").eq("user_id", newUserId).single()
     expect(member.role).toBe("member")
+  })
+
+  // CRITICAL: this test is the only one that catches a hardcoded "member" bug.
+  // If the auto-join flow uses a hardcoded "member" instead of invite.role,
+  // the test above passes but caregivers and admins silently join as members.
+  it("preserves caregiver role from invite — does NOT default to member", async () => {
+    const { token } = await createInvite({ familyId: "family-1", email: "nanny@example.com", role: "caregiver" })
+    await signUp({ email: "nanny@example.com", inviteToken: token })
+    const member = await db.from("FamilyMember").select()
+      .eq("family_id", "family-1").eq("user_id", newUserId).single()
+    expect(member.role).toBe("caregiver")  // must be "caregiver", not "member"
   })
 
   it("rejects expired invite token", async () => {
@@ -2551,7 +2726,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile && pnpm build
       - uses: vercel/action@v1
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -2842,9 +3024,10 @@ Stripe provides a fully hosted portal that handles upgrade, downgrade, cancellat
 ```
 User taps "Manage Subscription" in app settings
   → POST /api/billing/portal (Nuxt server route)
+  → Look up stripe_customer_id from User (not Family — Stripe credentials live on User)
   → Create Stripe portal session:
       stripe.billingPortal.sessions.create({
-        customer: family.stripe_customer_id,
+        customer: user.stripe_customer_id,
         return_url: "https://our-story.tinybit.app/settings"
       })
   → Redirect user to Stripe-hosted portal URL
@@ -2856,13 +3039,24 @@ User taps "Manage Subscription" in app settings
 ```ts
 // server/api/billing/portal.post.ts
 export default defineEventHandler(async (event) => {
-  const { familyId } = await readBody(event)
+  const supabase = await serverSupabaseServiceRole(event)
+  const user = await serverSupabaseUser(event)
+  if (!user) throw createError({ statusCode: 401 })
 
-  // Verify user is owner of this family
-  const family = await getFamilyForOwner(familyId, auth.uid())
+  // Stripe credentials live on User — not on Family
+  // (one subscription per user account; owner's tier determines their circles' features)
+  const { data: userRecord } = await supabase
+    .from("User")
+    .select("stripe_customer_id")
+    .eq("id", user.id)
+    .single()
+
+  if (!userRecord?.stripe_customer_id) {
+    throw createError({ statusCode: 400, message: "No active subscription found." })
+  }
 
   const session = await stripe.billingPortal.sessions.create({
-    customer: family.stripe_customer_id,
+    customer: userRecord.stripe_customer_id,
     return_url: `${process.env.APP_URL}/settings`,
   })
 
@@ -2870,20 +3064,22 @@ export default defineEventHandler(async (event) => {
 })
 ```
 
-### DB schema addition
-```sql
-Family
-  - stripe_customer_id (nullable)    ← set on first checkout
-  - stripe_subscription_id (nullable)
-```
+> **Note:** `stripe_customer_id` and `stripe_subscription_id` are on `User`, not `Family`. The subscription model is per user account — one Stripe customer per user. `Family.subscription_status` is a denormalised copy for fast RLS and is not the source of truth for billing. See the Stripe schema in the Monetization section.
 
 ### Webhooks to handle subscription changes from portal
 ```
 customer.subscription.updated
-  → UPDATE Family SET subscription_status, plan based on new price_id
+  → UPDATE User SET subscription_status based on new price_id
+  → UPDATE Family SET subscription_status for all families created_by = user_id
 
-customer.subscription.deleted
-  → UPDATE Family SET subscription_status = "free", grace_period_until = now() + 7 days
+customer.subscription.deleted  (voluntary cancellation from portal)
+  → UPDATE Family SET subscription_status = "grace",
+      grace_period_until = now() + INTERVAL '30 days'
+  → UPDATE User SET subscription_status = (unchanged until grace expires)
+  → Email all members: "[Circle name]'s plan ends in 30 days. Your photos are safe."
+  -- NOTE: voluntary cancellation → 30-day grace. Payment failure → 7-day grace.
+  -- These are two distinct scenarios handled by two distinct webhooks.
+  -- See the canonical grace period rules in the Error States section.
 
 payment_method.updated
   → no action needed (Stripe handles billing)
@@ -2970,16 +3166,7 @@ $crisp.push(["set", "user:nickname", [`${user.first_name} ${user.last_name}`]])
 // → inserts to Feedback table → sends email to you via Resend
 ```
 
-### DB schema (optional)
-```sql
-Feedback
-  - id
-  - user_id
-  - message
-  - page
-  - app_version
-  - created_at
-```
+> See the canonical `Feedback` table in the Data Model section — `user_id` is nullable to support viewer-role submissions (grandparents using the view-only link can still submit feedback without an account).
 
 ---
 
@@ -3097,7 +3284,7 @@ const hasMilestoneChapters = computed(() =>
 ## Localization / i18n
 
 ### Why it matters
-Family apps are used across generations and cultures. Even if Phase 1 is English-only, building without i18n from the start means a painful retrofit later — especially for date formats, RTL languages, and pluralization.
+Family apps are used across generations and cultures. Building without i18n from the start means a painful retrofit later — especially for date formats, RTL languages, and pluralization. All three priority languages ship in Phase 1 (see below).
 
 ### Solution: @nuxtjs/i18n
 
@@ -3113,7 +3300,7 @@ export default defineNuxtConfig({
     locales: [
       { code: "en", file: "en.json", name: "English" },
       { code: "fr", file: "fr.json", name: "Français" },
-      { code: "zh", file: "zh.json", name: "中文" },
+      { code: "zh-Hans", file: "zh-Hans.json", name: "中文（简体）" },
     ],
     defaultLocale: "en",
     strategy: "prefix_except_default",
@@ -3138,7 +3325,7 @@ const { t } = useI18n()
 t("timeline.empty")
 ```
 
-### Priority languages for Phase 2
+### Priority languages for Phase 1
 | Language | Reason |
 |---|---|
 | English | Default |
@@ -3183,11 +3370,7 @@ User selects photo for upload
   → If no match: proceed with upload, store pHash
 ```
 
-### DB schema addition
-```sql
-MemoryMedia
-  - phash TEXT  -- 64-character hex string
-```
+> `phash` is in the canonical `MemoryMedia` model — see the Data Model section. No migration addition needed here.
 
 ### pHash distance function (PostgreSQL)
 ```sql
@@ -3282,40 +3465,31 @@ Friend groups:
 ```
 
 ### Hook 3: First-memory anniversary (month 1)
-Sent exactly 1 month after a circle's first upload. Marks a real moment before "On This Day" kicks in.
+Sent exactly 1 month after a circle's first upload. Implemented as part of the **"Your First Month" recap email** (see Key Features §7.5) — not a separate send.
 
-```
-Scheduled Edge Function (daily)
-  → SELECT families where first memory was uploaded exactly 30 days ago
-  → Push + email to all members:
-      "One month ago, [uploader] added your first memory to [Circle name]"
-      Show the original memory as a card
-      CTA: "Add another →"
-```
+The nostalgia element ("One month ago, [uploader] added your first memory") is the opening section of that email. `Family.first_month_email_sent` is the guard flag. There is one email, one flag, one Edge Function invocation.
 
 ### Hook 4: "Quiet circle" nudge (14-day inactivity)
 If no uploads in 14 days, send a soft nudge to the owner only (not all members — don't spam).
 
 ```
-if last_memory_created_at < now() - INTERVAL '14 days'
-  AND nudge_count_this_period < 3
+if family.last_memory_at < now() - INTERVAL '14 days'
+  AND family.quiet_nudge_count < 3
   → push to owner only: "Your story has been quiet — add something this week?"
-  → increment nudge_count, record nudge_sent_at
+  → UPDATE Family SET quiet_nudge_count = quiet_nudge_count + 1,
+                      quiet_nudge_last_sent_at = now()
 ```
+
+> `last_memory_at` is updated on every Memory insert via trigger (see Data Model `Family` table). Do not query `MAX(Memory.created_at)` per-family in the cron — it will not scale.
 
 **Hard rules to prevent guilt-tripping:**
 - Max 3 nudges total before permanently stopping for that circle — families that go quiet don't want to be badgered
 - Minimum 14 days between nudges (never more than monthly)
 - Hard stop after 3 consecutive non-engaged nudges — if they've ignored 3, they've made their decision
-- Reset nudge count if a new memory is uploaded (circle is active again)
+- Reset nudge count if a new memory is uploaded (circle is active again) — implemented in the `handle_memory_insert()` trigger: `quiet_nudge_count = 0` on every Memory insert. This gives the circle a fresh 3-nudge window the next time it goes quiet. Do not reset in the cron — the trigger is the right place because it fires immediately on any upload.
 - Never send to members — owner only
 
-**DB addition:**
-```sql
-Family
-  - quiet_nudge_count INT NOT NULL DEFAULT 0
-  - quiet_nudge_last_sent_at TIMESTAMPTZ
-```
+> `quiet_nudge_count` and `quiet_nudge_last_sent_at` are in the canonical `Family` model — see the Data Model section. No migration addition needed here.
 
 ### Hook 5: Family streak
 A streak that belongs to the circle, not the individual. Any member uploading counts — this distributes the pressure and makes it social rather than personal.
@@ -3354,9 +3528,23 @@ The 52-week card is a word-of-mouth moment. It's inherently brag-worthy.
 The #1 retention driver. Brings users back unprompted, every day.
 
 ### Features
-- Daily push notification: "2 years ago today — Mia's first birthday 🎂"
-- In-app "On This Day" carousel at the top of the timeline
-- Weekly email digest: "Your family added 7 memories this week" + thumbnails of highlights
+- Daily push notification: "2 years ago today — Mia's first birthday 🎂" *(Phase 1)*
+- In-app "On This Day" carousel at the top of the timeline *(Phase 3 — push notification is Phase 1; see carousel subsection below)*
+- Weekly email digest: "Your family added 7 memories this week" + thumbnails of highlights *(Phase 1)*
+
+### Activation threshold
+
+On This Day only activates for circles with **30+ memories and 90+ days since first upload**. Below this threshold, most days yield nothing — a Plus subscriber paying $4.99/mo who sees silence for months concludes the feature is broken.
+
+**Below-threshold fallback:** substitute a *"A memory from your first month"* notification — surface the oldest memory in the circle as a mini-nostalgia moment. This gives new circles a retention hook while On This Day ramps up.
+
+```
+if circle.memory_count < 30 OR circle.first_memory_at > now() - INTERVAL '90 days':
+  → Send "A memory from your first month" (oldest memory) instead
+  → Max once per week — do not send daily if below threshold
+```
+
+> `memory_count` is in the canonical `Family` model — incremented by the `handle_memory_insert()` trigger on every Memory insert. Do not query `COUNT(*) FROM Memory WHERE family_id = $id` in the cron — it does not scale.
 
 ### Implementation: scheduled Edge Function (daily cron)
 ```
@@ -3374,15 +3562,8 @@ Every day at 8am (user's local timezone):
 ```
 
 ### Weekly digest (every Monday 9am)
-```
-SELECT COUNT(*), array_agg(id) FROM Memory
-WHERE family_id = $family_id
-  AND created_at > now() - INTERVAL '7 days'
 
-→ If count > 0: send email via Resend
-    subject: "Your family added {N} memories this week"
-    body: thumbnail grid of top 4 memories + CTA to open app
-```
+> See the **Early Retention** section (Hook 1) for the canonical weekly digest implementation — including the zero-upload re-engagement variant, subject line personalisation, and build priority. The digest is built in Phase 1 alongside the On This Day cron; both share the same Edge Function invocation pattern.
 
 #### Grandparent-first digest design
 The weekly digest is the primary product for grandparents — many will never open the app. Design the email for them, not for the circle creator.
@@ -3421,6 +3602,9 @@ GET /api/reactions/email?token=<viewer-jwt>&memoryId=<id>&emoji=❤️
 This is the single most important interaction for grandparent engagement. FamilyAlbum built their retention around this pattern. Requiring the grandparent to open the app to react loses ~80% of them.
 
 ### "On This Day" carousel (in-app)
+
+> **Phase 3 only.** The push notification and below-threshold fallback email are Phase 1. The in-timeline carousel surface ships in Phase 3 — do not build it in Phase 1.
+
 - Shown at top of timeline when matching memories exist
 - Dismissible per session
 - Tapping opens the memory in full
@@ -3436,9 +3620,11 @@ Every family invite is a new user acquisition. The app is inherently viral — b
 ```
 User invites a friend to start their own family story
   → Share referral link: our-story.tinybit.app/join?ref={referral_code}
-  → Referee signs up + creates a family
-  → Both get +5 GB bonus storage (credited to AccountStorage.bonus_bytes)
+  → Referee signs up + creates a family + uploads first memory
+  → Referrer receives a 30-day Pro trial (credited immediately on referee's first upload)
 ```
+
+The referee gets no separate reward — the invite itself is valuable (they gain access to a product they want). The referrer gets something aspirational and immediately felt: Pro features for 30 days.
 
 ### DB schema
 ```sql
@@ -3449,7 +3635,8 @@ User
 Referral
   - id, referrer_user_id, referee_user_id
   - status: "pending" | "completed"
-  - bonus_granted (bool)
+  - pro_trial_granted (bool, default false)
+  - pro_trial_ends_at (nullable timestamp)  -- set when reward is granted; propagated to Family.trial_ends_at
   - created_at
 ```
 
@@ -3458,11 +3645,13 @@ Referral
 Referee signs up with referral code
   → INSERT Referral { referrer, referee, status: "pending" }
 
-Referee creates first family + uploads first memory
-  → UPDATE Referral { status: "completed" }
-  → ADD 5 GB to referrer AccountStorage.bonus_bytes
-  → ADD 5 GB to referee AccountStorage.bonus_bytes
-  → Notify referrer: "Your friend joined — you both got 5 GB!"
+Referee uploads first memory
+  → UPDATE Referral { status: "completed", pro_trial_granted: true,
+      pro_trial_ends_at: GREATEST(COALESCE(referrer_family.trial_ends_at, now()), now() + INTERVAL '30 days') }
+  → UPDATE Family SET trial_ends_at = GREATEST(COALESCE(trial_ends_at, now()), now() + INTERVAL '30 days')
+      for all families where created_by = referrer_user_id
+      (if referrer already has a running trial, this extends it to 30 days from today if that's further out)
+  → Notify referrer: "Your friend joined — enjoy 30 days of Pro free!"
 ```
 
 ### "Invite another family" flow
@@ -3522,13 +3711,19 @@ Share the app with them →"
 
 The last CTA is the key insight: the grandparent *becomes the acquisition channel into a new family*. They don't refer another viewer — they trigger their own family (a new creator) to sign up.
 
-### Storage-based referral incentive
-The existing +5 GB referral program is correct. Storage is the right incentive because:
-- It's directly connected to the product (not a discount on something else)
-- Heavy uploaders (new parents) are the most motivated to refer, and they're also the ones most likely to need storage
-- It self-selects for quality referrals — only active users care about storage
+### Referral incentive: 30-day Pro trial
 
-**Increase the trigger bar slightly:** Bonus credited when the referee uploads their first memory (not just signs up) — this ensures you're rewarding genuine activation, not drive-by signups.
+When a referred user uploads their first memory, the referrer receives a **30-day Pro trial** (not +5 GB storage).
+
+**Why Pro trial beats +5 GB storage:**
+- Storage is invisible — users don't notice 5 GB until they're nearly full, which could be months away. The reward has zero emotional impact at the moment of referral.
+- A Pro trial is immediate and tangible — the referrer gets time capsules, Year in Review preview, and voice reactions *today*. They feel the upgrade.
+- It creates aspirational intent — most referrers will want to stay on Pro after 30 days, driving upgrade conversion at zero extra acquisition cost.
+- The referral program "sell" becomes: *"Invite a friend, get a month of Pro free"* — far more compelling than *"get 5 GB"*
+
+**Trigger:** Credited when the referee uploads their first memory (not just signs up) — rewards genuine activation, not drive-by signups.
+
+**DB:** No separate reward table needed. The trial end date is stored directly on `Referral.pro_trial_ends_at` (for audit trail) and propagated to `Family.trial_ends_at` (for enforcement). See the core Data Model `Referral` table.
 
 ---
 
@@ -3574,10 +3769,23 @@ The product can be perfect and still die at zero if no one hears about it. This 
 ### Channel 1: New parent communities (primary beachhead)
 New parents are the highest-motivation audience. They have a clear pain point, they talk to each other constantly, and they share app recommendations freely.
 
-- **r/beyondthebump** (2M members) — post in weekly discussion threads, not a product post. Share as a parent, not a founder. "I built this because I couldn't find anything that did X."
-- **r/NewParents**, **r/daddit**, **r/mommit** — same approach
-- **Facebook Groups** — "New Moms [City]", birth month groups ("March 2025 Babies") — these are extremely active and trust peer recommendations
-- **What to post:** A real memory from your own circle. Not a feature list. Show the emotional output, not the product.
+- **r/beyondthebump** (2M members), **r/NewParents**, **r/daddit**, **r/mommit**
+- **Facebook Groups** — "New Moms [City]", birth month groups ("March 2025 Babies") — extremely active, high peer-recommendation trust
+- **What to post:** A real memory from your own circle. Never a feature list. Show the emotional output, not the product.
+
+**How to engage without getting banned:**
+Reddit and Facebook parent communities have strict no-promotion rules. Violating them gets you banned and poisons the channel for future posts. The only approach that works:
+
+1. **Be a genuine member first.** Spend 2–4 weeks contributing to threads unrelated to your product — answer questions, share experiences, be helpful. Build post history. New accounts with zero activity that immediately post about their product are flagged instantly.
+2. **Post your own story, not a product pitch.** "I built something to solve this problem I had" is allowed and respected. "Check out my new app" is spam. The difference is authenticity — you must actually be a parent using this for your own family, not a founder looking for beta users.
+3. **Let the product spread from value, not promotion.** Post a real memory from your own circle. Show what the app *does* emotionally, not what it *is* technically. If it's good, people ask what app made that. That question is the only CTA you need.
+4. **Reply to every DM personally.** Early adopters who DM are your most valuable signal. They'll become advocates if you treat them like people, not metrics.
+5. **Never post the same thing twice.** Subreddit mods track this. Unique, genuine contributions only.
+
+Concrete post formats that work:
+- "We've been using [app] for 6 months. Here's what our family's story looks like." (screenshot of timeline — no UI chrome, just the memories)
+- Responding to "how do you remember your baby's milestones?" threads: share your workflow, mention the app only if directly asked or as a natural part of the answer
+- "Soft launch post": "I built this for our family because nothing else did X. Would love feedback from other new parents." — works once, in the right subreddit, with real post history behind it
 
 ### Channel 2: Your own network (fastest path to first 10)
 - Personally invite 5–10 friends/family who have kids or a meaningful group
@@ -3647,6 +3855,46 @@ Below fold:
 
 ---
 
+## Pricing Page
+
+Lives at `our-story.tinybit.app/pricing` — inside the Nuxt app, not a separate site. Linked from the landing page, all upgrade prompts, and any shareable card that includes a "Made with Our Story" CTA. The answer to "what does this cost?" must be one tap away from any public-facing link.
+
+### Page structure
+
+```
+Headline:   Simple, honest pricing.
+Subhead:    Start free. Upgrade when your story grows.
+
+[Free]          [Plus — $4.99/mo]       [Pro — Coming soon]
+0 / 5 GB        50 GB                   500 GB
+1 circle        Unlimited circles       Unlimited + Pro features
+Up to 10 members Up to 20 members       Unlimited members
+Basic timeline  Search                  Time capsule
+Albums †        On This Day             Year in Review
+Milestones      Notification prefs      Voice reactions
+Comments        Offline upload          Collaborative memory
+Reactions
+
+† Coming in Phase 2 — already included in your Free plan, no upgrade needed.
+
+[Start free →]  [Upgrade to Plus →]    [Join waitlist →]
+```
+
+### FAQ (must answer these prominently)
+| Question | Answer |
+|---|---|
+| Can I cancel anytime? | Yes. No commitment, cancel in one tap from settings. |
+| What happens to my photos if I cancel? | They stay. Forever. Downgrading to Free restricts new uploads if you're over 5 GB, but never hides or deletes existing memories. |
+| Is my data private? | Yes. Invite-only. No ads. No AI training. No data selling. Your photos are stored privately and never leave our servers. |
+| Do grandparents need to pay? | No. Joining a circle is always free. Only circle owners pay. |
+| What counts toward the 5 GB limit? | Photos and videos you upload. Memories shared by other members don't count against your quota. |
+| Can I try Pro before paying? | Yes — every new circle gets a free 14-day Pro trial when you upload your first memory. No credit card needed. Refer a friend and extend it to 30 days when they upload their first memory. |
+
+### Phase 1 note
+Mark Pro as *"Coming soon"* — show the tier with greyed-out features and a waitlist CTA. Mark Albums with the `†` footnote above — it is a Free feature arriving in Phase 2, not gated behind a paid plan. Honest, and plants the value of upcoming features without overpromising what's available today.
+
+---
+
 ## Growth Strategy
 
 ### Priority order (build in this sequence)
@@ -3657,7 +3905,7 @@ Below fold:
 | 3 | **Invited member activation** | Get invited members to upload in their first session. This single metric predicts long-term retention better than anything else. |
 | 4 | **Shareable memory cards** | Branded share to WhatsApp/iMessage → recipient sees "Our Story" → organic discovery. |
 | 5 | **Year in Review** | Free, shareable, emotional. Your Spotify Wrapped moment. One viral share = dozens of signups. |
-| 6 | **Referral program** | +5 GB for both parties. Turns your happiest users into your sales team. |
+| 6 | **Referral program** | 30-day Pro trial for the referrer when referee uploads first memory. Turns your happiest users into your sales team — and drives upgrade conversion. |
 
 **Rule: nail retention (#1–3) before viral (#4–6). You can't grow what you can't retain.**
 
@@ -3715,7 +3963,7 @@ Sent by Our Story · Private, invite-only · No ads
 |---|---|
 | Built-in virality | Every family invite is a new user acquisition — make the invite email beautiful and emotional, not transactional |
 | Shareable memory cards | "Share to WhatsApp" with branded preview → viewer sees photo + "Made with Our Story" + download CTA |
-| Referral program | +5 GB bonus storage for both referrer and referee on first family created |
+| Referral program | Referrer gets 30-day Pro trial when referee uploads first memory. "Invite a friend, get a month of Pro free." |
 | Year in Review | Auto-generated annual recap users share on social — free Spotify Wrapped-style impressions |
 | View-only grandparent CTA | After grandparent views timeline: "Start your own family story →" — turns viewers into creators |
 
@@ -3764,18 +4012,20 @@ Family admin generates an event upload link. Guests scan QR code, enter their na
 **DB schema**
 ```sql
 EventUploadToken
-  - id, family_id, album_id
+  - id, family_id, album_id (nullable)  -- nullable: token may be scoped to a specific album or the entire family timeline
   - token (UUID, unique)
   - expires_at
   - max_uploads (default 100)
   - upload_count
   - created_by (user_id)
   - revoked (bool)
+  - requires_approval (bool, default true) — guest photos queue in pending state, visible only to admins until approved
 
 MemoryMedia
-  - owner_user_id (nullable — null for guest uploads)
-  - event_token_id (nullable)
-  - guest_name (nullable)
+  - event_token_id (nullable)  -- identifies the guest upload token; join to EventUploadToken for event context
+  - guest_name (nullable)      -- display name entered by guest on upload
+  -- Note: no owner_user_id on MemoryMedia — owner is derived via Memory.owner_user_id (regular) or
+  --       event_token_id + guest_name (guest). Do not add a redundant owner_user_id column here.
 ```
 
 **Flow**
@@ -3789,9 +4039,15 @@ Guest scans QR
   → Selects photos → uploads
   → Photos attributed to guest_name, queued for admin review
 
-Admin receives: "15 guest photos pending approval"
-  → Reviews → approves → appear in album
-  → OR: auto-approve (toggle per event)
+If requires_approval = true (default):
+  → Guest photos are pending — visible to admins only, NOT on the family timeline
+  → Admin receives push: "15 guest photos pending your approval"
+  → Reviews in bulk → approve all / approve individually / reject
+  → Approved photos appear in album
+If requires_approval = false (owner opted out):
+  → Photos appear immediately on the timeline
+
+**Why approval is the default:** A single inappropriate photo uploaded by an unknown guest before the owner reviews it is visible to all members including children. Events like weddings or birthdays are high-trust socially, but the guest list includes people outside the family's normal circle. Default to safe — let owners opt out for events where they trust everyone.
 
 Post-upload CTA: "Want to start your own family story? →"
 ```
@@ -3835,7 +4091,7 @@ TimeCapsule
   - content_type: "memory" | "letter" | "video"
   - memory_id (nullable — link to existing memory)
   - letter_text (nullable — encrypted at rest)
-  - media_path (nullable — signed URL generated only after unlock_date)
+  - media_path (nullable — Supabase Storage path; never return raw to client; signed URL generated server-side only after unlock_date — same rule as MemoryMedia.storage_path)
   - status: "locked" | "unlocked"
   - notified (bool)
 ```
@@ -3912,31 +4168,80 @@ const WHO_MILESTONES = [
 
 ### 4. Caregiver Mode
 
+> **Phase split:**
+> - **Phase 1** — Schema and RLS only. The `"caregiver"` value is included in the `FamilyMember.role` CHECK constraint from the initial migration. The RESTRICTIVE RLS policy (defined in the Auth section) ships in Phase 1 — defensive, costs nothing, correct from day one.
+> - **Phase 3** — Everything visible to the user: the caregiver invite UI (separate invite path, distinct from regular member invite), the simplified caregiver view (upload + family timeline only, no settings/private tab), and the acquisition funnel. Do not build the invite UI or simplified view in Phase 1 — there are no caregivers to invite yet and the complexity is not worth it.
+
 **How it works:**
-Nanny, babysitter, or daycare gets upload-only access to a specific family. Can upload but cannot view private memories, invite anyone, or access billing. High daily upload frequency from caregivers = strong retention signal for the family.
+Nanny, babysitter, or daycare gets limited access to a specific family. High daily upload frequency from caregivers = strong retention signal for the family.
 
-**DB schema**
-```sql
-FamilyMember
-  - role: "owner" | "admin" | "member" | "caregiver"
+**Full permission matrix**
 
--- Caregiver permissions (enforced via RLS)
--- Can: upload to family timeline, view family timeline
--- Cannot: view private memories, invite members, manage groups, access settings
-```
+| Action | Caregiver |
+|--------|-----------|
+| Upload to family timeline | Yes — always `visibility: "family"`, cannot set private |
+| View family timeline | Yes |
+| React (emoji) | Yes |
+| React (voice/video) | No |
+| Comment | No |
+| View private memories | No |
+| See member list | First name only — caregiver needs to know who the parents are, but cannot enumerate full member details |
+| Invite members | No |
+| Delete own uploads | No (owner/admin only) |
+| Access settings / billing | No |
+| Create albums | No |
+
+Displayed in the member list (visible to owner/admin only) as "[Name] · Caregiver".
+
+On removal: same content-choice flow as member deletion — owner is prompted to keep or remove the caregiver's uploads.
+
+> **DB schema:** `FamilyMember.role` includes `"caregiver"` in the canonical Data Model — see the Data Model section. No separate migration needed; it is part of the initial schema.
 
 **RLS policy for caregivers**
+
+> **Critical:** Postgres/Supabase permissive policies are OR'd together. A separate permissive policy for caregivers would add permission, not restrict it — a caregiver who satisfies the general "read family memories" policy would still read private memories. The fix is a **RESTRICTIVE** policy, which is AND'd with all permissive policies.
+
 ```sql
--- Caregivers can only see family-visibility memories, not private
-CREATE POLICY "caregiver memory access"
+-- RESTRICTIVE: blocks caregivers from private memories regardless of other policies
+-- AS RESTRICTIVE means this is AND'd with permissive policies, not OR'd
+CREATE POLICY "caregiver cannot read private memories"
 ON Memory FOR SELECT
+AS RESTRICTIVE
 USING (
-  visibility = 'family'
-  AND family_id IN (
-    SELECT family_id FROM FamilyMember
-    WHERE user_id = auth.uid()
+  NOT (
+    visibility = 'private'
+    AND EXISTS (
+      SELECT 1 FROM FamilyMember
+      WHERE user_id = auth.uid() AND role = 'caregiver'
+        AND family_id = Memory.family_id
+    )
   )
 );
+```
+
+This must have a corresponding pgTAP test before any caregiver feature ships:
+```sql
+-- pgTAP: caregiver cannot read private memories
+SELECT plan(2);
+
+SET LOCAL role TO authenticated;
+SET LOCAL request.jwt.claims TO '{"sub": "caregiver-uuid"}';
+
+SELECT is(
+  (SELECT count(*) FROM Memory
+   WHERE family_id = 'family-1-uuid' AND visibility = 'private'),
+  0::bigint,
+  'caregiver cannot read private memories'
+);
+
+SELECT is(
+  (SELECT count(*) FROM Memory
+   WHERE family_id = 'family-1-uuid' AND visibility = 'family'),
+  (SELECT count(*) FROM Memory WHERE family_id = 'family-1-uuid' AND visibility = 'family'),
+  'caregiver can read family-visibility memories'
+);
+
+SELECT * FROM finish();
 ```
 
 **Caregiver invite flow**
@@ -4014,7 +4319,7 @@ MemoryReaction
   - id, memory_id, user_id
   - type: "emoji" | "voice" | "video"
   - emoji (nullable)
-  - media_path (nullable — for voice/video)
+  - media_path (nullable — Supabase Storage path for voice/video reactions; never return raw to client — generate signed URL server-side, same rule as MemoryMedia.storage_path)
   - duration_seconds (nullable)
   - created_at
 ```
@@ -4115,13 +4420,7 @@ Journey status → "completed"
 
 **Why:** EXIF GPS data is already extracted on upload. Minimal extra work — massive shareability. A beautiful visual of your family's story across the world.
 
-**DB schema addition**
-```sql
-MemoryMedia
-  - lat (float, nullable)
-  - lng (float, nullable)
-  - location_name (nullable — reverse geocoded city/country)
-```
+> `lat`, `lng`, and `location_name` are already in the canonical `MemoryMedia` model — see the Data Model section. No migration addition needed here.
 
 **EXIF GPS extraction (on upload, Edge Function)**
 ```ts
@@ -4215,12 +4514,7 @@ Sunday: Challenge closes
 - "Family vacation challenge: everyone share their best photo from Hawaii"
 - Same schema, created_by = user_id instead of null
 
-**Streak tracking**
-```sql
-Family
-  - challenge_streak (int)
-  - last_challenge_completed_at
-```
+> `challenge_streak` and `last_challenge_completed_at` are in the canonical `Family` model — see the Data Model section. No migration addition needed here.
 
 ---
 
@@ -4228,13 +4522,7 @@ Family
 
 **Why:** Zero churn. A family that uses the app to preserve a grandparent's memory will never leave. Word of mouth in grief communities is powerful and underrated.
 
-**DB schema**
-```sql
-FamilyMember
-  - memorial_status: "active" | "memorial" (default "active")
-  - memorial_date (nullable — date of passing)
-  - memorial_message (nullable — tribute written by family)
-```
+> `memorial_status`, `memorial_date`, and `memorial_message` are in the canonical `FamilyMember` model — see the Data Model section. No migration addition needed here.
 
 **What changes when memorial_status = "memorial"**
 - Profile shows memorial badge + name + dates ("1942–2026")
@@ -4314,12 +4602,8 @@ Footer:
 ```
 
 **Conversion tracking**
-```sql
-NewsletterRecipient
-  - open_count
-  - click_count
-  - last_clicked_at
-```
+
+> `open_count`, `click_count`, `last_clicked_at`, and `join_prompt_count` are in the canonical `NewsletterRecipient` model — see the Data Model section. No migration addition needed here.
 
 ```ts
 // If click_count >= 3 AND not yet a member:
@@ -4425,13 +4709,16 @@ Capacitor wraps Nuxt with ~zero code changes. The jump from PWA to native app in
 - [ ] Auth — magic link + Google login (Supabase Auth)
 - [ ] Create family + invite members (email invite, token-based)
 - [ ] Upload photo/video to timeline
+- [ ] Batch upload with per-item EXIF date detection (multi-select, date review before submit)
+- [ ] Quick note (text-only memory, no photo required)
 - [ ] Add note to memory
 - [ ] Share to family / keep private
 - [ ] Comments + emoji reactions
 - [ ] Milestones (first steps, first birthday, first day of school)
 - [ ] Magic link view-only for grandparents (stateless JWT)
-- [ ] On This Day push notification (daily cron — #1 retention driver)
+- [ ] On This Day push notification (daily cron — #1 retention driver; built in Phase 1 for all users; Plus-gated in Phase 2 once billing ships — do not add the tier check until Stripe is wired)
 - [ ] Basic push notifications (new upload, comment, reaction)
+- [ ] Early retention hooks (weeks 1–6): weekly activity digest, milestone suggestions (triple-nudge), first-memory anniversary email, quiet-circle nudge — all reuse the React Email system already needed for invite emails
 - [ ] Cursor-based timeline pagination
 - [ ] Signed URLs for all media (never expose raw storage paths)
 - [ ] Supabase Storage for media
@@ -4441,9 +4728,11 @@ Capacitor wraps Nuxt with ~zero code changes. The jump from PWA to native app in
 - [ ] Supabase migrations workflow
 - [ ] Mobile-responsive UI + PWA manifest (no app download required)
 - [ ] Invite email (Resend + React Email — see invite email spec above)
+- [ ] Data export (async zip job — GDPR Article 20 data portability, required before any public launch)
+- [ ] Privacy policy + Terms of Service live (required before any public launch)
 
 **Do NOT build in Phase 1:**
-Everything else in this spec. No billing, no albums, no search, no rate limiting, no S3 migration, no referral program, no year in review, no native apps. Ship fast, learn fast.
+Everything else in this spec. No billing, no albums, no search, no Upstash Redis rate limiting (basic server-side validation — invite count cap, file size — still applies), no S3 migration, no referral program, no year in review, no native apps. Ship fast, learn fast.
 
 **Exit criteria:** At least one family (not yours) uses it weekly for 4 consecutive weeks.
 
@@ -4453,6 +4742,8 @@ Everything else in this spec. No billing, no albums, no search, no rate limiting
 **Target segment:** All families — including couples, adult siblings, caregiving families
 **Goal:** Get first paying users. Validate willingness to pay before building growth features.
 
+> **Scope note:** This checklist is the monetization critical path — the minimum required to ship billing and prove willingness to pay. The following features are also labeled Phase 2 in their spec sections but are secondary to the billing goal and not on the critical path: voice memo (§Key Features §3), phone/SMS OTP auth (§Auth), passkeys (§Auth), audit logging (§Media Privacy Model). Build them in Phase 2 after the core billing items are stable.
+
 **Build this:**
 - [ ] Stripe billing (family subscription, free + paid tiers)
 - [ ] Storage quota enforcement (per account, not per family)
@@ -4461,18 +4752,17 @@ Everything else in this spec. No billing, no albums, no search, no rate limiting
 - [ ] Search (PostgreSQL full-text, tsvector)
 - [ ] Memory date override (EXIF extraction + user-editable date)
 - [ ] Notification preferences (push on/off, quiet hours, email digest frequency)
-- [ ] Weekly email digest (Resend + React Email)
 - [ ] Invited member onboarding flow
 - [ ] Media deduplication (pHash)
 - [ ] Rate limiting (Upstash Redis)
 - [ ] Image/video CDN optimisation (Supabase image transforms, thumbnails)
 - [ ] Offline upload queue (Capacitor + IndexedDB)
 - [ ] Background upload (Capacitor Background Runner)
-- [ ] Data export (async zip job, GDPR)
-- [ ] Privacy policy + Terms of Service (Termly/Iubenda)
+- [ ] Year in Review shareable card (free for all tiers — the Spotify Wrapped growth mechanic; canvas API, 9:16 format, public share URL with "Create your family's story →" CTA)
 - [ ] Native app (Capacitor wrapper around existing Nuxt app — minimal code delta)
 - [ ] App Store submission (iOS + Android)
 - [ ] Universal Links / App Links (invite links open app if installed, browser if not)
+- [ ] Family streak (circle-level weekly upload streak; Sunday streak-saver nudge to owner; shareable achievement cards at 4/12/52 weeks — requires a week of usage data to be meaningful, so Phase 2 not Phase 1)
 
 **Exit criteria:** 20+ paying families. Churn rate under 5%/month.
 
@@ -4483,24 +4773,22 @@ Everything else in this spec. No billing, no albums, no search, no rate limiting
 **Goal:** Turn retention into growth. Add viral mechanics and power features.
 
 **Build this:**
-- [ ] On This Day in-app carousel + weekly digest
-- [ ] Referral program (+5 GB bonus storage)
+- [ ] On This Day in-app carousel (new in Phase 3 — the push notification is Phase 1; this is the in-timeline visual surface for matching memories)
+- [ ] Referral program (30-day Pro trial for referrer on referee's first upload)
 - [ ] Guest contributor / event QR code
 - [ ] Shareable memory cards (branded, WhatsApp/iMessage)
-- [ ] Year in Review (auto-generated annual recap)
 - [ ] Collaborative memory (one event, many contributors)
 - [ ] Family challenges (weekly prompts)
 - [ ] Pregnancy journey tracker
 - [ ] Baby / child development tracking (WHO milestones)
-- [ ] Caregiver mode
+- [ ] Caregiver mode — invite UI + simplified caregiver view (schema and RLS already shipped in Phase 1)
 - [ ] Family map (EXIF GPS, Mapbox)
 - [ ] Private family newsletter (outward to non-members)
 - [ ] Time capsule
 - [ ] Video / voice reactions
 - [ ] Live Photos (full support, LivePhotosKit)
-- [ ] Annual Recap / Year in Review video (Remotion)
+- [ ] Year in Review full slideshow/video (Remotion, Pro only — Phase 2 built the free shareable card; this is the immersive in-app video with blurred preview for Free/Plus)
 - [ ] S3 + CloudFront + MediaConvert (video at scale)
-- [ ] Localization / i18n (EN, FR, ZH)
 - [ ] PostHog analytics (self-hosted)
 - [ ] Feature flags (FeatureFlag table)
 - [ ] Memorial / legacy mode
