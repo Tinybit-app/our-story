@@ -14,7 +14,7 @@
     <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#d64040] dark:bg-[#e05454] shadow-[0_2px_6px_rgba(214,64,64,.4)] opacity-85 z-10" />
 
     <!-- Photo area -->
-    <div class="overflow-hidden bg-border" :class="wide ? 'aspect-[4/3]' : 'aspect-square'">
+    <div class="relative overflow-hidden bg-border" :class="wide ? 'aspect-[4/3]' : 'aspect-square'">
 
       <!-- Photo / video -->
       <img
@@ -45,6 +45,71 @@
         </svg>
       </div>
 
+      <!-- Reaction overlay — appears on hover at bottom of photo -->
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 translate-y-1"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-1"
+      >
+        <div
+          v-if="isHovered"
+          class="absolute bottom-0 inset-x-0 px-2 py-1.5 flex items-center gap-1 flex-wrap"
+          style="background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%);"
+          @click.stop
+        >
+          <!-- Existing reactions -->
+          <button
+            v-for="(group, emoji) in reactionGroups"
+            :key="emoji"
+            class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] transition-all duration-150"
+            :class="group.mine
+              ? 'bg-white/30 text-white font-semibold'
+              : 'bg-white/15 text-white/90 hover:bg-white/25'"
+            @click.stop="toggleReaction(emoji as string)"
+          >
+            <span>{{ emoji }}</span>
+            <span class="text-[10px]">{{ group.count }}</span>
+          </button>
+
+          <!-- Picker trigger -->
+          <div class="relative ml-auto">
+            <button
+              class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/15 text-white/80 text-[11px]
+                     hover:bg-white/30 transition-colors"
+              @click.stop="pickerOpen = !pickerOpen"
+            >+</button>
+
+            <Transition
+              enter-active-class="transition duration-100 ease-out"
+              enter-from-class="opacity-0 scale-90 translate-y-1"
+              enter-to-class="opacity-100 scale-100 translate-y-0"
+              leave-active-class="transition duration-75 ease-in"
+              leave-from-class="opacity-100 scale-100 translate-y-0"
+              leave-to-class="opacity-0 scale-90 translate-y-1"
+            >
+              <div
+                v-if="pickerOpen"
+                class="absolute bottom-full mb-1.5 right-0 z-20
+                       bg-card border border-border rounded-xl shadow-xl px-2 py-1.5
+                       flex gap-1"
+                @click.stop
+              >
+                <button
+                  v-for="e in PRESET_EMOJIS"
+                  :key="e"
+                  class="text-base w-7 h-7 flex items-center justify-center rounded-lg hover:bg-secondary transition-colors"
+                  :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
+                  @click.stop="toggleReaction(e); pickerOpen = false"
+                >{{ e }}</button>
+              </div>
+            </Transition>
+          </div>
+        </div>
+      </Transition>
+
     </div>
 
     <!-- Caption -->
@@ -64,65 +129,6 @@
 
       <!-- Date · Author -->
       <p class="text-[10px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
-
-      <!-- Reactions row -->
-      <div class="mt-2 flex items-center justify-center gap-1 flex-wrap min-h-[20px]">
-
-        <!-- Existing emoji groups -->
-        <button
-          v-for="(group, emoji) in reactionGroups"
-          :key="emoji"
-          class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] transition-all duration-150 border"
-          :class="group.mine
-            ? 'bg-accent/20 border-accent/40 text-foreground'
-            : 'bg-secondary border-transparent text-muted-foreground hover:border-border'"
-          @click.stop="toggleReaction(emoji as string)"
-        >
-          <span>{{ emoji }}</span>
-          <span class="text-[10px] font-medium">{{ group.count }}</span>
-        </button>
-
-        <!-- Add reaction trigger -->
-        <div class="relative">
-          <button
-            class="inline-flex items-center justify-center w-5 h-5 rounded-full border border-dashed border-border
-                   text-muted-foreground/50 text-[11px] transition-all duration-150
-                   hover:border-accent/60 hover:text-accent/80"
-            :class="pickerOpen ? 'border-accent/60 text-accent/80' : ''"
-            @click.stop="pickerOpen = !pickerOpen"
-          >
-            +
-          </button>
-
-          <!-- Emoji picker -->
-          <Transition
-            enter-active-class="transition duration-100 ease-out"
-            enter-from-class="opacity-0 scale-90 translate-y-1"
-            enter-to-class="opacity-100 scale-100 translate-y-0"
-            leave-active-class="transition duration-75 ease-in"
-            leave-from-class="opacity-100 scale-100 translate-y-0"
-            leave-to-class="opacity-0 scale-90 translate-y-1"
-          >
-            <div
-              v-if="pickerOpen"
-              class="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 z-20
-                     bg-card border border-border rounded-xl shadow-xl px-2 py-1.5
-                     flex gap-1"
-              @click.stop
-            >
-              <button
-                v-for="e in PRESET_EMOJIS"
-                :key="e"
-                class="text-base w-7 h-7 flex items-center justify-center rounded-lg
-                       hover:bg-secondary transition-colors"
-                :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
-                @click.stop="toggleReaction(e); pickerOpen = false"
-              >{{ e }}</button>
-            </div>
-          </Transition>
-        </div>
-
-      </div>
     </div>
 
   </article>
