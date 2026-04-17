@@ -54,7 +54,7 @@
         ✦ {{ memory.milestone_label }}
       </p>
 
-      <!-- Caption text (note or placeholder text) -->
+      <!-- Caption text -->
       <p
         class="font-['Caveat'] text-[15px] text-foreground leading-[1.35] overflow-hidden"
         style="-webkit-line-clamp:2; display:-webkit-box; -webkit-box-orient:vertical;"
@@ -64,6 +64,65 @@
 
       <!-- Date · Author -->
       <p class="text-[10px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
+
+      <!-- Reactions row -->
+      <div class="mt-2 flex items-center justify-center gap-1 flex-wrap min-h-[20px]">
+
+        <!-- Existing emoji groups -->
+        <button
+          v-for="(group, emoji) in reactionGroups"
+          :key="emoji"
+          class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] transition-all duration-150 border"
+          :class="group.mine
+            ? 'bg-accent/20 border-accent/40 text-foreground'
+            : 'bg-secondary border-transparent text-muted-foreground hover:border-border'"
+          @click.stop="toggleReaction(emoji as string)"
+        >
+          <span>{{ emoji }}</span>
+          <span class="text-[10px] font-medium">{{ group.count }}</span>
+        </button>
+
+        <!-- Add reaction trigger -->
+        <div class="relative">
+          <button
+            class="inline-flex items-center justify-center w-5 h-5 rounded-full border border-dashed border-border
+                   text-muted-foreground/50 text-[11px] transition-all duration-150
+                   hover:border-accent/60 hover:text-accent/80"
+            :class="pickerOpen ? 'border-accent/60 text-accent/80' : ''"
+            @click.stop="pickerOpen = !pickerOpen"
+          >
+            +
+          </button>
+
+          <!-- Emoji picker -->
+          <Transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="opacity-0 scale-90 translate-y-1"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-90 translate-y-1"
+          >
+            <div
+              v-if="pickerOpen"
+              class="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 z-20
+                     bg-card border border-border rounded-xl shadow-xl px-2 py-1.5
+                     flex gap-1"
+              @click.stop
+            >
+              <button
+                v-for="e in PRESET_EMOJIS"
+                :key="e"
+                class="text-base w-7 h-7 flex items-center justify-center rounded-lg
+                       hover:bg-secondary transition-colors"
+                :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
+                @click.stop="toggleReaction(e); pickerOpen = false"
+              >{{ e }}</button>
+            </div>
+          </Transition>
+        </div>
+
+      </div>
     </div>
 
   </article>
@@ -78,22 +137,16 @@ const props = defineProps<{
   wide?: boolean
 }>()
 
-// Deterministic tilts — nth-child-style cycle matching mockup pattern
-// Mockup: 3n+1 → -1.8, 3n+2 → 1.2, 3n+3 → -0.6, then 5n+1 → 2.1
-// Using a 6-element cycle that approximates the same spread
 const TILTS = [-1.8, 1.2, -0.6, 2.1, -1.6, 0.4]
 const tilt = computed(() => TILTS[props.index % TILTS.length])
+const PRESET_EMOJIS = ['❤️', '😂', '😍', '🥹', '👏']
 
 const isHovered = ref(false)
+const pickerOpen = ref(false)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
-
-const captionText = computed(() => {
-  if (memory.note) return memory.note
-  return ''
-})
-
-// Use memory shorthand — suppress TS lint about unused prop destructure
 const memory = computed(() => props.memory)
+
+const captionText = computed(() => memory.value.note ?? '')
 
 const formattedDateAndAuthor = computed(() => {
   const d = new Date(props.memory.memory_date)
@@ -101,5 +154,57 @@ const formattedDateAndAuthor = computed(() => {
   const u = props.memory.user
   const firstName = u?.first_name ?? ''
   return firstName ? `${dateStr} · ${firstName}` : dateStr
+})
+
+// ── Reactions ──────────────────────────────────────────────
+const currentUser = useSupabaseUser()
+
+// Local reactive copy so optimistic updates feel instant
+const localReactions = ref([...props.memory.memoryreaction])
+
+watch(() => props.memory.memoryreaction, (r) => { localReactions.value = [...r] })
+
+// Group by emoji: { '❤️': { count: 3, mine: true }, ... }
+const reactionGroups = computed(() => {
+  const groups: Record<string, { count: number; mine: boolean }> = {}
+  for (const r of localReactions.value) {
+    if (!r.emoji) continue
+    const key = r.emoji
+    if (!groups[key]) groups[key] = { count: 0, mine: false }
+    const g = groups[key]!
+    g.count++
+    if (r.user_id === currentUser.value?.id) g.mine = true
+  }
+  return groups
+})
+
+async function toggleReaction(emoji: string) {
+  const userId = currentUser.value?.id
+  if (!userId) return
+
+  const existing = localReactions.value.find(r => r.emoji === emoji && r.user_id === userId)
+
+  // Optimistic update
+  if (existing) {
+    localReactions.value = localReactions.value.filter(r => r !== existing)
+  } else {
+    localReactions.value = [...localReactions.value, { id: 'optimistic', emoji, user_id: userId }]
+  }
+
+  try {
+    const { reactions } = await $fetch<{ reactions: any[] }>(
+      `/api/memories/${props.memory.id}/reactions`,
+      { method: 'POST', body: { emoji } }
+    )
+    localReactions.value = reactions
+  } catch {
+    // Roll back optimistic update on error
+    localReactions.value = [...props.memory.memoryreaction]
+  }
+}
+
+// Close picker when hovering away from the card
+watch(isHovered, (hovered) => {
+  if (!hovered) pickerOpen.value = false
 })
 </script>
