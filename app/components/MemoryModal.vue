@@ -67,7 +67,7 @@
           padding: 12px 12px 0;
           opacity: 0;
         "
-        @click.stop
+        @click.stop="pickerOpen = false"
       >
         <!-- Pin -->
         <div
@@ -591,6 +591,7 @@ function stopVideo() {
 }
 const pickerOpen = ref(false);
 const navigating = ref(false);
+
 
 // ── Current memory ─────────────────────────────────────────
 const currentIndex = ref(0);
