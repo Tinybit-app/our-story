@@ -20,19 +20,6 @@
             </svg>
           </NuxtLink>
 
-          <!-- Year badge -->
-          <button
-            v-if="currentYear"
-            class="inline-flex items-center gap-1 h-5 px-2 rounded-full bg-foreground text-background
-                   text-[10px] font-bold tracking-wide cursor-pointer hover:opacity-70 transition-opacity
-                   flex-shrink-0 border-none ml-1"
-            @click="openJump"
-          >
-            {{ currentYear }}
-            <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
         </div>
 
         <!-- Avatar + dropdown -->
@@ -238,6 +225,30 @@
 
     <!-- Upload memory (headless) -->
     <UploadMemory v-if="circleId" ref="uploadRef" :circle-id="circleId" hide-trigger @uploaded="onUploaded" />
+
+    <!-- Floating year tape — scroll position indicator + jump trigger -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <button
+        v-if="currentYear"
+        class="fixed bottom-6 left-6 z-40 font-['Caveat'] text-2xl font-semibold select-none border-none
+               flex items-center gap-1.5 leading-none
+               hover:opacity-80 active:opacity-60 transition-opacity duration-150"
+        style="background:hsl(var(--accent)); color:hsl(var(--background)); padding:5px 18px 7px; box-shadow:2px 3px 10px rgba(44,36,32,.22); transform:rotate(-1deg);"
+        @click="openJump"
+      >
+        {{ currentYear }}
+        <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+    </Transition>
 
     <!-- FAB -->
     <Transition
