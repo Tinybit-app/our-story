@@ -1,1 +1,102 @@
-{}
+{
+  "login": {
+    "tagline": "每一个值得珍藏的时刻，都在这里。",
+    "subtitle": "为你、你的家人、你的朋友。",
+    "continueWithGoogle": "使用 Google 继续",
+    "continueWithEmail": "使用邮箱继续",
+    "sending": "发送中…",
+    "checkInbox": "请查收邮件",
+    "sentLink": "我们已向 {email} 发送了登录链接",
+    "tryDifferent": "尝试其他方式",
+    "noPassword": "我们将发送登录链接 — 无需密码。"
+  },
+  "onboarding": {
+    "whoIsThis": "这是谁的故事？",
+    "personalise": "我们将根据你的群体为你提供个性化体验。",
+    "continue": "继续",
+    "back": "返回",
+    "nameCircle": "给你的圈子命名",
+    "nameCircleSub": "这是你的成员将看到的名称。",
+    "creating": "创建中…",
+    "whatsYourName": "你叫什么名字？",
+    "nameSub": "让你的圈子认识你。",
+    "firstName": "名字",
+    "lastName": "姓氏（可选）",
+    "saving": "保存中…",
+    "inviteFirst": "邀请第一位成员",
+    "inviteSub": "他们将收到一封含有加入链接的邮件。",
+    "inviteSent": "邀请已发送",
+    "inviteSentLink": "链接已发送至 {email}",
+    "sendInvite": "发送邀请",
+    "skipForNow": "暂时跳过"
+  },
+  "circleType": {
+    "parents":    { "label": "新手父母",   "description": "宝宝成长里程碑" },
+    "couple":     { "label": "情侣",       "description": "感情里程碑" },
+    "family":     { "label": "家庭",       "description": "家庭回忆" },
+    "friends":    { "label": "朋友圈",     "description": "旅行、聚会、精彩时刻" },
+    "caregiving": { "label": "照护日记",   "description": "健康与生活事件" },
+    "travel":     { "label": "旅行团",     "description": "一起探险" },
+    "solo":       { "label": "只有我",     "description": "个人时间线" }
+  },
+  "nav": {
+    "addMemory": "添加记忆",
+    "members": "{n} 位成员",
+    "profileSettings": "个人设置",
+    "inviteMember": "邀请成员",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式",
+    "logOut": "退出登录",
+    "jumpTo": "跳转到",
+    "inviteSomeone": "邀请成员",
+    "inviteDesc": "他们将收到一封加入 {circle} 的邮件链接。",
+    "cancel": "取消",
+    "sending": "发送中…",
+    "sendInvite": "发送邀请",
+    "inviteSentTo": "邀请已发送至 {email}。",
+    "inviteAlreadySent": "此邮箱已收到邀请。",
+    "inviteMaxPending": "你有 10 个待处理的邀请，请等待部分邀请被接受后再试。",
+    "inviteFailed": "邀请发送失败，请重试。"
+  },
+  "timeline": {
+    "emptyTitle": "你的故事从这里开始",
+    "emptyDesc": "上传第一张照片或视频，开始记录你们的共同时间线。",
+    "loading": "加载记忆中…",
+    "memories": "{n} 条记忆",
+    "months": "{n} 个月"
+  },
+  "card": {
+    "noNote": "暂无备注"
+  },
+  "modal": {
+    "tabCaption": "标题",
+    "tabComments": "评论",
+    "milestone": "里程碑",
+    "note": "备注",
+    "milestonePlaceholder": "例：第一步",
+    "notePlaceholder": "添加备注…",
+    "cancel": "取消",
+    "saving": "保存中…",
+    "save": "保存",
+    "noNote": "暂无备注",
+    "noNoteOwner": "暂无备注 — 点击编辑图标添加",
+    "addComment": "添加评论…",
+    "post": "发布",
+    "noComments": "暂无评论",
+    "viewOlderComments": "查看 {n} 条更早的评论"
+  },
+  "upload": {
+    "addMemory": "添加记忆",
+    "addMemories": "添加 {n} 条记忆",
+    "addMore": "+ 添加更多",
+    "applyToAll": "应用到全部",
+    "note": "备注",
+    "milestone": "里程碑",
+    "whenWas": "这是什么时候？",
+    "cancel": "取消",
+    "upload": "上传",
+    "uploadN": "上传 {n} 个",
+    "uploading": "上传中 {done}/{total}…",
+    "allUploaded": "全部上传完成 ✓"
+  }
+}

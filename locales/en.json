@@ -1,1 +1,102 @@
-{}
+{
+  "login": {
+    "tagline": "Every moment worth keeping, in one place.",
+    "subtitle": "For you, your family, your friends.",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithEmail": "Continue with email",
+    "sending": "Sending…",
+    "checkInbox": "Check your inbox",
+    "sentLink": "We sent a sign-in link to {email}",
+    "tryDifferent": "Try a different way",
+    "noPassword": "We'll send you a sign-in link — no password needed."
+  },
+  "onboarding": {
+    "whoIsThis": "Who is this story for?",
+    "personalise": "We'll personalise your experience based on your group.",
+    "continue": "Continue",
+    "back": "Back",
+    "nameCircle": "Name your circle",
+    "nameCircleSub": "This is what your members will see.",
+    "creating": "Creating…",
+    "whatsYourName": "What's your name?",
+    "nameSub": "So your circle knows who you are.",
+    "firstName": "First name",
+    "lastName": "Last name (optional)",
+    "saving": "Saving…",
+    "inviteFirst": "Invite your first member",
+    "inviteSub": "They'll get an email with a link to join your story.",
+    "inviteSent": "Invite sent",
+    "inviteSentLink": "A link has been sent to {email}",
+    "sendInvite": "Send invite",
+    "skipForNow": "Skip for now"
+  },
+  "circleType": {
+    "parents":    { "label": "New parents",   "description": "Baby milestones & growth" },
+    "couple":     { "label": "Couple",         "description": "Relationship milestones" },
+    "family":     { "label": "Family",         "description": "General family memories" },
+    "friends":    { "label": "Friend group",   "description": "Trips, reunions, moments" },
+    "caregiving": { "label": "Caregiving",     "description": "Health & life events" },
+    "travel":     { "label": "Travel group",   "description": "Adventures together" },
+    "solo":       { "label": "Just me",        "description": "Personal timeline" }
+  },
+  "nav": {
+    "addMemory": "Add memory",
+    "members": "{n} member | {n} members",
+    "profileSettings": "Profile settings",
+    "inviteMember": "Invite member",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "logOut": "Log out",
+    "jumpTo": "Jump to",
+    "inviteSomeone": "Invite someone",
+    "inviteDesc": "They'll get an email with a link to join {circle}.",
+    "cancel": "Cancel",
+    "sending": "Sending…",
+    "sendInvite": "Send invite",
+    "inviteSentTo": "Invite sent to {email}.",
+    "inviteAlreadySent": "An invite was already sent to this email.",
+    "inviteMaxPending": "You have 10 pending invites. Wait for some to be accepted first.",
+    "inviteFailed": "Failed to send invite. Please try again."
+  },
+  "timeline": {
+    "emptyTitle": "Your story starts here",
+    "emptyDesc": "Add your first photo or video to start building your shared timeline.",
+    "loading": "Loading memories…",
+    "memories": "{n} memory | {n} memories",
+    "months": "{n} month | {n} months"
+  },
+  "card": {
+    "noNote": "No note"
+  },
+  "modal": {
+    "tabCaption": "Caption",
+    "tabComments": "Comments",
+    "milestone": "Milestone",
+    "note": "Note",
+    "milestonePlaceholder": "e.g. First steps",
+    "notePlaceholder": "Add a note…",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save",
+    "noNote": "No note added",
+    "noNoteOwner": "No note added — click the edit icon to add one",
+    "addComment": "Add a comment…",
+    "post": "Post",
+    "noComments": "No comments yet",
+    "viewOlderComments": "View {n} older comment | View {n} older comments"
+  },
+  "upload": {
+    "addMemory": "Add a memory",
+    "addMemories": "Add {n} memories",
+    "addMore": "+ Add more",
+    "applyToAll": "Apply to all",
+    "note": "Note",
+    "milestone": "Milestone",
+    "whenWas": "When was this?",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "uploadN": "Upload {n}",
+    "uploading": "Uploading {done}/{total}…",
+    "allUploaded": "All uploaded ✓"
+  }
+}
