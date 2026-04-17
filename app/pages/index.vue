@@ -5,21 +5,24 @@
     <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-5xl mx-auto px-5 py-3.5 flex items-center gap-3">
 
-        <!-- Circle name -->
+        <!-- Circle name / member count -->
         <div class="flex-1 min-w-0">
           <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase leading-none mb-1.5 select-none">Our Story</p>
-          <p class="text-sm font-semibold text-foreground leading-none truncate">{{ circle?.name ?? '…' }}</p>
-          <NuxtLink
-            v-if="circle?.memberCount"
-            to="/members"
-            class="group inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors leading-none mt-1.5"
-          >
-            {{ circle.memberCount }} {{ circle.memberCount === 1 ? 'member' : 'members' }}
-            <svg class="w-2.5 h-2.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </NuxtLink>
-
+          <div class="flex items-center gap-1.5 min-w-0">
+            <p class="text-sm font-semibold text-foreground leading-none truncate">{{ circle?.name ?? '…' }}</p>
+            <template v-if="circle?.memberCount">
+              <span class="text-border text-xs leading-none flex-shrink-0">/</span>
+              <NuxtLink
+                to="/members"
+                class="group inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors leading-none flex-shrink-0 whitespace-nowrap"
+              >
+                {{ circle.memberCount }} {{ circle.memberCount === 1 ? 'member' : 'members' }}
+                <svg class="w-2.5 h-2.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </NuxtLink>
+            </template>
+          </div>
         </div>
 
         <!-- Year pill -->
