@@ -44,6 +44,7 @@
         <div
           v-for="group in yearSection.months"
           :key="group.label"
+          :id="`month-${group.year}-${group.month}`"
           class="mb-12"
         >
           <!-- Month header -->

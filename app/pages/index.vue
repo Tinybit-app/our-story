@@ -387,7 +387,7 @@ function jumpToYear(year: number) {
 function jumpToMonth(year: number, month: number) {
   jumpOpen.value = false
   nextTick(() => {
-    const el = document.getElementById(`anchor-${year}`)
+    const el = document.getElementById(`month-${year}-${month}`)
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' })
   })
 }

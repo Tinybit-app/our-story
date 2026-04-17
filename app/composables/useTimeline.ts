@@ -74,7 +74,7 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
           year: 'numeric',
         }),
         memories,
-        hasMore: total >= MONTH_CAP,
+        hasMore: total > MONTH_CAP,
         anchorId: `anchor-${year}`,
       }))
   })

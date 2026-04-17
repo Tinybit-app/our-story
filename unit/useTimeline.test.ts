@@ -48,6 +48,17 @@ describe('useTimeline', () => {
     expect(monthGroups.value[0].hasMore).toBe(true)
   })
 
+  it('sets hasMore = false when month has exactly 12 memories (all visible)', () => {
+    const memories = ref<Memory[]>(
+      Array.from({ length: 12 }, (_, i) =>
+        makeMemory(`id-${i}`, `2025-07-${String(i + 1).padStart(2, '0')}T10:00:00Z`)
+      )
+    )
+    const { monthGroups } = useTimeline(memories)
+    expect(monthGroups.value[0].memories).toHaveLength(12)
+    expect(monthGroups.value[0].hasMore).toBe(false)
+  })
+
   it('sets hasMore = false when month has fewer than 12 memories', () => {
     const memories = ref<Memory[]>([
       makeMemory('1', '2025-04-01T10:00:00Z'),
