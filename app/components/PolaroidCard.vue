@@ -177,6 +177,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   open: [{ memory: Memory; tilt: number; rect: DOMRect }]
+  reactionUpdate: [{ memoryId: string; reactions: any[] }]
 }>()
 
 const articleEl = ref<HTMLElement>()
@@ -253,6 +254,7 @@ async function toggleReaction(emoji: string) {
       { method: 'POST', body: { emoji } }
     )
     localReactions.value = reactions
+    emit('reactionUpdate', { memoryId: props.memory.id, reactions })
   } catch (err) {
     console.error('[reactions] failed to toggle reaction:', err)
     // Roll back optimistic update on error

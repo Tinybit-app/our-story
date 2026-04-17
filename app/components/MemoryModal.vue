@@ -61,8 +61,9 @@
         class="relative z-10 bg-card will-change-transform flex flex-col"
         style="
           width: 100%;
-          max-width: 680px;
-          max-height: 90vh;
+          height: 100%;
+          max-width: 750px;
+          max-height: 75vh;
           padding: 12px 12px 0;
           opacity: 0;
         "
@@ -78,13 +79,22 @@
           class="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-foreground text-background hover:opacity-80 transition-opacity"
           @click="close"
         >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
 
         <!-- Photo / video: full width, aspect-ratio drives card height -->
-        <div class="relative overflow-hidden bg-border flex-shrink-0 aspect-[4/3]">
+        <div
+          class="relative overflow-hidden bg-border flex-shrink-0 aspect-[4/3]"
+        >
           <img
             v-if="firstMedia && firstMedia.media_type !== 'video'"
             :src="firstMedia.url ?? firstMedia.thumbnailUrl ?? ''"
@@ -105,17 +115,33 @@
             v-else-if="memory?.note"
             class="absolute inset-0 w-full h-full flex items-center justify-center p-6"
             style="
-              background-color: color-mix(in srgb, var(--accent) 12%, var(--card));
+              background-color: color-mix(
+                in srgb,
+                var(--accent) 12%,
+                var(--card)
+              );
               background-image: repeating-linear-gradient(
-                transparent, transparent 23px,
+                transparent,
+                transparent 23px,
                 color-mix(in srgb, var(--border) 80%, transparent) 24px
               );
             "
           >
-            <p class="text-[15px] text-foreground leading-7 text-center">{{ memory.note }}</p>
+            <p class="text-[15px] text-foreground leading-7 text-center">
+              {{ memory.note }}
+            </p>
           </div>
-          <div v-else class="absolute inset-0 w-full h-full flex items-center justify-center bg-secondary">
-            <svg class="w-12 h-12 text-muted-foreground/30" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <div
+            v-else
+            class="absolute inset-0 w-full h-full flex items-center justify-center bg-secondary"
+          >
+            <svg
+              class="w-12 h-12 text-muted-foreground/30"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+              viewBox="0 0 24 24"
+            >
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <path d="M21 15l-5-5L5 21" />
@@ -123,18 +149,64 @@
           </div>
         </div>
 
-        <!-- Caption section: fills remaining height budget -->
+        <!-- Caption section: tab bar + independent scroll panels -->
         <div class="flex-1 flex flex-col min-h-0">
+          <!-- Tab bar -->
+          <div class="flex-shrink-0 flex border-b border-border px-3">
+            <button
+              class="tab-btn py-2.5 px-3 text-[11px] font-semibold tracking-[.06em] border-b-2 transition-colors"
+              :class="
+                activeTab === 'caption'
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              "
+              @click="activeTab = 'caption'"
+            >
+              Caption
+            </button>
+            <button
+              class="tab-btn py-2.5 px-3 text-[11px] font-semibold tracking-[.06em] border-b-2 transition-colors"
+              :class="
+                activeTab === 'comments'
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              "
+              @click="activeTab = 'comments'"
+            >
+              Comments
+              <span
+                v-if="comments.length > 0"
+                class="ml-1 opacity-50 font-normal"
+                >{{ comments.length }}</span
+              >
+            </button>
+          </div>
 
-          <!-- 1. Metadata + reactions — compact, never scrolls -->
-          <div class="flex-shrink-0 pt-3 px-1.5 pb-3">
-
+          <!-- Caption tab -->
+          <div
+            v-show="activeTab === 'caption'"
+            class="caption-scroll flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-4"
+          >
             <!-- View mode -->
             <template v-if="!editing">
               <div class="flex items-start justify-between gap-2 group/meta">
                 <div class="flex-1 min-w-0">
-                  <p v-if="memory?.milestone_label" class="text-[10px] font-bold text-accent tracking-[.2em] uppercase mb-1.5">✦ {{ memory.milestone_label }}</p>
-                  <p v-if="memory?.note" class="text-[15px] text-foreground leading-relaxed mb-2">{{ memory.note }}</p>
+                  <p
+                    v-if="memory?.milestone_label"
+                    class="text-[10px] font-bold text-accent tracking-[.2em] uppercase mb-1.5"
+                  >
+                    ✦ {{ memory.milestone_label }}
+                  </p>
+                  <p
+                    v-if="memory?.note"
+                    class="text-[15px] text-foreground leading-relaxed mb-2 overflow-auto break-all"
+                  >
+                    {{ memory.note }}
+                  </p>
+                  <p
+                    v-else
+                    class="text-[13px] text-muted-foreground/50 italic mb-2"
+                  >No note added{{ isOwner ? ' — click the edit icon to add one' : '' }}</p>
                 </div>
                 <button
                   v-if="isOwner"
@@ -142,21 +214,45 @@
                   title="Edit note"
                   @click="startEditing"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                    />
+                    <path
+                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                    />
                   </svg>
                 </button>
               </div>
-              <p class="text-[12px] text-muted-foreground mb-3">{{ formattedDateAndAuthor }}</p>
+              <p class="text-[12px] text-muted-foreground mb-3">
+                {{ formattedDateAndAuthor }}
+              </p>
             </template>
 
             <!-- Edit mode -->
             <template v-else>
               <div class="mb-2">
                 <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]">Milestone</label>
-                  <span class="text-[10px]" :class="editMilestone.length >= 40 ? 'text-destructive' : 'text-muted-foreground'">{{ editMilestone.length }} / 40</span>
+                  <label
+                    class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]"
+                    >Milestone</label
+                  >
+                  <span
+                    class="text-[10px]"
+                    :class="
+                      editMilestone.length >= 40
+                        ? 'text-destructive'
+                        : 'text-muted-foreground'
+                    "
+                    >{{ editMilestone.length }} / 40</span
+                  >
                 </div>
                 <input
                   v-model="editMilestone"
@@ -166,8 +262,19 @@
                   class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
                 />
                 <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]">Note</label>
-                  <span class="text-[10px]" :class="editNote.length >= 500 ? 'text-destructive' : 'text-muted-foreground'">{{ editNote.length }} / 500</span>
+                  <label
+                    class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]"
+                    >Note</label
+                  >
+                  <span
+                    class="text-[10px]"
+                    :class="
+                      editNote.length >= 500
+                        ? 'text-destructive'
+                        : 'text-muted-foreground'
+                    "
+                    >{{ editNote.length }} / 500</span
+                  >
                 </div>
                 <textarea
                   ref="editTextareaEl"
@@ -176,24 +283,32 @@
                   rows="3"
                   maxlength="500"
                   class="w-full bg-secondary rounded-lg px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed"
-                  style="max-height: 120px; overflow-y: auto"
+                  style="max-height: 140px; overflow-y: auto"
                 />
                 <div class="flex items-center justify-end mt-1.5">
                   <div class="flex items-center gap-2">
                     <button
                       class="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
                       @click="cancelEditing"
-                    >Cancel</button>
+                    >
+                      Cancel
+                    </button>
                     <button
                       :disabled="saving"
                       class="text-[12px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
                       @click="saveEdit"
-                    >{{ saving ? "Saving…" : "Save" }}</button>
+                    >
+                      {{ saving ? "Saving…" : "Save" }}
+                    </button>
                   </div>
                 </div>
               </div>
-              <p class="text-[12px] text-muted-foreground mb-3">{{ formattedDateAndAuthor }}</p>
+              <p class="text-[12px] text-muted-foreground mb-3">
+                {{ formattedDateAndAuthor }}
+              </p>
             </template>
+
+            <!-- Reactions -->
             <div class="flex items-center gap-1.5 flex-wrap">
               <div
                 v-for="(group, emoji) in reactionGroups"
@@ -202,20 +317,32 @@
               >
                 <button
                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] border transition-all duration-150"
-                  :class="group.mine ? 'bg-accent/15 border-accent/25 text-foreground font-medium' : 'bg-secondary border-transparent text-muted-foreground hover:border-border'"
+                  :class="
+                    group.mine
+                      ? 'bg-accent/15 border-accent/25 text-foreground font-medium'
+                      : 'bg-secondary border-transparent text-muted-foreground hover:border-border'
+                  "
                   @click="toggleReaction(emoji as string)"
-                >{{ emoji }}<span class="text-[11px]">{{ group.count }}</span></button>
+                >
+                  {{ emoji }}<span class="text-[11px]">{{ group.count }}</span>
+                </button>
                 <!-- Tooltip -->
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-foreground text-background text-[10px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover/rxn:opacity-100 transition-opacity duration-150 z-40 shadow-md">
+                <div
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-foreground text-background text-[10px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover/rxn:opacity-100 transition-opacity duration-150 z-40 shadow-md"
+                >
                   {{ reactionTooltip(group.names) }}
-                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground" />
+                  <div
+                    class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground"
+                  />
                 </div>
               </div>
               <div class="relative">
                 <button
                   class="w-8 h-8 rounded-full border border-border text-muted-foreground text-[16px] flex items-center justify-center hover:bg-secondary transition-colors"
                   @click.stop="pickerOpen = !pickerOpen"
-                >+</button>
+                >
+                  +
+                </button>
                 <Transition
                   enter-active-class="transition duration-100 ease-out"
                   enter-from-class="opacity-0 scale-90 translate-y-1"
@@ -231,111 +358,188 @@
                     @click.stop
                   >
                     <button
-                      v-for="e in PRESET_EMOJIS" :key="e"
+                      v-for="e in PRESET_EMOJIS"
+                      :key="e"
                       class="text-base w-7 h-7 flex items-center justify-center rounded-lg hover:bg-secondary transition-colors"
                       :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
-                      @click.stop="toggleReaction(e); pickerOpen = false;"
-                    >{{ e }}</button>
+                      @click.stop="
+                        toggleReaction(e);
+                        pickerOpen = false;
+                      "
+                    >
+                      {{ e }}
+                    </button>
                   </div>
                 </Transition>
               </div>
             </div>
           </div>
 
-          <!-- 2. Comment input — always visible -->
-          <div class="flex-shrink-0 px-1.5 py-3 border-t border-border">
-            <div class="flex gap-2 items-center">
-              <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-secondary flex items-center justify-center text-[10px] font-bold text-foreground">
-                <img v-if="selfAvatarUrl" :src="selfAvatarUrl" class="w-full h-full object-cover" />
-                <span v-else>{{ selfInitials }}</span>
-              </div>
-              <div class="flex-1 flex items-end gap-2 bg-secondary rounded-2xl px-3 py-2">
-                <textarea
-                  ref="textareaEl"
-                  v-model="commentDraft"
-                  placeholder="Add a comment…"
-                  rows="1"
-                  class="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
-                  style="max-height: 80px; overflow-y: auto"
-                  @keydown.enter.exact.prevent="submitComment"
-                  @input="autoResize"
-                />
-                <button
-                  :disabled="!commentDraft.trim() || submitting"
-                  class="flex-shrink-0 text-[12px] font-semibold text-accent disabled:text-muted-foreground transition-colors pb-0.5"
-                  @click="submitComment"
-                >{{ submitting ? "…" : "Post" }}</button>
+          <!-- Comments tab -->
+          <div
+            v-show="activeTab === 'comments'"
+            class="flex-1 min-h-0 flex flex-col overflow-hidden"
+          >
+            <!-- Comment input — always visible at top of tab -->
+            <div class="flex-shrink-0 px-3 py-3 border-b border-border">
+              <div class="flex gap-2 items-center">
+                <div
+                  class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-secondary flex items-center justify-center text-[10px] font-bold text-foreground"
+                >
+                  <img
+                    v-if="selfAvatarUrl"
+                    :src="selfAvatarUrl"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else>{{ selfInitials }}</span>
+                </div>
+                <div
+                  class="flex-1 flex items-end gap-2 bg-secondary rounded-2xl px-3 py-2"
+                >
+                  <textarea
+                    ref="textareaEl"
+                    v-model="commentDraft"
+                    placeholder="Add a comment…"
+                    rows="1"
+                    class="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
+                    style="max-height: 80px; overflow-y: auto"
+                    @keydown.enter.exact.prevent="submitComment"
+                    @input="autoResize"
+                  />
+                  <button
+                    :disabled="!commentDraft.trim() || submitting"
+                    class="flex-shrink-0 text-[12px] font-semibold text-accent disabled:text-muted-foreground transition-colors pb-0.5"
+                    @click="submitComment"
+                  >
+                    {{ submitting ? "…" : "Post" }}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- 3. Comment thread — newest first, scrollable -->
-          <div class="caption-scroll flex-1 min-h-0 overflow-y-auto px-1.5 pt-3 pb-4">
-            <div v-if="comments.length > 0" class="space-y-3">
-              <div v-for="c in visibleComments" :key="c.id" class="flex gap-2.5 group/comment">
-                <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-secondary flex items-center justify-center text-[10px] font-bold text-foreground">
-                  <img v-if="c.user?.avatar_url" :src="c.user.avatar_url" class="w-full h-full object-cover" />
-                  <span v-else>{{ commentInitials(c.user) }}</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <!-- View mode -->
-                  <template v-if="editingCommentId !== c.id">
-                    <div class="relative">
-                      <div class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
-                        <span class="text-[11px] font-semibold text-foreground mr-1.5">{{ commentDisplayName(c.user) }}</span>
-                        <span class="text-[13px] text-foreground leading-snug">{{ c.body }}</span>
+            <!-- Comment thread — scrollable -->
+            <div
+              class="caption-scroll flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-4"
+            >
+              <div v-if="comments.length > 0" class="space-y-3">
+                <div
+                  v-for="c in visibleComments"
+                  :key="c.id"
+                  class="flex gap-2.5 group/comment"
+                >
+                  <div
+                    class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-secondary flex items-center justify-center text-[10px] font-bold text-foreground"
+                  >
+                    <img
+                      v-if="c.user?.avatar_url"
+                      :src="c.user.avatar_url"
+                      class="w-full h-full object-cover"
+                    />
+                    <span v-else>{{ commentInitials(c.user) }}</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <!-- View mode -->
+                    <template v-if="editingCommentId !== c.id">
+                      <div class="relative">
+                        <div
+                          class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2"
+                        >
+                          <span
+                            class="text-[11px] font-semibold text-foreground mr-1.5"
+                            >{{ commentDisplayName(c.user) }}</span
+                          >
+                          <span
+                            class="text-[13px] text-foreground leading-snug"
+                            >{{ c.body }}</span
+                          >
+                        </div>
+                        <!-- Pencil edit button (own comments only) -->
+                        <button
+                          v-if="c.user_id === currentUserId"
+                          class="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-accent hover:border-accent/40 transition-all opacity-0 group-hover/comment:opacity-100 shadow-sm"
+                          title="Edit comment"
+                          @click.stop="startEditingComment(c)"
+                        >
+                          <svg
+                            width="9"
+                            height="9"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                          >
+                            <path
+                              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                            />
+                            <path
+                              d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                            />
+                          </svg>
+                        </button>
                       </div>
-                      <!-- Pencil edit button (own comments only) -->
-                      <button
-                        v-if="c.user_id === currentUserId"
-                        class="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-accent hover:border-accent/40 transition-all opacity-0 group-hover/comment:opacity-100 shadow-sm"
-                        title="Edit comment"
-                        @click.stop="startEditingComment(c)"
-                      >
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                    </div>
-                    <p class="text-[10px] text-muted-foreground mt-0.5 ml-3">{{ timeAgo(c.created_at) }}</p>
-                  </template>
+                      <p class="text-[10px] text-muted-foreground mt-0.5 ml-3">
+                        {{ timeAgo(c.created_at) }}
+                      </p>
+                    </template>
 
-                  <!-- Edit mode -->
-                  <template v-else>
-                    <div class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
-                      <span class="text-[11px] font-semibold text-foreground mr-1.5 block mb-1">{{ commentDisplayName(c.user) }}</span>
-                      <textarea
-                        ref="commentEditEl"
-                        v-model="commentEditDraft"
-                        rows="2"
-                        maxlength="2000"
-                        class="w-full bg-transparent text-[13px] text-foreground resize-none outline-none leading-snug"
-                        style="max-height: 120px; overflow-y: auto"
-                        @keydown.enter.exact.prevent="saveCommentEdit(c.id)"
-                        @keydown.escape="cancelCommentEdit"
-                      />
-                    </div>
-                    <div class="flex items-center gap-2 mt-1 ml-3">
-                      <span class="text-[10px] text-muted-foreground">{{ commentEditDraft.length }} / 2000</span>
-                      <button class="text-[11px] text-muted-foreground hover:text-foreground transition-colors" @click="cancelCommentEdit">Cancel</button>
-                      <button
-                        :disabled="!commentEditDraft.trim() || savingComment"
-                        class="text-[11px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
-                        @click="saveCommentEdit(c.id)"
-                      >{{ savingComment ? "Saving…" : "Save" }}</button>
-                    </div>
-                  </template>
+                    <!-- Edit mode -->
+                    <template v-else>
+                      <div
+                        class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2"
+                      >
+                        <span
+                          class="text-[11px] font-semibold text-foreground mr-1.5 block mb-1"
+                          >{{ commentDisplayName(c.user) }}</span
+                        >
+                        <textarea
+                          ref="commentEditEl"
+                          v-model="commentEditDraft"
+                          rows="2"
+                          maxlength="2000"
+                          class="w-full bg-transparent text-[13px] text-foreground resize-none outline-none leading-snug"
+                          style="max-height: 120px; overflow-y: auto"
+                          @keydown.enter.exact.prevent="saveCommentEdit(c.id)"
+                          @keydown.escape="cancelCommentEdit"
+                        />
+                      </div>
+                      <div class="flex items-center gap-2 mt-1 ml-3">
+                        <span class="text-[10px] text-muted-foreground"
+                          >{{ commentEditDraft.length }} / 2000</span
+                        >
+                        <button
+                          class="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                          @click="cancelCommentEdit"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          :disabled="!commentEditDraft.trim() || savingComment"
+                          class="text-[11px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
+                          @click="saveCommentEdit(c.id)"
+                        >
+                          {{ savingComment ? "Saving…" : "Save" }}
+                        </button>
+                      </div>
+                    </template>
+                  </div>
                 </div>
               </div>
+              <p
+                v-else
+                class="text-[12px] text-muted-foreground text-center py-6"
+              >
+                No comments yet
+              </p>
+              <button
+                v-if="!allCommentsVisible && hiddenCommentCount > 0"
+                class="mt-3 w-full text-[12px] text-muted-foreground hover:text-foreground transition-colors text-left"
+                @click="allCommentsVisible = true"
+              >
+                View {{ hiddenCommentCount }} older
+                {{ hiddenCommentCount === 1 ? "comment" : "comments" }} ↓
+              </button>
             </div>
-            <button
-              v-if="!allCommentsVisible && hiddenCommentCount > 0"
-              class="mt-3 w-full text-[12px] text-muted-foreground hover:text-foreground transition-colors text-left"
-              @click="allCommentsVisible = true"
-            >View {{ hiddenCommentCount }} older {{ hiddenCommentCount === 1 ? 'comment' : 'comments' }} ↓</button>
           </div>
-
         </div>
         <!-- /caption section -->
       </div>
@@ -354,7 +558,10 @@ const props = defineProps<{
   tilt: number;
 }>();
 
-const emit = defineEmits<{ close: []; update: [Pick<Memory, 'id'> & Partial<Memory>] }>();
+const emit = defineEmits<{
+  close: [];
+  update: [Pick<Memory, "id"> & Partial<Memory>];
+}>();
 
 const PRESET_EMOJIS = [
   "❤️",
@@ -407,21 +614,28 @@ const formattedDateAndAuthor = computed(() => {
 
 // ── Reactions ──────────────────────────────────────────────
 const supabaseClient = useSupabaseClient();
-const currentUserId = ref<string | null>(null);
-
-supabaseClient.auth.getSession().then(({ data }) => {
-  currentUserId.value = data.session?.user?.id ?? null;
-});
+// Initialise synchronously from useSupabaseUser (available from SSR/hydration);
+// fall back to getSession() in case the ref hasn't populated yet.
+const currentUserId = ref<string | null>(useSupabaseUser().value?.id ?? null);
+if (!currentUserId.value) {
+  supabaseClient.auth.getSession().then(({ data }) => {
+    currentUserId.value = data.session?.user?.id ?? null;
+  });
+}
 
 // ── Edit note ──────────────────────────────────────────────
+const activeTab = ref<"caption" | "comments">("caption");
 const editing = ref(false);
+const noteExpanded = ref(false);
 const saving = ref(false);
 const editNote = ref("");
 const editMilestone = ref("");
 const editTextareaEl = ref<HTMLTextAreaElement>();
 
 const isOwner = computed(
-  () => !!currentUserId.value && memory.value?.owner_user_id === currentUserId.value,
+  () =>
+    !!currentUserId.value &&
+    memory.value?.owner_user_id === currentUserId.value,
 );
 
 function startEditing() {
@@ -440,7 +654,12 @@ async function saveEdit() {
   saving.value = true;
   try {
     const { memory: updated } = await $fetch<{
-      memory: { id: string; note: string | null; milestone_label: string | null; milestone_is_custom: boolean };
+      memory: {
+        id: string;
+        note: string | null;
+        milestone_label: string | null;
+        milestone_is_custom: boolean;
+      };
     }>(`/api/memories/${memory.value.id}`, {
       method: "PATCH",
       body: {
@@ -463,14 +682,23 @@ async function saveEdit() {
   }
 }
 
-type Reaction = { id: string; emoji: string; user_id: string; user: { first_name: string | null; last_name: string | null } | null };
+type Reaction = {
+  id: string;
+  emoji: string;
+  user_id: string;
+  user: { first_name: string | null; last_name: string | null } | null;
+};
 const localReactions = ref<Reaction[]>([]);
 
 const reactionGroups = computed(() => {
-  const groups: Record<string, { count: number; mine: boolean; names: string[] }> = {};
+  const groups: Record<
+    string,
+    { count: number; mine: boolean; names: string[] }
+  > = {};
   for (const r of localReactions.value) {
     if (!r.emoji) continue;
-    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, mine: false, names: [] };
+    if (!groups[r.emoji])
+      groups[r.emoji] = { count: 0, mine: false, names: [] };
     const g = groups[r.emoji]!;
     g.count++;
     if (r.user_id === currentUserId.value) {
@@ -493,7 +721,7 @@ async function toggleReaction(emoji: string) {
     currentUserId.value ??
     (await supabaseClient.auth.getSession()).data.session?.user?.id;
   if (!userId || !memory.value) return;
-  currentUserId.value = userId;
+  if (!currentUserId.value) currentUserId.value = userId;
 
   const existing = localReactions.value.find(
     (r) => r.emoji === emoji && r.user_id === userId,
@@ -507,12 +735,14 @@ async function toggleReaction(emoji: string) {
     ];
   }
 
+  const memoryId = memory.value.id;
   try {
     const { reactions } = await $fetch<{ reactions: any[] }>(
-      `/api/memories/${memory.value.id}/reactions`,
+      `/api/memories/${memoryId}/reactions`,
       { method: "POST", body: { emoji } },
     );
     localReactions.value = reactions;
+    emit("update", { id: memoryId, memoryreaction: reactions });
   } catch (err) {
     console.error("[MemoryModal] reaction error:", err);
     localReactions.value = [...(memory.value?.memoryreaction ?? [])];
@@ -587,7 +817,9 @@ async function navigate(dir: "prev" | "next") {
   comments.value = [];
   commentDraft.value = "";
   allCommentsVisible.value = false;
+  activeTab.value = "caption";
   editing.value = false;
+  noteExpanded.value = false;
   editNote.value = "";
   editMilestone.value = "";
   editingCommentId.value = null;
@@ -809,6 +1041,7 @@ watch(
       comments.value = [];
       commentDraft.value = "";
       allCommentsVisible.value = false;
+      activeTab.value = "caption";
       editing.value = false;
       editNote.value = "";
       editMilestone.value = "";

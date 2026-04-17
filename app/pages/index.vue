@@ -147,6 +147,7 @@
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
+        @reaction-update="onReactionUpdate"
       />
 
     </main>
@@ -288,6 +289,11 @@ function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; re
 function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
   const i = memoriesFlat.value.findIndex((m) => m.id === patch.id)
   if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
+}
+
+function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions: any[] }) {
+  const i = memoriesFlat.value.findIndex((m) => m.id === memoryId)
+  if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], memoryreaction: reactions } as Memory
 }
 
 const supabase = useSupabaseClient()

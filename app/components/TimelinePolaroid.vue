@@ -70,6 +70,7 @@
               :index="i"
               :wide="isWideMemory(memory.id)"
               @open="$emit('openMemory', $event)"
+              @reaction-update="$emit('reactionUpdate', $event)"
             />
 
             <!-- See more card -->
@@ -117,6 +118,7 @@ const emit = defineEmits<{
   loadMore: []
   yearChange: [year: number]
   openMemory: [{ memory: Memory; tilt: number; rect: DOMRect }]
+  reactionUpdate: [{ memoryId: string; reactions: any[] }]
 }>()
 
 // Group month groups by year for rendering
