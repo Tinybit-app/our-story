@@ -82,6 +82,9 @@
               <div class="w-full rounded-[14px] overflow-hidden bg-secondary mb-4 relative" style="aspect-ratio:4/5">
                 <img v-if="!firstItem.isVideo" :src="firstItem.previewUrl" class="w-full h-full object-cover" />
                 <video v-else :src="firstItem.previewUrl" class="w-full h-full object-cover" muted playsinline />
+                <div v-if="firstItem.isVideo" class="absolute bottom-2 left-2 bg-black/50 rounded px-1.5 py-0.5">
+                  <span class="text-white text-[9px] font-semibold tracking-wide">VIDEO</span>
+                </div>
                 <div v-if="firstItem.uploading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
                   <p class="text-white text-lg font-bold">{{ firstItem.progress }}%</p>
                   <div class="w-24 bg-white/30 rounded-full h-1 overflow-hidden">
@@ -183,14 +186,29 @@
                   </button>
                 </div>
 
-                <!-- Date + error -->
-                <div class="px-3 py-2">
+                <!-- Date + note + milestone + error -->
+                <div class="px-3 py-2 space-y-1.5">
                   <input
                     v-model="item.date"
                     type="date"
                     class="w-full bg-transparent text-xs text-foreground focus:outline-none"
                   />
-                  <p v-if="item.error" class="text-[11px] text-destructive mt-0.5 leading-tight">{{ item.error }}</p>
+                  <textarea
+                    v-model="item.note"
+                    placeholder="Note… (optional)"
+                    rows="1"
+                    maxlength="500"
+                    class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground resize-none focus:outline-none leading-snug"
+                    style="max-height: 48px; overflow-y: auto"
+                  />
+                  <input
+                    v-model="item.milestoneLabel"
+                    type="text"
+                    placeholder="✦ Milestone… (optional)"
+                    maxlength="40"
+                    class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  />
+                  <p v-if="item.error" class="text-[11px] text-destructive leading-tight">{{ item.error }}</p>
                 </div>
               </div>
             </div>

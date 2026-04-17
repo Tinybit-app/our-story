@@ -18,14 +18,32 @@
     <!-- Photo area -->
     <div class="relative overflow-hidden bg-border" :class="wide ? 'aspect-[4/3]' : 'aspect-square'">
 
-      <!-- Photo / video -->
+      <!-- Photo -->
       <img
-        v-if="firstMedia?.thumbnailUrl || firstMedia?.url"
+        v-if="firstMedia && firstMedia.media_type !== 'video' && (firstMedia.thumbnailUrl || firstMedia.url)"
         :src="firstMedia.thumbnailUrl ?? firstMedia.url ?? ''"
         :alt="memory.note ?? 'Memory'"
         class="w-full h-full object-cover block"
         loading="lazy"
       />
+
+      <!-- Video -->
+      <template v-else-if="firstMedia?.media_type === 'video' && firstMedia.url">
+        <video
+          :src="firstMedia.url"
+          class="w-full h-full object-cover block"
+          muted
+          playsinline
+          preload="metadata"
+        />
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div class="w-9 h-9 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
+            <svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+      </template>
 
       <!-- Note-only: lined paper look -->
       <div

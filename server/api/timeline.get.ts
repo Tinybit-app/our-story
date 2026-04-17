@@ -95,15 +95,19 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
           const { storage_path, ...safeMedia } = media
           if (!storage_path) return { ...safeMedia, url: null, thumbnailUrl: null }
 
+          const isVideo = media.media_type === "video"
+
           const [fullResult, thumbResult] = await Promise.allSettled([
             supabase.storage.from("memories-private").createSignedUrl(storage_path, 3600),
-            supabase.storage.from("memories-private").createSignedUrl(storage_path, 86400, {
-              transform: { width: 800, format: "webp" as "origin", quality: 85 },
-            }),
+            isVideo
+              ? Promise.resolve({ data: null })
+              : supabase.storage.from("memories-private").createSignedUrl(storage_path, 86400, {
+                  transform: { width: 800, format: "webp" as "origin", quality: 85 },
+                }),
           ])
 
           const url = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
-          const thumbnailUrl = thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? url) : url
+          const thumbnailUrl = isVideo ? url : (thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? url) : url)
 
           return { ...safeMedia, url, thumbnailUrl }
         })

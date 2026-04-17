@@ -83,13 +83,21 @@
           </svg>
         </button>
 
-        <!-- Photo: full width, aspect-ratio drives card height -->
+        <!-- Photo / video: full width, aspect-ratio drives card height -->
         <div class="relative overflow-hidden bg-border flex-shrink-0 aspect-[4/3]">
           <img
-            v-if="firstMedia"
+            v-if="firstMedia && firstMedia.media_type !== 'video'"
             :src="firstMedia.url ?? firstMedia.thumbnailUrl ?? ''"
             :alt="memory?.note ?? 'Memory'"
             class="absolute inset-0 w-full h-full object-cover block"
+          />
+          <video
+            v-else-if="firstMedia?.media_type === 'video' && firstMedia.url"
+            :src="firstMedia.url"
+            class="absolute inset-0 w-full h-full object-cover block"
+            controls
+            playsinline
+            preload="metadata"
           />
           <div
             v-else-if="memory?.note"
