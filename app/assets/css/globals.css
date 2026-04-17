@@ -43,7 +43,7 @@
     --muted-foreground: 26 10% 49%;  /* #8a7f74 warm stone (shared) */
     --accent: 33 40% 65%;            /* #c8a882 amber (shared) */
     --accent-foreground: 25 15% 9%;
-    --destructive: 0 62% 30%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
     --border: 22 8% 22%;             /* #3d3530 */
     --input: 22 8% 22%;
@@ -58,5 +58,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
   }
 }

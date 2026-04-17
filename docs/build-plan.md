@@ -59,8 +59,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 
 
 ### Milestone 6: Timeline
-- [ ] 6.1 Signed URL API (cursor-based, memory_date ordering)
-- [ ] 6.2 Timeline UI (infinite scroll, skeleton states)
+- [x] 6.1 Signed URL API (cursor-based, memory_date ordering)
+- [x] 6.2 Timeline UI — Polaroid Wall (monthly sections, year badge, jump modal, month overflow page)
 
 ### Milestone 7: Memory Features
 - [ ] 7.1 Share to circle (visibility toggle)

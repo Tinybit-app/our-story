@@ -7,12 +7,19 @@
 - **Build plan:** `docs/build-plan.md` — Phase 1 step-by-step implementation with progress tracker
 
 **Before every implementation task:**
+
 1. Check the build plan progress tracker to see what's done and what's next
 2. Read the relevant build plan step(s) in full before writing any code
 3. Cross-reference the design spec for the feature being built — implementation must match the spec exactly
 4. After implementing, verify against the build plan's "Definition of done" for that step
 
 The build plan and design spec are the source of truth. Do not deviate from them without explicitly discussing the trade-off with the user first.
+
+**After every implementation task:**
+
+Always test the implementation and verify the workflow with the user. This is very important.
+
+Update doc/build-plan.md and doc/design-spec.md with any change in the implementation so that the docs are in sync with the implementation. This is very important
 
 ## Stack
 
@@ -27,6 +34,12 @@ The build plan and design spec are the source of truth. Do not deviate from them
 
 - **UI / copy and Code / DB:** "Circle", "CircleMember", "CircleInvite" — consistent throughout
 - Memory visibility values: `'private'` (owner only) and `'circle'` (all circle members)
+
+## UI Layout
+
+- **Main app pages** (any page with a header/nav shell): use `max-w-[1280px] mx-auto` for both the header inner div and the `<main>` content area
+- **Auth/onboarding/modal-like pages** (login, confirm, invite/[token], onboarding/*): use `max-w-sm` centered — these are intentionally narrow
+- Never use `max-w-2xl`, `max-w-3xl`, or `max-w-5xl` for main app page layouts
 
 ## Rules
 

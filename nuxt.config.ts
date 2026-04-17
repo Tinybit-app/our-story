@@ -6,6 +6,14 @@ export default defineNuxtConfig({
     head: {
       title: 'Our Story',
       meta: [{ name: 'description', content: 'Your circle of memories.' }],
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap',
+        },
+      ],
     },
   },
 

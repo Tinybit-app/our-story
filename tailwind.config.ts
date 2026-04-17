@@ -60,6 +60,7 @@ export default {
         },
       },
       fontFamily: {
+        sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['Georgia', 'ui-serif', '"Times New Roman"', 'serif'],
       },
       borderRadius: {

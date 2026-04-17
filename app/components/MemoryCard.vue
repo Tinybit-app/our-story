@@ -1,5 +1,7 @@
 <template>
-  <article class="bg-card rounded-[16px] overflow-hidden border border-border">
+  <article
+    class="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+  >
 
     <!-- Media -->
     <div class="aspect-[4/5] bg-secondary relative overflow-hidden">
@@ -11,64 +13,71 @@
         loading="lazy"
       />
       <div v-else class="w-full h-full flex items-center justify-center">
-        <span class="text-muted-foreground text-sm">No image</span>
+        <svg class="w-10 h-10 text-muted-foreground/30" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
       </div>
 
-      <!-- Video play indicator -->
+      <!-- Video play button -->
       <div
         v-if="firstMedia?.media_type === 'video'"
         class="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
-        <div class="w-12 h-12 rounded-full bg-black/30 flex items-center justify-center">
-          <svg class="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+        <div class="w-14 h-14 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/20">
+          <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>
       </div>
 
       <!-- Multiple media badge -->
-      <div v-if="mediaCount > 1" class="absolute top-2.5 right-2.5">
-        <div class="bg-black/40 rounded-md px-1.5 py-0.5 flex items-center gap-1">
-          <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z" />
+      <div v-if="mediaCount > 1" class="absolute top-3 right-3">
+        <div class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1.5">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="7" y="3" width="14" height="14" rx="2"/>
+            <path d="M3 7v11a3 3 0 0 0 3 3h11"/>
           </svg>
-          <span class="text-white text-[10px] font-medium">{{ mediaCount }}</span>
+          <span class="text-white text-[10px] font-semibold tracking-wide">{{ mediaCount }}</span>
         </div>
       </div>
 
       <!-- Milestone badge -->
       <div v-if="memory.milestone_label" class="absolute bottom-3 left-3">
-        <span class="bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium px-2.5 py-1 rounded-full border border-border/50">
-          {{ memory.milestone_label }}
+        <span class="bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium px-3 py-1 rounded-full border border-border/50 shadow-sm">
+          ✦ {{ memory.milestone_label }}
         </span>
       </div>
     </div>
 
     <!-- Info strip -->
-    <div class="px-4 py-3">
-      <div class="flex items-center justify-between mb-1.5">
-        <div class="flex items-center gap-2 min-w-0">
-          <!-- Avatar -->
-          <div class="w-5 h-5 rounded-full bg-secondary overflow-hidden flex-shrink-0">
-            <img
-              v-if="memory.user?.avatar_url"
-              :src="memory.user.avatar_url"
-              class="w-full h-full object-cover"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <span class="text-[9px] font-bold text-muted-foreground">{{ initials }}</span>
-            </div>
-          </div>
-          <span class="text-xs font-medium text-foreground truncate">{{ ownerName }}</span>
-        </div>
-        <span class="text-xs text-muted-foreground flex-shrink-0 ml-3">{{ formattedDate }}</span>
-      </div>
+    <div class="px-4 pt-3 pb-3.5">
 
-      <p v-if="memory.note" class="text-sm text-foreground/80 leading-snug line-clamp-2">
+      <!-- Date -->
+      <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase mb-2">{{ formattedDate }}</p>
+
+      <!-- Note -->
+      <p v-if="memory.note" class="text-sm text-foreground/85 leading-snug line-clamp-2 mb-3">
         {{ memory.note }}
       </p>
-    </div>
 
+      <!-- Author -->
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-secondary overflow-hidden flex-shrink-0 ring-1 ring-border">
+          <img
+            v-if="memory.user?.avatar_url"
+            :src="memory.user.avatar_url"
+            class="w-full h-full object-cover"
+          />
+          <div v-else class="w-full h-full flex items-center justify-center">
+            <span class="text-[8px] font-bold text-muted-foreground">{{ initials }}</span>
+          </div>
+        </div>
+        <span class="text-[11px] font-medium text-muted-foreground truncate">{{ ownerName }}</span>
+      </div>
+
+    </div>
   </article>
 </template>
 
@@ -91,10 +100,12 @@ const initials = computed(() => {
 })
 
 const formattedDate = computed(() => {
-  return new Date(props.memory.memory_date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const d = new Date(props.memory.memory_date)
+  const now = new Date()
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000)
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 })
 </script>

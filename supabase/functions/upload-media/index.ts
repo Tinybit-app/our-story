@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
   const file = formData.get("file") as File
   const circleId = formData.get("circleId") as string
   const note = formData.get("note") as string | null
+  const milestoneLabel = formData.get("milestoneLabel") as string | null
   const memoryDate = formData.get("memoryDate") as string | null
 
   if (!file || !circleId) {
@@ -93,6 +94,7 @@ Deno.serve(async (req) => {
       circle_id: circleId,
       visibility: "private",
       note: note || null,
+      milestone_label: milestoneLabel || null,
       memory_date: memoryDate || new Date().toISOString(),
     })
     .select()
