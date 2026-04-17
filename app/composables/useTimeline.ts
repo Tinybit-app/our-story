@@ -30,6 +30,7 @@ export interface MonthGroup {
   label: string
   memories: Memory[]
   hasMore: boolean
+  totalCount: number
   anchorId: string
 }
 
@@ -75,6 +76,7 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
         }),
         memories,
         hasMore: total > MONTH_CAP,
+        totalCount: total,
         anchorId: `anchor-${year}`,
       }))
   })

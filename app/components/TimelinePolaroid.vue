@@ -31,13 +31,19 @@
         <div
           :id="`anchor-${yearSection.year}`"
           :data-year="yearSection.year"
-          class="relative flex items-center gap-4 mb-8 mt-2"
+          class="flex items-center gap-0 mb-10 mt-4"
         >
-          <div class="h-px flex-1 bg-border" />
-          <span class="font-['Caveat'] text-3xl font-semibold text-muted-foreground/60 select-none px-2">
-            {{ yearSection.year }}
+          <!-- Amber tape label -->
+          <span
+            class="font-['Caveat'] text-[28px] font-semibold select-none flex-shrink-0 px-5 pb-1.5 pt-1"
+            style="background:var(--accent); color:var(--background); transform:rotate(-1deg); box-shadow:2px 3px 8px rgba(44,36,32,.18); display:inline-block; line-height:1.2;"
+          >{{ yearSection.year }}</span>
+          <!-- Line to the right -->
+          <div class="flex-1 h-[2px] bg-border mx-3" />
+          <!-- Summary -->
+          <span class="text-[11px] text-muted-foreground whitespace-nowrap pr-1">
+            {{ yearSummary(yearSection) }}
           </span>
-          <div class="h-px flex-1 bg-border" />
         </div>
 
         <!-- Month sections within this year -->
@@ -45,16 +51,17 @@
           v-for="group in yearSection.months"
           :key="group.label"
           :id="`month-${group.year}-${group.month}`"
-          class="mb-12"
+          class="mb-14 mt-12 first:mt-0"
         >
-          <!-- Month header -->
-          <div class="flex items-baseline gap-3 mb-4">
-            <h2 class="font-['Caveat'] text-xl font-semibold text-foreground">{{ group.label }}</h2>
-            <span class="text-xs text-muted-foreground">{{ group.memories.length }}{{ group.hasMore ? '+' : '' }} memories</span>
+          <!-- Month divider: two lines with uppercase month label between -->
+          <div class="flex items-center gap-4 mb-8">
+            <div class="flex-1 h-px bg-border" />
+            <span class="text-[11px] font-semibold tracking-[.16em] uppercase text-muted-foreground">{{ group.label }}</span>
+            <div class="flex-1 h-px bg-border" />
           </div>
 
           <!-- Polaroid grid -->
-          <div class="flex flex-wrap gap-5">
+          <div class="flex flex-wrap gap-6">
             <PolaroidCard
               v-for="(memory, i) in group.memories"
               :key="memory.id"
@@ -66,16 +73,13 @@
             <NuxtLink
               v-if="group.hasMore"
               :to="`/timeline/${group.year}/${group.month}`"
-              class="w-44 flex-shrink-0 aspect-[3/4] flex flex-col items-center justify-center
-                     border-2 border-dashed border-border rounded-sm hover:border-primary
-                     hover:bg-secondary transition-colors gap-2 text-center px-3"
+              class="flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-[4px]
+                     border-2 border-dashed border-muted-foreground/40 text-[13px] font-semibold text-muted-foreground
+                     hover:border-primary hover:text-foreground transition-colors self-center text-center px-3"
+              style="width:160px; height:160px; background:var(--border); transform:rotate(0.5deg);"
             >
-              <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-              <span class="font-['Caveat'] text-sm text-muted-foreground leading-snug">
-                See all in<br />{{ group.label }}
-              </span>
+              <span class="leading-snug">+{{ group.totalCount - group.memories.length }} more</span>
+              <span class="leading-snug">Open {{ group.label }} →</span>
             </NuxtLink>
 
           </div>
@@ -120,6 +124,12 @@ const yearSections = computed(() => {
     .sort(([a], [b]) => b - a)
     .map(([year, months]) => ({ year, months }))
 })
+
+function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
+  const totalMemories = yearSection.months.reduce((sum, g) => sum + g.totalCount, 0)
+  const monthCount = yearSection.months.length
+  return `${totalMemories} memor${totalMemories === 1 ? 'y' : 'ies'} · ${monthCount} month${monthCount === 1 ? '' : 's'}`
+}
 
 // Root element for scoped observers
 const rootEl = ref<HTMLElement>()
