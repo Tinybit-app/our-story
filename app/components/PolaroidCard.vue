@@ -4,12 +4,7 @@
            shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)]
            transition-[transform,box-shadow] duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)]
            p-[10px] pb-[18px]"
-    :style="{
-      width: cardWidth,
-      transform: isHovered ? 'rotate(0deg) scale(1.05) translateY(-4px)' : `rotate(${tilt}deg)`,
-      zIndex: isHovered ? 10 : 1,
-      boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined,
-    }"
+    :style="articleStyle"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
   >
@@ -18,7 +13,7 @@
     <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#d64040] dark:bg-[#e05454] shadow-[0_2px_6px_rgba(214,64,64,.4)] opacity-85 z-10" />
 
     <!-- Photo area -->
-    <div class="overflow-hidden bg-border" :style="{ aspectRatio: photoAspect }">
+    <div class="overflow-hidden bg-border" :style="{ aspectRatio: photoAspectRatio }">
 
       <!-- Photo / video -->
       <img
@@ -82,18 +77,21 @@ const props = defineProps<{
   size?: 'sm' | 'md' | 'lg' | 'tall'
 }>()
 
-const size = computed(() => props.size ?? 'md')
+const WIDTHS  = { sm: '170px', md: '210px', lg: '290px', tall: '190px' } as const
+const ASPECTS = { sm: '1/1',   md: '1/1',   lg: '4/3',   tall: '3/4'  } as const
 
-const WIDTHS = { sm: '170px', md: '210px', lg: '290px', tall: '190px' }
-const ASPECTS = { sm: '1/1', md: '1/1', lg: '4/3', tall: '3/4' }
-const cardWidth = computed(() => WIDTHS[size.value])
-const photoAspect = computed(() => ASPECTS[size.value])
+const photoAspectRatio = computed(() => ASPECTS[props.size ?? 'md'])
 
-// Deterministic tilts — nth-child-style cycle matching mockup pattern
-// Mockup: 3n+1 → -1.8, 3n+2 → 1.2, 3n+3 → -0.6, then 5n+1 → 2.1
-// Using a 6-element cycle that approximates the same spread
+const articleStyle = computed(() => ({
+  width: WIDTHS[props.size ?? 'md'],
+  transform: isHovered.value
+    ? 'rotate(0deg) scale(1.05) translateY(-4px)'
+    : `rotate(${TILTS[props.index % TILTS.length]}deg)`,
+  zIndex: isHovered.value ? 10 : 1,
+  boxShadow: isHovered.value ? '0 14px 44px rgba(44,36,32,.22)' : undefined,
+}))
+
 const TILTS = [-1.8, 1.2, -0.6, 2.1, -1.6, 0.4]
-const tilt = computed(() => TILTS[props.index % TILTS.length])
 
 const isHovered = ref(false)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
