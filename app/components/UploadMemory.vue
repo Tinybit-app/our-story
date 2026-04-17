@@ -10,6 +10,7 @@
     />
 
     <button
+      v-if="!hideTrigger"
       class="flex items-center gap-2 bg-primary text-primary-foreground rounded-[12px] px-4 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
       @click="fileInput?.click()"
     >
@@ -222,7 +223,10 @@ interface UploadItem {
   error: string
 }
 
-const props = defineProps<{ circleId: string }>()
+const props = defineProps<{ circleId: string; hideTrigger?: boolean }>()
+
+const isOpen = computed(() => items.value.length > 0)
+defineExpose({ open: () => fileInput.value?.click(), isOpen })
 const emit = defineEmits<{ uploaded: [] }>()
 
 const supabase = useSupabaseClient()
