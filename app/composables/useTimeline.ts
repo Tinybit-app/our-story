@@ -60,9 +60,7 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
 
       const group = map.get(key)!
       group.total++
-      if (group.memories.length < MONTH_CAP) {
-        group.memories.push(memory)
-      }
+      group.memories.push(memory)
     }
 
     return Array.from(map.entries())
@@ -74,7 +72,9 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
           month: 'long',
           year: 'numeric',
         }),
-        memories,
+        memories: memories
+          .sort((a, b) => b.memory_date.localeCompare(a.memory_date))
+          .slice(0, MONTH_CAP),
         hasMore: total > MONTH_CAP,
         totalCount: total,
         anchorId: `anchor-${year}`,
