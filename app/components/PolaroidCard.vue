@@ -1,38 +1,44 @@
 <template>
   <article
-    class="relative bg-white dark:bg-zinc-800 rounded-sm cursor-pointer select-none
-           shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)]
-           hover:-translate-y-1 transition-all duration-200 w-44 flex-shrink-0 p-2.5 pb-8"
-    :style="{ transform: `rotate(${tilt}deg)`, zIndex: isHovered ? 10 : 1 }"
+    class="relative bg-card flex-shrink-0 cursor-pointer select-none
+           shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)]
+           transition-[transform,box-shadow] duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)]
+           p-[10px] pb-[18px]"
+    :class="wide ? 'w-[290px]' : 'w-[210px]'"
+    :style="{ transform: isHovered ? 'rotate(0deg) scale(1.05) translateY(-4px)' : `rotate(${tilt}deg)`, zIndex: isHovered ? 10 : 1, boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined }"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
   >
+
+    <!-- Pin -->
+    <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#d64040] dark:bg-[#e05454] shadow-[0_2px_6px_rgba(214,64,64,.4)] opacity-85 z-10" />
+
     <!-- Photo area -->
-    <div class="aspect-[4/3] bg-zinc-100 dark:bg-zinc-700 overflow-hidden rounded-[2px]">
+    <div class="overflow-hidden bg-border" :class="wide ? 'aspect-[4/3]' : 'aspect-square'">
 
       <!-- Photo / video -->
       <img
         v-if="firstMedia?.thumbnailUrl || firstMedia?.url"
         :src="firstMedia.thumbnailUrl ?? firstMedia.url ?? ''"
         :alt="memory.note ?? 'Memory'"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover block"
         loading="lazy"
       />
 
       <!-- Note-only: lined paper look -->
       <div
         v-else-if="memory.note"
-        class="w-full h-full flex items-center justify-center p-3 bg-amber-50 dark:bg-zinc-700"
-        style="background-image: repeating-linear-gradient(transparent, transparent 23px, #e5e0d8 24px);"
+        class="w-full h-full flex items-center justify-center p-3"
+        style="background-color: color-mix(in srgb, var(--accent) 12%, var(--card)); background-image: repeating-linear-gradient(transparent, transparent 23px, color-mix(in srgb, var(--border) 80%, transparent) 24px);"
       >
-        <p class="text-sm text-zinc-700 dark:text-zinc-200 leading-6 line-clamp-4 font-['Caveat'] text-center">
+        <p class="font-['Caveat'] text-[15px] text-foreground leading-6 line-clamp-4 text-center">
           {{ memory.note }}
         </p>
       </div>
 
       <!-- Placeholder -->
-      <div v-else class="w-full h-full flex items-center justify-center">
-        <svg class="w-8 h-8 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+      <div v-else class="w-full h-full flex items-center justify-center bg-secondary">
+        <svg class="w-8 h-8 text-muted-foreground/30" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
           <rect x="3" y="3" width="18" height="18" rx="2"/>
           <circle cx="8.5" cy="8.5" r="1.5"/>
           <path d="M21 15l-5-5L5 21"/>
@@ -41,55 +47,59 @@
 
     </div>
 
-    <!-- Caption strip -->
-    <div class="mt-2 min-h-[40px]">
+    <!-- Caption -->
+    <div class="pt-3 px-1 text-center">
       <!-- Milestone badge -->
-      <p v-if="memory.milestone_label" class="font-['Caveat'] text-[13px] font-semibold text-amber-700 dark:text-amber-400 leading-tight mb-0.5">
+      <p v-if="memory.milestone_label" class="font-['Caveat'] text-[14px] font-semibold text-accent leading-tight mb-0.5">
         ✦ {{ memory.milestone_label }}
       </p>
 
-      <!-- Note caption (for photo cards — truncated) -->
-      <p v-if="memory.note && firstMedia" class="font-['Caveat'] text-[13px] text-zinc-600 dark:text-zinc-300 leading-tight line-clamp-2">
-        {{ memory.note }}
+      <!-- Caption text (note or placeholder text) -->
+      <p
+        class="font-['Caveat'] text-[15px] text-foreground leading-[1.35] overflow-hidden"
+        style="-webkit-line-clamp:2; display:-webkit-box; -webkit-box-orient:vertical;"
+      >
+        {{ captionText }}
       </p>
-    </div>
 
-    <!-- Author + date pin -->
-    <div class="absolute bottom-2 left-2.5 right-2.5 flex items-center gap-1.5">
-      <div class="w-4 h-4 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-600 flex-shrink-0">
-        <img v-if="memory.user?.avatar_url" :src="memory.user.avatar_url" class="w-full h-full object-cover" />
-        <span v-else class="w-full h-full flex items-center justify-center text-[7px] font-bold text-zinc-500">{{ initials }}</span>
-      </div>
-      <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-['Caveat'] truncate">{{ formattedDate }}</span>
+      <!-- Date · Author -->
+      <p class="text-[10px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
     </div>
 
   </article>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import type { Memory } from '~/composables/useTimeline'
 
 const props = defineProps<{
   memory: Memory
   index: number
+  wide?: boolean
 }>()
 
-// Deterministic tilts — 12-element cycle, no randomness, SSR-safe
-const TILTS = [-2.5, 1.2, -0.8, 2.1, -1.6, 0.4, -2.0, 1.8, -0.5, 2.4, -1.2, 0.9]
+// Deterministic tilts — nth-child-style cycle matching mockup pattern
+// Mockup: 3n+1 → -1.8, 3n+2 → 1.2, 3n+3 → -0.6, then 5n+1 → 2.1
+// Using a 6-element cycle that approximates the same spread
+const TILTS = [-1.8, 1.2, -0.6, 2.1, -1.6, 0.4]
 const tilt = computed(() => TILTS[props.index % TILTS.length])
 
 const isHovered = ref(false)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
 
-const initials = computed(() => {
-  const u = props.memory.user
-  if (!u) return '?'
-  return [u.first_name?.[0], u.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
+const captionText = computed(() => {
+  if (memory.note) return memory.note
+  return ''
 })
 
-const formattedDate = computed(() => {
+// Use memory shorthand — suppress TS lint about unused prop destructure
+const memory = computed(() => props.memory)
+
+const formattedDateAndAuthor = computed(() => {
   const d = new Date(props.memory.memory_date)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const u = props.memory.user
+  const firstName = u?.first_name ?? ''
+  return firstName ? `${dateStr} · ${firstName}` : dateStr
 })
 </script>

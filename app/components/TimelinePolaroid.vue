@@ -49,7 +49,7 @@
 
         <!-- Month sections within this year -->
         <div
-          v-for="group in yearSection.months"
+          v-for="(group, gi) in yearSection.months"
           :key="group.label"
           :id="`month-${group.year}-${group.month}`"
           class="mb-14 mt-12 first:mt-0"
@@ -68,6 +68,7 @@
               :key="memory.id"
               :memory="memory"
               :index="i"
+              :wide="i === WIDE_PATTERN[gi % WIDE_PATTERN.length]"
             />
 
             <!-- See more card -->
@@ -125,6 +126,10 @@ const yearSections = computed(() => {
     .sort(([a], [b]) => b - a)
     .map(([year, months]) => ({ year, months }))
 })
+
+// Which card index within each month group gets the wide (4/3) treatment
+// Cycles through positions so adjacent months don't always put the wide card in the same spot
+const WIDE_PATTERN = [0, 1, 2, 1, 0, 2]
 
 function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
   const totalMemories = yearSection.months.reduce((sum, g) => sum + g.totalCount, 0)
