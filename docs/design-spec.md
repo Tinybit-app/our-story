@@ -795,9 +795,9 @@ import { z } from "zod"
 
 const uploadSchema = z.object({
   circleId: z.string().uuid(),
-  note: z.string().max(2000).optional(),
+  note: z.string().max(500).optional(),
   memoryDate: z.string().datetime().optional(),
-  milestoneLabel: z.string().max(200).optional(),
+  milestoneLabel: z.string().max(40).optional(),
 })
 
 export default defineEventHandler(async (event) => {

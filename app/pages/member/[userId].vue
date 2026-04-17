@@ -62,6 +62,7 @@
     :origin-rect="selectedRect"
     :tilt="selectedTilt"
     @close="selectedMemoryIndex = null"
+    @update="onMemoryUpdate"
   />
 </template>
 
@@ -76,6 +77,11 @@ function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; re
   selectedMemoryIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
   selectedRect.value = rect
   selectedTilt.value = tilt
+}
+
+function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
+  const i = memoriesFlat.value.findIndex((m) => m.id === patch.id)
+  if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
 }
 
 definePageMeta({})

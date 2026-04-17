@@ -47,6 +47,21 @@
         </svg>
       </div>
 
+      <!-- Milestone stamp — top-left corner of photo -->
+      <div
+        v-if="memory.milestone_label"
+        class="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 rounded-sm"
+        style="
+          background: hsl(var(--accent) / 0.88);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border: 1px solid hsl(var(--accent) / 0.6);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        "
+      >
+        <span class="text-[9px] font-bold text-white/90 tracking-[.18em] uppercase leading-none drop-shadow-sm truncate max-w-[120px]">✦ {{ memory.milestone_label }}</span>
+      </div>
+
       <!-- Reaction overlay — appears on hover at bottom of photo -->
       <Transition
         enter-active-class="transition duration-150 ease-out"
@@ -117,11 +132,6 @@
 
     <!-- Caption -->
     <div class="pt-3 px-1 text-center">
-      <!-- Milestone badge -->
-      <p v-if="memory.milestone_label" class="text-[11px] font-semibold text-accent leading-tight mb-0.5 tracking-wide uppercase">
-        ✦ {{ memory.milestone_label }}
-      </p>
-
       <!-- Caption text -->
       <p
         class="text-[13px] text-foreground leading-[1.35] overflow-hidden"

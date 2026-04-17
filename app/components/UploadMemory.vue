@@ -97,12 +97,33 @@
                 </div>
               </div>
 
-              <textarea
-                v-model="firstItem.note"
-                placeholder="Add a note… (optional)"
-                rows="2"
-                class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none mb-3"
-              />
+              <div class="mb-3">
+                <div class="flex items-baseline justify-between mb-1">
+                  <label class="text-xs text-muted-foreground">Note</label>
+                  <span class="text-[11px]" :class="firstItem.note.length >= 500 ? 'text-destructive' : 'text-muted-foreground'">{{ firstItem.note.length }} / 500</span>
+                </div>
+                <textarea
+                  v-model="firstItem.note"
+                  placeholder="Add a note… (optional)"
+                  rows="2"
+                  maxlength="500"
+                  class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                />
+              </div>
+
+              <div class="mb-3">
+                <div class="flex items-baseline justify-between mb-1">
+                  <label class="text-xs text-muted-foreground">Milestone</label>
+                  <span class="text-[11px]" :class="firstItem.milestoneLabel.length >= 40 ? 'text-destructive' : 'text-muted-foreground'">{{ firstItem.milestoneLabel.length }} / 40</span>
+                </div>
+                <input
+                  v-model="firstItem.milestoneLabel"
+                  type="text"
+                  placeholder="e.g. First steps, Wedding day… (optional)"
+                  maxlength="40"
+                  class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
 
               <div class="flex items-center justify-between">
                 <label class="text-sm text-muted-foreground">When was this?</label>
@@ -217,6 +238,7 @@ interface UploadItem {
   isVideo: boolean
   date: string
   note: string
+  milestoneLabel: string
   uploading: boolean
   progress: number
   done: boolean
@@ -297,6 +319,7 @@ async function onFilesSelected(e: Event) {
       isVideo,
       date,
       note: '',
+      milestoneLabel: '',
       uploading: false,
       progress: 0,
       done: false,
@@ -336,6 +359,7 @@ async function uploadItem(item: UploadItem): Promise<void> {
   formData.append('file', item.file)
   formData.append('circleId', props.circleId)
   formData.append('note', item.note)
+  if (item.milestoneLabel.trim()) formData.append('milestoneLabel', item.milestoneLabel.trim())
   formData.append('memoryDate', `${item.date}T00:00:00Z`)
 
   return new Promise((resolve) => {

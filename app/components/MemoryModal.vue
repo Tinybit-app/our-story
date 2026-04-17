@@ -75,7 +75,7 @@
 
         <!-- Close -->
         <button
-          class="absolute top-3 right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-black/35 text-white/90 hover:bg-black/55 transition-colors"
+          class="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-foreground text-background hover:opacity-80 transition-opacity"
           @click="close"
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -118,9 +118,72 @@
 
           <!-- 1. Metadata + reactions — compact, never scrolls -->
           <div class="flex-shrink-0 pt-3 px-1.5 pb-3">
-            <p v-if="memory?.milestone_label" class="text-[10px] font-bold text-accent tracking-[.2em] uppercase mb-1.5">✦ {{ memory.milestone_label }}</p>
-            <p v-if="memory?.note" class="text-[15px] text-foreground leading-relaxed mb-2">{{ memory.note }}</p>
-            <p class="text-[12px] text-muted-foreground mb-3">{{ formattedDateAndAuthor }}</p>
+
+            <!-- View mode -->
+            <template v-if="!editing">
+              <div class="flex items-start justify-between gap-2 group/meta">
+                <div class="flex-1 min-w-0">
+                  <p v-if="memory?.milestone_label" class="text-[10px] font-bold text-accent tracking-[.2em] uppercase mb-1.5">✦ {{ memory.milestone_label }}</p>
+                  <p v-if="memory?.note" class="text-[15px] text-foreground leading-relaxed mb-2">{{ memory.note }}</p>
+                </div>
+                <button
+                  v-if="isOwner"
+                  class="flex-shrink-0 mt-0.5 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors opacity-0 group-hover/meta:opacity-100"
+                  title="Edit note"
+                  @click="startEditing"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              </div>
+              <p class="text-[12px] text-muted-foreground mb-3">{{ formattedDateAndAuthor }}</p>
+            </template>
+
+            <!-- Edit mode -->
+            <template v-else>
+              <div class="mb-2">
+                <div class="flex items-baseline justify-between mb-1">
+                  <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]">Milestone</label>
+                  <span class="text-[10px]" :class="editMilestone.length >= 40 ? 'text-destructive' : 'text-muted-foreground'">{{ editMilestone.length }} / 40</span>
+                </div>
+                <input
+                  v-model="editMilestone"
+                  type="text"
+                  placeholder="e.g. First steps"
+                  maxlength="40"
+                  class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
+                />
+                <div class="flex items-baseline justify-between mb-1">
+                  <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]">Note</label>
+                  <span class="text-[10px]" :class="editNote.length >= 500 ? 'text-destructive' : 'text-muted-foreground'">{{ editNote.length }} / 500</span>
+                </div>
+                <textarea
+                  ref="editTextareaEl"
+                  v-model="editNote"
+                  placeholder="Add a note…"
+                  rows="3"
+                  maxlength="500"
+                  class="w-full bg-secondary rounded-lg px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed"
+                  style="max-height: 120px; overflow-y: auto"
+                />
+                <div class="flex items-center justify-end mt-1.5">
+                  <div class="flex items-center gap-2">
+                    <button
+                      class="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                      @click="cancelEditing"
+                    >Cancel</button>
+                    <button
+                      :disabled="saving"
+                      class="text-[12px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
+                      @click="saveEdit"
+                    >{{ saving ? "Saving…" : "Save" }}</button>
+                  </div>
+                </div>
+              </div>
+              <p class="text-[12px] text-muted-foreground mb-3">{{ formattedDateAndAuthor }}</p>
+            </template>
             <div class="flex items-center gap-1.5 flex-wrap">
               <button
                 v-for="(group, emoji) in reactionGroups"
@@ -229,7 +292,7 @@ const props = defineProps<{
   tilt: number;
 }>();
 
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; update: [Pick<Memory, 'id'> & Partial<Memory>] }>();
 
 const PRESET_EMOJIS = [
   "❤️",
@@ -279,6 +342,56 @@ const currentUserId = ref<string | null>(null);
 supabaseClient.auth.getSession().then(({ data }) => {
   currentUserId.value = data.session?.user?.id ?? null;
 });
+
+// ── Edit note ──────────────────────────────────────────────
+const editing = ref(false);
+const saving = ref(false);
+const editNote = ref("");
+const editMilestone = ref("");
+const editTextareaEl = ref<HTMLTextAreaElement>();
+
+const isOwner = computed(
+  () => !!currentUserId.value && memory.value?.owner_user_id === currentUserId.value,
+);
+
+function startEditing() {
+  editNote.value = memory.value?.note ?? "";
+  editMilestone.value = memory.value?.milestone_label ?? "";
+  editing.value = true;
+  nextTick(() => editTextareaEl.value?.focus());
+}
+
+function cancelEditing() {
+  editing.value = false;
+}
+
+async function saveEdit() {
+  if (saving.value || !memory.value) return;
+  saving.value = true;
+  try {
+    const { memory: updated } = await $fetch<{
+      memory: { id: string; note: string | null; milestone_label: string | null; milestone_is_custom: boolean };
+    }>(`/api/memories/${memory.value.id}`, {
+      method: "PATCH",
+      body: {
+        note: editNote.value.trim() || null,
+        milestone_label: editMilestone.value.trim() || null,
+      },
+    });
+    // Propagate to parent memoriesFlat
+    emit("update", {
+      id: updated.id,
+      note: updated.note,
+      milestone_label: updated.milestone_label,
+      milestone_is_custom: updated.milestone_is_custom,
+    });
+    editing.value = false;
+  } catch (err) {
+    console.error("[MemoryModal] failed to save edit:", err);
+  } finally {
+    saving.value = false;
+  }
+}
 
 const localReactions = ref<{ id: string; emoji: string; user_id: string }[]>(
   [],
@@ -393,6 +506,9 @@ async function navigate(dir: "prev" | "next") {
   comments.value = [];
   commentDraft.value = "";
   allCommentsVisible.value = false;
+  editing.value = false;
+  editNote.value = "";
+  editMilestone.value = "";
 
   await nextTick();
 
@@ -572,6 +688,9 @@ watch(
       comments.value = [];
       commentDraft.value = "";
       allCommentsVisible.value = false;
+      editing.value = false;
+      editNote.value = "";
+      editMilestone.value = "";
       visible.value = true;
       await nextTick();
       await runEnterAnimation();

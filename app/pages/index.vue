@@ -41,8 +41,7 @@
         <!-- Add memory -->
         <button
           v-if="circleId"
-          class="flex-shrink-0 flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full bg-primary text-primary-foreground
-                 text-[11px] font-semibold hover:opacity-90 active:scale-95 transition-all"
+          class="flex-shrink-0 flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 active:scale-95 transition-all"
           @click="uploadRef?.open()"
         >
           <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -265,6 +264,7 @@
       :origin-rect="selectedRect"
       :tilt="selectedTilt"
       @close="selectedMemoryIndex = null"
+      @update="onMemoryUpdate"
     />
 
 
@@ -283,6 +283,11 @@ function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; re
   selectedMemoryIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
   selectedRect.value = rect
   selectedTilt.value = tilt
+}
+
+function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
+  const i = memoriesFlat.value.findIndex((m) => m.id === patch.id)
+  if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
 }
 
 const supabase = useSupabaseClient()
