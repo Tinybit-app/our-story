@@ -31,7 +31,7 @@
         class="w-full h-full flex items-center justify-center p-3"
         style="background-color: color-mix(in srgb, var(--accent) 12%, var(--card)); background-image: repeating-linear-gradient(transparent, transparent 23px, color-mix(in srgb, var(--border) 80%, transparent) 24px);"
       >
-        <p class="font-['Caveat'] text-[15px] text-foreground leading-6 line-clamp-4 text-center">
+        <p class="text-[13px] text-foreground leading-6 line-clamp-4 text-center">
           {{ memory.note }}
         </p>
       </div>
@@ -115,20 +115,20 @@
     <!-- Caption -->
     <div class="pt-3 px-1 text-center">
       <!-- Milestone badge -->
-      <p v-if="memory.milestone_label" class="font-['Caveat'] text-[14px] font-semibold text-accent leading-tight mb-0.5">
+      <p v-if="memory.milestone_label" class="text-[11px] font-semibold text-accent leading-tight mb-0.5 tracking-wide uppercase">
         ✦ {{ memory.milestone_label }}
       </p>
 
       <!-- Caption text -->
       <p
-        class="font-['Caveat'] text-[15px] text-foreground leading-[1.35] overflow-hidden"
+        class="text-[13px] text-foreground leading-[1.35] overflow-hidden"
         style="-webkit-line-clamp:2; display:-webkit-box; -webkit-box-orient:vertical;"
       >
         {{ captionText }}
       </p>
 
       <!-- Date · Author -->
-      <p class="text-[10px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
+      <p class="text-[11px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
     </div>
 
   </article>
