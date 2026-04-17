@@ -235,19 +235,22 @@
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 translate-y-2"
     >
-      <button
-        v-if="currentYear"
-        class="fixed bottom-6 left-6 z-40 font-['Caveat'] text-2xl font-semibold select-none border-none
-               flex items-center gap-1.5 leading-none
-               hover:opacity-80 active:opacity-60 transition-opacity duration-150"
-        style="background:hsl(var(--accent)); color:hsl(var(--background)); padding:5px 18px 7px; box-shadow:2px 3px 10px rgba(44,36,32,.22); transform:rotate(-1deg);"
-        @click="openJump"
-      >
-        {{ currentYear }}
-        <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path d="M6 9l6 6 6-6"/>
-        </svg>
-      </button>
+      <div v-if="currentYear" class="fixed bottom-6 inset-x-0 z-40 pointer-events-none">
+        <div class="max-w-5xl mx-auto px-5 flex justify-start">
+          <button
+            class="pointer-events-auto font-['Caveat'] text-2xl font-semibold select-none border-none
+                   flex items-center gap-1.5 leading-none
+                   hover:opacity-80 active:opacity-60 transition-opacity duration-150"
+            style="background:hsl(var(--accent)); color:hsl(var(--background)); padding:5px 18px 7px; box-shadow:2px 3px 10px rgba(44,36,32,.22); transform:rotate(-1deg);"
+            @click="openJump"
+          >
+            {{ currentYear }}
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     </Transition>
 
     <!-- FAB -->
