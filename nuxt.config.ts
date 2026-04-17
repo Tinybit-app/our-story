@@ -30,7 +30,24 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@sentry/nuxt/module",
     "@nuxtjs/color-mode",
+    "@nuxtjs/i18n",
   ],
+
+  i18n: {
+    strategy: 'no_prefix',
+    defaultLocale: 'en',
+    locales: [
+      { code: 'en', name: 'English', file: 'en.json' },
+      { code: 'zh-CN', name: '中文', file: 'zh-CN.json' },
+    ],
+    langDir: '../locales/',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_locale',
+      alwaysRedirect: false,
+      fallbackLocale: 'en',
+    },
+  },
 
   colorMode: {
     classSuffix: '',
