@@ -57,7 +57,7 @@
           <!-- Month divider: two lines with uppercase month label between -->
           <div class="flex items-center gap-4 mb-8">
             <div class="flex-1 h-px bg-border" />
-            <span class="text-[11px] font-semibold tracking-[.16em] uppercase text-muted-foreground">{{ group.label }}</span>
+            <span class="text-[11px] font-semibold tracking-[.16em] uppercase text-muted-foreground">{{ group.label }} &middot; {{ group.totalCount }} {{ group.totalCount === 1 ? 'memory' : 'memories' }}</span>
             <div class="flex-1 h-px bg-border" />
           </div>
 
