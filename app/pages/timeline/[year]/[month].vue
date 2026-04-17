@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-5xl mx-auto px-5 py-3.5 flex items-center gap-3">
+      <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
         <NuxtLink
           to="/"
           class="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
@@ -20,7 +20,7 @@
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-5 py-6">
+    <main class="max-w-[1280px] mx-auto px-5 py-6">
 
       <!-- Loading -->
       <div v-if="loading" class="flex justify-center py-32">

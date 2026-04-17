@@ -37,9 +37,9 @@ Update doc/build-plan.md and doc/design-spec.md with any change in the implement
 
 ## UI Layout
 
-- **Main app pages** (any page with a header/nav shell): use `max-w-5xl mx-auto` for both the header inner div and the `<main>` content area
+- **Main app pages** (any page with a header/nav shell): use `max-w-[1280px] mx-auto` for both the header inner div and the `<main>` content area
 - **Auth/onboarding/modal-like pages** (login, confirm, invite/[token], onboarding/*): use `max-w-sm` centered — these are intentionally narrow
-- Never use `max-w-2xl` or `max-w-3xl` for main app page layouts
+- Never use `max-w-2xl`, `max-w-3xl`, or `max-w-5xl` for main app page layouts
 
 ## Rules
 

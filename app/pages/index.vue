@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-5xl mx-auto px-5 py-3.5 flex items-center gap-3">
+      <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
 
         <!-- Circle name / member count -->
         <div class="flex-1 min-w-0">
@@ -137,7 +137,7 @@
     </header>
 
     <!-- Feed -->
-    <main class="max-w-5xl mx-auto px-5 py-6">
+    <main class="max-w-[1280px] mx-auto px-5 py-6">
 
       <!-- Timeline -->
       <TimelinePolaroid
@@ -147,6 +147,7 @@
         :has-next-page="!!nextCursor"
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
+        @open-memory="onOpenMemory"
       />
 
     </main>
@@ -257,12 +258,32 @@
     <!-- Upload memory (headless) -->
     <UploadMemory v-if="circleId" ref="uploadRef" :circle-id="circleId" hide-trigger @uploaded="onUploaded" />
 
+    <!-- Memory detail modal -->
+    <MemoryModal
+      :memories="memoriesFlat"
+      :start-index="selectedMemoryIndex"
+      :origin-rect="selectedRect"
+      :tilt="selectedTilt"
+      @close="selectedMemoryIndex = null"
+    />
+
 
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
+
+// ── Memory modal ───────────────────────────────────────────
+const selectedMemoryIndex = ref<number | null>(null)
+const selectedRect = ref<DOMRect | null>(null)
+const selectedTilt = ref(0)
+
+function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; rect: DOMRect }) {
+  selectedMemoryIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
+  selectedRect.value = rect
+  selectedTilt.value = tilt
+}
 
 const supabase = useSupabaseClient()
 const authUser = useSupabaseUser()

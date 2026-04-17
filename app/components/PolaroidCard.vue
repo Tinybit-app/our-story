@@ -1,5 +1,6 @@
 <template>
   <article
+    ref="articleEl"
     class="relative bg-card flex-shrink-0 cursor-pointer select-none
            shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)]
            transition-[transform,box-shadow] duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)]
@@ -8,6 +9,7 @@
     :style="{ transform: isHovered ? 'rotate(0deg) scale(1.05) translateY(-4px)' : `rotate(${tilt}deg)`, zIndex: isHovered ? 10 : 1, boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined }"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
+    @click="onCardClick"
   >
 
     <!-- Pin -->
@@ -145,8 +147,19 @@ const props = defineProps<{
   wide?: boolean
 }>()
 
+const emit = defineEmits<{
+  open: [{ memory: Memory; tilt: number; rect: DOMRect }]
+}>()
+
+const articleEl = ref<HTMLElement>()
+
 const TILTS = [-1.8, 1.2, -0.6, 2.1, -1.6, 0.4]
 const tilt = computed(() => TILTS[props.index % TILTS.length])
+
+function onCardClick() {
+  if (!articleEl.value) return
+  emit('open', { memory: props.memory, tilt: tilt.value ?? 0, rect: articleEl.value.getBoundingClientRect() })
+}
 const PRESET_EMOJIS = ['❤️', '😂', '😍', '🥹', '👏', '🔥', '😮', '🥰', '😭', '✨', '🎉', '👍']
 
 const isHovered = ref(false)

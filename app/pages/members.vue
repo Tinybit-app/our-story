@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-5xl mx-auto px-5 h-14 flex items-center gap-3">
+      <div class="max-w-[1280px] mx-auto px-5 h-14 flex items-center gap-3">
         <button
           class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1"
           @click="router.back()"
@@ -32,7 +32,7 @@
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-5 py-6 space-y-8">
+    <main class="max-w-[1280px] mx-auto px-5 py-6 space-y-8">
 
       <!-- Loading -->
       <div v-if="pending" class="flex justify-center py-24">

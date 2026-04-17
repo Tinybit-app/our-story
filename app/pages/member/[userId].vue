@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-5xl mx-auto px-5 py-3.5 flex items-center gap-3">
+      <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
         <button
           class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1 flex-shrink-0"
           @click="router.back()"
@@ -16,7 +16,7 @@
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-5">
+    <main class="max-w-[1280px] mx-auto px-5">
 
       <!-- Profile hero -->
       <div v-if="member" class="flex items-end gap-5 pt-8 pb-8 border-b border-border">
@@ -48,16 +48,35 @@
           :loading="loading"
           :has-next-page="!!nextCursor"
           @load-more="fetchTimeline(nextCursor ?? undefined)"
+          @open-memory="onOpenMemory"
         />
       </div>
 
     </main>
 
   </div>
+
+  <MemoryModal
+    :memories="memoriesFlat"
+    :start-index="selectedMemoryIndex"
+    :origin-rect="selectedRect"
+    :tilt="selectedTilt"
+    @close="selectedMemoryIndex = null"
+  />
 </template>
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
+
+const selectedMemoryIndex = ref<number | null>(null)
+const selectedRect = ref<DOMRect | null>(null)
+const selectedTilt = ref(0)
+
+function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; rect: DOMRect }) {
+  selectedMemoryIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
+  selectedRect.value = rect
+  selectedTilt.value = tilt
+}
 
 definePageMeta({})
 

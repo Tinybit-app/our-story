@@ -69,6 +69,7 @@
               :memory="memory"
               :index="i"
               :wide="isWideMemory(memory.id)"
+              @open="$emit('openMemory', $event)"
             />
 
             <!-- See more card -->
@@ -110,9 +111,12 @@ const props = defineProps<{
   hasNextPage: boolean
 }>()
 
+import type { Memory } from '~/composables/useTimeline'
+
 const emit = defineEmits<{
   loadMore: []
   yearChange: [year: number]
+  openMemory: [{ memory: Memory; tilt: number; rect: DOMRect }]
 }>()
 
 // Group month groups by year for rendering
