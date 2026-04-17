@@ -13,55 +13,42 @@
           </svg>
           Back
         </button>
-
-        <div class="flex-1 flex items-center gap-3 min-w-0" v-if="member">
-          <div class="w-8 h-8 rounded-full overflow-hidden ring-2 ring-border flex-shrink-0 flex items-center justify-center bg-secondary">
-            <img v-if="member.avatarUrl" :src="member.avatarUrl" class="w-full h-full object-cover" />
-            <span v-else class="text-[10px] font-bold text-foreground">{{ initials(member) }}</span>
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-foreground leading-none truncate">{{ displayName(member) }}</p>
-            <p class="text-[10px] text-muted-foreground mt-0.5 capitalize">{{ member.role }}</p>
-          </div>
-        </div>
-        <div v-else class="flex-1" />
       </div>
     </header>
 
-    <!-- Feed -->
-    <main class="max-w-5xl mx-auto px-5 py-6">
+    <main class="max-w-5xl mx-auto px-5">
 
-      <!-- Loading -->
-      <div v-if="loading && memories.length === 0" class="flex flex-col items-center gap-3 justify-center py-32">
-        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <p class="text-xs text-muted-foreground">Loading memories…</p>
-      </div>
-
-      <!-- Empty state -->
-      <div v-else-if="!loading && memories.length === 0" class="flex flex-col items-center justify-center py-32 text-center">
-        <div class="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-            <circle cx="12" cy="13" r="3"/>
-          </svg>
+      <!-- Profile hero -->
+      <div v-if="member" class="flex items-end gap-5 pt-8 pb-8 border-b border-border">
+        <!-- Avatar -->
+        <div class="w-16 h-16 rounded-full overflow-hidden ring-2 ring-border flex-shrink-0 flex items-center justify-center bg-secondary">
+          <img v-if="member.avatarUrl" :src="member.avatarUrl" class="w-full h-full object-cover" />
+          <span v-else class="text-xl font-bold text-foreground">{{ initials(member) }}</span>
         </div>
-        <p class="text-base font-semibold text-foreground mb-2">No memories yet</p>
-        <p class="text-sm text-muted-foreground">{{ member ? displayName(member) : 'This member' }} hasn't shared any memories.</p>
-      </div>
 
-      <!-- Grid -->
-      <div v-else class="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-0">
-        <div v-for="memory in memories" :key="memory.id" class="break-inside-avoid mb-4">
-          <MemoryCard :memory="memory" />
+        <!-- Name + stats -->
+        <div class="min-w-0 flex-1">
+          <h1 class="text-xl font-semibold text-foreground leading-tight truncate">{{ displayName(member) }}</h1>
+          <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+            <span class="text-[11px] text-muted-foreground capitalize">{{ member.role }}</span>
+            <span class="text-border text-xs">·</span>
+            <span class="text-[11px] text-muted-foreground">Joined {{ joinedLabel }}</span>
+            <span v-if="totalMemories > 0" class="text-border text-xs">·</span>
+            <span v-if="totalMemories > 0" class="text-[11px] text-muted-foreground">
+              {{ totalMemories }} {{ totalMemories === 1 ? 'memory' : 'memories' }}
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Infinite scroll sentinel -->
-      <div ref="loadMoreEl" class="h-4 mt-2" />
-
-      <!-- Pagination loading -->
-      <div v-if="loading && memories.length > 0" class="flex justify-center py-6">
-        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <!-- Timeline -->
+      <div class="py-6">
+        <TimelinePolaroid
+          :month-groups="monthGroups"
+          :loading="loading"
+          :has-next-page="!!nextCursor"
+          @load-more="fetchTimeline(nextCursor ?? undefined)"
+        />
       </div>
 
     </main>
@@ -70,6 +57,8 @@
 </template>
 
 <script setup lang="ts">
+import type { Memory } from '~/composables/useTimeline'
+
 definePageMeta({})
 
 const router = useRouter()
@@ -99,20 +88,27 @@ function initials(m: any): string {
   return (first + last).toUpperCase() || '?'
 }
 
+const joinedLabel = computed(() => {
+  if (!member.value?.joinedAt) return ''
+  return new Date(member.value.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+})
+
 // ── Timeline ───────────────────────────────────────────────
-const memories = ref<any[]>([])
+const memoriesFlat = ref<Memory[]>([])
 const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const loadMoreEl = ref<HTMLElement>()
+
+const { monthGroups } = useTimeline(memoriesFlat)
+const totalMemories = computed(() => monthGroups.value.reduce((sum, g) => sum + g.totalCount, 0))
 
 async function fetchTimeline(cursor?: string) {
   if (loading.value || !circleId.value) return
   loading.value = true
   try {
-    const data = await $fetch<{ memories: any[]; nextCursor: string | null }>('/api/timeline', {
+    const data = await $fetch<{ memories: Memory[]; nextCursor: string | null }>('/api/timeline', {
       query: { circleId: circleId.value, authorId: userId, ...(cursor ? { cursor } : {}) },
     })
-    memories.value = cursor ? [...memories.value, ...data.memories] : data.memories
+    memoriesFlat.value = cursor ? [...memoriesFlat.value, ...data.memories] : data.memories
     nextCursor.value = data.nextCursor
   } catch (err) {
     console.error('[member-timeline] fetch error:', err)
@@ -121,12 +117,5 @@ async function fetchTimeline(cursor?: string) {
   }
 }
 
-const { stop } = useIntersectionObserver(loadMoreEl, ([entry]) => {
-  if (entry?.isIntersecting && nextCursor.value && !loading.value) {
-    fetchTimeline(nextCursor.value)
-  }
-})
-
 onMounted(() => fetchTimeline())
-onUnmounted(() => stop())
 </script>
