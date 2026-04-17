@@ -93,11 +93,13 @@
           />
           <video
             v-else-if="firstMedia?.media_type === 'video' && firstMedia.url"
+            ref="videoEl"
             :src="firstMedia.url"
             class="absolute inset-0 w-full h-full object-cover block"
             controls
             playsinline
-            preload="metadata"
+            autoplay
+            preload="auto"
           />
           <div
             v-else-if="memory?.note"
@@ -193,16 +195,25 @@
               <p class="text-[12px] text-muted-foreground mb-3">{{ formattedDateAndAuthor }}</p>
             </template>
             <div class="flex items-center gap-1.5 flex-wrap">
-              <button
+              <div
                 v-for="(group, emoji) in reactionGroups"
                 :key="emoji"
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] border transition-all duration-150"
-                :class="group.mine ? 'bg-accent/15 border-accent/25 text-foreground font-medium' : 'bg-secondary border-transparent text-muted-foreground hover:border-border'"
-                @click="toggleReaction(emoji as string)"
-              >{{ emoji }}<span class="text-[11px]">{{ group.count }}</span></button>
+                class="relative group/rxn"
+              >
+                <button
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] border transition-all duration-150"
+                  :class="group.mine ? 'bg-accent/15 border-accent/25 text-foreground font-medium' : 'bg-secondary border-transparent text-muted-foreground hover:border-border'"
+                  @click="toggleReaction(emoji as string)"
+                >{{ emoji }}<span class="text-[11px]">{{ group.count }}</span></button>
+                <!-- Tooltip -->
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-foreground text-background text-[10px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover/rxn:opacity-100 transition-opacity duration-150 z-40 shadow-md">
+                  {{ reactionTooltip(group.names) }}
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground" />
+                </div>
+              </div>
               <div class="relative">
                 <button
-                  class="w-6 h-6 rounded-full border border-border text-muted-foreground text-[13px] flex items-center justify-center hover:bg-secondary transition-colors"
+                  class="w-8 h-8 rounded-full border border-border text-muted-foreground text-[16px] flex items-center justify-center hover:bg-secondary transition-colors"
                   @click.stop="pickerOpen = !pickerOpen"
                 >+</button>
                 <Transition
@@ -362,7 +373,15 @@ const PRESET_EMOJIS = [
 
 const polaroidEl = ref<HTMLElement>();
 const backdropEl = ref<HTMLElement>();
+const videoEl = ref<HTMLVideoElement>();
 const visible = ref(false);
+
+function stopVideo() {
+  if (videoEl.value) {
+    videoEl.value.pause();
+    videoEl.value.currentTime = 0;
+  }
+}
 const pickerOpen = ref(false);
 const navigating = ref(false);
 
@@ -444,21 +463,30 @@ async function saveEdit() {
   }
 }
 
-const localReactions = ref<{ id: string; emoji: string; user_id: string }[]>(
-  [],
-);
+type Reaction = { id: string; emoji: string; user_id: string; user: { first_name: string | null; last_name: string | null } | null };
+const localReactions = ref<Reaction[]>([]);
 
 const reactionGroups = computed(() => {
-  const groups: Record<string, { count: number; mine: boolean }> = {};
+  const groups: Record<string, { count: number; mine: boolean; names: string[] }> = {};
   for (const r of localReactions.value) {
     if (!r.emoji) continue;
-    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, mine: false };
+    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, mine: false, names: [] };
     const g = groups[r.emoji]!;
     g.count++;
-    if (r.user_id === currentUserId.value) g.mine = true;
+    if (r.user_id === currentUserId.value) {
+      g.mine = true;
+      g.names.unshift("You");
+    } else {
+      g.names.push(r.user?.first_name ?? "Someone");
+    }
   }
   return groups;
 });
+
+function reactionTooltip(names: string[]): string {
+  if (names.length <= 3) return names.join(", ");
+  return `${names.slice(0, 2).join(", ")} +${names.length - 2} more`;
+}
 
 async function toggleReaction(emoji: string) {
   const userId =
@@ -475,7 +503,7 @@ async function toggleReaction(emoji: string) {
   } else {
     localReactions.value = [
       ...localReactions.value,
-      { id: "optimistic", emoji, user_id: userId },
+      { id: "optimistic", emoji, user_id: userId, user: null },
     ];
   }
 
@@ -551,6 +579,8 @@ async function navigate(dir: "prev" | "next") {
     await new Promise((r) => setTimeout(r, 190));
   }
 
+  stopVideo();
+
   // Switch to new memory
   currentIndex.value = newIdx;
   localReactions.value = [...(props.memories[newIdx]?.memoryreaction ?? [])];
@@ -583,6 +613,7 @@ async function navigate(dir: "prev" | "next") {
 }
 
 async function close() {
+  stopVideo();
   const el = polaroidEl.value;
   const bd = backdropEl.value;
 

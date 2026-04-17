@@ -112,7 +112,7 @@
           <!-- Picker trigger -->
           <div class="relative ml-auto">
             <button
-              class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/15 text-white/80 text-[11px]
+              class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/15 text-white/80 text-[14px]
                      hover:bg-white/30 transition-colors"
               @click.stop="pickerOpen = !pickerOpen"
             >+</button>

@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
       id, owner_user_id, visibility, note, memory_date, milestone_label, milestone_is_custom, created_at,
       memorymedia(id, storage_path, media_type, file_size),
       user!owner_user_id(first_name, last_name, avatar_url),
-      memoryreaction(id, emoji, user_id),
+      memoryreaction(id, emoji, user_id, user!user_id(first_name, last_name)),
       memorycomment(id)
     `)
     .eq("circle_id", circleId)

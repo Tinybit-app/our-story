@@ -20,7 +20,7 @@ export interface Memory {
   created_at: string
   memorymedia: MediaItem[]
   user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null
-  memoryreaction: { id: string; emoji: string; user_id: string }[]
+  memoryreaction: { id: string; emoji: string; user_id: string; user: { first_name: string | null; last_name: string | null } | null }[]
   memorycomment: { id: string }[]
 }
 
