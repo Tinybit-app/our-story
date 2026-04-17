@@ -4,13 +4,12 @@
            shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)]
            transition-[transform,box-shadow] duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)]
            p-[10px] pb-[18px]"
-    :class="{
-      'w-[170px]': size === 'sm',
-      'w-[210px]': size === 'md',
-      'w-[290px]': size === 'lg',
-      'w-[190px]': size === 'tall',
+    :style="{
+      width: cardWidth,
+      transform: isHovered ? 'rotate(0deg) scale(1.05) translateY(-4px)' : `rotate(${tilt}deg)`,
+      zIndex: isHovered ? 10 : 1,
+      boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined,
     }"
-    :style="{ transform: isHovered ? 'rotate(0deg) scale(1.05) translateY(-4px)' : `rotate(${tilt}deg)`, zIndex: isHovered ? 10 : 1, boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined }"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
   >
@@ -19,11 +18,7 @@
     <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#d64040] dark:bg-[#e05454] shadow-[0_2px_6px_rgba(214,64,64,.4)] opacity-85 z-10" />
 
     <!-- Photo area -->
-    <div class="overflow-hidden bg-border" :class="{
-      'aspect-square': size === 'sm' || size === 'md',
-      'aspect-[4/3]': size === 'lg',
-      'aspect-[3/4]': size === 'tall',
-    }">
+    <div class="overflow-hidden bg-border" :style="{ aspectRatio: photoAspect }">
 
       <!-- Photo / video -->
       <img
@@ -88,6 +83,11 @@ const props = defineProps<{
 }>()
 
 const size = computed(() => props.size ?? 'md')
+
+const WIDTHS = { sm: '170px', md: '210px', lg: '290px', tall: '190px' }
+const ASPECTS = { sm: '1/1', md: '1/1', lg: '4/3', tall: '3/4' }
+const cardWidth = computed(() => WIDTHS[size.value])
+const photoAspect = computed(() => ASPECTS[size.value])
 
 // Deterministic tilts — nth-child-style cycle matching mockup pattern
 // Mockup: 3n+1 → -1.8, 3n+2 → 1.2, 3n+3 → -0.6, then 5n+1 → 2.1
