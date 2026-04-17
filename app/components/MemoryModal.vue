@@ -261,17 +261,60 @@
           <!-- 3. Comment thread — newest first, scrollable -->
           <div class="caption-scroll flex-1 min-h-0 overflow-y-auto px-1.5 pt-3 pb-4">
             <div v-if="comments.length > 0" class="space-y-3">
-              <div v-for="c in visibleComments" :key="c.id" class="flex gap-2.5">
+              <div v-for="c in visibleComments" :key="c.id" class="flex gap-2.5 group/comment">
                 <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-secondary flex items-center justify-center text-[10px] font-bold text-foreground">
                   <img v-if="c.user?.avatar_url" :src="c.user.avatar_url" class="w-full h-full object-cover" />
                   <span v-else>{{ commentInitials(c.user) }}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
-                    <span class="text-[11px] font-semibold text-foreground mr-1.5">{{ commentDisplayName(c.user) }}</span>
-                    <span class="text-[13px] text-foreground leading-snug">{{ c.body }}</span>
-                  </div>
-                  <p class="text-[10px] text-muted-foreground mt-0.5 ml-3">{{ timeAgo(c.created_at) }}</p>
+                  <!-- View mode -->
+                  <template v-if="editingCommentId !== c.id">
+                    <div class="relative">
+                      <div class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
+                        <span class="text-[11px] font-semibold text-foreground mr-1.5">{{ commentDisplayName(c.user) }}</span>
+                        <span class="text-[13px] text-foreground leading-snug">{{ c.body }}</span>
+                      </div>
+                      <!-- Pencil edit button (own comments only) -->
+                      <button
+                        v-if="c.user_id === currentUserId"
+                        class="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-accent hover:border-accent/40 transition-all opacity-0 group-hover/comment:opacity-100 shadow-sm"
+                        title="Edit comment"
+                        @click.stop="startEditingComment(c)"
+                      >
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <p class="text-[10px] text-muted-foreground mt-0.5 ml-3">{{ timeAgo(c.created_at) }}</p>
+                  </template>
+
+                  <!-- Edit mode -->
+                  <template v-else>
+                    <div class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
+                      <span class="text-[11px] font-semibold text-foreground mr-1.5 block mb-1">{{ commentDisplayName(c.user) }}</span>
+                      <textarea
+                        ref="commentEditEl"
+                        v-model="commentEditDraft"
+                        rows="2"
+                        maxlength="2000"
+                        class="w-full bg-transparent text-[13px] text-foreground resize-none outline-none leading-snug"
+                        style="max-height: 120px; overflow-y: auto"
+                        @keydown.enter.exact.prevent="saveCommentEdit(c.id)"
+                        @keydown.escape="cancelCommentEdit"
+                      />
+                    </div>
+                    <div class="flex items-center gap-2 mt-1 ml-3">
+                      <span class="text-[10px] text-muted-foreground">{{ commentEditDraft.length }} / 2000</span>
+                      <button class="text-[11px] text-muted-foreground hover:text-foreground transition-colors" @click="cancelCommentEdit">Cancel</button>
+                      <button
+                        :disabled="!commentEditDraft.trim() || savingComment"
+                        class="text-[11px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
+                        @click="saveCommentEdit(c.id)"
+                      >{{ savingComment ? "Saving…" : "Save" }}</button>
+                    </div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -517,6 +560,8 @@ async function navigate(dir: "prev" | "next") {
   editing.value = false;
   editNote.value = "";
   editMilestone.value = "";
+  editingCommentId.value = null;
+  commentEditDraft.value = "";
 
   await nextTick();
 
@@ -644,6 +689,43 @@ function commentInitials(user: Comment["user"]): string {
   const first = user?.first_name?.[0] ?? "";
   const last = user?.last_name?.[0] ?? "";
   return (first + last).toUpperCase() || "?";
+}
+
+// ── Comment editing ────────────────────────────────────────
+const editingCommentId = ref<string | null>(null);
+const commentEditDraft = ref("");
+const savingComment = ref(false);
+const commentEditEl = ref<HTMLTextAreaElement>();
+
+function startEditingComment(c: Comment) {
+  editingCommentId.value = c.id;
+  commentEditDraft.value = c.body;
+  nextTick(() => commentEditEl.value?.focus());
+}
+
+function cancelCommentEdit() {
+  editingCommentId.value = null;
+  commentEditDraft.value = "";
+}
+
+async function saveCommentEdit(commentId: string) {
+  const body = commentEditDraft.value.trim();
+  if (!body || savingComment.value || !memory.value) return;
+  savingComment.value = true;
+  try {
+    await $fetch(`/api/memories/${memory.value.id}/comments/${commentId}`, {
+      method: "PATCH",
+      body: { body },
+    });
+    const idx = comments.value.findIndex((c) => c.id === commentId);
+    if (idx !== -1) comments.value[idx] = { ...comments.value[idx]!, body };
+    editingCommentId.value = null;
+    commentEditDraft.value = "";
+  } catch (err) {
+    console.error("[MemoryModal] failed to update comment:", err);
+  } finally {
+    savingComment.value = false;
+  }
 }
 
 function timeAgo(iso: string): string {
