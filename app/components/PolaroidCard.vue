@@ -150,13 +150,12 @@
 
     <!-- Caption -->
     <div class="pt-3 px-1 text-center">
-      <!-- Caption text -->
+      <!-- Caption text: always 2 lines tall so cards stay the same height -->
       <p
-        class="text-[13px] text-foreground leading-[1.35] overflow-hidden"
-        style="-webkit-line-clamp:2; display:-webkit-box; -webkit-box-orient:vertical;"
-      >
-        {{ captionText }}
-      </p>
+        class="text-[13px] leading-[1.35] line-clamp-2 break-words"
+        :class="captionText ? 'text-foreground' : 'text-muted-foreground/40 italic'"
+        style="min-height: 2.7em"
+      >{{ captionText || 'No note' }}</p>
 
       <!-- Date · Author -->
       <p class="text-[11px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
