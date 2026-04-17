@@ -94,7 +94,8 @@
                 v-if="pickerOpen"
                 class="absolute bottom-full mb-1.5 right-0 z-20
                        bg-card border border-border rounded-xl shadow-xl px-2 py-1.5
-                       flex gap-1"
+                       grid gap-0.5"
+                style="grid-template-columns: repeat(6, 1fr);"
                 @click.stop
               >
                 <button
@@ -129,6 +130,7 @@
 
       <!-- Date · Author -->
       <p class="text-[11px] text-muted-foreground mt-[5px]">{{ formattedDateAndAuthor }}</p>
+
     </div>
 
   </article>
@@ -145,7 +147,7 @@ const props = defineProps<{
 
 const TILTS = [-1.8, 1.2, -0.6, 2.1, -1.6, 0.4]
 const tilt = computed(() => TILTS[props.index % TILTS.length])
-const PRESET_EMOJIS = ['❤️', '😂', '😍', '🥹', '👏']
+const PRESET_EMOJIS = ['❤️', '😂', '😍', '🥹', '👏', '🔥', '😮', '🥰', '😭', '✨', '🎉', '👍']
 
 const isHovered = ref(false)
 const pickerOpen = ref(false)
@@ -163,7 +165,13 @@ const formattedDateAndAuthor = computed(() => {
 })
 
 // ── Reactions ──────────────────────────────────────────────
-const currentUser = useSupabaseUser()
+const supabaseClient = useSupabaseClient()
+const currentUserId = ref<string | null>(null)
+
+// Resolve user ID from session (reactive ref can be null on initial render)
+supabaseClient.auth.getSession().then(({ data }) => {
+  currentUserId.value = data.session?.user?.id ?? null
+})
 
 // Local reactive copy so optimistic updates feel instant
 const localReactions = ref([...props.memory.memoryreaction])
@@ -179,14 +187,15 @@ const reactionGroups = computed(() => {
     if (!groups[key]) groups[key] = { count: 0, mine: false }
     const g = groups[key]!
     g.count++
-    if (r.user_id === currentUser.value?.id) g.mine = true
+    if (r.user_id === currentUserId.value) g.mine = true
   }
   return groups
 })
 
 async function toggleReaction(emoji: string) {
-  const userId = currentUser.value?.id
+  const userId = currentUserId.value ?? (await supabaseClient.auth.getSession()).data.session?.user?.id
   if (!userId) return
+  currentUserId.value = userId
 
   const existing = localReactions.value.find(r => r.emoji === emoji && r.user_id === userId)
 
@@ -203,7 +212,8 @@ async function toggleReaction(emoji: string) {
       { method: 'POST', body: { emoji } }
     )
     localReactions.value = reactions
-  } catch {
+  } catch (err) {
+    console.error('[reactions] failed to toggle reaction:', err)
     // Roll back optimistic update on error
     localReactions.value = [...props.memory.memoryreaction]
   }

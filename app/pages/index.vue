@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-background">
 
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
+    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-5xl mx-auto px-5 py-3.5 flex items-center gap-3">
 
         <!-- Circle name / member count -->
@@ -167,6 +167,7 @@
         <div class="absolute inset-0 bg-black/45 backdrop-blur-sm" @click="jumpOpen = false" />
         <div
           class="relative bg-card border border-border rounded-2xl p-5 w-full max-w-lg shadow-2xl"
+          @click.stop
         >
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-semibold text-foreground">Jump to</h2>
@@ -191,7 +192,7 @@
                   ? 'bg-secondary text-muted-foreground hover:bg-accent hover:text-background cursor-pointer'
                   : 'bg-transparent text-transparent cursor-default pointer-events-none'"
                 :disabled="!info.months.includes(m)"
-                @click="info.months.includes(m) && jumpToMonth(info.year, m)"
+                @click="jumpToMonth(info.year, m)"
               >
                 {{ info.months.includes(m) ? MONTH_ABBR[m - 1] : '' }}
               </button>
@@ -380,10 +381,11 @@ function jumpToYear(year: number) {
 
 function jumpToMonth(year: number, month: number) {
   jumpOpen.value = false
-  nextTick(() => {
+  // Wait for the modal leave transition (100ms) to complete before scrolling
+  setTimeout(() => {
     const el = document.getElementById(`month-${year}-${month}`)
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' })
-  })
+  }, 120)
 }
 
 const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
