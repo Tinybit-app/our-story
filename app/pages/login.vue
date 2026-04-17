@@ -9,10 +9,10 @@
 
       <!-- Headline -->
       <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
-        Every moment worth keeping, in one place.
+        {{ t('login.tagline') }}
       </h1>
       <p class="text-sm text-muted-foreground mb-8">
-        For you, your family, your friends.
+        {{ t('login.subtitle') }}
       </p>
 
       <!-- Google -->
@@ -23,13 +23,13 @@
         @click="signInWithGoogle"
       >
         <GoogleIcon class="w-[18px] h-[18px] shrink-0" />
-        Continue with Google
+        {{ t('login.continueWithGoogle') }}
       </button>
 
       <!-- Divider -->
       <div v-if="!sent" class="flex items-center gap-3 my-1.5 text-xs text-muted-foreground">
         <div class="flex-1 h-px bg-border" />
-        or
+        {{ t('login.or') }}
         <div class="flex-1 h-px bg-border" />
       </div>
 
@@ -47,7 +47,7 @@
           :disabled="loading"
           class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
-          {{ loading ? 'Sending…' : 'Continue with email' }}
+          {{ loading ? t('login.sending') : t('login.continueWithEmail') }}
         </button>
       </form>
 
@@ -58,23 +58,33 @@
 
       <!-- Success state -->
       <div v-if="sent" class="mt-6 rounded-[12px] bg-card border border-border px-5 py-4 text-center">
-        <p class="text-sm font-semibold text-foreground mb-1">Check your inbox</p>
+        <p class="text-sm font-semibold text-foreground mb-1">{{ t('login.checkInbox') }}</p>
         <p class="text-xs text-muted-foreground leading-relaxed">
-          We sent a sign-in link to <span class="text-foreground font-medium">{{ email }}</span>
+          {{ t('login.sentLink', { email }) }}
         </p>
         <button
           type="button"
           class="mt-3 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
           @click="sent = false; authError = null"
         >
-          Try a different way
+          {{ t('login.tryDifferent') }}
         </button>
       </div>
 
       <!-- Footer note -->
       <p v-else-if="!authError" class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
-        We'll send you a sign-in link — no password needed.
+        {{ t('login.noPassword') }}
       </p>
+
+      <!-- Language toggle -->
+      <div class="mt-8 flex justify-center">
+        <button
+          class="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          @click="toggleLocale"
+        >
+          {{ locale === 'en' ? '中文' : 'English' }}
+        </button>
+      </div>
 
     </div>
   </div>
@@ -82,6 +92,11 @@
 
 <script setup lang="ts">
 definePageMeta({ auth: false })
+const { t, locale, setLocale } = useI18n()
+
+function toggleLocale() {
+  setLocale(locale.value === 'en' ? 'zh-CN' : 'en')
+}
 
 const user = useSupabaseUser()
 const router = useRouter()

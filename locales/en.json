@@ -8,7 +8,8 @@
     "checkInbox": "Check your inbox",
     "sentLink": "We sent a sign-in link to {email}",
     "tryDifferent": "Try a different way",
-    "noPassword": "We'll send you a sign-in link — no password needed."
+    "noPassword": "We'll send you a sign-in link — no password needed.",
+    "or": "or"
   },
   "onboarding": {
     "whoIsThis": "Who is this story for?",
@@ -66,7 +67,8 @@
     "months": "{n} month | {n} months"
   },
   "card": {
-    "noNote": "No note"
+    "noNote": "No note",
+    "photoAlt": "Memory"
   },
   "modal": {
     "tabCaption": "Caption",

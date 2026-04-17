@@ -8,7 +8,8 @@
     "checkInbox": "请查收邮件",
     "sentLink": "我们已向 {email} 发送了登录链接",
     "tryDifferent": "尝试其他方式",
-    "noPassword": "我们将发送登录链接 — 无需密码。"
+    "noPassword": "我们将发送登录链接 — 无需密码。",
+    "or": "或"
   },
   "onboarding": {
     "whoIsThis": "这是谁的故事？",
@@ -66,7 +67,8 @@
     "months": "{n} 个月"
   },
   "card": {
-    "noNote": "暂无备注"
+    "noNote": "暂无备注",
+    "photoAlt": "记忆"
   },
   "modal": {
     "tabCaption": "标题",
