@@ -35,6 +35,18 @@
           </svg>
         </button>
 
+        <!-- Add memory -->
+        <button
+          v-if="circleId"
+          class="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground
+                 flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
+          @click="uploadRef?.open()"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+
         <!-- Avatar + dropdown -->
         <div ref="menuRef" class="relative flex-shrink-0">
           <button
@@ -239,30 +251,6 @@
     <!-- Upload memory (headless) -->
     <UploadMemory v-if="circleId" ref="uploadRef" :circle-id="circleId" hide-trigger @uploaded="onUploaded" />
 
-    <!-- FAB -->
-    <Transition
-      enter-active-class="transition duration-200 ease-out"
-      enter-from-class="opacity-0 translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-150 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-2"
-    >
-      <div v-if="circleId && !uploadRef?.isOpen" class="fixed bottom-6 inset-x-0 z-40 pointer-events-none">
-        <div class="max-w-5xl mx-auto px-5 flex justify-end">
-          <button
-            class="pointer-events-auto flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200
-                   h-12 w-12 justify-center sm:h-14 sm:w-auto sm:pl-5 sm:pr-6"
-            @click="uploadRef?.open()"
-          >
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
-            <span class="hidden sm:inline text-sm font-semibold">Add memory</span>
-          </button>
-        </div>
-      </div>
-    </Transition>
 
   </div>
 </template>
