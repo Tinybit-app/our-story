@@ -2,8 +2,10 @@ import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
 
 const querySchema = z.object({
-  circleId: z.uuid(),
+  circleId: z.string().uuid(),
   cursor: z.string().optional(),
+  authorId: z.string().uuid().optional(),
+  yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -14,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const result = querySchema.safeParse(getQuery(event))
   if (!result.success) throw createError({ statusCode: 400, message: "circleId is required" })
-  const { circleId, cursor } = result.data
+  const { circleId, cursor, authorId, yearMonth } = result.data
 
   // Verify the requesting user belongs to this circle
   const { data: membership } = await supabase
@@ -36,15 +38,36 @@ export default defineEventHandler(async (event) => {
       memorycomment(id)
     `)
     .eq("circle_id", circleId)
-    // Show circle-shared memories + the current user's own private memories
     .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
     .order("memory_date", { ascending: false })
     .order("id", { ascending: false })
-    .limit(20)
+
+  if (authorId) {
+    query = query.eq("owner_user_id", authorId)
+  }
+
+  if (yearMonth) {
+    // Filter to a specific calendar month — used by the month overflow page
+    const parts = yearMonth.split('-')
+    const year = Number(parts[0])
+    const month = Number(parts[1])
+    const from = new Date(Date.UTC(year, month - 1, 1)).toISOString()
+    const to = new Date(Date.UTC(year, month, 1)).toISOString()
+    query = query.gte("memory_date", from).lt("memory_date", to).limit(100)
+
+    const { data: memories, error } = await query
+    if (error) {
+      console.error("[timeline] month query failed:", error.message)
+      throw createError({ statusCode: 500, message: "Failed to load timeline." })
+    }
+    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null }
+  }
+
+  // Cursor-based pagination for the main timeline
+  query = query.limit(20)
 
   if (cursor) {
     const [cursorDate, cursorId] = cursor.split(",")
-    // Keyset pagination: memories before the cursor position
     query = (query as any).or(
       `memory_date.lt.${cursorDate},and(memory_date.eq.${cursorDate},id.lt.${cursorId})`
     )
@@ -57,13 +80,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: "Failed to load timeline." })
   }
 
-  // Generate signed URLs — storage_path is stripped before returning
-  const memoriesWithUrls = await Promise.all(
-    (memories ?? []).map(async (memory) => {
+  const memoriesWithUrls = await attachSignedUrls(supabase, memories ?? [])
+  const last = memoriesWithUrls[memoriesWithUrls.length - 1]
+  const nextCursor = last ? `${last.memory_date},${last.id}` : null
+
+  return { memories: memoriesWithUrls, nextCursor }
+})
+
+async function attachSignedUrls(supabase: any, memories: any[]) {
+  return Promise.all(
+    memories.map(async (memory) => {
       const mediaWithUrls = await Promise.all(
         ((memory.memorymedia as any[]) ?? []).map(async (media) => {
           const { storage_path, ...safeMedia } = media
-
           if (!storage_path) return { ...safeMedia, url: null, thumbnailUrl: null }
 
           const [fullResult, thumbResult] = await Promise.allSettled([
@@ -73,23 +102,13 @@ export default defineEventHandler(async (event) => {
             }),
           ])
 
-          const url =
-            fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
-          const thumbnailUrl =
-            thumbResult.status === "fulfilled"
-              ? (thumbResult.value.data?.signedUrl ?? url)
-              : url
+          const url = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
+          const thumbnailUrl = thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? url) : url
 
           return { ...safeMedia, url, thumbnailUrl }
         })
       )
-
       return { ...memory, memorymedia: mediaWithUrls }
     })
   )
-
-  const last = memoriesWithUrls[memoriesWithUrls.length - 1]
-  const nextCursor = last ? `${last.memory_date},${last.id}` : null
-
-  return { memories: memoriesWithUrls, nextCursor }
-})
+}

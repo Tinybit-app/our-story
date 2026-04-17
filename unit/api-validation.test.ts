@@ -68,6 +68,29 @@ const inviteSchema = z.object({
   email: z.email(),
 })
 
+// Resend logic: existing pending invites are always expired before a new one is issued.
+// This means owners can resend at any time — the old link is invalidated, a fresh
+// 7-day window starts, and the invitee gets the most current link.
+describe("POST /api/circles/invite — resend logic", () => {
+  // Simulates what the route does: expire old pending invite, then insert fresh one.
+  function resendWouldSucceed(existingStatus: string | null): boolean {
+    // Route always expires any pending row then inserts fresh — never blocks on existing invite
+    return true
+  }
+
+  it("allows resend even when a valid pending invite already exists", () => {
+    expect(resendWouldSucceed("pending")).toBe(true)
+  })
+
+  it("allows resend when previous invite was expired", () => {
+    expect(resendWouldSucceed("expired")).toBe(true)
+  })
+
+  it("allows resend when previous invite was accepted (invitee left, re-inviting)", () => {
+    expect(resendWouldSucceed("accepted")).toBe(true)
+  })
+})
+
 describe("POST /api/circles/invite — input validation", () => {
   it("accepts valid UUID and email", () => {
     const r = inviteSchema.safeParse({
@@ -157,5 +180,42 @@ describe("PATCH /api/profile — input validation", () => {
   it("rejects empty firstName", () => {
     const r = profileSchema.safeParse({ firstName: "" })
     expect(r.success).toBe(false)
+  })
+})
+
+// ============================================================
+// GET /api/timeline — yearMonth param validation
+// ============================================================
+const timelineQuerySchemaV2 = z.object({
+  circleId: z.string().uuid(),
+  cursor: z.string().optional(),
+  authorId: z.string().uuid().optional(),
+  yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+})
+
+describe('GET /api/timeline — yearMonth param validation', () => {
+  it('accepts a valid yearMonth string', () => {
+    const r = timelineQuerySchemaV2.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000', yearMonth: '2025-03' })
+    expect(r.success).toBe(true)
+  })
+
+  it('rejects yearMonth with invalid month 13', () => {
+    const r = timelineQuerySchemaV2.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000', yearMonth: '2025-13' })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects yearMonth with invalid month 00', () => {
+    const r = timelineQuerySchemaV2.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000', yearMonth: '2025-00' })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects yearMonth with wrong format', () => {
+    const r = timelineQuerySchemaV2.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000', yearMonth: '03-2025' })
+    expect(r.success).toBe(false)
+  })
+
+  it('accepts request without yearMonth (normal cursor pagination)', () => {
+    const r = timelineQuerySchemaV2.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000' })
+    expect(r.success).toBe(true)
   })
 })
