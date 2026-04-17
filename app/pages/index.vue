@@ -3,16 +3,37 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-2xl mx-auto px-5 h-14 flex items-center gap-3">
+      <div class="max-w-5xl mx-auto px-5 py-3.5 flex items-center gap-3">
 
         <!-- Circle name -->
         <div class="flex-1 min-w-0">
-          <p class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase leading-none mb-1">Our Story</p>
+          <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase leading-none mb-1.5 select-none">Our Story</p>
           <p class="text-sm font-semibold text-foreground leading-none truncate">{{ circle?.name ?? '…' }}</p>
-        </div>
+          <NuxtLink
+            v-if="circle?.memberCount"
+            to="/members"
+            class="group inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors leading-none mt-1.5"
+          >
+            {{ circle.memberCount }} {{ circle.memberCount === 1 ? 'member' : 'members' }}
+            <svg class="w-2.5 h-2.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </NuxtLink>
 
-        <!-- Add memory -->
-        <UploadMemory v-if="circleId" :circle-id="circleId" @uploaded="onUploaded" />
+          <!-- Year badge -->
+          <button
+            v-if="currentYear"
+            class="inline-flex items-center gap-1 h-5 px-2 rounded-full bg-foreground text-background
+                   text-[10px] font-bold tracking-wide cursor-pointer hover:opacity-70 transition-opacity
+                   flex-shrink-0 border-none ml-1"
+            @click="openJump"
+          >
+            {{ currentYear }}
+            <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
 
         <!-- Avatar + dropdown -->
         <div ref="menuRef" class="relative flex-shrink-0">
@@ -55,6 +76,17 @@
                   Profile settings
                 </button>
 
+                <button
+                  v-if="canInvite"
+                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
+                  @click="menuOpen = false; inviteOpen = true"
+                >
+                  <svg class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                  </svg>
+                  Invite member
+                </button>
+
                 <!-- Theme toggle -->
                 <button
                   class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
@@ -88,72 +120,179 @@
     </header>
 
     <!-- Feed -->
-    <main class="max-w-2xl mx-auto px-5 py-6">
+    <main class="max-w-5xl mx-auto px-5 py-6">
 
-      <!-- Loading -->
-      <div v-if="loading && memories.length === 0" class="flex justify-center py-24">
-        <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-      </div>
-
-      <!-- Empty state -->
-      <div v-else-if="!loading && memories.length === 0" class="text-center py-24">
-        <p class="text-sm font-medium text-foreground mb-1.5">No memories yet</p>
-        <p class="text-xs text-muted-foreground leading-relaxed">
-          Add your first memory — a photo, video, or just a note.
-        </p>
-      </div>
-
-      <!-- Grid -->
-      <div v-else class="columns-1 sm:columns-2 gap-4 space-y-0">
-        <div
-          v-for="memory in memories"
-          :key="memory.id"
-          class="break-inside-avoid mb-4"
-        >
-          <MemoryCard :memory="memory" />
-        </div>
-      </div>
-
-      <!-- Infinite scroll sentinel -->
-      <div ref="loadMoreEl" class="h-4 mt-2" />
-
-      <!-- Pagination loading -->
-      <div v-if="loading && memories.length > 0" class="flex justify-center py-6">
-        <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-      </div>
+      <!-- Timeline -->
+      <TimelinePolaroid
+        ref="timelinePolaroidRef"
+        :month-groups="monthGroups"
+        :loading="loading"
+        :has-next-page="!!nextCursor"
+        @load-more="fetchTimeline(nextCursor ?? undefined)"
+        @year-change="onYearChange"
+      />
 
     </main>
+
+    <!-- Jump modal -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="jumpOpen"
+        class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-20"
+      >
+        <div class="absolute inset-0 bg-black/45 backdrop-blur-sm" @click="jumpOpen = false" />
+        <div
+          class="relative bg-card border border-border rounded-2xl p-5 w-full max-w-lg shadow-2xl"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-semibold text-foreground">Jump to</h2>
+            <button class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground" @click="jumpOpen = false">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div v-for="info in yearInfos" :key="info.year" class="mb-4 last:mb-0">
+            <div class="grid gap-1.5" style="grid-template-columns: 44px repeat(12, 1fr);">
+              <button
+                class="text-xs font-bold text-foreground hover:text-accent transition-colors text-left py-1"
+                @click="jumpToYear(info.year)"
+              >
+                {{ info.year }}
+              </button>
+              <button
+                v-for="m in 12"
+                :key="m"
+                class="h-7 rounded text-[10px] font-medium transition-colors"
+                :class="info.months.includes(m)
+                  ? 'bg-secondary text-muted-foreground hover:bg-accent hover:text-background cursor-pointer'
+                  : 'bg-transparent text-transparent cursor-default pointer-events-none'"
+                :disabled="!info.months.includes(m)"
+                @click="info.months.includes(m) && jumpToMonth(info.year, m)"
+              >
+                {{ info.months.includes(m) ? MONTH_ABBR[m - 1] : '' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Invite member dialog -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="inviteOpen" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
+
+        <!-- Sheet -->
+        <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] p-6 shadow-2xl">
+          <h2 class="font-display text-lg font-bold text-foreground mb-1">Invite someone</h2>
+          <p class="text-xs text-muted-foreground mb-5">They'll get an email with a link to join {{ circle?.name ?? 'your circle' }}.</p>
+
+          <form @submit.prevent="sendInvite">
+            <input
+              v-model="inviteEmail"
+              type="email"
+              placeholder="their@email.com"
+              required
+              :disabled="inviteSending"
+              class="w-full bg-background border border-border rounded-[10px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-3 disabled:opacity-50"
+            />
+
+            <p v-if="inviteError" class="text-xs text-destructive mb-3">{{ inviteError }}</p>
+            <p v-if="inviteSentTo" class="text-xs text-green-600 dark:text-green-400 mb-3">Invite sent to {{ inviteSentTo }}.</p>
+
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="flex-1 py-3 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors"
+                @click="closeInvite"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                :disabled="inviteSending || !inviteEmail"
+                class="flex-1 py-3 rounded-[10px] text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+              >
+                {{ inviteSending ? 'Sending…' : 'Send invite' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Upload memory (headless) -->
+    <UploadMemory v-if="circleId" ref="uploadRef" :circle-id="circleId" hide-trigger @uploaded="onUploaded" />
+
+    <!-- FAB -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <div v-if="circleId && !uploadRef?.isOpen" class="fixed bottom-6 inset-x-0 z-40 pointer-events-none">
+        <div class="max-w-5xl mx-auto px-5 flex justify-end">
+          <button
+            class="pointer-events-auto group flex items-center gap-2 h-14 pl-5 pr-6 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+            @click="uploadRef?.open()"
+          >
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            <span class="text-sm font-semibold">Add memory</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Memory } from '~/composables/useTimeline'
+
 const supabase = useSupabaseClient()
 const authUser = useSupabaseUser()
 const router = useRouter()
 
 // ── User identity ──────────────────────────────────────────
-const userAvatarUrl = computed(() =>
-  authUser.value?.user_metadata?.avatar_url
-  ?? authUser.value?.user_metadata?.picture
-  ?? null
-)
+const { data: profile } = await useFetch<{ firstName: string | null; lastName: string | null; avatarUrl: string | null }>('/api/profile')
+
+const userAvatarUrl = computed(() => profile.value?.avatarUrl ?? null)
 
 const userDisplayName = computed(() => {
-  const meta = authUser.value?.user_metadata
-  return meta?.full_name ?? meta?.name ?? authUser.value?.email?.split('@')[0] ?? 'You'
+  const parts = [profile.value?.firstName, profile.value?.lastName].filter(Boolean)
+  return parts.length ? parts.join(' ') : (authUser.value?.email?.split('@')[0] ?? 'You')
 })
 
 const userInitials = computed(() => {
-  const name = userDisplayName.value
-  const parts = name.trim().split(' ')
-  return parts.length >= 2
-    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    : name.slice(0, 2).toUpperCase()
+  const first = profile.value?.firstName?.[0] ?? ''
+  const last = profile.value?.lastName?.[0] ?? ''
+  return (first + last).toUpperCase() || (userDisplayName.value.slice(0, 2).toUpperCase())
 })
 
 // ── Dropdown ───────────────────────────────────────────────
 const menuOpen = ref(false)
 const menuRef = ref<HTMLElement>()
+const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>()
 onClickOutside(menuRef, () => { menuOpen.value = false })
 
 // ── Theme ──────────────────────────────────────────────────
@@ -188,19 +327,18 @@ const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
 const circle = computed(() => circlesData.value?.circles?.[0] ?? null)
 const circleId = computed<string | null>(() => circle.value?.id ?? null)
 
-const memories = ref<any[]>([])
+const memoriesFlat = ref<Memory[]>([])
 const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const loadMoreEl = ref<HTMLElement>()
 
 async function fetchTimeline(cursor?: string) {
   if (loading.value || !circleId.value) return
   loading.value = true
   try {
-    const data = await $fetch<{ memories: any[]; nextCursor: string | null }>('/api/timeline', {
+    const data = await $fetch<{ memories: Memory[]; nextCursor: string | null }>('/api/timeline', {
       query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
     })
-    memories.value = cursor ? [...memories.value, ...data.memories] : data.memories
+    memoriesFlat.value = cursor ? [...memoriesFlat.value, ...data.memories] : data.memories
     nextCursor.value = data.nextCursor
   } catch (err) {
     console.error('[timeline] fetch error:', err)
@@ -210,15 +348,90 @@ async function fetchTimeline(cursor?: string) {
 }
 
 function onUploaded() {
+  memoriesFlat.value = []
+  nextCursor.value = null
   fetchTimeline()
 }
 
-const { stop } = useIntersectionObserver(loadMoreEl, ([entry]) => {
-  if (entry?.isIntersecting && nextCursor.value && !loading.value) {
-    fetchTimeline(nextCursor.value)
+onMounted(() => fetchTimeline())
+
+const { monthGroups, yearInfos } = useTimeline(memoriesFlat)
+
+// ── Year badge ─────────────────────────────────────────────
+const currentYear = ref<number | null>(null)
+const timelinePolaroidRef = ref<{ scrollToYear: (y: number) => void }>()
+
+function onYearChange(year: number) {
+  currentYear.value = year
+}
+
+watch(monthGroups, (groups) => {
+  if (groups.length && !currentYear.value) {
+    currentYear.value = groups[0]?.year ?? null
   }
+}, { immediate: true })
+
+// ── Jump modal ─────────────────────────────────────────────
+const jumpOpen = ref(false)
+
+function openJump() {
+  jumpOpen.value = true
+  menuOpen.value = false
+}
+
+function jumpToYear(year: number) {
+  jumpOpen.value = false
+  nextTick(() => timelinePolaroidRef.value?.scrollToYear(year))
+}
+
+function jumpToMonth(year: number, month: number) {
+  jumpOpen.value = false
+  nextTick(() => {
+    const el = document.getElementById(`anchor-${year}`)
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' })
+  })
+}
+
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// ── Invite ─────────────────────────────────────────────────
+const canInvite = computed(() => {
+  const role = circle.value?.role
+  return role === 'owner' || role === 'admin'
 })
 
-onMounted(() => fetchTimeline())
-onUnmounted(() => stop())
+const inviteOpen = ref(false)
+const inviteEmail = ref('')
+const inviteSending = ref(false)
+const inviteError = ref('')
+const inviteSentTo = ref('')
+
+function closeInvite() {
+  inviteOpen.value = false
+  inviteEmail.value = ''
+  inviteError.value = ''
+  inviteSentTo.value = ''
+}
+
+async function sendInvite() {
+  if (!circleId.value || !inviteEmail.value) return
+  inviteSending.value = true
+  inviteError.value = ''
+  inviteSentTo.value = ''
+  try {
+    await $fetch('/api/circles/invite', {
+      method: 'POST',
+      body: { circleId: circleId.value, email: inviteEmail.value },
+    })
+    inviteSentTo.value = inviteEmail.value
+    inviteEmail.value = ''
+  } catch (err: any) {
+    const msg = err?.data?.message ?? ''
+    if (msg.includes('already been sent')) inviteError.value = 'An invite was already sent to this email.'
+    else if (msg.includes('Max 10')) inviteError.value = 'You have 10 pending invites. Wait for some to be accepted first.'
+    else inviteError.value = 'Failed to send invite. Please try again.'
+  } finally {
+    inviteSending.value = false
+  }
+}
 </script>
