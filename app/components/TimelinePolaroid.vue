@@ -68,7 +68,7 @@
               :key="memory.id"
               :memory="memory"
               :index="i"
-              :size="cardSize(memory.id)"
+              :wide="isWideMemory(memory.id)"
             />
 
             <!-- See more card -->
@@ -127,16 +127,12 @@ const yearSections = computed(() => {
     .map(([year, months]) => ({ year, months }))
 })
 
-// Returns a stable card size based on a hash of the memory id.
-// Distribution: md 45% · lg 25% · tall 20% · sm 10%
-function cardSize(id: string): 'sm' | 'md' | 'lg' | 'tall' {
+// Returns true ~30% of the time based on a stable hash of the memory id.
+// Deterministic so the layout never shifts on re-render.
+function isWideMemory(id: string): boolean {
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  const v = h % 20
-  if (v < 9) return 'md'
-  if (v < 14) return 'lg'
-  if (v < 18) return 'tall'
-  return 'sm'
+  return (h % 10) < 3
 }
 
 function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
