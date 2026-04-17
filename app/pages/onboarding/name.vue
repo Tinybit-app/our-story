@@ -12,10 +12,10 @@
       </div>
 
       <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
-        Name your circle
+        {{ t('onboarding.nameCircle') }}
       </h1>
       <p class="text-sm text-muted-foreground mb-8">
-        This is what your members will see.
+        {{ t('onboarding.nameCircleSub') }}
       </p>
 
       <input
@@ -34,14 +34,14 @@
         :disabled="!name || loading"
         class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity mb-3"
       >
-        {{ loading ? 'Creating…' : 'Continue' }}
+        {{ loading ? t('onboarding.creating') : t('onboarding.continue') }}
       </button>
 
       <button
         @click="router.back()"
         class="w-full text-muted-foreground text-sm py-2.5 hover:text-foreground transition-colors"
       >
-        Back
+        {{ t('onboarding.back') }}
       </button>
 
     </div>
@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'onboarding' })
+const { t } = useI18n()
 
 const router = useRouter()
 const name = ref('')

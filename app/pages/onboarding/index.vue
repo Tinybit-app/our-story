@@ -12,10 +12,10 @@
       </div>
 
       <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
-        Who is this story for?
+        {{ t('onboarding.whoIsThis') }}
       </h1>
       <p class="text-sm text-muted-foreground mb-8">
-        We'll personalise your experience based on your group.
+        {{ t('onboarding.personalise') }}
       </p>
 
       <div class="grid grid-cols-2 gap-2">
@@ -38,7 +38,7 @@
         :disabled="!selected"
         class="mt-6 w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
       >
-        Continue
+        {{ t('onboarding.continue') }}
       </button>
 
     </div>
@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'onboarding' })
+const { t } = useI18n()
 
 const selected = ref('')
 const router = useRouter()
@@ -57,15 +58,15 @@ onMounted(() => {
   circleTypeCookie.value = null
 })
 
-const circleTypes = [
-  { value: 'parents',    label: 'New parents',   description: 'Baby milestones & growth' },
-  { value: 'couple',     label: 'Couple',         description: 'Relationship milestones' },
-  { value: 'family',     label: 'Family',         description: 'General family memories' },
-  { value: 'friends',    label: 'Friend group',   description: 'Trips, reunions, moments' },
-  { value: 'caregiving', label: 'Caregiving',     description: 'Health & life events' },
-  { value: 'travel',     label: 'Travel group',   description: 'Adventures together' },
-  { value: 'solo',       label: 'Just me',        description: 'Personal timeline' },
-]
+const circleTypes = computed(() => [
+  { value: 'parents',    label: t('circleType.parents.label'),    description: t('circleType.parents.description') },
+  { value: 'couple',     label: t('circleType.couple.label'),     description: t('circleType.couple.description') },
+  { value: 'family',     label: t('circleType.family.label'),     description: t('circleType.family.description') },
+  { value: 'friends',    label: t('circleType.friends.label'),    description: t('circleType.friends.description') },
+  { value: 'caregiving', label: t('circleType.caregiving.label'), description: t('circleType.caregiving.description') },
+  { value: 'travel',     label: t('circleType.travel.label'),     description: t('circleType.travel.description') },
+  { value: 'solo',       label: t('circleType.solo.label'),       description: t('circleType.solo.description') },
+])
 
 function select(value: string) {
   selected.value = value

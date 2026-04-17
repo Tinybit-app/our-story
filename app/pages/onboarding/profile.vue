@@ -5,16 +5,16 @@
       <p class="text-xs font-bold tracking-widest text-foreground mb-8 uppercase">Our Story</p>
 
       <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
-        What's your name?
+        {{ t('onboarding.whatsYourName') }}
       </h1>
       <p class="text-sm text-muted-foreground mb-8">
-        So your circle knows who you are.
+        {{ t('onboarding.nameSub') }}
       </p>
 
       <input
         v-model="firstName"
         type="text"
-        placeholder="First name"
+        :placeholder="t('onboarding.firstName')"
         autofocus
         class="w-full bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-3"
         @keyup.enter="lastName && firstName ? save() : undefined"
@@ -22,7 +22,7 @@
       <input
         v-model="lastName"
         type="text"
-        placeholder="Last name (optional)"
+        :placeholder="t('onboarding.lastName')"
         class="w-full bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-4"
         @keyup.enter="firstName ? save() : undefined"
       />
@@ -34,7 +34,7 @@
         :disabled="!firstName.trim() || loading"
         class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
       >
-        {{ loading ? 'Saving…' : 'Continue' }}
+        {{ loading ? t('onboarding.saving') : t('onboarding.continue') }}
       </button>
 
     </div>
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'onboarding' })
+const { t } = useI18n()
 
 const router = useRouter()
 const firstName = ref('')

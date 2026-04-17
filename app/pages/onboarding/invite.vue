@@ -12,10 +12,10 @@
       </div>
 
       <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
-        Invite your first member
+        {{ t('onboarding.inviteFirst') }}
       </h1>
       <p class="text-sm text-muted-foreground mb-8">
-        They'll get an email with a link to join your story.
+        {{ t('onboarding.inviteSub') }}
       </p>
 
       <input
@@ -30,8 +30,8 @@
       <p v-if="errorMsg" class="mb-4 text-sm text-destructive">{{ errorMsg }}</p>
 
       <div v-if="sent" class="mb-4 rounded-[12px] bg-card border border-border px-4 py-3.5">
-        <p class="text-sm font-medium text-foreground">Invite sent</p>
-        <p class="text-xs text-muted-foreground mt-0.5">A link has been sent to {{ email }}</p>
+        <p class="text-sm font-medium text-foreground">{{ t('onboarding.inviteSent') }}</p>
+        <p class="text-xs text-muted-foreground mt-0.5">{{ t('onboarding.inviteSentLink', { email }) }}</p>
       </div>
 
       <button
@@ -39,14 +39,14 @@
         :disabled="!email || loading || sent"
         class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity mb-3"
       >
-        {{ loading ? 'Sending…' : 'Send invite' }}
+        {{ loading ? t('nav.sending') : t('onboarding.sendInvite') }}
       </button>
 
       <button
         @click="finish"
         class="w-full text-muted-foreground text-sm py-2.5 hover:text-foreground transition-colors"
       >
-        {{ sent ? 'Continue' : 'Skip for now' }}
+        {{ sent ? t('onboarding.continue') : t('onboarding.skipForNow') }}
       </button>
 
     </div>
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'onboarding' })
+const { t } = useI18n()
 
 const email = ref('')
 const loading = ref(false)
