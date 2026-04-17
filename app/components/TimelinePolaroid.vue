@@ -31,17 +31,18 @@
         <div
           :id="`anchor-${yearSection.year}`"
           :data-year="yearSection.year"
-          class="flex items-center gap-0 mb-10 mt-4"
+          class="flex items-center mb-10"
+          :class="yearSections.indexOf(yearSection) === 0 ? 'mt-0' : 'mt-16'"
         >
           <!-- Amber tape label -->
           <span
-            class="font-['Caveat'] text-[28px] font-semibold select-none flex-shrink-0 px-5 pb-1.5 pt-1"
-            style="background:var(--accent); color:var(--background); transform:rotate(-1deg); box-shadow:2px 3px 8px rgba(44,36,32,.18); display:inline-block; line-height:1.2;"
+            class="font-['Caveat'] text-[28px] font-semibold select-none flex-shrink-0 relative z-[1]"
+            style="background:hsl(var(--accent)); color:hsl(var(--background)); padding:4px 20px 6px; transform:rotate(-1deg); box-shadow:2px 3px 8px rgba(44,36,32,.18); line-height:1.2;"
           >{{ yearSection.year }}</span>
           <!-- Line to the right -->
-          <div class="flex-1 h-[2px] bg-border mx-3" />
+          <div class="flex-1 h-[2px] bg-border" />
           <!-- Summary -->
-          <span class="text-[11px] text-muted-foreground whitespace-nowrap pr-1">
+          <span class="text-[11px] text-muted-foreground whitespace-nowrap px-[14px]">
             {{ yearSummary(yearSection) }}
           </span>
         </div>
