@@ -49,7 +49,7 @@
 
         <!-- Month sections within this year -->
         <div
-          v-for="(group, gi) in yearSection.months"
+          v-for="group in yearSection.months"
           :key="group.label"
           :id="`month-${group.year}-${group.month}`"
           class="mb-14 mt-12 first:mt-0"
@@ -68,7 +68,7 @@
               :key="memory.id"
               :memory="memory"
               :index="i"
-              :wide="i === WIDE_PATTERN[gi % WIDE_PATTERN.length]"
+              :wide="isWideMemory(memory.id)"
             />
 
             <!-- See more card -->
@@ -127,9 +127,13 @@ const yearSections = computed(() => {
     .map(([year, months]) => ({ year, months }))
 })
 
-// Which card index within each month group gets the wide (4/3) treatment
-// Cycles through positions so adjacent months don't always put the wide card in the same spot
-const WIDE_PATTERN = [0, 1, 2, 1, 0, 2]
+// Returns true ~30% of the time based on a stable hash of the memory id.
+// Deterministic so the layout never shifts on re-render.
+function isWideMemory(id: string): boolean {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return (h % 10) < 3
+}
 
 function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
   const totalMemories = yearSection.months.reduce((sum, g) => sum + g.totalCount, 0)
