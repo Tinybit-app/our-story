@@ -2,6 +2,14 @@
 
 ---
 
+## Vision
+
+> *Your story may not feel like much right now — but looking back 20 years from now, you will cherish every memory you saved here.*
+
+Our Story exists to capture the small, ordinary moments that become irreplaceable with time: a toddler's first messy birthday cake, a quiet Sunday morning, a handwritten note from someone who is no longer here. We build every feature with that 20-year perspective in mind. Nothing we ship should make it harder to preserve those moments — and everything we ship should make it easier.
+
+---
+
 ## Core Principles
 
 These are non-negotiable. Every feature, every decision, every line of code is evaluated against them — in this order.
