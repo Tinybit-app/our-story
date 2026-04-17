@@ -41,13 +41,15 @@
         <!-- Add memory -->
         <button
           v-if="circleId"
-          class="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground
-                 flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
+          class="flex-shrink-0 flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full bg-primary text-primary-foreground
+                 text-[11px] font-semibold hover:opacity-90 active:scale-95 transition-all"
           @click="uploadRef?.open()"
         >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path d="M12 5v14M5 12h14"/>
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
           </svg>
+          <span>Add memory</span>
         </button>
 
         <!-- Avatar + dropdown -->
