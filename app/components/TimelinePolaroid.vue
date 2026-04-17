@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="rootEl">
 
     <!-- Empty state -->
     <div v-if="monthGroups.length === 0 && !loading" class="flex flex-col items-center justify-center py-32 text-center">
@@ -95,11 +95,10 @@
 </template>
 
 <script setup lang="ts">
-import type { MonthGroup, YearInfo } from '~/composables/useTimeline'
+import type { MonthGroup } from '~/composables/useTimeline'
 
 const props = defineProps<{
   monthGroups: MonthGroup[]
-  yearInfos: YearInfo[]
   loading: boolean
   hasNextPage: boolean
 }>()
@@ -120,6 +119,9 @@ const yearSections = computed(() => {
     .sort(([a], [b]) => b - a)
     .map(([year, months]) => ({ year, months }))
 })
+
+// Root element for scoped observers
+const rootEl = ref<HTMLElement>()
 
 // Infinite scroll
 const loadMoreEl = ref<HTMLElement>()
@@ -145,7 +147,7 @@ function setupYearObserver() {
     },
     { rootMargin: '-10% 0px -85% 0px', threshold: 0 }
   )
-  document.querySelectorAll('[data-year]').forEach((el) => yearObserver!.observe(el))
+  ;(rootEl.value ?? document).querySelectorAll('[data-year]').forEach((el) => yearObserver!.observe(el))
 }
 
 // Re-run observer when new year sections appear
