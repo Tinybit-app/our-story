@@ -16,15 +16,33 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo("/login")
   }
 
-  // If the user has a valid session but their account is pending deletion,
-  // restrict them to /settings/account (where the cancellation banner is shown).
-  // useUserState caches the result so this adds no extra requests on subsequent
-  // navigations within the same session.
-  if (session && to.path !== "/settings/account") {
-    const { ensure } = useUserState()
-    const state = await ensure()
-    if (state.deletedAt) {
-      return navigateTo("/settings/account")
+  // Check membership state for authenticated users. useUserState caches the
+  // result so this adds no extra requests on subsequent navigations.
+  if (session) {
+    // Routes that don't require an active circle membership
+    const noMembershipRoutes = ["/onboarding", "/settings/account", "/invite"]
+    const needsMembership = !noMembershipRoutes.some((r) => to.path.startsWith(r))
+
+    if (needsMembership) {
+      const { ensure } = useUserState()
+      const state = await ensure()
+
+      // Account pending deletion → restrict to settings
+      if (state.deletedAt) {
+        return navigateTo("/settings/account")
+      }
+
+      if (to.path === "/no-circle") {
+        // Already on the right page but bounce away if state has changed
+        if (state.needsProfile) return navigateTo("/onboarding/profile")
+        if (state.hasMembership) return navigateTo("/")
+        return
+      }
+
+      // Any other route that needs membership → redirect if not a member
+      if (!state.hasMembership) {
+        return navigateTo(state.needsProfile ? "/onboarding" : "/no-circle")
+      }
     }
   }
 })

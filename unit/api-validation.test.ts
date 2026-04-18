@@ -900,26 +900,32 @@ describe("/no-circle routing — guard logic", () => {
   })
 })
 
-describe("/no-circle page — self-guard", () => {
+// ============================================================
+// auth.global middleware — /no-circle bounce-away
+// When a user navigates TO /no-circle but their state has changed
+// (e.g. they just accepted an invite in another tab), the middleware
+// redirects them away. Previously this lived in the page's onMounted;
+// it was moved to auth.global so it runs before the page renders.
+// ============================================================
+describe("auth.global middleware — /no-circle bounce-away", () => {
   type UserState = { hasMembership: boolean; needsProfile: boolean }
 
-  // The /no-circle page itself also guards against users who shouldn't be there
-  function noCirclePageRedirect(state: UserState): "/" | "/onboarding/profile" | null {
+  function noCircleMiddleware(state: UserState): "/" | "/onboarding/profile" | null {
     if (state.needsProfile) return "/onboarding/profile"
     if (state.hasMembership) return "/"
     return null // stay on /no-circle
   }
 
   it("stays on /no-circle for user with no membership and complete profile", () => {
-    expect(noCirclePageRedirect({ hasMembership: false, needsProfile: false })).toBeNull()
+    expect(noCircleMiddleware({ hasMembership: false, needsProfile: false })).toBeNull()
   })
 
   it("redirects user with membership away to home", () => {
-    expect(noCirclePageRedirect({ hasMembership: true, needsProfile: false })).toBe("/")
+    expect(noCircleMiddleware({ hasMembership: true, needsProfile: false })).toBe("/")
   })
 
   it("redirects user still needing profile to /onboarding/profile", () => {
-    expect(noCirclePageRedirect({ hasMembership: false, needsProfile: true })).toBe("/onboarding/profile")
+    expect(noCircleMiddleware({ hasMembership: false, needsProfile: true })).toBe("/onboarding/profile")
   })
 })
 
@@ -979,6 +985,53 @@ describe("GET /api/auth/membership — deletedAt field", () => {
   it("returns deletedAt as an ISO string for a pending-deletion account", () => {
     const iso = "2026-04-18T03:00:00Z"
     expect(buildResponse(iso).deletedAt).toBe(iso)
+  })
+})
+
+// ============================================================
+// GET /api/auth/membership — hasMembership excludes soft-deleted circles
+// The service role bypasses RLS, so membership.get.ts must manually
+// filter out circlemember rows whose circle has deleted_at set.
+// This was the root cause of hasMembership returning true after the
+// user's only circle was soft-deleted.
+// ============================================================
+describe("GET /api/auth/membership — hasMembership excludes soft-deleted circles", () => {
+  type MemberRow = { circle: { deleted_at: string | null } | null }
+
+  function computeHasMembership(memberships: MemberRow[]): boolean {
+    return memberships.some((m) => m.circle !== null && !m.circle.deleted_at)
+  }
+
+  it("returns true when the user has one active circle", () => {
+    expect(computeHasMembership([{ circle: { deleted_at: null } }])).toBe(true)
+  })
+
+  it("returns false when the user's only circle is soft-deleted", () => {
+    expect(computeHasMembership([{ circle: { deleted_at: "2026-04-18T00:00:00Z" } }])).toBe(false)
+  })
+
+  it("returns false when the user has no memberships at all", () => {
+    expect(computeHasMembership([])).toBe(false)
+  })
+
+  it("returns true when one of two circles is active and the other is soft-deleted", () => {
+    const memberships: MemberRow[] = [
+      { circle: { deleted_at: "2026-04-17T00:00:00Z" } },
+      { circle: { deleted_at: null } },
+    ]
+    expect(computeHasMembership(memberships)).toBe(true)
+  })
+
+  it("returns false when all circles across multiple memberships are soft-deleted", () => {
+    const memberships: MemberRow[] = [
+      { circle: { deleted_at: "2026-04-16T00:00:00Z" } },
+      { circle: { deleted_at: "2026-04-17T00:00:00Z" } },
+    ]
+    expect(computeHasMembership(memberships)).toBe(false)
+  })
+
+  it("treats a null circle join (deleted row) as no membership", () => {
+    expect(computeHasMembership([{ circle: null }])).toBe(false)
   })
 })
 

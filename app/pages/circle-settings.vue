@@ -239,6 +239,10 @@ async function confirmDeleteCircle() {
       method: 'POST',
       body: { confirmName: deleteConfirmInput.value.trim() },
     })
+    // Clear the membership cache so the home page guard re-checks and
+    // redirects to /no-circle if this was the user's only circle.
+    const { clear } = useUserState()
+    clear()
     await navigateTo('/')
   } catch (err: any) {
     deleteError.value = err?.data?.message ?? t('members.deleteCircleError')

@@ -51,16 +51,4 @@
 <script setup lang="ts">
 definePageMeta({ auth: false })
 const { t } = useI18n()
-const router = useRouter()
-
-// If the user already has a membership, send them home
-onMounted(async () => {
-  const { ensure } = useUserState()
-  const { hasMembership, needsProfile } = await ensure()
-  if (needsProfile) {
-    router.replace('/onboarding/profile')
-  } else if (hasMembership) {
-    router.replace('/')
-  }
-})
 </script>

@@ -601,22 +601,6 @@ async function doLogout() {
   router.replace("/login");
 }
 
-// ── Guard ──────────────────────────────────────────────────
-onMounted(async () => {
-  const { ensure } = useUserState();
-  const { hasMembership, needsProfile } = await ensure();
-  if (needsProfile) {
-    router.replace("/onboarding/profile");
-    return;
-  }
-  if (!hasMembership) {
-    // Existing users with a profile but no circle (e.g. removed from a circle)
-    // land on /no-circle rather than the new-user onboarding flow.
-    router.replace(needsProfile ? "/onboarding" : "/no-circle");
-    return;
-  }
-});
-
 // ── Data ───────────────────────────────────────────────────
 const route = useRoute();
 const { data: circlesData } = await useFetch<{ circles: any[] }>(
