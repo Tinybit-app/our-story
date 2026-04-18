@@ -95,12 +95,16 @@
         <div
           class="relative overflow-hidden bg-border flex-shrink-0 aspect-[4/3]"
         >
-          <img
-            v-if="firstMedia && firstMedia.media_type !== 'video'"
-            :src="firstMedia.url ?? firstMedia.thumbnailUrl ?? ''"
-            :alt="memory?.note ?? t('card.photoAlt')"
-            class="absolute inset-0 w-full h-full object-cover block"
-          />
+          <template v-if="firstMedia && firstMedia.media_type !== 'video'">
+            <div v-if="!modalImgLoaded" class="absolute inset-0 skeleton-shimmer" />
+            <img
+              :src="firstMedia.url ?? firstMedia.thumbnailUrl ?? ''"
+              :alt="memory?.note ?? t('card.photoAlt')"
+              class="absolute inset-0 w-full h-full object-cover block transition-opacity duration-300"
+              :class="modalImgLoaded ? 'opacity-100' : 'opacity-0'"
+              @load="modalImgLoaded = true"
+            />
+          </template>
           <video
             v-else-if="firstMedia?.media_type === 'video' && firstMedia.url"
             ref="videoEl"
@@ -608,6 +612,10 @@ const hasPrev = computed(() => currentIndex.value > 0);
 const hasNext = computed(() => currentIndex.value < props.memories.length - 1);
 
 const firstMedia = computed(() => memory.value?.memorymedia[0] ?? null);
+const modalImgLoaded = ref(false);
+
+// Reset when navigating to a different memory
+watch(firstMedia, () => { modalImgLoaded.value = false; });
 
 const formattedDate = computed(() => {
   if (!memory.value) return "";

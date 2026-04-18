@@ -25,28 +25,44 @@
       :class="wide ? 'aspect-[4/3]' : 'aspect-square'"
     >
       <!-- Photo -->
-      <img
+      <template
         v-if="
           firstMedia &&
           firstMedia.media_type !== 'video' &&
           (firstMedia.thumbnailUrl || firstMedia.url)
         "
-        :src="firstMedia.thumbnailUrl ?? firstMedia.url ?? ''"
-        :alt="memory.note ?? t('card.photoAlt')"
-        class="w-full h-full object-cover block"
-        loading="lazy"
-      />
+      >
+        <!-- Shimmer skeleton shown until image loads -->
+        <div
+          v-if="!imgLoaded"
+          class="absolute inset-0 skeleton-shimmer"
+        />
+        <img
+          :src="firstMedia.thumbnailUrl ?? firstMedia.url ?? ''"
+          :alt="memory.note ?? t('card.photoAlt')"
+          class="w-full h-full object-cover block transition-opacity duration-300"
+          :class="imgLoaded ? 'opacity-100' : 'opacity-0'"
+          loading="lazy"
+          @load="imgLoaded = true"
+        />
+      </template>
 
       <!-- Video -->
       <template
         v-else-if="firstMedia?.media_type === 'video' && firstMedia.url"
       >
+        <div
+          v-if="!videoLoaded"
+          class="absolute inset-0 skeleton-shimmer"
+        />
         <video
           :src="firstMedia.url"
-          class="w-full h-full object-cover block"
+          class="w-full h-full object-cover block transition-opacity duration-300"
+          :class="videoLoaded ? 'opacity-100' : 'opacity-0'"
           muted
           playsinline
           preload="metadata"
+          @loadedmetadata="videoLoaded = true"
         />
         <div
           class="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -270,7 +286,15 @@ const PRESET_EMOJIS = [
 
 const isHovered = ref(false);
 const pickerOpen = ref(false);
+const imgLoaded = ref(false);
+const videoLoaded = ref(false);
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null);
+
+// Reset load state when the media source changes (e.g. switching circles)
+watch(firstMedia, () => {
+  imgLoaded.value = false;
+  videoLoaded.value = false;
+});
 const memory = computed(() => props.memory);
 
 const captionText = computed(() => memory.value.note ?? "");
