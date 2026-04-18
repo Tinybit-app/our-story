@@ -168,7 +168,7 @@
                 <button
                   v-if="canInvite"
                   class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
-                  @click="menuOpen = false; inviteOpen = true"
+                  @click="menuOpen = false; openInvite()"
                 >
                   <svg
                     class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0"
@@ -249,6 +249,7 @@
         :month-groups="monthGroups"
         :loading="loading"
         :has-next-page="!!nextCursor"
+        :circle-type="circle?.circle_type ?? null"
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
@@ -331,6 +332,15 @@
       </div>
     </Transition>
 
+    <!-- Solo invite nudge -->
+    <SoloInviteNudge
+      v-if="circleId && circle?.circle_type === 'solo'"
+      v-model="soloNudgeOpen"
+      :circle-id="circleId"
+      @switched="onCircleTypeSwitched"
+      @invite-anyway="soloNudgeOpen = false; inviteOpen = true"
+    />
+
     <!-- Invite member dialog -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
@@ -407,6 +417,7 @@
       v-if="circleId"
       ref="uploadRef"
       :circle-id="circleId"
+      :circle-type="circle?.circle_type ?? null"
       hide-trigger
       @uploaded="onUploaded"
     />
@@ -734,6 +745,23 @@ const canInvite = computed(() => {
   const role = circle.value?.role;
   return role === "owner" || role === "admin";
 });
+
+const soloNudgeOpen = ref(false);
+
+function openInvite() {
+  if (circle.value?.circle_type === "solo" && circle.value?.role === "owner") {
+    soloNudgeOpen.value = true;
+  } else {
+    inviteOpen.value = true;
+  }
+}
+
+function onCircleTypeSwitched(newType: string) {
+  // Update the local circle data so the UI reflects the new type immediately
+  const c = allCircles.value.find((c: any) => c.id === circleId.value);
+  if (c) c.circle_type = newType;
+  inviteOpen.value = true;
+}
 
 const inviteOpen = ref(false);
 const inviteEmail = ref("");

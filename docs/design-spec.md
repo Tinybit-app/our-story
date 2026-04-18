@@ -1400,6 +1400,22 @@ Once all circles are resolved, proceed with Scenario 2.
 
 ---
 
+### Circle settings page (`/circle-settings`)
+
+Owner-only page (`app/pages/circle-settings.vue`) accessible via:
+- Gear icon next to the circle name in the home header (`index.vue`)
+- Gear icon in the members page header (`members.vue`)
+
+Contains:
+- Circle name + type display (read-only info)
+- **Danger zone** — 2-step delete circle flow (moved here from `/members`)
+
+The delete circle flow was moved from the members page to a dedicated settings page to avoid accidental deletion and to keep the members page focused on member management.
+
+After successful deletion the page calls `useUserState().clear()` before redirecting to `/` so the middleware re-checks membership state and redirects to `/no-circle`.
+
+---
+
 ### Scenario 4 — Circle deleted (by owner)
 
 Make it hard to do accidentally.
@@ -1562,16 +1578,18 @@ No one gets left out."
 - CTA at the end: "Start your story →" — not "Sign up" or "Create account"
 
 **Empty state copy (adapts to circle_type):**
-| circle_type | Empty timeline copy |
-|---|---|
-| parents | "Your baby's story starts here. Upload your first memory — grandparents are waiting." |
-| couple | "Your story together starts here. Add your first memory." |
-| family | "Your family's story starts here. Add your first memory together." |
-| friends | "No memories yet. Add the first one — your crew will thank you." |
-| caregiving | "A record of what matters. Add your first memory." |
-| travel | "Your adventure starts here. Upload your first memory from the trip." |
-| solo | "Your personal story starts here. Just for you, until you're ready to share." |
-| custom | "Your circle's story starts here. Add the first memory." |
+| circle_type | Headline | Body |
+|---|---|---|
+| parents | "Every milestone deserves a memory" | "Add your first photo or video to start documenting your little one's story." |
+| couple | "Your shared story starts here" | "Add your first memory together to start building your timeline." |
+| family | "Family moments last forever" | "Add your first photo or video to start building your family story." |
+| friends | "Capture every adventure together" | "Add your first photo or video to start building your shared memories." |
+| caregiving | "Every moment matters" | "Add your first photo or video to start documenting your journey." |
+| travel | "The adventure starts here" | "Add your first photo or video from the trip to start your travel story." |
+| solo | "Your story, your way" | "Add your first photo or video to start building your personal timeline." |
+| custom | "Your story starts here" | "Add your first photo or video to start building your shared timeline." |
+
+Implemented via `useCircleTypeConfig` composable (`app/composables/useCircleTypeConfig.ts`) — single source of truth for all per-type copy and chip data.
 
 ---
 
@@ -1612,14 +1630,25 @@ Solo mode UX rules:
 
 Solo-to-circle upgrade:
 ```
-User taps "Invite someone to your story"
-  → Standard invite flow (email → token → join)
+User taps "Invite someone to your story" (from nav dropdown or members page)
+  → SoloInviteNudge dialog appears:
+      "This is a solo circle. Choose a shared type to invite someone,
+       or invite them anyway and keep it solo."
+      → Type picker (6 options: couple, family, friends, parents, caregiving, travel)
+      → [Switch type & invite] → PATCH /api/circles/[id] updates circle_type,
+                                  then standard invite dialog opens
+      → [Invite anyway]        → standard invite dialog opens without type change
+      → [Cancel]               → nudge closes, no action
   → On first member joining:
       "Your story just got bigger — [name] has joined"
   → Prompt: "Want to share any of your memories with them?"
       → User selects which existing memories to make circle-visible
   → Circle mode activated — no data lost, full continuity
 ```
+
+**PATCH /api/circles/[id]** — owner-only endpoint for updating `circle_type`. Accepts `{ circleType: z.enum(CIRCLE_TYPES) }`. Used by the solo invite nudge. Implemented at `server/api/circles/[id]/index.patch.ts`.
+
+**SoloInviteNudge.vue** — `app/components/SoloInviteNudge.vue`. Shown when `circle.circle_type === 'solo'` and the user is the owner. Presents a 2-column type picker (all shared types, no solo) with "Switch type & invite" and "Invite anyway" actions. After a successful switch the local circle data is patched in memory so the nudge doesn't re-trigger on the next open.
 
 **Privacy rule: private memories never auto-share.** When a solo user's first member joins, no existing memories change visibility. Every memory the solo user created stays `visibility: "private"` until they explicitly set it to `"circle"`. The sharing prompt is an invitation — not a default. The default must always be "keep private."
 
@@ -1653,12 +1682,113 @@ Circle
 ```
 
 Used to:
-- Pre-populate milestone template suggestions
-- Personalise empty state copy ("Upload your first trip photo" vs "Upload your baby's first moment")
+- Pre-populate milestone quick-pick chips in the upload modal
+- Personalise empty state copy (headline + body — see table above)
 - Inform push notification copy ("Your circle" vs "Your family" vs "Your crew")
 
 - Skip steps allowed but nudge user back to complete
 - Empty state always shows "Upload your first memory" CTA — copy adapts to circle_type
+
+**Implemented differentiation (shipped):**
+
+All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
+
+| circle_type | Milestone chips |
+|---|---|
+| parents | First smile · First steps · First word · First birthday · First tooth |
+| couple | First date · Anniversary · Engaged · Moved in together · Wedding day |
+| family | Family trip · Birthday · Holiday · Graduation · Reunion |
+| friends | Trip · Party · Concert · Road trip · Reunion |
+| caregiving | Good day · Doctor visit · Treatment · Recovery · Milestone |
+| travel | Arrived · Best meal · Hidden gem · Adventure · Last day |
+| solo | Achievement · New chapter · Goal reached · Reflection · Memory |
+
+**Per-type feature roadmap (not yet implemented):**
+
+#### Parents
+*Core differentiation: time is relative to the baby*
+
+| Feature | Description |
+|---|---|
+| **Baby age stamp** | Every memory card shows baby's age at time of photo ("3 months, 2 weeks"). Requires a `date_of_birth` field set at circle creation. |
+| **Developmental milestone tracks** | Predefined milestone categories (Motor, Language, Social, First foods) with completion checkboxes. |
+| **Growth chart** | Weight/height log entries alongside photos, visualized as a simple chart. |
+| **Vaccination tracker** | Date-stamped health events separate from memories. |
+| **Weekly digest** | "Your baby is 6 months old this week" summary email with recent memories. |
+
+#### Couple
+*Core differentiation: shared relationship timeline with anniversary anchoring*
+
+| Feature | Description |
+|---|---|
+| **Relationship start date** | Set once at circle creation; used to compute "Year 3 together", "1,200 days", anniversary reminders. |
+| **Anniversary reminder** | Email/push nudge one week before the anniversary date. |
+| **"How we met" pinned memory** | One memory pinned at the top of the timeline as the origin story. |
+| **Couple stats** | Memories together, countries visited, months documented. |
+| **Private mode default** | All memories default to visible only to the two of them. |
+
+#### Family
+*Core differentiation: multi-generational, person-tagged memories*
+
+| Feature | Description |
+|---|---|
+| **Person tags** | Tag which family members appear in a memory (grandma, dad, the kids). |
+| **"This day last year"** | Surface a memory from exactly 1 year ago in a weekly digest. |
+| **Event grouping** | Cluster memories by event (Christmas 2024, Summer holiday) rather than just month. |
+| **Family tree light** | Simple list of circle members with their relationship labels (Grandma, Uncle, etc.). |
+
+#### Friends
+*Core differentiation: event-centric and trip-focused*
+
+| Feature | Description |
+|---|---|
+| **Trip/event containers** | Group memories inside a named event (Barcelona Trip, NYE 2025). |
+| **"Who was there" tag** | Tag which members attended an event. |
+| **Reaction leaderboard** | Fun stat: most-reacted photo, most-active member. |
+| **Memory count milestones** | Celebrate 50th, 100th memory with a banner. |
+
+#### Caregiving
+*Core differentiation: structured health log alongside emotional memories*
+
+| Feature | Description |
+|---|---|
+| **Daily log entry** | Simple structured note: mood (1–5), energy, free text — separate from photo memories. |
+| **Medication/appointment reminders** | Upcoming event alerts. |
+| **Health event types** | Tag memories as: Doctor visit · Good day · Hard day · Milestone · Treatment. |
+| **Care team notes** | Private notes visible only to admins (not the care recipient if they're a member). |
+| **PDF export** | Structured health timeline export for medical appointments. |
+
+#### Travel
+*Core differentiation: geography and itinerary awareness*
+
+| Feature | Description |
+|---|---|
+| **Location tag** | City/country on each memory; auto-suggested from EXIF GPS data. |
+| **Trip itinerary** | Ordered list of destinations with dates; memories attached to each stop. |
+| **Map view** | Pins on a world map showing where memories were taken. |
+| **Trip stats** | Countries visited, days travelled, km covered. |
+| **"Before you leave" prompt** | Nudge to add a final memory on the last day of the trip. |
+
+#### Solo
+*Core differentiation: personal journal with reflection prompts*
+
+| Feature | Description |
+|---|---|
+| **Private visibility default** | Memories default to `private` (owner only) instead of `circle`. |
+| **Reflection prompts** | Optional writing prompt on upload: "What made today memorable?" |
+| **Mood/emotion tag** | Tag each memory with a feeling. |
+| **Year-in-review** | Auto-generated annual summary of memories. |
+| **Streak tracker** | "You've documented 7 days in a row." |
+
+**Highest-value, lowest-effort features to build next:**
+
+| Priority | circle_type | Feature | Why |
+|---|---|---|---|
+| 1 | parents | Baby age stamp | Birth date field + computed display — highest emotional value, clear differentiator |
+| 2 | travel | Location tag | Single text field + EXIF GPS auto-fill, shown below the date |
+| 3 | caregiving | Health event types | Add a type selector to the upload modal for caregiving circles |
+| 4 | solo | Private visibility default | One-line change: default `visibility` to `'private'` when `circle_type === 'solo'` |
+| 5 | couple | Anniversary anchoring | Relationship start date field, shown in the header |
 
 ### Path D — Existing user with no active circle (`/no-circle`)
 
@@ -3970,11 +4100,25 @@ Subhead:    No ads. No AI training. Invite-only.
 CTA:        Start your circle — free  →
 
 Below fold:
-  — What it looks like (screenshot of timeline with milestone card)
-  — How it works: invite → upload → remember (3 steps)
-  — "Who uses it": new parents / grandparents / friend groups / couples
-  — Privacy proof: "Your photos never leave your circle."
-  — Pricing: free to start
+  1. What it looks like
+       — Screenshot of timeline with a milestone card visible
+
+  2. How it works
+       — 3 steps: invite → upload → remember
+
+  3. "Who uses it" — per-type feature cards
+       — One card per circle type (7 types)
+       — Each card: emoji icon, type name, core differentiation tagline,
+         3–4 bullet feature highlights specific to that type
+       — CTA on each card: "Start a [type] circle →"
+       — See §Circle-type landing page sections for full copy per type
+
+  4. Privacy proof
+       — "Your photos never leave your circle."
+       — "No ads. No algorithm. No AI training on your memories."
+
+  5. Pricing summary
+       — Free to start. One line. Link to /pricing.
 ```
 
 **SEO targets (Phase 1):**
@@ -3982,8 +4126,123 @@ Below fold:
 - "family memory app"
 - "private baby photo sharing grandparents"
 - "photo sharing app no ads"
+- "baby milestone tracker app"
+- "couple photo timeline app"
+- "group travel photo sharing"
+- "caregiving journal app"
 
 **What this is NOT:** a marketing site with multiple pages, blog, or complex content. It's a single focused page. Build it inside the Nuxt app as the `/` route — unauthenticated visitors land here, authenticated users are redirected to `/timeline`.
+
+**Per-type card copy** — see §Circle-type landing page sections below for the feature bullets, taglines, and SEO angles to use in each card. The cards are the primary way the landing page communicates the product's depth without requiring a sign-up.
+
+---
+
+### Circle-type landing page sections
+
+The "Who uses it" section of the landing page should expand into per-type feature highlights. Each type has a distinct core differentiation that resonates with a different audience. Use these in landing page copy, SEO targeting, and any future type-specific landing sub-pages (`/for-parents`, `/for-couples`, etc.).
+
+---
+
+#### 👶 Parents
+**Core differentiation: time is relative to the baby**
+
+- **Baby age stamp** — every memory automatically shows the baby's age ("3 months, 2 weeks") based on a birth date set at circle creation
+- **Developmental milestone categories** — predefined milestone tracks (Motor, Language, Social, First foods) with completion checkboxes
+- **Growth chart** — weight/height log entries alongside photos, visualized as a simple chart
+- **Vaccination tracker** — date-stamped health events separate from memories
+- **Weekly digest** — "Your baby is 6 months old this week" summary email with recent memories
+
+SEO angles: "private baby photo sharing", "baby milestone tracker", "share baby photos with grandparents"
+
+---
+
+#### 💑 Couple
+**Core differentiation: shared relationship timeline with anniversary anchoring**
+
+- **Relationship start date** — set once, used to calculate "Year 3 together", "1,200 days"
+- **Anniversary reminder** — email/push nudge a week before the anniversary
+- **"How we met" pinned memory** — one memory pinned at the top of the timeline as the origin story
+- **Couple stats** — memories together, countries visited, months documented
+- **Private mode default** — all memories default to visible only to the two of them
+
+SEO angles: "couple memory app", "relationship photo timeline", "private photo album for couples"
+
+---
+
+#### 👨‍👩‍👧‍👦 Family
+**Core differentiation: multi-generational, person-tagged memories**
+
+- **Person tags** — tag which family members appear in a memory (grandma, dad, the kids)
+- **"This day last year"** — surface a memory from exactly 1 year ago in a weekly digest
+- **Event grouping** — cluster memories by event (Christmas 2024, Summer holiday) rather than just month
+- **Family tree light** — simple list of circle members with their relationship labels (Grandma, Uncle, etc.)
+
+SEO angles: "family memory app", "private family photo sharing", "family photo album app"
+
+---
+
+#### 👯 Friends
+**Core differentiation: event-centric and trip-focused**
+
+- **Trip/event containers** — group memories inside a named event (Barcelona Trip, NYE 2025)
+- **"Who was there" tag** — tag which members attended an event
+- **Reaction leaderboard** — fun stat: most-reacted photo, most-active member
+- **Memory count milestones** — celebrate 50th, 100th memory with a banner
+
+SEO angles: "shared photo album for friends", "group trip photo sharing app", "friend group memory app"
+
+---
+
+#### 🤍 Caregiving
+**Core differentiation: structured health log alongside emotional memories**
+
+- **Daily log entry** — simple structured note: mood (1–5), energy, notes — separate from photo memories
+- **Medication/appointment reminders** — upcoming event alerts
+- **Health event types** — tag memories as: Doctor visit · Good day · Hard day · Treatment · Milestone
+- **Care team notes** — private notes visible only to admins (not the care recipient if they're a member)
+- **Export as PDF** — structured health timeline export for medical appointments
+
+SEO angles: "caregiving journal app", "dementia care memory app", "family caregiver photo log"
+
+---
+
+#### ✈️ Travel
+**Core differentiation: geography and itinerary awareness**
+
+- **Location tag** — city/country on each memory, auto-suggested from EXIF GPS data
+- **Trip itinerary** — ordered list of destinations with dates, memories attached to each stop
+- **Map view** — pins on a world map showing where memories were taken
+- **Trip stats** — countries visited, days travelled, km covered
+- **"Before you leave" prompt** — nudge to add a final memory on the last day of the trip
+
+SEO angles: "group travel photo sharing", "trip memory app", "private shared travel album"
+
+---
+
+#### 📔 Solo
+**Core differentiation: personal journal with reflection prompts**
+
+- **Private visibility default** — memories default to `private` (owner only) instead of `circle`
+- **Reflection prompts** — optional writing prompt on upload ("What made today memorable?")
+- **Mood/emotion tag** — tag each memory with a feeling
+- **Year-in-review** — auto-generated annual summary of memories
+- **Streak tracker** — "You've documented 7 days in a row"
+
+SEO angles: "private photo journal app", "personal memory timeline", "visual diary app"
+
+---
+
+### Per-type build priority
+
+Highest-value, lowest-effort features to implement first (see build plan §4.10):
+
+| Priority | Type | Feature | Why |
+|---|---|---|---|
+| 1 | parents | **Baby age stamp** | Birth date field + computed age on every memory card. Most distinctive parents feature. Matches top landing page card. |
+| 2 | travel | **Location tag** | Single text field + EXIF GPS auto-fill, shown below the memory date. Low effort, high landing page impact. |
+| 3 | caregiving | **Health event types** | Type selector in upload modal for caregiving circles only. |
+| 4 | solo | **Private visibility default** | One-line change: default `visibility` to `'private'` when `circle_type === 'solo'`. |
+| 5 | couple | **Anniversary anchoring** | Relationship start date at circle creation + display in header + anniversary email trigger. |
 
 **`tinybit.app`** is the company page (separate site) listing both products. The Our Story landing page lives inside the Our Story app.
 

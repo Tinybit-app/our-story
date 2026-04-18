@@ -122,10 +122,22 @@
                 <input
                   v-model="firstItem.milestoneLabel"
                   type="text"
-                  :placeholder="t('upload.milestonePlaceholder')"
+                  :placeholder="typeConfig.milestonePlaceholder"
                   maxlength="40"
                   class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
+                <!-- Milestone chips — quick-pick suggestions -->
+                <div v-if="typeConfig.milestoneChips.length > 0 && !firstItem.milestoneLabel" class="flex flex-wrap gap-1.5 mt-2">
+                  <button
+                    v-for="chip in typeConfig.milestoneChips"
+                    :key="chip"
+                    type="button"
+                    class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-secondary hover:bg-border text-muted-foreground hover:text-foreground transition-colors border border-border"
+                    @click="firstItem.milestoneLabel = chip"
+                  >
+                    {{ chip }}
+                  </button>
+                </div>
               </div>
 
               <div class="flex items-center justify-between">
@@ -204,7 +216,7 @@
                   <input
                     v-model="item.milestoneLabel"
                     type="text"
-                    :placeholder="t('upload.milestoneShort')"
+                    :placeholder="typeConfig.milestoneShort"
                     maxlength="40"
                     class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
                   />
@@ -264,7 +276,8 @@ interface UploadItem {
   error: string
 }
 
-const props = defineProps<{ circleId: string; hideTrigger?: boolean }>()
+const props = defineProps<{ circleId: string; circleType?: string | null; hideTrigger?: boolean }>()
+const typeConfig = computed(() => useCircleTypeConfig(props.circleType))
 
 const isOpen = computed(() => items.value.length > 0)
 defineExpose({ open: () => fileInput.value?.click(), isOpen })

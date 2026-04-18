@@ -36,16 +36,24 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Owner deletion: resolve ownership first (auto-promote admin, force transfer, or delete circle)
   - 30-day soft delete + daily hard purge cron
 - [x] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
+  - Danger zone UI moved to dedicated `/circle-settings` page (previously in members page)
+  - `useUserState().clear()` called before post-deletion redirect so middleware re-checks membership
 - [ ] 3.8 Data export (ExportJob): members export own uploads only; owners export full circle
 
 ### Milestone 3.9: Landing Page + Pricing Page (Cold Discovery)
 - [ ] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
-- [ ] 3.9.2 Hero: headline, subhead, single CTA ("Start your circle — free")
-- [ ] 3.9.3 Below fold: product screenshot, 3-step explainer, privacy proof, pricing summary
-- [ ] 3.9.4 SEO: `<title>`, meta description, OG tags targeting "private photo sharing for family"
-- [ ] 3.9.5 `/pricing` route — tier comparison table (Free / Plus / Pro "coming soon"), FAQ (cancel, photos on cancel, privacy, grandparents), CTA per tier
-- Note: single focused pages — not a multi-page marketing site; lives inside the Nuxt app
-- Note: see design spec §Cold Discovery Strategy and §Pricing Page for full structure
+- [ ] 3.9.2 Hero: headline ("A private space where your circle builds a shared story."), subhead, single CTA ("Start your circle — free")
+- [ ] 3.9.3 How it works: 3-step explainer (invite → upload → remember) + product screenshot
+- [ ] 3.9.4 "Who uses it" — per-type feature cards (7 cards, one per circle type):
+  - Each card: emoji icon, type name, core differentiation tagline, 3–4 feature bullets, "Start a [type] circle →" CTA
+  - Copy source: design spec §Circle-type landing page sections
+  - Cards are the primary depth signal — show the product is purpose-built, not generic
+- [ ] 3.9.5 Privacy proof block: "Your photos never leave your circle. No ads. No algorithm. No AI training on your memories."
+- [ ] 3.9.6 Pricing summary: one line + link to /pricing
+- [ ] 3.9.7 SEO: `<title>`, meta description, OG tags — primary: "private photo sharing for family"; per-type: baby/couple/travel/caregiving angles (see design spec §SEO targets)
+- [ ] 3.9.8 `/pricing` route — tier comparison table (Free / Plus / Pro "coming soon"), FAQ (cancel, photos on cancel, privacy, grandparents), CTA per tier
+- Note: single focused page — not a multi-page marketing site; lives inside the Nuxt app as the `/` route
+- Note: see design spec §Cold Discovery Strategy and §Pricing Page for full copy and structure
 
 ### Milestone 4: Onboarding & Circle Creation
 - [x] 4.1 Onboarding flow (circle type picker → name → invite)
@@ -53,6 +61,19 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 4.3 Invite acceptance flow (token → auto-join)
 - [x] 4.6 Multi-circle support: circle switcher in nav, active circle via `?circle=<id>` URL param, existing members can create new circles via `/onboarding`, post-creation redirects to `/?circle=<newId>`
 - [x] 4.7 No-circle holding screen (`/no-circle`): shown to existing users with no active membership instead of new-user onboarding
+  - All redirect logic consolidated in `auth.global.ts` middleware (removed page-level onMounted guards)
+  - Fixed bug: `hasMembership` returned true after soft-delete because service role bypasses RLS; fixed by joining circle table and filtering `deleted_at` in JS
+- [x] 4.8 Invite pre-validation: `GET /api/invites/[token]/status` (public, no auth) shows circle-deleted or expired error before requiring sign-in
+- [x] 4.9 Circle type differentiation:
+  - Per-type empty state copy, milestone placeholder, and milestone quick-pick chips (`useCircleTypeConfig` composable)
+  - `PATCH /api/circles/[id]` endpoint for owner to update `circle_type`
+  - Solo invite nudge (`SoloInviteNudge.vue`): intercepts invite flow for solo circles, offers type switch or "invite anyway"
+- [ ] 4.10 Per-type features — phase 1 (highest-value, lowest-effort; see design spec §Per-type feature roadmap):
+  - [ ] 4.10.1 Parents — baby age stamp: `date_of_birth` field on circle creation + computed age display on memory cards
+  - [ ] 4.10.2 Travel — location tag: single text field on upload modal + EXIF GPS auto-fill, shown below memory date
+  - [ ] 4.10.3 Caregiving — health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal
+  - [ ] 4.10.4 Solo — private visibility default: default `visibility` to `'private'` when `circle_type === 'solo'`
+  - [ ] 4.10.5 Couple — anniversary anchoring: relationship start date field at circle creation, anniversary display in header
 - [ ] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
 - [ ] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)
 
@@ -78,12 +99,12 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [ ] 8.1 Comments (post, read, delete own)
 - [ ] 8.2 Emoji reactions (toggle on/off)
 
-### Milestone 8.5: Localization (i18n — English + Chinese + French)
-- [ ] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-Hans` + `fr` locales (lazy-loaded JSON files)
-- [ ] 8.5.2 Extract all UI strings to `locales/en.json` — replace every hardcoded string with `t('key')`
-- [ ] 8.5.3 Translate `locales/zh-Hans.json` (Simplified Chinese — must-have: developer's own parents)
+### Milestone 8.5: Localization (i18n — English + Chinese)
+- [x] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-CN` locales (lazy-loaded JSON files)
+- [x] 8.5.2 Extract all UI strings to `locales/en.json` — replace every hardcoded string with `t('key')`
+- [x] 8.5.3 Translate `locales/zh-CN.json` (Simplified Chinese)
+- [x] 8.5.5 Language toggle in header + avatar dropdown (persisted to `User.locale` in DB)
 - [ ] 8.5.4 Translate `locales/fr.json` (French — Canadian bilingual requirement)
-- [ ] 8.5.5 Language toggle in settings (persisted to `User.locale`)
 - Note: use `Intl.DateTimeFormat` for all dates from day one — never hardcode `MM/DD/YYYY`
 - Note: see design spec §Localization for full setup code and priority language rationale
 

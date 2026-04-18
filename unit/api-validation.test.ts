@@ -1355,3 +1355,111 @@ describe("GET /api/invites/[token]/status — invite pre-validation", () => {
     expect(statusResult(invite)).toBe("expired")
   })
 })
+
+// ============================================================
+// PATCH /api/circles/[id] — circle type update
+// Owner-only endpoint to change circle_type (e.g. solo → couple).
+// Used by the solo invite nudge when the owner wants to switch type
+// before inviting their first member.
+// ============================================================
+const CIRCLE_TYPES_ALL = [
+  "parents", "couple", "family", "friends",
+  "caregiving", "travel", "solo", "custom",
+] as const
+
+const patchCircleSchema = z.object({
+  circleType: z.enum(CIRCLE_TYPES_ALL),
+})
+
+describe("PATCH /api/circles/[id] — input validation", () => {
+  it("accepts all 8 valid circle_type values", () => {
+    for (const ct of CIRCLE_TYPES_ALL) {
+      expect(patchCircleSchema.safeParse({ circleType: ct }).success).toBe(true)
+    }
+  })
+
+  it("rejects an unknown circleType", () => {
+    expect(patchCircleSchema.safeParse({ circleType: "household" }).success).toBe(false)
+  })
+
+  it("rejects a missing circleType", () => {
+    expect(patchCircleSchema.safeParse({}).success).toBe(false)
+  })
+
+  it("rejects circleType as null", () => {
+    expect(patchCircleSchema.safeParse({ circleType: null }).success).toBe(false)
+  })
+})
+
+describe("PATCH /api/circles/[id] — access control", () => {
+  type Role = "owner" | "admin" | "member"
+
+  function canUpdateCircleType(role: Role): boolean {
+    return role === "owner"
+  }
+
+  it("allows the owner to change the circle type", () => {
+    expect(canUpdateCircleType("owner")).toBe(true)
+  })
+
+  it("blocks an admin from changing the circle type", () => {
+    expect(canUpdateCircleType("admin")).toBe(false)
+  })
+
+  it("blocks a member from changing the circle type", () => {
+    expect(canUpdateCircleType("member")).toBe(false)
+  })
+})
+
+// ============================================================
+// Solo invite nudge — when to intercept the invite flow
+// When a solo circle owner tries to invite someone, show a nudge
+// offering to switch the circle type. The nudge is skipped entirely
+// for non-solo circles or for non-owners (admins can invite too,
+// but only owners can change the type — so admins go straight to invite).
+// ============================================================
+describe("solo invite nudge — interception logic", () => {
+  type InviteContext = {
+    circleType: string
+    requesterRole: "owner" | "admin" | "member"
+  }
+
+  function shouldShowNudge(ctx: InviteContext): boolean {
+    return ctx.circleType === "solo" && ctx.requesterRole === "owner"
+  }
+
+  it("shows nudge for a solo circle owner", () => {
+    expect(shouldShowNudge({ circleType: "solo", requesterRole: "owner" })).toBe(true)
+  })
+
+  it("does not show nudge for a non-solo circle", () => {
+    expect(shouldShowNudge({ circleType: "couple", requesterRole: "owner" })).toBe(false)
+    expect(shouldShowNudge({ circleType: "family", requesterRole: "owner" })).toBe(false)
+  })
+
+  it("does not show nudge for an admin on a solo circle (admin cannot change type)", () => {
+    expect(shouldShowNudge({ circleType: "solo", requesterRole: "admin" })).toBe(false)
+  })
+})
+
+describe("solo invite nudge — switch outcome", () => {
+  type SwitchResult = "switched_then_invite" | "invite_anyway" | "cancelled"
+
+  function resolveNudgeAction(action: "switch" | "anyway" | "cancel"): SwitchResult {
+    if (action === "switch") return "switched_then_invite"
+    if (action === "anyway") return "invite_anyway"
+    return "cancelled"
+  }
+
+  it("switches circle type and opens invite dialog on 'switch' action", () => {
+    expect(resolveNudgeAction("switch")).toBe("switched_then_invite")
+  })
+
+  it("skips type change and opens invite dialog directly on 'invite anyway' action", () => {
+    expect(resolveNudgeAction("anyway")).toBe("invite_anyway")
+  })
+
+  it("closes nudge without any change on 'cancel'", () => {
+    expect(resolveNudgeAction("cancel")).toBe("cancelled")
+  })
+})

@@ -21,7 +21,7 @@
           <button
             v-if="canManage"
             class="flex items-center gap-1.5 text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
-            @click="inviteOpen = true"
+            @click="openInvite"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -349,6 +349,15 @@
       </div>
     </Transition>
 
+    <!-- Solo invite nudge -->
+    <SoloInviteNudge
+      v-if="circleId && circle?.circle_type === 'solo'"
+      v-model="soloNudgeOpen"
+      :circle-id="circleId"
+      @switched="onCircleTypeSwitched"
+      @invite-anyway="soloNudgeOpen = false; inviteOpen = true"
+    />
+
     <!-- Invite dialog -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
@@ -553,6 +562,22 @@ async function resendInvite(invite: any) {
   } finally {
     resendingEmail.value = null
   }
+}
+
+// ── Solo invite nudge ──────────────────────────────────────
+const soloNudgeOpen = ref(false)
+
+function openInvite() {
+  if (circle.value?.circle_type === 'solo' && data.value?.myRole === 'owner') {
+    soloNudgeOpen.value = true
+  } else {
+    inviteOpen.value = true
+  }
+}
+
+function onCircleTypeSwitched(newType: string) {
+  if (circle.value) circle.value.circle_type = newType
+  inviteOpen.value = true
 }
 
 // ── Invite dialog ──────────────────────────────────────────

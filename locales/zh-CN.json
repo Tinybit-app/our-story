@@ -168,6 +168,13 @@
     "circleDeleted": "此圈子已被删除",
     "circleDeletedDesc": "创建者已删除此圈子，你的邀请不再有效。"
   },
+  "soloNudge": {
+    "title": "这是一个独享圈子",
+    "desc": "独享圈子仅供你一人使用。选择一个共享类型来邀请他人，或直接邀请并保持独享模式。",
+    "switchAndInvite": "切换类型并邀请",
+    "inviteAnyway": "直接邀请",
+    "switching": "切换中…"
+  },
   "members": {
     "title": "成员",
     "invite": "邀请",

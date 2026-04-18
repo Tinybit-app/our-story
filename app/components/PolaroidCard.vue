@@ -365,7 +365,7 @@ async function toggleReaction(emoji: string) {
   } else {
     localReactions.value = [
       ...localReactions.value,
-      { id: "optimistic", emoji, user_id: userId },
+      { id: "optimistic", emoji, user_id: userId, user: null },
     ];
   }
 

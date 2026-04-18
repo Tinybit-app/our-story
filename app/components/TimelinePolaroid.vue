@@ -9,9 +9,9 @@
           <circle cx="12" cy="13" r="3"/>
         </svg>
       </div>
-      <p class="text-base font-semibold text-foreground mb-2">{{ t('timeline.emptyTitle') }}</p>
+      <p class="text-base font-semibold text-foreground mb-2">{{ typeConfig.emptyTitle }}</p>
       <p class="text-sm text-muted-foreground leading-relaxed max-w-xs">
-        {{ t('timeline.emptyDesc') }}
+        {{ typeConfig.emptyDesc }}
       </p>
     </div>
 
@@ -111,7 +111,10 @@ const props = defineProps<{
   monthGroups: MonthGroup[]
   loading: boolean
   hasNextPage: boolean
+  circleType?: string | null
 }>()
+
+const typeConfig = computed(() => useCircleTypeConfig(props.circleType))
 
 import type { Memory } from '~/composables/useTimeline'
 
