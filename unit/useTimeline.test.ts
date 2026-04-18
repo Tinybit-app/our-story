@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { ref } from 'vue'
 import { useTimeline } from '~/composables/useTimeline'
 import type { Memory } from '~/composables/useTimeline'
+
+vi.stubGlobal('useI18n', () => ({ locale: ref('en') }))
 
 function makeMemory(id: string, dateStr: string, overrides: Partial<Memory> = {}): Memory {
   return {
