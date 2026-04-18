@@ -29,7 +29,16 @@
     "inviteSent": "邀请已发送",
     "inviteSentLink": "链接已发送至 {email}",
     "sendInvite": "发送邀请",
-    "skipForNow": "暂时跳过"
+    "skipForNow": "暂时跳过",
+    "circlePlaceholderParents": "小李一家",
+    "circlePlaceholderCouple": "小明 & 小红",
+    "circlePlaceholderFriends": "巴塞罗那旅行团",
+    "circlePlaceholderSolo": "我的故事",
+    "circlePlaceholderFamily": "李家族",
+    "circlePlaceholderTravel": "东南亚 2025",
+    "circlePlaceholderCaregiving": "照护圈子",
+    "circlePlaceholderDefault": "我们的圈子",
+    "language": "语言"
   },
   "circleType": {
     "parents":    { "label": "新手父母",   "description": "宝宝成长里程碑" },
@@ -64,11 +73,17 @@
     "emptyDesc": "上传第一张照片或视频，开始记录你们的共同时间线。",
     "loading": "加载记忆中…",
     "memories": "{n} 条记忆",
-    "months": "{n} 个月"
+    "months": "{n} 个月",
+    "more": "更多",
+    "open": "打开",
+    "noMemoriesFor": "{month} 暂无记忆。"
   },
   "card": {
     "noNote": "暂无备注",
-    "photoAlt": "记忆"
+    "photoAlt": "记忆",
+    "today": "今天",
+    "yesterday": "昨天",
+    "daysAgo": "{n}天前"
   },
   "modal": {
     "tabCaption": "标题",
@@ -85,7 +100,9 @@
     "addComment": "添加评论…",
     "post": "发布",
     "noComments": "暂无评论",
-    "viewOlderComments": "查看 {n} 条更早的评论"
+    "viewOlderComments": "查看 {n} 条更早的评论",
+    "editNote": "编辑备注",
+    "editComment": "编辑评论"
   },
   "upload": {
     "addMemory": "添加记忆",
@@ -99,6 +116,67 @@
     "upload": "上传",
     "uploadN": "上传 {n} 个",
     "uploading": "上传中 {done}/{total}…",
-    "allUploaded": "全部上传完成 ✓"
+    "allUploaded": "全部上传完成 ✓",
+    "notePlaceholder": "添加备注…（可选）",
+    "milestonePlaceholder": "例：第一步、婚礼…（可选）",
+    "noteShort": "备注…（可选）",
+    "milestoneShort": "✦ 里程碑…（可选）",
+    "errorVideoSize": "视频不能超过 500 MB。",
+    "errorPhotoSize": "照片不能超过 50 MB。",
+    "errorSession": "会话已过期，请重新登录。",
+    "errorStorageFull": "存储空间已满",
+    "errorVideoTooLarge": "视频太大",
+    "errorPhotoTooLarge": "照片太大",
+    "errorFailed": "上传失败"
+  },
+  "common": {
+    "back": "返回",
+    "justNow": "刚刚",
+    "daysAgo": "{n}天前",
+    "hoursAgo": "{n}小时前",
+    "minsAgo": "{n}分钟前",
+    "inDays": "{n}天后",
+    "inHours": "{n}小时后",
+    "inMins": "{n}分钟后",
+    "you": "你",
+    "someone": "某人",
+    "unknown": "未知",
+    "errorGeneric": "出现错误，请重试。"
+  },
+  "confirm": {
+    "signingIn": "正在登录…",
+    "tryAgain": "重试",
+    "error": "出现错误，请重试。"
+  },
+  "invite": {
+    "joining": "正在加入你的圈子…",
+    "expired": "此邀请已过期",
+    "error": "出现错误",
+    "expiredDesc": "请联系圈子管理员重新发送邀请。",
+    "errorDesc": "请重新点击链接，或请求新的邀请。",
+    "goToSignIn": "前往登录"
+  },
+  "members": {
+    "title": "成员",
+    "invite": "邀请",
+    "count": "{n} 位成员",
+    "you": "（你）",
+    "roleOwner": "创建者",
+    "roleAdmin": "管理员",
+    "roleMember": "成员",
+    "pendingInvites": "待接受邀请",
+    "resend": "重新发送",
+    "removeConfirm": "确认移除？",
+    "yes": "是",
+    "no": "否",
+    "invited": "邀请于 {time}",
+    "expires": "过期于 {time}",
+    "removeError": "移除成员失败。",
+    "cancelInviteError": "取消邀请失败。",
+    "resendInviteError": "重新发送邀请失败。"
+  },
+  "member": {
+    "joined": "加入于 {date}",
+    "memories": "{n} 条记忆"
   }
 }

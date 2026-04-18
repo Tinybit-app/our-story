@@ -9,11 +9,11 @@
           @click="retry"
           class="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
         >
-          Try again
+          {{ t('confirm.tryAgain') }}
         </button>
       </template>
       <template v-else>
-        <p class="text-sm text-muted-foreground">Signing you in…</p>
+        <p class="text-sm text-muted-foreground">{{ t('confirm.signingIn') }}</p>
       </template>
     </div>
   </div>
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 definePageMeta({ auth: false })
+const { t } = useI18n()
 
 const user = useSupabaseUser()
 const router = useRouter()
@@ -38,7 +39,7 @@ async function checkMembership() {
       router.push(hasMembership ? "/" : "/onboarding")
     }
   } catch {
-    errorMsg.value = "Something went wrong. Please try again."
+    errorMsg.value = t('confirm.error')
   }
 }
 

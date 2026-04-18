@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
   // Fetch circle name + sender name for email
   const [{ data: circle }, { data: sender }] = await Promise.all([
     supabase.from("circle").select("name").eq("id", circleId).single(),
-    supabase.from("user").select("first_name, last_name").eq("id", user.sub).single(),
+    (supabase as any).from("user").select("first_name, last_name, locale").eq("id", user.sub).single(),
   ])
 
   const senderName = [sender?.first_name, sender?.last_name].filter(Boolean).join(" ") || "Someone"
@@ -81,6 +81,7 @@ export default defineEventHandler(async (event) => {
         senderName,
         circleName: circle?.name ?? "a circle",
         inviteUrl: `${config.appUrl}/invite/${invite.token}`,
+        locale: sender?.locale ?? "en",
       }),
     })
   } else {
@@ -90,11 +91,31 @@ export default defineEventHandler(async (event) => {
   return { ok: true }
 })
 
-function buildInviteEmail({ senderName, circleName, inviteUrl }: {
+function buildInviteEmail({ senderName, circleName, inviteUrl, locale }: {
   senderName: string
   circleName: string
   inviteUrl: string
+  locale: string
 }) {
+  if (locale === "zh-CN") {
+    return `
+      <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; padding: 40px 24px; background: #fffdf8; color: #1a1a1a;">
+        <p style="font-size: 11px; font-weight: bold; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin: 0 0 28px;">Our Story</p>
+        <h2 style="font-size: 22px; font-weight: bold; margin: 0 0 12px; line-height: 1.3;">${senderName} 邀请你加入他们的故事</h2>
+        <p style="color: #555; margin: 0 0 32px; line-height: 1.6; font-size: 15px;">
+          ${senderName} 在 Our Story 上创建了 <strong>${circleName}</strong> — 一个私密的空间，用来分享记忆、里程碑和珍贵时刻。
+        </p>
+        <a href="${inviteUrl}" style="display: block; background: #1a1a1a; color: #fff; text-align: center; padding: 16px 24px; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 600;">
+          加入 ${circleName} →
+        </a>
+        <p style="color: #999; font-size: 12px; margin-top: 32px; text-align: center; line-height: 1.6;">
+          无需账号即可浏览。加入后可添加你自己的记忆。<br/>
+          私密、仅限邀请 · 无广告
+        </p>
+      </div>
+    `
+  }
+
   return `
     <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; padding: 40px 24px; background: #fffdf8; color: #1a1a1a;">
       <p style="font-size: 11px; font-weight: bold; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin: 0 0 28px;">Our Story</p>

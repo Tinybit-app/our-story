@@ -37,8 +37,8 @@ export default defineNuxtConfig({
     strategy: 'no_prefix',
     defaultLocale: 'en',
     locales: [
-      { code: 'en', name: 'English', file: 'en.json' },
-      { code: 'zh-CN', name: '中文', file: 'zh-CN.json' },
+      { code: 'en',    name: 'English', shortLabel: 'EN', file: 'en.json' },
+      { code: 'zh-CN', name: '中文',    shortLabel: '中', file: 'zh-CN.json' },
     ],
     langDir: '../locales/',
     detectBrowserLanguage: {

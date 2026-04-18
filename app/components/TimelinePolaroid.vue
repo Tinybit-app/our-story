@@ -9,9 +9,9 @@
           <circle cx="12" cy="13" r="3"/>
         </svg>
       </div>
-      <p class="text-base font-semibold text-foreground mb-2">Your story starts here</p>
+      <p class="text-base font-semibold text-foreground mb-2">{{ t('timeline.emptyTitle') }}</p>
       <p class="text-sm text-muted-foreground leading-relaxed max-w-xs">
-        Add your first photo or video to start building your shared timeline.
+        {{ t('timeline.emptyDesc') }}
       </p>
     </div>
 
@@ -19,7 +19,7 @@
     <div v-else-if="loading && monthGroups.length === 0" class="flex justify-center py-32">
       <div class="flex flex-col items-center gap-3">
         <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <p class="text-xs text-muted-foreground">Loading memories…</p>
+        <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
       </div>
     </div>
 
@@ -57,7 +57,7 @@
           <!-- Month divider: two lines with uppercase month label between -->
           <div class="flex items-center gap-4 mb-8">
             <div class="flex-1 h-px bg-border" />
-            <span class="text-[11px] font-semibold tracking-[.16em] uppercase text-muted-foreground">{{ group.label }} &middot; {{ group.totalCount }} {{ group.totalCount === 1 ? 'memory' : 'memories' }}</span>
+            <span class="text-[11px] font-semibold tracking-[.16em] uppercase text-muted-foreground">{{ group.label }} &middot; {{ t('timeline.memories', group.totalCount) }}</span>
             <div class="flex-1 h-px bg-border" />
           </div>
 
@@ -82,8 +82,8 @@
                      hover:border-primary hover:text-foreground transition-colors self-center text-center px-3"
               style="width:160px; height:160px; background:var(--border); transform:rotate(0.5deg);"
             >
-              <span class="leading-snug">+{{ group.totalCount - group.memories.length }} more</span>
-              <span class="leading-snug">Open {{ group.label }} →</span>
+              <span class="leading-snug">+{{ group.totalCount - group.memories.length }} {{ t('timeline.more') }}</span>
+              <span class="leading-snug">{{ t('timeline.open') }} {{ group.label }} →</span>
             </NuxtLink>
 
           </div>
@@ -105,6 +105,7 @@
 
 <script setup lang="ts">
 import type { MonthGroup } from '~/composables/useTimeline'
+const { t } = useI18n()
 
 const props = defineProps<{
   monthGroups: MonthGroup[]
@@ -144,7 +145,7 @@ function isWideMemory(id: string): boolean {
 function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
   const totalMemories = yearSection.months.reduce((sum, g) => sum + g.totalCount, 0)
   const monthCount = yearSection.months.length
-  return `${totalMemories} memor${totalMemories === 1 ? 'y' : 'ies'} · ${monthCount} month${monthCount === 1 ? '' : 's'}`
+  return `${t('timeline.memories', totalMemories)} · ${t('timeline.months', monthCount)}`
 }
 
 // Root element for scoped observers

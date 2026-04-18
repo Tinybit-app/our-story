@@ -45,6 +45,8 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
   monthGroups: ComputedRef<MonthGroup[]>
   yearInfos: ComputedRef<YearInfo[]>
 } {
+  const { locale } = useI18n()
+
   const monthGroups = computed<MonthGroup[]>(() => {
     const map = new Map<string, { year: number; month: number; memories: Memory[]; total: number }>()
 
@@ -68,7 +70,7 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
       .map(([, { year, month, memories, total }]) => ({
         year,
         month,
-        label: new Date(year, month - 1).toLocaleDateString('en-US', {
+        label: new Date(year, month - 1).toLocaleDateString(locale.value, {
           month: 'long',
           year: 'numeric',
         }),

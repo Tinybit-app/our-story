@@ -11,10 +11,10 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
-          Back
+          {{ t('common.back') }}
         </button>
 
-        <p class="flex-1 text-sm font-semibold text-foreground text-center">Members</p>
+        <p class="flex-1 text-sm font-semibold text-foreground text-center">{{ t('members.title') }}</p>
 
         <!-- Invite button (owner/admin only) -->
         <button
@@ -26,7 +26,7 @@
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
             <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
           </svg>
-          Invite
+          {{ t('members.invite') }}
         </button>
         <div v-else class="w-12" />
       </div>
@@ -47,7 +47,7 @@
         <!-- Active members -->
         <section>
           <p class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-4">
-            {{ data.members.length }} {{ data.members.length === 1 ? 'Member' : 'Members' }}
+            {{ t('members.count', data.members.length) }}
           </p>
           <ul class="space-y-1">
             <li
@@ -67,18 +67,18 @@
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-foreground leading-none truncate">
                     {{ displayName(member) }}
-                    <span v-if="member.userId === authUser?.sub" class="text-muted-foreground font-normal"> (you)</span>
+                    <span v-if="member.userId === authUser?.sub" class="text-muted-foreground font-normal"> {{ t('members.you') }}</span>
                   </p>
                 </div>
-                <span :class="roleBadgeClass(member.role)" class="flex-shrink-0 text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full capitalize">
-                  {{ member.role }}
+                <span :class="roleBadgeClass(member.role)" class="flex-shrink-0 text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full">
+                  {{ roleLabel(member.role) }}
                 </span>
               </div>
 
               <!-- Remove button / inline confirm -->
               <template v-if="canManage && member.role !== 'owner' && !(member.userId === authUser?.sub)">
                 <div v-if="confirmRemoveId === member.userId" class="flex items-center gap-1.5 flex-shrink-0" @click.stop>
-                  <span class="text-xs text-muted-foreground">Remove?</span>
+                  <span class="text-xs text-muted-foreground">{{ t('members.removeConfirm') }}</span>
                   <button
                     class="px-2.5 py-1 text-xs font-semibold text-destructive border border-destructive/40 rounded-lg hover:bg-destructive/10 transition-colors"
                     :disabled="removingId === member.userId"
@@ -87,13 +87,13 @@
                     <svg v-if="removingId === member.userId" class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                       <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                     </svg>
-                    <span v-else>Yes</span>
+                    <span v-else>{{ t('members.yes') }}</span>
                   </button>
                   <button
                     class="px-2.5 py-1 text-xs font-medium text-foreground border border-border rounded-lg hover:bg-secondary transition-colors"
                     @click="confirmRemoveId = null"
                   >
-                    No
+                    {{ t('members.no') }}
                   </button>
                 </div>
                 <button
@@ -116,7 +116,7 @@
         <!-- Pending invites (owner/admin only) -->
         <section v-if="canManage && data.invites.length > 0">
           <p class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-4">
-            Pending invites
+            {{ t('members.pendingInvites') }}
           </p>
           <ul class="space-y-1">
             <li
@@ -135,7 +135,7 @@
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-foreground leading-none truncate">{{ invite.email }}</p>
                 <p class="text-xs text-muted-foreground mt-1">
-                  Invited {{ timeAgo(invite.created_at) }} · expires {{ timeAgo(invite.expires_at, true) }}
+                  {{ t('members.invited', { time: timeAgo(invite.created_at) }) }} · {{ t('members.expires', { time: timeAgo(invite.expires_at, true) }) }}
                 </p>
               </div>
 
@@ -146,7 +146,7 @@
                   :disabled="resendingEmail === invite.email"
                   @click="resendInvite(invite)"
                 >
-                  {{ resendingEmail === invite.email ? '…' : 'Resend' }}
+                  {{ resendingEmail === invite.email ? '…' : t('members.resend') }}
                 </button>
                 <button
                   class="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors rounded-lg hover:bg-secondary"
@@ -178,8 +178,8 @@
       <div v-if="inviteOpen" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
         <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] p-6 shadow-2xl">
-          <h2 class="font-display text-lg font-bold text-foreground mb-1">Invite someone</h2>
-          <p class="text-xs text-muted-foreground mb-5">They'll get a link to join {{ circleName }}.</p>
+          <h2 class="font-display text-lg font-bold text-foreground mb-1">{{ t('nav.inviteSomeone') }}</h2>
+          <p class="text-xs text-muted-foreground mb-5">{{ t('nav.inviteDesc', { circle: circleName }) }}</p>
 
           <form @submit.prevent="sendInvite">
             <input
@@ -191,12 +191,12 @@
               class="w-full bg-background border border-border rounded-[10px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-3 disabled:opacity-50"
             />
             <p v-if="inviteError" class="text-xs text-destructive mb-3">{{ inviteError }}</p>
-            <p v-if="inviteSentTo" class="text-xs text-green-600 dark:text-green-400 mb-3">Invite sent to {{ inviteSentTo }}.</p>
+            <p v-if="inviteSentTo" class="text-xs text-green-600 dark:text-green-400 mb-3">{{ t('nav.inviteSentTo', { email: inviteSentTo }) }}</p>
 
             <div class="flex gap-2">
-              <button type="button" class="flex-1 py-3 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors" @click="closeInvite">Cancel</button>
+              <button type="button" class="flex-1 py-3 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors" @click="closeInvite">{{ t('nav.cancel') }}</button>
               <button type="submit" :disabled="inviteSending || !inviteEmail" class="flex-1 py-3 rounded-[10px] text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40">
-                {{ inviteSending ? 'Sending…' : 'Send invite' }}
+                {{ inviteSending ? t('nav.sending') : t('nav.sendInvite') }}
               </button>
             </div>
           </form>
@@ -209,6 +209,7 @@
 
 <script setup lang="ts">
 definePageMeta({})
+const { t } = useI18n()
 
 const router = useRouter()
 const authUser = useSupabaseUser()
@@ -235,7 +236,7 @@ const canManage = computed(() =>
 // ── Display helpers ────────────────────────────────────────
 function displayName(member: any): string {
   const parts = [member.firstName, member.lastName].filter(Boolean)
-  return parts.length ? parts.join(' ') : member.firstName || 'Unknown'
+  return parts.length ? parts.join(' ') : member.firstName || t('common.unknown')
 }
 
 function initials(member: any): string {
@@ -253,19 +254,25 @@ function roleBadgeClass(role: string): string {
   }
 }
 
+function roleLabel(role: string): string {
+  if (role === 'owner') return t('members.roleOwner')
+  if (role === 'admin') return t('members.roleAdmin')
+  return t('members.roleMember')
+}
+
 function timeAgo(dateStr: string, future = false): string {
   const diff = Math.abs(Date.now() - new Date(dateStr).getTime())
   const days = Math.floor(diff / 86_400_000)
   const hours = Math.floor(diff / 3_600_000)
   const mins = Math.floor(diff / 60_000)
   if (future) {
-    if (days > 0) return `in ${days}d`
-    if (hours > 0) return `in ${hours}h`
-    return `in ${mins}m`
+    if (days > 0) return t('common.inDays', { n: days })
+    if (hours > 0) return t('common.inHours', { n: hours })
+    return t('common.inMins', { n: mins })
   }
-  if (days > 0) return `${days}d ago`
-  if (hours > 0) return `${hours}h ago`
-  return `${mins}m ago`
+  if (days > 0) return t('common.daysAgo', { n: days })
+  if (hours > 0) return t('common.hoursAgo', { n: hours })
+  return t('common.minsAgo', { n: mins })
 }
 
 // ── Remove member ──────────────────────────────────────────
@@ -281,7 +288,7 @@ async function removeMember(member: any) {
     confirmRemoveId.value = null
     await refresh()
   } catch (err: any) {
-    removeError.value = err?.data?.message ?? 'Failed to remove member.'
+    removeError.value = err?.data?.message ?? t('members.removeError')
     confirmRemoveId.value = null
   } finally {
     removingId.value = null
@@ -298,7 +305,7 @@ async function cancelInvite(invite: any) {
     await $fetch(`/api/circles/${circleId.value}/invites/${invite.id}`, { method: 'DELETE' })
     await refresh()
   } catch (err: any) {
-    alert(err?.data?.message ?? 'Failed to cancel invite.')
+    alert(err?.data?.message ?? t('members.cancelInviteError'))
   } finally {
     cancellingId.value = null
   }
@@ -317,7 +324,7 @@ async function resendInvite(invite: any) {
     })
     await refresh()
   } catch (err: any) {
-    alert(err?.data?.message ?? 'Failed to resend invite.')
+    alert(err?.data?.message ?? t('members.resendInviteError'))
   } finally {
     resendingEmail.value = null
   }
@@ -352,9 +359,9 @@ async function sendInvite() {
     await refresh()
   } catch (err: any) {
     const msg = err?.data?.message ?? ''
-    if (msg.includes('already been sent')) inviteError.value = 'An invite was already sent to this email.'
-    else if (msg.includes('Max 10')) inviteError.value = 'You have 10 pending invites. Wait for some to be accepted first.'
-    else inviteError.value = 'Failed to send invite. Please try again.'
+    if (msg.includes('already been sent')) inviteError.value = t('nav.inviteAlreadySent')
+    else if (msg.includes('Max 10')) inviteError.value = t('nav.inviteMaxPending')
+    else inviteError.value = t('nav.inviteFailed')
   } finally {
     inviteSending.value = false
   }

@@ -11,7 +11,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
-          Back
+          {{ t('common.back') }}
         </button>
       </div>
     </header>
@@ -32,10 +32,10 @@
           <div class="flex items-center gap-3 mt-1.5 flex-wrap">
             <span class="text-[11px] text-muted-foreground capitalize">{{ member.role }}</span>
             <span class="text-border text-xs">·</span>
-            <span class="text-[11px] text-muted-foreground">Joined {{ joinedLabel }}</span>
+            <span class="text-[11px] text-muted-foreground">{{ t('member.joined', { date: joinedLabel }) }}</span>
             <span v-if="totalMemories > 0" class="text-border text-xs">·</span>
             <span v-if="totalMemories > 0" class="text-[11px] text-muted-foreground">
-              {{ totalMemories }} {{ totalMemories === 1 ? 'memory' : 'memories' }}
+              {{ t('member.memories', totalMemories) }}
             </span>
           </div>
         </div>
@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
+const { t, locale } = useI18n()
 
 const selectedMemoryIndex = ref<number | null>(null)
 const selectedRect = ref<DOMRect | null>(null)
@@ -110,7 +111,7 @@ const member = computed(() => membersData.value?.members.find((m: any) => m.user
 
 function displayName(m: any): string {
   const parts = [m.firstName, m.lastName].filter(Boolean)
-  return parts.length ? parts.join(' ') : 'Unknown'
+  return parts.length ? parts.join(' ') : t('common.unknown')
 }
 
 function initials(m: any): string {
@@ -121,7 +122,7 @@ function initials(m: any): string {
 
 const joinedLabel = computed(() => {
   if (!member.value?.joinedAt) return ''
-  return new Date(member.value.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return new Date(member.value.joinedAt).toLocaleDateString(locale.value, { month: 'long', year: 'numeric' })
 })
 
 // ── Timeline ───────────────────────────────────────────────

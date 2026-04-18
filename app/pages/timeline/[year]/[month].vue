@@ -11,7 +11,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          Back
+          {{ t('common.back') }}
         </NuxtLink>
         <div class="flex-1 min-w-0">
           <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase leading-none mb-1 select-none">Our Story</p>
@@ -26,19 +26,19 @@
       <div v-if="loading" class="flex justify-center py-32">
         <div class="flex flex-col items-center gap-3">
           <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p class="text-xs text-muted-foreground">Loading memories…</p>
+          <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
         </div>
       </div>
 
       <!-- Empty -->
       <div v-else-if="memories.length === 0" class="text-center py-32">
-        <p class="text-sm text-muted-foreground">No memories found for {{ monthLabel }}.</p>
+        <p class="text-sm text-muted-foreground">{{ t('timeline.noMemoriesFor', { month: monthLabel }) }}</p>
       </div>
 
       <!-- Polaroid grid (uncapped) -->
       <div v-else>
         <p class="text-xs text-muted-foreground mb-6">
-          {{ memories.length }} {{ memories.length === 1 ? 'memory' : 'memories' }}
+          {{ t('timeline.memories', memories.length) }}
         </p>
         <div class="flex flex-wrap gap-5">
           <PolaroidCard
@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
+const { t, locale } = useI18n()
 
 const route = useRoute()
 const year = Number(route.params.year)
@@ -67,7 +68,7 @@ if (!year || !month || month < 1 || month > 12 || year < 2000 || year > 2100) {
 }
 
 const monthLabel = computed(() =>
-  new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  new Date(year, month - 1).toLocaleDateString(locale.value, { month: 'long', year: 'numeric' })
 )
 
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')

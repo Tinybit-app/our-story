@@ -8,7 +8,7 @@
       <img
         v-if="firstMedia?.thumbnailUrl || firstMedia?.url"
         :src="firstMedia.thumbnailUrl ?? firstMedia.url"
-        :alt="memory.note ?? 'Memory'"
+        :alt="memory.note ?? t('card.photoAlt')"
         class="w-full h-full object-cover"
         loading="lazy"
       />
@@ -83,14 +83,15 @@
 
 <script setup lang="ts">
 const props = defineProps<{ memory: any }>()
+const { t, locale } = useI18n()
 
 const firstMedia = computed(() => props.memory.memorymedia?.[0] ?? null)
 const mediaCount = computed(() => props.memory.memorymedia?.length ?? 0)
 
 const ownerName = computed(() => {
   const u = props.memory.user
-  if (!u) return 'Unknown'
-  return [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Unknown'
+  if (!u) return t('common.unknown')
+  return [u.first_name, u.last_name].filter(Boolean).join(' ') || t('common.unknown')
 })
 
 const initials = computed(() => {
@@ -103,9 +104,9 @@ const formattedDate = computed(() => {
   const d = new Date(props.memory.memory_date)
   const now = new Date()
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays} days ago`
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  if (diffDays === 0) return t('card.today')
+  if (diffDays === 1) return t('card.yesterday')
+  if (diffDays < 7) return t('card.daysAgo', { n: diffDays })
+  return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
 })
 </script>

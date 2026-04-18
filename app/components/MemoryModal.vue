@@ -98,7 +98,7 @@
           <img
             v-if="firstMedia && firstMedia.media_type !== 'video'"
             :src="firstMedia.url ?? firstMedia.thumbnailUrl ?? ''"
-            :alt="memory?.note ?? 'Memory'"
+            :alt="memory?.note ?? t('card.photoAlt')"
             class="absolute inset-0 w-full h-full object-cover block"
           />
           <video
@@ -162,7 +162,7 @@
               "
               @click="activeTab = 'caption'"
             >
-              Caption
+              {{ t('modal.tabCaption') }}
             </button>
             <button
               class="tab-btn py-2.5 px-3 text-[11px] font-semibold tracking-[.06em] border-b-2 transition-colors"
@@ -173,7 +173,7 @@
               "
               @click="activeTab = 'comments'"
             >
-              Comments
+              {{ t('modal.tabComments') }}
               <span
                 v-if="comments.length > 0"
                 class="ml-1 opacity-50 font-normal"
@@ -206,12 +206,12 @@
                   <p
                     v-else
                     class="text-[13px] text-muted-foreground/50 italic mb-2"
-                  >No note added{{ isOwner ? ' — click the edit icon to add one' : '' }}</p>
+                  >{{ isOwner ? t('modal.noNoteOwner') : t('modal.noNote') }}</p>
                 </div>
                 <button
                   v-if="isOwner"
                   class="flex-shrink-0 mt-0.5 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors opacity-0 group-hover/meta:opacity-100"
-                  title="Edit note"
+                  :title="t('modal.editNote')"
                   @click="startEditing"
                 >
                   <svg
@@ -242,7 +242,7 @@
                 <div class="flex items-baseline justify-between mb-1">
                   <label
                     class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]"
-                    >Milestone</label
+                    >{{ t('modal.milestone') }}</label
                   >
                   <span
                     class="text-[10px]"
@@ -257,14 +257,14 @@
                 <input
                   v-model="editMilestone"
                   type="text"
-                  placeholder="e.g. First steps"
+                  :placeholder="t('modal.milestonePlaceholder')"
                   maxlength="40"
                   class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
                 />
                 <div class="flex items-baseline justify-between mb-1">
                   <label
                     class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]"
-                    >Note</label
+                    >{{ t('modal.note') }}</label
                   >
                   <span
                     class="text-[10px]"
@@ -279,7 +279,7 @@
                 <textarea
                   ref="editTextareaEl"
                   v-model="editNote"
-                  placeholder="Add a note…"
+                  :placeholder="t('modal.notePlaceholder')"
                   rows="3"
                   maxlength="500"
                   class="w-full bg-secondary rounded-lg px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed"
@@ -291,14 +291,14 @@
                       class="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
                       @click="cancelEditing"
                     >
-                      Cancel
+                      {{ t('modal.cancel') }}
                     </button>
                     <button
                       :disabled="saving"
                       class="text-[12px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
                       @click="saveEdit"
                     >
-                      {{ saving ? "Saving…" : "Save" }}
+                      {{ saving ? t('modal.saving') : t('modal.save') }}
                     </button>
                   </div>
                 </div>
@@ -399,7 +399,7 @@
                   <textarea
                     ref="textareaEl"
                     v-model="commentDraft"
-                    placeholder="Add a comment…"
+                    :placeholder="t('modal.addComment')"
                     rows="1"
                     class="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
                     style="max-height: 80px; overflow-y: auto"
@@ -411,7 +411,7 @@
                     class="flex-shrink-0 text-[12px] font-semibold text-accent disabled:text-muted-foreground transition-colors pb-0.5"
                     @click="submitComment"
                   >
-                    {{ submitting ? "…" : "Post" }}
+                    {{ submitting ? "…" : t('modal.post') }}
                   </button>
                 </div>
               </div>
@@ -457,7 +457,7 @@
                         <button
                           v-if="c.user_id === currentUserId"
                           class="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-accent hover:border-accent/40 transition-all opacity-0 group-hover/comment:opacity-100 shadow-sm"
-                          title="Edit comment"
+                          :title="t('modal.editComment')"
                           @click.stop="startEditingComment(c)"
                         >
                           <svg
@@ -510,14 +510,14 @@
                           class="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                           @click="cancelCommentEdit"
                         >
-                          Cancel
+                          {{ t('modal.cancel') }}
                         </button>
                         <button
                           :disabled="!commentEditDraft.trim() || savingComment"
                           class="text-[11px] font-semibold text-accent disabled:text-muted-foreground transition-colors"
                           @click="saveCommentEdit(c.id)"
                         >
-                          {{ savingComment ? "Saving…" : "Save" }}
+                          {{ savingComment ? t('modal.saving') : t('modal.save') }}
                         </button>
                       </div>
                     </template>
@@ -528,15 +528,14 @@
                 v-else
                 class="text-[12px] text-muted-foreground text-center py-6"
               >
-                No comments yet
+                {{ t('modal.noComments') }}
               </p>
               <button
                 v-if="!allCommentsVisible && hiddenCommentCount > 0"
                 class="mt-3 w-full text-[12px] text-muted-foreground hover:text-foreground transition-colors text-left"
                 @click="allCommentsVisible = true"
               >
-                View {{ hiddenCommentCount }} older
-                {{ hiddenCommentCount === 1 ? "comment" : "comments" }} ↓
+                {{ t('modal.viewOlderComments', hiddenCommentCount) }} ↓
               </button>
             </div>
           </div>
@@ -550,6 +549,7 @@
 
 <script setup lang="ts">
 import type { Memory } from "~/composables/useTimeline";
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   memories: Memory[];
@@ -604,7 +604,7 @@ const firstMedia = computed(() => memory.value?.memorymedia[0] ?? null);
 const formattedDateAndAuthor = computed(() => {
   if (!memory.value) return "";
   const d = new Date(memory.value.memory_date);
-  const dateStr = d.toLocaleDateString("en-US", {
+  const dateStr = d.toLocaleDateString(locale.value, {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -704,9 +704,9 @@ const reactionGroups = computed(() => {
     g.count++;
     if (r.user_id === currentUserId.value) {
       g.mine = true;
-      g.names.unshift("You");
+      g.names.unshift(t('common.you'));
     } else {
-      g.names.push(r.user?.first_name ?? "Someone");
+      g.names.push(r.user?.first_name ?? t('common.someone'));
     }
   }
   return groups;
@@ -944,9 +944,9 @@ function autoResize(e: Event) {
 }
 
 function commentDisplayName(user: Comment["user"]): string {
-  if (!user) return "Someone";
+  if (!user) return t('common.someone');
   const parts = [user.first_name, user.last_name].filter(Boolean);
-  return parts.length ? parts.join(" ") : "Someone";
+  return parts.length ? parts.join(" ") : t('common.someone');
 }
 
 function commentInitials(user: Comment["user"]): string {
@@ -995,13 +995,13 @@ async function saveCommentEdit(commentId: string) {
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('common.justNow');
+  if (mins < 60) return t('common.minsAgo', { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t('common.hoursAgo', { n: hrs });
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString("en-US", {
+  if (days < 7) return t('common.daysAgo', { n: days });
+  return new Date(iso).toLocaleDateString(locale.value, {
     month: "short",
     day: "numeric",
   });

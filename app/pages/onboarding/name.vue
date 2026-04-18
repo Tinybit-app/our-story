@@ -62,15 +62,15 @@ const circleIdCookie = useCookie<string | null>('onboarding_circle_id', { maxAge
 
 const placeholder = computed(() => {
   const map: Record<string, string> = {
-    parents:    'The Johnson Family',
-    couple:     'Sarah & Mike',
-    friends:    'Barcelona Trip Crew',
-    solo:       'My Story',
-    family:     'The Smiths',
-    travel:     'Southeast Asia 2025',
-    caregiving: 'The Wilson Circle',
+    parents:    t('onboarding.circlePlaceholderParents'),
+    couple:     t('onboarding.circlePlaceholderCouple'),
+    friends:    t('onboarding.circlePlaceholderFriends'),
+    solo:       t('onboarding.circlePlaceholderSolo'),
+    family:     t('onboarding.circlePlaceholderFamily'),
+    travel:     t('onboarding.circlePlaceholderTravel'),
+    caregiving: t('onboarding.circlePlaceholderCaregiving'),
   }
-  return map[circleTypeCookie.value ?? ''] ?? 'Our Circle'
+  return map[circleTypeCookie.value ?? ''] ?? t('onboarding.circlePlaceholderDefault')
 })
 
 async function createCircle() {
@@ -96,7 +96,7 @@ async function createCircle() {
       router.push('/onboarding/invite')
     }
   } catch (err: any) {
-    errorMsg.value = err?.data?.message ?? 'Something went wrong. Please try again.'
+    errorMsg.value = err?.data?.message ?? t('common.errorGeneric')
   } finally {
     loading.value = false
   }

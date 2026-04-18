@@ -77,7 +77,7 @@ async function sendInvite() {
     })
     sent.value = true
   } catch (err: any) {
-    errorMsg.value = err?.data?.message ?? 'Failed to send invite. Please try again.'
+    errorMsg.value = err?.data?.message ?? t('nav.inviteFailed')
   } finally {
     loading.value = false
   }

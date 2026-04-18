@@ -80,6 +80,9 @@
           <span>{{ t('nav.addMemory') }}</span>
         </button>
 
+        <!-- Language toggle -->
+        <LocalePicker class="flex-shrink-0" />
+
         <!-- Avatar + dropdown -->
         <div ref="menuRef" class="relative flex-shrink-0">
           <button
@@ -187,18 +190,6 @@
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                   </svg>
                   {{ isDark ? t('nav.lightMode') : t('nav.darkMode') }}
-                </button>
-
-                <!-- Language toggle -->
-                <button
-                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
-                  @click="toggleLocale"
-                >
-                  <svg class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                  </svg>
-                  {{ locale === 'en' ? '中文' : 'English' }}
                 </button>
 
                 <div class="h-px bg-border mx-3" />
@@ -413,13 +404,6 @@ import type { Memory } from "~/composables/useTimeline";
 
 // ── i18n ───────────────────────────────────────────────────
 const { t, locale, setLocale } = useI18n()
-
-async function toggleLocale() {
-  const next = locale.value === 'en' ? 'zh-CN' : 'en'
-  await setLocale(next as 'en' | 'zh-CN')
-  menuOpen.value = false
-  $fetch('/api/profile', { method: 'PATCH', body: { locale: next } }).catch(() => {})
-}
 
 // Locale-aware month abbreviation using Intl (auto-adapts to zh-CN)
 function monthAbbr(month: number): string {

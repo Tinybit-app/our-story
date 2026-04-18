@@ -5,23 +5,21 @@
 
       <template v-if="errorMsg">
         <h1 class="font-display text-xl font-bold text-foreground mb-3">
-          {{ errorMsg === 'invite_expired' ? 'This invite has expired' : 'Something went wrong' }}
+          {{ errorMsg === 'invite_expired' ? t('invite.expired') : t('invite.error') }}
         </h1>
         <p class="text-sm text-muted-foreground mb-6">
-          {{ errorMsg === 'invite_expired'
-            ? 'Ask the circle owner to send a new invite.'
-            : 'Please try the link again or ask for a new invite.' }}
+          {{ errorMsg === 'invite_expired' ? t('invite.expiredDesc') : t('invite.errorDesc') }}
         </p>
         <NuxtLink
           to="/login"
           class="inline-block bg-primary text-primary-foreground rounded-[12px] px-6 py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
         >
-          Go to sign in
+          {{ t('invite.goToSignIn') }}
         </NuxtLink>
       </template>
 
       <template v-else>
-        <p class="text-muted-foreground text-sm">Joining your circle…</p>
+        <p class="text-muted-foreground text-sm">{{ t('invite.joining') }}</p>
       </template>
     </div>
   </div>
@@ -29,6 +27,7 @@
 
 <script setup lang="ts">
 definePageMeta({ auth: false })
+const { t } = useI18n()
 
 const route = useRoute()
 const user = useSupabaseUser()

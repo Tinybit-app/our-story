@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     .insert({
       owner_user_id: user.id,
       circle_id: circleId,
-      visibility: "private",
+      visibility: "circle",
       note: note || null,
       milestone_label: milestoneLabel || null,
       memory_date: memoryDate || new Date().toISOString(),

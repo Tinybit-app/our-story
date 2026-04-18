@@ -11,6 +11,24 @@
         {{ t('onboarding.nameSub') }}
       </p>
 
+      <!-- Language toggle -->
+      <div class="mb-6">
+        <p class="text-xs text-muted-foreground mb-2">{{ t('onboarding.language') }}</p>
+        <div class="inline-flex rounded-[10px] border border-border bg-card p-0.5 gap-0.5">
+          <button
+            v-for="loc in locales"
+            :key="loc.code"
+            @click="setLocale(loc.code)"
+            class="px-4 py-1.5 rounded-[8px] text-sm font-medium transition-colors"
+            :class="locale === loc.code
+              ? 'bg-foreground text-background'
+              : 'text-muted-foreground hover:text-foreground'"
+          >
+            {{ loc.name }}
+          </button>
+        </div>
+      </div>
+
       <input
         v-model="firstName"
         type="text"
@@ -43,7 +61,7 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'onboarding' })
-const { t } = useI18n()
+const { t, locale, locales, setLocale } = useI18n()
 
 const router = useRouter()
 const firstName = ref('')
@@ -59,14 +77,14 @@ async function save() {
   try {
     await $fetch('/api/profile', {
       method: 'PATCH',
-      body: { firstName: firstName.value, lastName: lastName.value },
+      body: { firstName: firstName.value, lastName: lastName.value, locale: locale.value },
     })
 
     const { refresh } = useUserState()
     const { hasMembership } = await refresh()
     router.push(hasMembership ? '/' : '/onboarding')
   } catch (err: any) {
-    errorMsg.value = err?.data?.message ?? 'Something went wrong. Please try again.'
+    errorMsg.value = err?.data?.message ?? t('common.errorGeneric')
   } finally {
     loading.value = false
   }

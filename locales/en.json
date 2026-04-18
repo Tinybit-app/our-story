@@ -29,7 +29,16 @@
     "inviteSent": "Invite sent",
     "inviteSentLink": "A link has been sent to {email}",
     "sendInvite": "Send invite",
-    "skipForNow": "Skip for now"
+    "skipForNow": "Skip for now",
+    "circlePlaceholderParents": "The Johnson Family",
+    "circlePlaceholderCouple": "Sarah & Mike",
+    "circlePlaceholderFriends": "Barcelona Trip Crew",
+    "circlePlaceholderSolo": "My Story",
+    "circlePlaceholderFamily": "The Smiths",
+    "circlePlaceholderTravel": "Southeast Asia 2025",
+    "circlePlaceholderCaregiving": "The Wilson Circle",
+    "circlePlaceholderDefault": "Our Circle",
+    "language": "Language"
   },
   "circleType": {
     "parents":    { "label": "New parents",   "description": "Baby milestones & growth" },
@@ -64,11 +73,17 @@
     "emptyDesc": "Add your first photo or video to start building your shared timeline.",
     "loading": "Loading memories…",
     "memories": "{n} memory | {n} memories",
-    "months": "{n} month | {n} months"
+    "months": "{n} month | {n} months",
+    "more": "more",
+    "open": "Open",
+    "noMemoriesFor": "No memories found for {month}."
   },
   "card": {
     "noNote": "No note",
-    "photoAlt": "Memory"
+    "photoAlt": "Memory",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{n} days ago"
   },
   "modal": {
     "tabCaption": "Caption",
@@ -85,7 +100,9 @@
     "addComment": "Add a comment…",
     "post": "Post",
     "noComments": "No comments yet",
-    "viewOlderComments": "View {n} older comment | View {n} older comments"
+    "viewOlderComments": "View {n} older comment | View {n} older comments",
+    "editNote": "Edit note",
+    "editComment": "Edit comment"
   },
   "upload": {
     "addMemory": "Add a memory",
@@ -99,6 +116,67 @@
     "upload": "Upload",
     "uploadN": "Upload {n}",
     "uploading": "Uploading {done}/{total}…",
-    "allUploaded": "All uploaded ✓"
+    "allUploaded": "All uploaded ✓",
+    "notePlaceholder": "Add a note… (optional)",
+    "milestonePlaceholder": "e.g. First steps, Wedding day… (optional)",
+    "noteShort": "Note… (optional)",
+    "milestoneShort": "✦ Milestone… (optional)",
+    "errorVideoSize": "Videos must be under 500 MB.",
+    "errorPhotoSize": "Photos must be under 50 MB.",
+    "errorSession": "Session expired — please sign in again.",
+    "errorStorageFull": "Storage full",
+    "errorVideoTooLarge": "Video too large",
+    "errorPhotoTooLarge": "Photo too large",
+    "errorFailed": "Upload failed"
+  },
+  "common": {
+    "back": "Back",
+    "justNow": "just now",
+    "daysAgo": "{n}d ago",
+    "hoursAgo": "{n}h ago",
+    "minsAgo": "{n}m ago",
+    "inDays": "in {n}d",
+    "inHours": "in {n}h",
+    "inMins": "in {n}m",
+    "you": "You",
+    "someone": "Someone",
+    "unknown": "Unknown",
+    "errorGeneric": "Something went wrong. Please try again."
+  },
+  "confirm": {
+    "signingIn": "Signing you in…",
+    "tryAgain": "Try again",
+    "error": "Something went wrong. Please try again."
+  },
+  "invite": {
+    "joining": "Joining your circle…",
+    "expired": "This invite has expired",
+    "error": "Something went wrong",
+    "expiredDesc": "Ask the circle owner to send a new invite.",
+    "errorDesc": "Please try the link again or ask for a new invite.",
+    "goToSignIn": "Go to sign in"
+  },
+  "members": {
+    "title": "Members",
+    "invite": "Invite",
+    "count": "{n} Member | {n} Members",
+    "you": "(you)",
+    "roleOwner": "Owner",
+    "roleAdmin": "Admin",
+    "roleMember": "Member",
+    "pendingInvites": "Pending invites",
+    "resend": "Resend",
+    "removeConfirm": "Remove?",
+    "yes": "Yes",
+    "no": "No",
+    "invited": "Invited {time}",
+    "expires": "expires {time}",
+    "removeError": "Failed to remove member.",
+    "cancelInviteError": "Failed to cancel invite.",
+    "resendInviteError": "Failed to resend invite."
+  },
+  "member": {
+    "joined": "Joined {date}",
+    "memories": "{n} memory | {n} memories"
   }
 }

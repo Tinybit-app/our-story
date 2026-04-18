@@ -17,7 +17,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <path d="M12 5v14M5 12h14"/>
       </svg>
-      Add memory
+      {{ t('nav.addMemory') }}
     </button>
 
     <Teleport to="body">
@@ -38,14 +38,14 @@
           <div class="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
             <div>
               <h2 class="text-sm font-semibold text-foreground">
-                {{ items.length === 1 ? 'Add a memory' : `Add ${items.length} memories` }}
+                {{ items.length === 1 ? t('upload.addMemory') : t('upload.addMemories', items.length) }}
               </h2>
               <button
                 class="text-xs text-muted-foreground hover:text-foreground transition-colors mt-0.5"
                 :disabled="isUploading"
                 @click="fileInput?.click()"
               >
-                + Add more
+                {{ t('upload.addMore') }}
               </button>
             </div>
             <button
@@ -70,7 +70,7 @@
               class="flex-shrink-0 bg-secondary hover:bg-border transition-colors text-foreground text-xs font-medium px-3 py-1.5 rounded-[10px]"
               @click="applyGroupDate"
             >
-              Apply to all
+              {{ t('upload.applyToAll') }}
             </button>
           </div>
 
@@ -102,12 +102,12 @@
 
               <div class="mb-3">
                 <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-xs text-muted-foreground">Note</label>
+                  <label class="text-xs text-muted-foreground">{{ t('upload.note') }}</label>
                   <span class="text-[11px]" :class="firstItem.note.length >= 500 ? 'text-destructive' : 'text-muted-foreground'">{{ firstItem.note.length }} / 500</span>
                 </div>
                 <textarea
                   v-model="firstItem.note"
-                  placeholder="Add a note… (optional)"
+                  :placeholder="t('upload.notePlaceholder')"
                   rows="2"
                   maxlength="500"
                   class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
@@ -116,20 +116,20 @@
 
               <div class="mb-3">
                 <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-xs text-muted-foreground">Milestone</label>
+                  <label class="text-xs text-muted-foreground">{{ t('upload.milestone') }}</label>
                   <span class="text-[11px]" :class="firstItem.milestoneLabel.length >= 40 ? 'text-destructive' : 'text-muted-foreground'">{{ firstItem.milestoneLabel.length }} / 40</span>
                 </div>
                 <input
                   v-model="firstItem.milestoneLabel"
                   type="text"
-                  placeholder="e.g. First steps, Wedding day… (optional)"
+                  :placeholder="t('upload.milestonePlaceholder')"
                   maxlength="40"
                   class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div class="flex items-center justify-between">
-                <label class="text-sm text-muted-foreground">When was this?</label>
+                <label class="text-sm text-muted-foreground">{{ t('upload.whenWas') }}</label>
                 <input
                   v-model="firstItem.date"
                   type="date"
@@ -195,7 +195,7 @@
                   />
                   <textarea
                     v-model="item.note"
-                    placeholder="Note… (optional)"
+                    :placeholder="t('upload.noteShort')"
                     rows="1"
                     maxlength="500"
                     class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground resize-none focus:outline-none leading-snug"
@@ -204,7 +204,7 @@
                   <input
                     v-model="item.milestoneLabel"
                     type="text"
-                    placeholder="✦ Milestone… (optional)"
+                    :placeholder="t('upload.milestoneShort')"
                     maxlength="40"
                     class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
                   />
@@ -227,16 +227,16 @@
               :disabled="isUploading"
               @click="cancel"
             >
-              Cancel
+              {{ t('upload.cancel') }}
             </button>
             <button
               class="flex-1 bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
               :disabled="isUploading || allDone"
               @click="uploadAll"
             >
-              <span v-if="isUploading">Uploading {{ doneCount }}/{{ items.length }}…</span>
-              <span v-else-if="allDone">All uploaded ✓</span>
-              <span v-else>{{ items.length === 1 ? 'Upload' : `Upload ${items.length}` }}</span>
+              <span v-if="isUploading">{{ t('upload.uploading', { done: doneCount, total: items.length }) }}</span>
+              <span v-else-if="allDone">{{ t('upload.allUploaded') }}</span>
+              <span v-else>{{ items.length === 1 ? t('upload.upload') : t('upload.uploadN', items.length) }}</span>
             </button>
           </div>
 
@@ -248,6 +248,7 @@
 
 <script setup lang="ts">
 import exifr from 'exifr'
+const { t } = useI18n()
 
 interface UploadItem {
   id: string
@@ -326,7 +327,7 @@ async function onFilesSelected(e: Event) {
     const isVideo = file.type.startsWith('video/')
     const maxSize = isVideo ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES
     if (file.size > maxSize) {
-      globalError.value = isVideo ? 'Videos must be under 500 MB.' : 'Photos must be under 50 MB.'
+      globalError.value = isVideo ? t('upload.errorVideoSize') : t('upload.errorPhotoSize')
       continue
     }
     const date = isVideo ? today() : await extractExifDate(file)
@@ -368,7 +369,7 @@ async function uploadItem(item: UploadItem): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token
   if (!token) {
-    item.error = 'Session expired — please sign in again.'
+    item.error = t('upload.errorSession')
     item.uploading = false
     return
   }
@@ -396,17 +397,17 @@ async function uploadItem(item: UploadItem): Promise<void> {
         item.done = true
       } else {
         item.error = result.error === 'storage_full'
-          ? 'Storage full'
+          ? t('upload.errorStorageFull')
           : result.error === 'file_too_large'
-            ? item.isVideo ? 'Video too large' : 'Photo too large'
-            : 'Upload failed'
+            ? item.isVideo ? t('upload.errorVideoTooLarge') : t('upload.errorPhotoTooLarge')
+            : t('upload.errorFailed')
       }
       resolve()
     }
 
     xhr.onerror = () => {
       item.uploading = false
-      item.error = 'Upload failed'
+      item.error = t('upload.errorFailed')
       resolve()
     }
 

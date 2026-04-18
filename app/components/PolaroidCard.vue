@@ -32,7 +32,7 @@
           (firstMedia.thumbnailUrl || firstMedia.url)
         "
         :src="firstMedia.thumbnailUrl ?? firstMedia.url ?? ''"
-        :alt="memory.note ?? 'Memory'"
+        :alt="memory.note ?? t('card.photoAlt')"
         class="w-full h-full object-cover block"
         loading="lazy"
       />
@@ -210,7 +210,7 @@
         "
         style="min-height: 2em"
       >
-        {{ captionText || "No note" }}
+        {{ captionText || t('card.noNote') }}
       </p>
 
       <!-- Date · Author -->
@@ -223,6 +223,7 @@
 
 <script setup lang="ts">
 import type { Memory } from "~/composables/useTimeline";
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   memory: Memory;
@@ -272,7 +273,7 @@ const captionText = computed(() => memory.value.note ?? "");
 
 const formattedDateAndAuthor = computed(() => {
   const d = new Date(props.memory.memory_date);
-  const dateStr = d.toLocaleDateString("en-US", {
+  const dateStr = d.toLocaleDateString(locale.value, {
     month: "short",
     day: "numeric",
   });
