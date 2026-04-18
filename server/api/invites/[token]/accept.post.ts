@@ -31,5 +31,14 @@ export default defineEventHandler(async (event) => {
 
   await supabase.from("circleinvite").update({ status: "accepted" }).eq("id", invite.id)
 
+  // Re-attach any memories this user previously owned in this circle that were
+  // detached when they were removed (owner_user_id was NULLed but former_owner_user_id
+  // preserves the reference so we can restore ownership on rejoin).
+  await supabase
+    .from("memory")
+    .update({ owner_user_id: user.sub, former_owner_user_id: null, former_owner_name: null })
+    .eq("former_owner_user_id", user.sub)
+    .eq("circle_id", invite.circle_id)
+
   return { ok: true, circleId: invite.circle_id }
 })

@@ -25,6 +25,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // /onboarding (index): only accessible before a circle has been created
-  if (hasMembership) return navigateTo('/')
+  // /onboarding (index): accessible to any authenticated user who wants to create
+  // a circle — including existing members creating a second circle. Do NOT block
+  // on hasMembership here. The circle type picker is the entry point for all
+  // circle creation, both first-time and subsequent.
 })

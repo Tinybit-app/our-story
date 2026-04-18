@@ -90,8 +90,9 @@ async function createCircle() {
 
     if (circleTypeCookie.value === 'solo') {
       circleTypeCookie.value = null
+      const newCircleId = circleId
       circleIdCookie.value = null
-      router.push('/')
+      router.push(`/?circle=${newCircleId}`)
     } else {
       router.push('/onboarding/invite')
     }

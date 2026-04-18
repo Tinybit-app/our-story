@@ -213,9 +213,13 @@
         {{ captionText || t('card.noNote') }}
       </p>
 
-      <!-- Date · Author -->
-      <p class="text-[11px] text-muted-foreground mt-[5px]">
-        {{ formattedDateAndAuthor }}
+      <!-- Date · Author (former member name shown greyed out) -->
+      <p class="text-[11px] mt-[5px]">
+        <span class="text-muted-foreground">{{ formattedDate }}</span>
+        <template v-if="authorName">
+          <span class="text-muted-foreground"> · </span>
+          <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
+        </template>
       </p>
     </div>
   </article>
@@ -271,15 +275,20 @@ const memory = computed(() => props.memory);
 
 const captionText = computed(() => memory.value.note ?? "");
 
-const formattedDateAndAuthor = computed(() => {
-  const d = new Date(props.memory.memory_date);
-  const dateStr = d.toLocaleDateString(locale.value, {
+const formattedDate = computed(() => {
+  return new Date(props.memory.memory_date).toLocaleDateString(locale.value, {
     month: "short",
     day: "numeric",
   });
-  const u = props.memory.user;
-  const firstName = u?.first_name ?? "";
-  return firstName ? `${dateStr} · ${firstName}` : dateStr;
+});
+
+// owner_user_id is null for detached (former member) memories
+const isFormerMember = computed(() => props.memory.owner_user_id === null);
+
+const authorName = computed(() => {
+  if (props.memory.user?.first_name) return props.memory.user.first_name;
+  if (isFormerMember.value && props.memory.former_owner_name) return props.memory.former_owner_name;
+  return null;
 });
 
 // ── Reactions ──────────────────────────────────────────────

@@ -63,6 +63,8 @@
     "cancel": "Cancel",
     "sending": "Sending…",
     "sendInvite": "Send invite",
+    "yourCircles": "Your circles",
+    "createNewCircle": "Create a new circle",
     "inviteSentTo": "Invite sent to {email}.",
     "inviteAlreadySent": "An invite was already sent to this email.",
     "inviteMaxPending": "You have 10 pending invites. Wait for some to be accepted first.",
@@ -143,6 +145,13 @@
     "unknown": "Unknown",
     "errorGeneric": "Something went wrong. Please try again."
   },
+  "noCircle": {
+    "title": "You're not in any circle",
+    "desc": "You may have been removed, or your invite hasn't arrived yet.",
+    "createCircle": "Create a new circle",
+    "waitingTitle": "Waiting for an invite?",
+    "waitingDesc": "Ask the circle owner to send you an invite link. You'll get an email with a link to join."
+  },
   "confirm": {
     "signingIn": "Signing you in…",
     "tryAgain": "Try again",
@@ -172,11 +181,62 @@
     "invited": "Invited {time}",
     "expires": "expires {time}",
     "removeError": "Failed to remove member.",
+    "removing": "Removing…",
+    "removeTitle": "Remove {name}",
+    "removeContentQuestion": "What should happen to their photos in this circle?",
+    "removeKeepLabel": "Keep their memories in the circle",
+    "removeKeepDesc": "Photos stay on the timeline. You can delete individual photos later.",
+    "removeDeleteLabel": "Remove their memories from the circle",
+    "removeDeleteDesc": "Their photos and videos are permanently deleted from this circle. This cannot be undone.",
+    "removeNotification": "They'll receive an email letting them know.",
     "cancelInviteError": "Failed to cancel invite.",
-    "resendInviteError": "Failed to resend invite."
+    "resendInviteError": "Failed to resend invite.",
+    "removeAction": "Remove member",
+    "makeAdmin": "Make admin",
+    "removeAdmin": "Remove admin",
+    "transferOwnership": "Transfer ownership",
+    "transferOwnershipTitle": "Transfer ownership to {name}?",
+    "transferOwnershipDesc": "They'll become the new owner. You'll become an admin.",
+    "confirm": "Confirm",
+    "roleChangeError": "Failed to update role. Please try again."
   },
   "member": {
     "joined": "Joined {date}",
     "memories": "{n} memory | {n} memories"
+  },
+  "settings": {
+    "account": {
+      "title": "Account settings",
+      "pendingDeletionTitle": "Account deletion scheduled",
+      "pendingDeletionDesc": "Your account is scheduled for permanent deletion on {date}. All your data will be removed. You can cancel before then.",
+      "cancelDeletion": "Cancel deletion",
+      "canceling": "Canceling…",
+      "exportTitle": "Export your data",
+      "exportDesc": "Download a zip of all your photos, videos, and notes. You'll receive a download link by email within a few minutes.",
+      "exportButton": "Request export",
+      "exporting": "Requesting…",
+      "exportQueued": "Export started — check your email for the download link.",
+      "exportInProgress": "An export is already in progress.",
+      "deleteTitle": "Delete account",
+      "deleteDesc": "Your account will be deactivated immediately. After 30 days, all your photos, videos, and memories across every circle will be permanently deleted. You'll receive a confirmation email with a link to cancel.",
+      "deleteStep1Title": "Right now",
+      "deleteStep1Desc": "Your account is deactivated. You're signed out everywhere. You have 30 days to change your mind.",
+      "deleteStep2Title": "On {date} — permanent",
+      "deleteStep2Desc": "Everything is gone forever and cannot be recovered:",
+      "deleteItem1": "Photos and videos you uploaded",
+      "deleteItem2": "Your profile and account",
+      "deleteItem3": "Any circles where you were the only member",
+      "deleteCircleQuestion": "Your photos in shared circles",
+      "deleteCircleKeepLabel": "Keep them in the circle",
+      "deleteCircleKeepDesc": "Your photos stay on the timeline. Your name fades quietly.",
+      "deleteCircleRemoveLabel": "Remove them from every circle",
+      "deleteCircleRemoveDesc": "Your photos and videos are permanently deleted from all circles on day 30.",
+      "ownerWarning": "You own one or more circles. Transfer ownership or delete your circles before deleting your account.",
+      "deleteEmailNote": "You'll receive a confirmation email with a link to cancel any time before that date.",
+      "deleteButton": "Delete my account",
+      "deleting": "Processing…",
+      "needsTransferWarning": "The following circles have members but no admin. Please promote someone to admin before deleting your account:",
+      "needsTransferHint": "Go to each circle's members page and promote a member to admin."
+    }
   }
 }

@@ -1320,72 +1320,149 @@ if (prefs.email_digest_frequency !== "off") queueDigest(...)
 
 ## Account Deletion & Data Retention
 
-### Soft-delete model
-```sql
--- User table
-User
-  - id
-  - deleted_at (nullable timestamp)
+Three distinct deletion scenarios. Each is documented below with exact state changes and notification emails.
 
--- RLS: exclude deleted users from all queries
-CREATE POLICY "exclude deleted users"
-ON User FOR SELECT
-USING (deleted_at IS NULL OR id = auth.uid());
-```
+---
 
-### Member account deletion flow
+### Scenario 1 — Member removed from a circle (by owner or admin)
 
-1. User requests deletion in settings
-2. If they are a circle owner → block, show ownership resolution screen (see below)
-3. If they are a member (not owner) → show content choice:
+This is not account deletion. The member keeps their account; they are only removed from one circle.
 
-> *"What should happen to your photos in shared circles?"*
-> - **Keep them as part of the story** (default) — your name becomes "[First name] (no longer in circle)", memories stay
-> - **Remove them from all circles** — your photos and voice memos are deleted from shared timelines
+**Content choice shown to the owner/admin at time of removal:**
+> *"What should happen to their photos in this circle?"*
+> - **Keep their memories** (default) — photos stay on the timeline. Their reactions are removed.
+> - **Remove their memories** — their photos and videos are permanently deleted from this circle.
 
-4. Reactions: always removed regardless of choice (tied to identity, low-stakes)
-5. Set `deleted_at = now()` → revoke active sessions → 30-day soft delete window
-6. Scheduled Edge Function runs daily:
+**What happens immediately (server-side):**
 
-```
-SELECT * FROM User WHERE deleted_at < now() - INTERVAL '30 days'
-→ If "remove" chosen: delete storage objects, delete memories from shared timelines
-→ If "keep" chosen: set display name to "[First name] (no longer in circle)", retain media — preserves context for remaining members without exposing personal account details
-→ delete CircleMember records
-→ hard delete User row
-```
+| Action | Keep memories | Remove memories |
+|--------|--------------|-----------------|
+| `memory.owner_user_id` set to `NULL` | ✓ (detaches from account) | — |
+| Storage files deleted | — | ✓ |
+| Memory rows deleted | — | ✓ (cascade) |
+| Reactions deleted | ✓ | ✓ (always) |
+| `CircleMember` row deleted | ✓ | ✓ |
 
-### Circle owner account deletion flow
+**Detaching explained:** Setting `owner_user_id = NULL` means the memory is no longer tied to any user account. It stays on the timeline indefinitely, visible to all circle members. Circle owners and admins can still delete these memories later. If the removed member later deletes their own account, these detached memories are **not** affected — they survive the account purge.
 
-Block deletion until ownership is resolved. Present in order:
+**Notification email — sent to the removed member immediately:**
+> Subject: *"You've been removed from [circle name]"*
+> Body: *"[Owner name] has removed you from [circle name]. Your [photos/memories] [have been kept on the timeline / have been deleted]. If you think this was a mistake, reach out to the circle owner."*
 
-1. **Has admins** → auto-promote oldest admin to owner, then proceed with account deletion
-2. **Has members but no admins** → force transfer screen: *"Select a new owner for [circle name] before continuing"*
-3. **Sole member of a circle** → ask: *"Delete [circle name] too, or leave it empty?"*
-4. Once all circles are resolved → proceed with standard member deletion flow above
+---
 
-### Circle deletion (owner-initiated)
+### Scenario 2 — Member deletes their own account
 
-Owners can delete a circle. Make it hard to do accidentally:
+**Pre-flight check (before accepting the request):**
+- If the user is a circle owner → run ownership resolution first (see Scenario 3)
+
+**What happens at the moment they confirm deletion:**
+1. `User.deleted_at = now()`, `User.deletion_requested_at = now()`
+2. All active sessions revoked (`auth.admin.signOut(userId, "global")`)
+3. User is signed out everywhere immediately
+
+**Notification email — sent to the user immediately:**
+> Subject: *"Your account is scheduled for deletion"*
+> Body: *"Your Our Story account will be permanently deleted on [date 30 days from now]. All your photos, videos, and memories will be removed. You can cancel this at any time before then from account settings. [Cancel deletion →]"*
+
+**What the 30-day grace period looks like:**
+- Account is deactivated — user cannot sign in
+- Their memories are still on circle timelines (other members can still see them)
+- User can cancel deletion by clicking the link in the confirmation email — this restores full access
+
+**What the daily purge cron does at day 30:**
+1. Fetches memories where `owner_user_id = user.id` → collects storage paths from `memorymedia` → deletes storage files
+2. Hard-deletes the `User` row (cascades to owned `Memory` rows, `CircleMember`, `AccountStorage`)
+3. Deletes the `auth.users` entry
+4. Memories with `owner_user_id = NULL` (detached from a prior circle removal) are **not touched** — they remain on the timeline
+
+**Notification email — sent 3 days before purge (day 27):**
+> Subject: *"Your account will be permanently deleted in 3 days"*
+> Body: *"This is your last chance to cancel your account deletion. After [date], all your data will be permanently deleted and cannot be recovered. [Cancel deletion →]"*
+
+---
+
+### Scenario 3 — Owner deletes their own account (ownership resolution)
+
+Run this check before Scenario 2. For each circle the user owns:
+
+| Circle state | Resolution |
+|-------------|-----------|
+| Has at least one admin | Auto-promote the oldest admin (by `created_at`) to owner. Email the new owner (see below). |
+| Has members but no admins | **Block deletion.** Show list of circle names. Hint: "Go to each circle's members page and promote a member to admin." |
+| Sole member (no other members) | Allow. Circle becomes empty. Purged with the account at day 30. |
+
+Once all circles are resolved, proceed with Scenario 2.
+
+**Notification email — sent to newly auto-promoted owner immediately:**
+> Subject: *"You're now the owner of [circle name]"*
+> Body: *"[Previous owner] has deleted their account and you've been made the owner of [circle name] as the most senior admin. You now have full ownership including the ability to manage billing and delete the circle."*
+
+---
+
+### Scenario 4 — Circle deleted (by owner)
+
+Make it hard to do accidentally.
 
 **Step 1 — Warning screen:**
-> *"This will permanently delete [N] memories and remove all [N] members. Members will be notified and have 30 days to export their own photos."*
+> *"This will permanently delete [N] memories and remove all [N] members. Members will be notified and have 30 days to export their own photos before they're gone forever."*
 > [Cancel] [Delete circle →]
 
-**Step 2 — Confirmation:**
+**Step 2 — Type-to-confirm:**
 > Type *"[circle name]"* to confirm
 
-**Step 3 — 30-day soft delete:**
-- Circle is hidden from all members immediately
-- Day 1: email all members — *"[Owner] has deleted [circle name]. You have 30 days to export your own photos before they're gone. [Export my photos →]"*
-- Owner can recover within 30 days from their account settings
-- Day 30: hard purge — all memories, media, and member records permanently deleted
+**Step 3 — Immediate actions:**
+- `Circle.deleted_at = now()`, `Circle.deletion_initiated_by = owner.id`
+- Circle hidden from all members immediately (RLS excludes it)
 
-> **DB:** `Circle.deleted_at`, `Circle.deletion_initiated_by`, `User.deleted_at`, and `User.deletion_requested_at` are all in the canonical Data Model. No separate migration needed — they are included in the initial schema.
+**Notification email — sent to all members on day 1:**
+> Subject: *"[Owner name] has deleted [circle name]"*
+> Body: *"[Owner name] has deleted [circle name]. You have 30 days to export your photos before they're gone forever. After [date], all memories will be permanently deleted. [Export my photos →] [Learn more →]"*
 
-### Grace period
-- User can cancel deletion within 30 days (set `deleted_at = NULL`)
-- After 30 days, purge is irreversible
+- Owner can recover the circle within 30 days from account settings (sets `Circle.deleted_at = NULL`)
+- **Day 30 hard purge:** delete all storage files → delete all `Memory` rows (cascade) → delete all `CircleMember` rows → delete `Circle` row
+
+---
+
+### Notification email summary
+
+| Event | Recipient(s) | When | Sent by |
+|-------|-------------|------|---------|
+| Member removed from circle | Removed member | Immediately | `DELETE /api/circles/[id]/members/[userId]` |
+| Account deletion initiated | User | Immediately | `POST /api/account/delete` |
+| Owner auto-promoted to new owner | Promoted admin | Immediately | `POST /api/account/delete` |
+| Account purge warning | User | Day 27 — detected by daily purge cron via `deletion_requested_at BETWEEN (now-28d) AND (now-27d)` | `purge-deleted-users` Edge Function |
+| Circle deleted | All members | Day 1 of soft-delete window | `purge-deleted-users` Edge Function (not yet implemented — step 3.7) |
+
+Email copy for member removal varies by `keepContent`:
+- `keepContent: true` → *"Your photos are still part of [circle]'s story."*
+- `keepContent: false` → *"Your photos have been permanently deleted from [circle]."*
+
+All emails sent via Resend from `hello@our-story.tinybit.app`. In dev (no `RESEND_API_KEY`), emails are logged to console instead.
+
+---
+
+### Grace periods
+
+| What | Grace period | How to cancel |
+|------|-------------|--------------|
+| Account deletion | 30 days | Link in confirmation email, or account settings |
+| Circle deletion | 30 days | Account settings (owner only) |
+| After day 30 | — | Irreversible — no recovery |
+
+---
+
+### Soft-delete DB columns
+
+```
+User
+  - deleted_at (nullable)               -- set when user initiates deletion
+  - deletion_requested_at (nullable)    -- same timestamp; kept separate for audit
+
+Circle
+  - deleted_at (nullable)               -- set when owner initiates circle deletion
+  - deletion_initiated_by (nullable FK → User)
+```
 
 ---
 
@@ -1582,6 +1659,39 @@ Used to:
 
 - Skip steps allowed but nudge user back to complete
 - Empty state always shows "Upload your first memory" CTA — copy adapts to circle_type
+
+### Path D — Existing user with no active circle (`/no-circle`)
+
+An authenticated user with a complete profile but no circle membership (e.g. removed by an owner, or their only circle was deleted) is **not** sent through the new-user onboarding flow. Onboarding asks "who is this story for?" — a disorienting question for someone who was just removed from a circle they knew.
+
+Instead they land on `/no-circle`:
+
+```
+Removed member refreshes or signs in again
+  → index.vue guard: hasMembership=false, needsProfile=false
+  → router.replace('/no-circle')
+```
+
+**Page content:**
+- Title: "You're not in any circle"
+- Subtitle: "You may have been removed, or your invite hasn't arrived yet."
+- Primary CTA: "Create a new circle" → `/onboarding` (circle type picker — they already have a profile so the profile step is skipped)
+- Secondary info block: "Waiting for an invite? Ask the circle owner to send you an invite link."
+
+**Routing rules:**
+
+| State | Destination |
+|---|---|
+| `hasMembership: true` | `/` — should not be on this page |
+| `needsProfile: true` | `/onboarding/profile` — brand-new user, complete profile first |
+| `hasMembership: false, needsProfile: false` | Stay on `/no-circle` |
+
+The `/no-circle` page runs its own `onMounted` guard mirroring the index guard to handle the case where a user navigates there directly after gaining a membership.
+
+**Onboarding from `/no-circle`:**
+When the user clicks "Create a new circle", they go to `/onboarding` (circle type picker). The onboarding middleware allows this for users without a membership. Since `needsProfile` is false, the profile step is skipped. They complete the flow and gain a new membership — at which point the onboarding redirect sends them to `/`.
+
+---
 
 ### Onboarding for invited members
 The creator's onboarding is covered above. Invited members land on a timeline they didn't build — they need a different first experience.
@@ -3663,9 +3773,24 @@ Referee uploads first memory
   → Notify referrer: "Your friend joined — enjoy 30 days of Pro free!"
 ```
 
+### Multi-circle support and circle switcher
+
+A user can belong to multiple circles (e.g. "Dao Family" and "Barcelona Trip Crew"). The active circle is tracked via the `?circle=<id>` URL query param; when absent the first circle in the list is used.
+
+**Circle switcher** — the circle name in the main nav header is always clickable and opens a bottom sheet showing:
+- All circles the user belongs to, with their role badge
+- A checkmark on the currently active circle
+- "Create a new circle" CTA at the bottom (navigates to `/onboarding`)
+
+Switching circles updates the URL param (`/?circle=<id>`) and reloads the timeline.
+
+**Creating a second circle** — any authenticated user (including existing members) can access `/onboarding` to create a new circle. The onboarding middleware no longer blocks on `hasMembership`. The profile step is skipped when `needsProfile=false`. After creation the user is redirected to `/?circle=<newId>` so the new circle is immediately active.
+
+**Post-creation redirect** — both `onboarding/name.vue` (solo path) and `onboarding/invite.vue` (invite path) redirect to `/?circle=<newId>` after completing the flow, not to bare `/`.
+
 ### "Invite another circle" flow
 A user who loves the app in Circle A should easily seed Circle B:
-- "Start a new circle story" CTA in circle switcher
+- "Create a new circle" CTA in circle switcher
 - Pre-filled invite email: "I've been using Our Story with my family — want to start one for ours?"
 - Every new circle created = new subscription opportunity
 

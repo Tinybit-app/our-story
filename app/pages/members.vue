@@ -75,40 +75,31 @@
                 </span>
               </div>
 
-              <!-- Remove button / inline confirm -->
-              <template v-if="canManage && member.role !== 'owner' && !(member.userId === authUser?.sub)">
-                <div v-if="confirmRemoveId === member.userId" class="flex items-center gap-1.5 flex-shrink-0" @click.stop>
-                  <span class="text-xs text-muted-foreground">{{ t('members.removeConfirm') }}</span>
-                  <button
-                    class="px-2.5 py-1 text-xs font-semibold text-destructive border border-destructive/40 rounded-lg hover:bg-destructive/10 transition-colors"
-                    :disabled="removingId === member.userId"
-                    @click="removeMember(member)"
-                  >
-                    <svg v-if="removingId === member.userId" class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                    </svg>
-                    <span v-else>{{ t('members.yes') }}</span>
-                  </button>
-                  <button
-                    class="px-2.5 py-1 text-xs font-medium text-foreground border border-border rounded-lg hover:bg-secondary transition-colors"
-                    @click="confirmRemoveId = null"
-                  >
-                    {{ t('members.no') }}
-                  </button>
-                </div>
-                <button
-                  v-else
-                  class="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors rounded-lg hover:bg-secondary flex-shrink-0"
-                  @click.stop="confirmRemoveId = member.userId"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                    <path d="M10 11v6M14 11v6"/>
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                  </svg>
-                </button>
-              </template>
+              <!-- Role action button (owner only, non-self, non-owner targets) -->
+              <button
+                v-if="data?.myRole === 'owner' && member.role !== 'owner' && member.userId !== authUser?.sub"
+                class="p-1.5 text-muted-foreground/50 hover:text-foreground transition-colors rounded-lg hover:bg-secondary flex-shrink-0"
+                @click.stop="openRoleDialog(member)"
+                :title="member.role === 'admin' ? t('members.removeAdmin') : t('members.makeAdmin')"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </button>
+
+              <!-- Remove button -->
+              <button
+                v-if="canManage && member.role !== 'owner' && !(member.userId === authUser?.sub)"
+                class="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors rounded-lg hover:bg-secondary flex-shrink-0"
+                @click.stop="openRemoveDialog(member)"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
             </li>
           </ul>
         </section>
@@ -165,6 +156,184 @@
       </template>
 
     </main>
+
+    <!-- Role management dialog -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="roleDialog" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="roleDialog = null" />
+        <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] shadow-2xl overflow-hidden">
+
+          <!-- Header -->
+          <div class="px-6 pt-6 pb-4 border-b border-border">
+            <p class="text-sm font-semibold text-foreground">{{ displayName(roleDialog) }}</p>
+            <p class="text-xs text-muted-foreground mt-0.5">{{ roleLabel(roleDialog.role) }}</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="px-6 py-4 space-y-2">
+            <!-- member → admin -->
+            <button
+              v-if="roleDialog.role === 'member'"
+              class="w-full text-left px-4 py-3 rounded-xl border border-border hover:bg-secondary text-sm font-medium text-foreground transition-colors"
+              :disabled="!!roleChangingId"
+              @click="changeRole(roleDialog, 'admin')"
+            >
+              {{ t('members.makeAdmin') }}
+            </button>
+
+            <!-- admin → member -->
+            <button
+              v-if="roleDialog.role === 'admin'"
+              class="w-full text-left px-4 py-3 rounded-xl border border-border hover:bg-secondary text-sm font-medium text-foreground transition-colors"
+              :disabled="!!roleChangingId"
+              @click="changeRole(roleDialog, 'member')"
+            >
+              {{ t('members.removeAdmin') }}
+            </button>
+
+            <!-- admin → owner (transfer) -->
+            <template v-if="roleDialog.role === 'admin'">
+              <div v-if="!transferConfirming" class="pt-1">
+                <button
+                  class="w-full text-left px-4 py-3 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-sm font-medium text-amber-700 dark:text-amber-300 transition-colors"
+                  :disabled="!!roleChangingId"
+                  @click="transferConfirming = true"
+                >
+                  {{ t('members.transferOwnership') }}
+                </button>
+              </div>
+              <div v-else class="pt-1 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-3">
+                <p class="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                  {{ t('members.transferOwnershipTitle', { name: roleDialog.firstName }) }}
+                </p>
+                <p class="text-xs text-amber-600 dark:text-amber-400">{{ t('members.transferOwnershipDesc') }}</p>
+                <div class="flex gap-2 pt-1">
+                  <button
+                    class="flex-1 py-2 rounded-lg text-xs font-medium border border-border text-foreground hover:bg-secondary transition-colors"
+                    @click="transferConfirming = false"
+                  >
+                    {{ t('nav.cancel') }}
+                  </button>
+                  <button
+                    class="flex-1 py-2 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:opacity-90 transition-opacity disabled:opacity-40"
+                    :disabled="!!roleChangingId"
+                    @click="changeRole(roleDialog, 'owner')"
+                  >
+                    {{ roleChangingId ? '…' : t('members.confirm') }}
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-6 pb-5">
+            <p v-if="roleChangeError" class="text-xs text-destructive mb-3">{{ roleChangeError }}</p>
+            <button
+              class="w-full py-2.5 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors"
+              @click="roleDialog = null"
+            >
+              {{ t('nav.cancel') }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Remove member content-choice dialog -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="removeDialog" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="removeDialog = null" />
+        <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] shadow-2xl overflow-hidden">
+
+          <!-- Header -->
+          <div class="px-6 pt-6 pb-4 border-b border-border">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-destructive mb-1">{{ t('members.removeAction') }}</p>
+            <h2 class="text-base font-bold text-foreground leading-snug">
+              {{ t('members.removeTitle', { name: removeDialog.firstName }) }}
+            </h2>
+            <p class="text-xs text-muted-foreground mt-1">{{ t('members.removeContentQuestion') }}</p>
+          </div>
+
+          <!-- Choices -->
+          <div class="px-6 py-4 space-y-2">
+            <label
+              class="flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all"
+              :class="keepContent ? 'border-foreground bg-secondary' : 'border-border hover:border-foreground/30'"
+            >
+              <input type="radio" :value="true" v-model="keepContent" class="mt-0.5 accent-foreground" />
+              <div>
+                <p class="text-sm font-medium text-foreground">{{ t('members.removeKeepLabel') }}</p>
+                <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">{{ t('members.removeKeepDesc') }}</p>
+              </div>
+            </label>
+
+            <label
+              class="flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all"
+              :class="!keepContent ? 'border-destructive/50 bg-destructive/5' : 'border-border hover:border-foreground/30'"
+            >
+              <input type="radio" :value="false" v-model="keepContent" class="mt-0.5 accent-foreground" />
+              <div>
+                <p class="text-sm font-medium text-foreground">{{ t('members.removeDeleteLabel') }}</p>
+                <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">{{ t('members.removeDeleteDesc') }}</p>
+              </div>
+            </label>
+
+            <!-- Irreversibility warning shown when "remove" is selected -->
+            <Transition
+              enter-active-class="transition duration-150 ease-out"
+              enter-from-class="opacity-0 -translate-y-1"
+              enter-to-class="opacity-100 translate-y-0"
+            >
+              <div v-if="!keepContent" class="flex items-start gap-2 px-3.5 py-3 rounded-xl bg-destructive/8 border border-destructive/20">
+                <svg class="w-3.5 h-3.5 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <p class="text-xs text-destructive leading-relaxed">{{ t('members.removeDeleteWarning') }}</p>
+              </div>
+            </Transition>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-6 pb-6 space-y-2.5">
+            <p class="text-xs text-muted-foreground">{{ t('members.removeNotification') }}</p>
+            <p v-if="removeError" class="text-xs text-destructive">{{ removeError }}</p>
+            <div class="flex gap-2 pt-1">
+              <button
+                type="button"
+                class="flex-1 py-3 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors"
+                @click="removeDialog = null"
+              >
+                {{ t('nav.cancel') }}
+              </button>
+              <button
+                :disabled="!!removingId"
+                class="flex-1 py-3 rounded-[10px] text-sm font-semibold bg-destructive text-white hover:opacity-90 transition-opacity disabled:opacity-40"
+                @click="removeMember(removeDialog)"
+              >
+                {{ removingId ? t('members.removing') : t('members.removeConfirm') }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </Transition>
 
     <!-- Invite dialog -->
     <Transition
@@ -275,21 +444,62 @@ function timeAgo(dateStr: string, future = false): string {
   return t('common.minsAgo', { n: mins })
 }
 
+// ── Role management ───────────────────────────────────────
+const roleDialog = ref<{ userId: string; firstName: string; lastName?: string | null; role: string } | null>(null)
+const roleChangingId = ref<string | null>(null)
+const roleChangeError = ref('')
+const transferConfirming = ref(false)
+
+function openRoleDialog(member: any) {
+  roleDialog.value = { userId: member.userId, firstName: member.firstName, lastName: member.lastName, role: member.role }
+  roleChangeError.value = ''
+  transferConfirming.value = false
+}
+
+async function changeRole(member: { userId: string; role: string } | null, newRole: string) {
+  if (!circleId.value || !member) return
+  roleChangingId.value = member.userId
+  roleChangeError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}/members/${member.userId}`, {
+      method: 'PATCH',
+      body: { role: newRole },
+    })
+    roleDialog.value = null
+    await refresh()
+  } catch (err: any) {
+    roleChangeError.value = err?.data?.message ?? t('members.roleChangeError')
+  } finally {
+    roleChangingId.value = null
+    transferConfirming.value = false
+  }
+}
+
 // ── Remove member ──────────────────────────────────────────
 const removingId = ref<string | null>(null)
-const confirmRemoveId = ref<string | null>(null)
 const removeError = ref('')
+const removeDialog = ref<{ userId: string; firstName: string } | null>(null)
+const keepContent = ref(true)
 
-async function removeMember(member: any) {
-  if (!circleId.value) return
+function openRemoveDialog(member: any) {
+  removeDialog.value = { userId: member.userId, firstName: member.firstName }
+  keepContent.value = true
+  removeError.value = ''
+}
+
+async function removeMember(member: { userId: string } | null) {
+  if (!circleId.value || !member) return
   removingId.value = member.userId
+  removeError.value = ''
   try {
-    await $fetch(`/api/circles/${circleId.value}/members/${member.userId}`, { method: 'DELETE' })
-    confirmRemoveId.value = null
+    await $fetch(`/api/circles/${circleId.value}/members/${member.userId}`, {
+      method: 'DELETE',
+      body: { keepContent: keepContent.value },
+    })
+    removeDialog.value = null
     await refresh()
   } catch (err: any) {
     removeError.value = err?.data?.message ?? t('members.removeError')
-    confirmRemoveId.value = null
   } finally {
     removingId.value = null
   }

@@ -13,11 +13,22 @@
             Our Story
           </p>
           <div class="flex items-center gap-1.5 min-w-0">
-            <p
-              class="text-sm font-semibold text-foreground leading-none truncate"
+            <!-- Circle name — clickable when user has multiple circles -->
+            <button
+              class="text-sm font-semibold text-foreground leading-none truncate flex items-center gap-1 hover:opacity-70 transition-opacity"
+              @click="circleSwitcherOpen = true"
             >
               {{ circle?.name ?? "…" }}
-            </p>
+              <svg
+                class="w-3 h-3 text-muted-foreground flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
             <template v-if="circle?.memberCount">
               <span class="text-border text-xs leading-none flex-shrink-0"
                 >/</span
@@ -124,7 +135,8 @@
 
               <!-- Actions -->
               <div class="py-1">
-                <button
+                <NuxtLink
+                  to="/settings/account"
                   class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
                   @click="menuOpen = false"
                 >
@@ -139,7 +151,7 @@
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                   </svg>
                   {{ t('nav.profileSettings') }}
-                </button>
+                </NuxtLink>
 
                 <button
                   v-if="canInvite"
@@ -387,6 +399,65 @@
       @uploaded="onUploaded"
     />
 
+    <!-- Circle switcher -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="circleSwitcherOpen" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="circleSwitcherOpen = false" />
+        <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] shadow-2xl overflow-hidden">
+
+          <!-- Header -->
+          <div class="px-5 pt-5 pb-3 border-b border-border">
+            <p class="text-xs font-bold tracking-widest uppercase text-muted-foreground">{{ t('nav.yourCircles') }}</p>
+          </div>
+
+          <!-- Circle list -->
+          <ul class="px-3 py-2">
+            <li v-for="c in allCircles" :key="c.id">
+              <button
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left"
+                :class="c.id === circleId ? 'bg-secondary' : 'hover:bg-secondary/60'"
+                @click="switchCircle(c.id)"
+              >
+                <div class="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0 text-xs font-bold text-foreground">
+                  {{ c.name?.[0]?.toUpperCase() ?? '?' }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-foreground truncate">{{ c.name }}</p>
+                  <p class="text-[11px] text-muted-foreground">{{ roleLabel(c.role) }}</p>
+                </div>
+                <svg v-if="c.id === circleId" class="w-4 h-4 text-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+            </li>
+          </ul>
+
+          <!-- Create new circle -->
+          <div class="px-3 pb-3 pt-1 border-t border-border mt-1">
+            <button
+              class="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/60 transition-colors text-left"
+              @click="startNewCircle"
+            >
+              <div class="w-8 h-8 rounded-lg border border-dashed border-border flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-foreground">{{ t('nav.createNewCircle') }}</p>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </Transition>
+
     <!-- Memory detail modal -->
     <MemoryModal
       :memories="memoriesFlat"
@@ -527,16 +598,29 @@ onMounted(async () => {
     return;
   }
   if (!hasMembership) {
-    router.replace("/onboarding");
+    // Existing users with a profile but no circle (e.g. removed from a circle)
+    // land on /no-circle rather than the new-user onboarding flow.
+    router.replace(needsProfile ? "/onboarding" : "/no-circle");
     return;
   }
 });
 
 // ── Data ───────────────────────────────────────────────────
+const route = useRoute();
 const { data: circlesData } = await useFetch<{ circles: any[] }>(
   "/api/circles",
 );
-const circle = computed(() => circlesData.value?.circles?.[0] ?? null);
+const allCircles = computed(() => circlesData.value?.circles ?? []);
+
+// Active circle: prefer ?circle=<id> URL param, fallback to first
+const circle = computed(() => {
+  const paramId = route.query.circle as string | undefined;
+  if (paramId) {
+    const found = allCircles.value.find((c: any) => c.id === paramId);
+    if (found) return found;
+  }
+  return allCircles.value[0] ?? null;
+});
 const circleId = computed<string | null>(() => circle.value?.id ?? null);
 
 const memoriesFlat = ref<Memory[]>([]);
@@ -617,6 +701,37 @@ function jumpToMonth(year: number, month: number) {
       });
   }, 120);
 }
+
+// ── Circle switcher ────────────────────────────────────────
+const circleSwitcherOpen = ref(false);
+
+function roleLabel(role: string): string {
+  if (role === "owner") return t("members.roleOwner");
+  if (role === "admin") return t("members.roleAdmin");
+  return t("members.roleMember");
+}
+
+function switchCircle(id: string) {
+  circleSwitcherOpen.value = false;
+  memoriesFlat.value = [];
+  nextCursor.value = null;
+  router.push({ query: { circle: id } });
+}
+
+function startNewCircle() {
+  circleSwitcherOpen.value = false;
+  router.push("/onboarding");
+}
+
+// Reload timeline when the active circle changes
+watch(circleId, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    memoriesFlat.value = [];
+    nextCursor.value = null;
+    currentYear.value = null;
+    fetchTimeline();
+  }
+});
 
 // ── Invite ─────────────────────────────────────────────────
 const canInvite = computed(() => {

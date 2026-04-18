@@ -231,8 +231,12 @@
                   </svg>
                 </button>
               </div>
-              <p class="text-[12px] text-muted-foreground mb-3">
-                {{ formattedDateAndAuthor }}
+              <p class="text-[12px] mb-3">
+                <span class="text-muted-foreground">{{ formattedDate }}</span>
+                <template v-if="authorName">
+                  <span class="text-muted-foreground"> · </span>
+                  <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
+                </template>
               </p>
             </template>
 
@@ -303,8 +307,12 @@
                   </div>
                 </div>
               </div>
-              <p class="text-[12px] text-muted-foreground mb-3">
-                {{ formattedDateAndAuthor }}
+              <p class="text-[12px] mb-3">
+                <span class="text-muted-foreground">{{ formattedDate }}</span>
+                <template v-if="authorName">
+                  <span class="text-muted-foreground"> · </span>
+                  <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
+                </template>
               </p>
             </template>
 
@@ -601,16 +609,21 @@ const hasNext = computed(() => currentIndex.value < props.memories.length - 1);
 
 const firstMedia = computed(() => memory.value?.memorymedia[0] ?? null);
 
-const formattedDateAndAuthor = computed(() => {
+const formattedDate = computed(() => {
   if (!memory.value) return "";
-  const d = new Date(memory.value.memory_date);
-  const dateStr = d.toLocaleDateString(locale.value, {
+  return new Date(memory.value.memory_date).toLocaleDateString(locale.value, {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
-  const firstName = memory.value.user?.first_name ?? "";
-  return firstName ? `${dateStr} · ${firstName}` : dateStr;
+});
+
+const isFormerMember = computed(() => memory.value?.owner_user_id === null);
+
+const authorName = computed(() => {
+  if (memory.value?.user?.first_name) return memory.value.user.first_name;
+  if (isFormerMember.value && memory.value?.former_owner_name) return memory.value.former_owner_name;
+  return null;
 });
 
 // ── Reactions ──────────────────────────────────────────────

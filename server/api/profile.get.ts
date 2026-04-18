@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
 
   const { data, error } = await supabase
     .from("user")
-    .select("first_name, last_name, avatar_url, locale")
+    .select("first_name, last_name, avatar_url, locale, deleted_at")
     .eq("id", user.sub)
     .maybeSingle()
 
@@ -22,5 +22,6 @@ export default defineEventHandler(async (event) => {
     lastName: data?.last_name ?? null,
     avatarUrl: data?.avatar_url ?? null,
     locale: data?.locale ?? null,
+    deletedAt: data?.deleted_at ?? null,
   }
 })

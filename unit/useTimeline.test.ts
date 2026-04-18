@@ -9,6 +9,7 @@ function makeMemory(id: string, dateStr: string, overrides: Partial<Memory> = {}
   return {
     id,
     owner_user_id: 'user-1',
+    former_owner_name: null,
     visibility: 'circle',
     note: null,
     memory_date: dateStr,
@@ -107,5 +108,32 @@ describe('useTimeline', () => {
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value[0].anchorId).toBe('anchor-2025')
     expect(monthGroups.value[1].anchorId).toBe('anchor-2025')
+  })
+})
+
+describe('useTimeline — detached memories (former member)', () => {
+  it('includes detached memories (owner_user_id = null) in month groups', () => {
+    const memories = ref<Memory[]>([
+      makeMemory('1', '2025-05-01T10:00:00Z', { owner_user_id: null, former_owner_name: 'Sarah Kim' }),
+      makeMemory('2', '2025-05-10T10:00:00Z'),
+    ])
+    const { monthGroups } = useTimeline(memories)
+    expect(monthGroups.value).toHaveLength(1)
+    expect(monthGroups.value[0].memories).toHaveLength(2)
+  })
+
+  it('detached memory has owner_user_id null and former_owner_name set', () => {
+    const m = makeMemory('1', '2025-05-01T10:00:00Z', {
+      owner_user_id: null,
+      former_owner_name: 'Sarah Kim',
+    })
+    expect(m.owner_user_id).toBeNull()
+    expect(m.former_owner_name).toBe('Sarah Kim')
+  })
+
+  it('normal memory has owner_user_id set and former_owner_name null', () => {
+    const m = makeMemory('1', '2025-05-01T10:00:00Z')
+    expect(m.owner_user_id).toBe('user-1')
+    expect(m.former_owner_name).toBeNull()
   })
 })

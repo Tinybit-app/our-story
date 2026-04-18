@@ -84,8 +84,9 @@ async function sendInvite() {
 }
 
 function finish() {
+  const newCircleId = circleIdCookie.value
   circleTypeCookie.value = null
   circleIdCookie.value = null
-  router.push('/')
+  router.push(newCircleId ? `/?circle=${newCircleId}` : '/')
 }
 </script>

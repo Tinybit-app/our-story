@@ -63,6 +63,8 @@
     "cancel": "取消",
     "sending": "发送中…",
     "sendInvite": "发送邀请",
+    "yourCircles": "我的圈子",
+    "createNewCircle": "创建新圈子",
     "inviteSentTo": "邀请已发送至 {email}。",
     "inviteAlreadySent": "此邮箱已收到邀请。",
     "inviteMaxPending": "你有 10 个待处理的邀请，请等待部分邀请被接受后再试。",
@@ -143,6 +145,13 @@
     "unknown": "未知",
     "errorGeneric": "出现错误，请重试。"
   },
+  "noCircle": {
+    "title": "你还不在任何圈子里",
+    "desc": "你可能已被移除，或邀请链接尚未送达。",
+    "createCircle": "创建新圈子",
+    "waitingTitle": "在等待邀请？",
+    "waitingDesc": "请圈子管理员向你发送邀请链接，你将收到一封包含加入链接的邮件。"
+  },
   "confirm": {
     "signingIn": "正在登录…",
     "tryAgain": "重试",
@@ -172,11 +181,62 @@
     "invited": "邀请于 {time}",
     "expires": "过期于 {time}",
     "removeError": "移除成员失败。",
+    "removing": "移除中…",
+    "removeTitle": "移除 {name}",
+    "removeContentQuestion": "他们在圈子里的照片应该如何处理？",
+    "removeKeepLabel": "保留他们的记忆",
+    "removeKeepDesc": "照片保留在时间线上，你可以之后删除单张照片。",
+    "removeDeleteLabel": "从圈子中删除他们的记忆",
+    "removeDeleteDesc": "他们的照片和视频将从此圈子中永久删除，无法撤销。",
+    "removeNotification": "他们将收到一封通知邮件。",
     "cancelInviteError": "取消邀请失败。",
-    "resendInviteError": "重新发送邀请失败。"
+    "resendInviteError": "重新发送邀请失败。",
+    "removeAction": "移除成员",
+    "makeAdmin": "设为管理员",
+    "removeAdmin": "取消管理员",
+    "transferOwnership": "转让所有权",
+    "transferOwnershipTitle": "将所有权转让给 {name}？",
+    "transferOwnershipDesc": "他们将成为新的创建者，你将成为管理员。",
+    "confirm": "确认",
+    "roleChangeError": "角色更新失败，请重试。"
   },
   "member": {
     "joined": "加入于 {date}",
     "memories": "{n} 条记忆"
+  },
+  "settings": {
+    "account": {
+      "title": "账户设置",
+      "pendingDeletionTitle": "账户删除已安排",
+      "pendingDeletionDesc": "你的账户将于 {date} 永久删除。届时所有数据将被清除。你可以在此之前取消。",
+      "cancelDeletion": "取消删除",
+      "canceling": "取消中…",
+      "exportTitle": "导出你的数据",
+      "exportDesc": "下载包含所有照片、视频和备注的压缩包。下载链接将在几分钟内发送至你的邮箱。",
+      "exportButton": "申请导出",
+      "exporting": "申请中…",
+      "exportQueued": "导出已开始 — 请查收邮件获取下载链接。",
+      "exportInProgress": "已有一个导出任务正在进行。",
+      "deleteTitle": "删除账户",
+      "deleteDesc": "你的账户将立即停用。30天后，你在所有圈子中的照片、视频和记忆将被永久删除，无法恢复。你将收到一封确认邮件，其中包含取消删除的链接。",
+      "deleteStep1Title": "立即生效",
+      "deleteStep1Desc": "你的账户立即停用，所有设备退出登录。你有 30 天的时间反悔。",
+      "deleteStep2Title": "{date} — 永久删除",
+      "deleteStep2Desc": "以下内容将永久消失，无法恢复：",
+      "deleteItem1": "你上传的所有照片和视频",
+      "deleteItem2": "你的个人资料和账户",
+      "deleteItem3": "你是唯一成员的圈子",
+      "deleteCircleQuestion": "你在共享圈子中的照片",
+      "deleteCircleKeepLabel": "保留在圈子中",
+      "deleteCircleKeepDesc": "你的照片继续显示在时间线上，你的名字将轻轻淡出。",
+      "deleteCircleRemoveLabel": "从所有圈子中删除",
+      "deleteCircleRemoveDesc": "你的照片和视频将在第 30 天从所有圈子中永久删除。",
+      "ownerWarning": "你拥有一个或多个圈子。请先转让所有权或删除圈子，再删除账户。",
+      "deleteEmailNote": "你将收到一封确认邮件，在该日期之前可随时通过邮件中的链接取消删除。",
+      "deleteButton": "删除我的账户",
+      "deleting": "处理中…",
+      "needsTransferWarning": "以下圈子有成员但没有管理员，请先在每个圈子中提升一位成员为管理员：",
+      "needsTransferHint": "进入各圈子的成员页面，将某位成员提升为管理员。"
+    }
   }
 }

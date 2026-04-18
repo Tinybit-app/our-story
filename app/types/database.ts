@@ -229,6 +229,8 @@ export type Database = {
           contributions_open: boolean
           created_at: string
           circle_id: string
+          former_owner_name: string | null
+          former_owner_user_id: string | null
           group_id: string | null
           id: string
           is_collaborative: boolean
@@ -236,7 +238,7 @@ export type Database = {
           milestone_is_custom: boolean
           milestone_label: string | null
           note: string | null
-          owner_user_id: string
+          owner_user_id: string | null
           visibility: string
         }
         Insert: {
@@ -244,6 +246,8 @@ export type Database = {
           circle_id: string
           contributions_open?: boolean
           created_at?: string
+          former_owner_name?: string | null
+          former_owner_user_id?: string | null
           group_id?: string | null
           id?: string
           is_collaborative?: boolean
@@ -251,7 +255,7 @@ export type Database = {
           milestone_is_custom?: boolean
           milestone_label?: string | null
           note?: string | null
-          owner_user_id: string
+          owner_user_id?: string | null
           visibility?: string
         }
         Update: {
@@ -259,6 +263,8 @@ export type Database = {
           circle_id?: string
           contributions_open?: boolean
           created_at?: string
+          former_owner_name?: string | null
+          former_owner_user_id?: string | null
           group_id?: string | null
           id?: string
           is_collaborative?: boolean
@@ -266,7 +272,7 @@ export type Database = {
           milestone_is_custom?: boolean
           milestone_label?: string | null
           note?: string | null
-          owner_user_id?: string
+          owner_user_id?: string | null
           visibility?: string
         }
         Relationships: [
@@ -477,15 +483,55 @@ export type Database = {
           },
         ]
       }
+      exportjob: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exportjob_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user: {
         Row: {
           avatar_url: string | null
           created_at: string
           deleted_at: string | null
+          deletion_requested_at: string | null
           email: string
           first_name: string | null
           id: string
           last_name: string | null
+          locale: string | null
           platform_role: string
           referral_code: string
           referred_by_user_id: string | null
@@ -498,10 +544,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           deleted_at?: string | null
+          deletion_requested_at?: string | null
           email: string
           first_name?: string | null
           id: string
           last_name?: string | null
+          locale?: string | null
           platform_role?: string
           referral_code?: string
           referred_by_user_id?: string | null
@@ -514,10 +562,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           deleted_at?: string | null
+          deletion_requested_at?: string | null
           email?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
+          locale?: string | null
           platform_role?: string
           referral_code?: string
           referred_by_user_id?: string | null
