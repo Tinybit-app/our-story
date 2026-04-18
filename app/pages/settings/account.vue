@@ -70,6 +70,39 @@
 
         <div class="h-px bg-border" />
 
+        <!-- ── Deleted circles (pending restore) ────────── -->
+        <div v-if="deletedCircles.length > 0">
+          <h2 class="text-base font-semibold text-foreground mb-1">{{ t('settings.account.deletedCirclesTitle') }}</h2>
+          <p class="text-sm text-muted-foreground mb-4">{{ t('settings.account.deletedCirclesDesc') }}</p>
+
+          <p v-if="restoreMsg" class="text-sm text-green-600 dark:text-green-400 mb-3">{{ restoreMsg }}</p>
+
+          <ul class="space-y-3">
+            <li
+              v-for="c in deletedCircles"
+              :key="c.id"
+              class="flex items-center justify-between gap-4 border border-border rounded-xl px-4 py-3"
+            >
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-foreground truncate">{{ c.name }}</p>
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  {{ t('settings.account.purgesOn', { date: formatPurgeDate(c.purge_date) }) }}
+                </p>
+              </div>
+              <button
+                :disabled="restoringId === c.id"
+                class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-secondary disabled:opacity-40 transition-colors"
+                @click="restoreCircle(c)"
+              >
+                {{ restoringId === c.id ? t('settings.account.restoring') : t('settings.account.restoreCircle') }}
+              </button>
+            </li>
+          </ul>
+          <p v-if="restoreError" class="text-xs text-destructive mt-2">{{ restoreError }}</p>
+        </div>
+
+        <div v-if="deletedCircles.length > 0" class="h-px bg-border" />
+
         <!-- ── Delete account ────────────────────────────── -->
         <div>
           <h3 class="text-base font-semibold text-destructive mb-4">{{ t('settings.account.deleteTitle') }}</h3>
@@ -240,8 +273,13 @@ async function requestExport() {
 // ── Delete account ──────────────────────────────────────────
 const deleting = ref(false)
 const deleteError = ref('')
-const circlesNeedingTransfer = ref<string[]>([])
 const keepCircleMemories = ref(true)
+
+// Pre-load ownership check so the warning is visible before the user clicks delete
+const { data: preflightData } = await useFetch<{ circlesNeedingTransfer: string[] }>(
+  '/api/account/deletion-preflight'
+)
+const circlesNeedingTransfer = ref<string[]>(preflightData.value?.circlesNeedingTransfer ?? [])
 
 async function requestDeletion() {
   deleting.value = true
@@ -268,6 +306,36 @@ async function requestDeletion() {
   }
 }
 
+// ── Deleted circles (restore) ───────────────────────────────
+const { data: deletedCirclesData, refresh: refreshDeletedCircles } = await useFetch<{
+  circles: { id: string; name: string; circle_type: string; deleted_at: string; purge_date: string }[]
+}>('/api/circles/deleted')
+
+const deletedCircles = computed(() => deletedCirclesData.value?.circles ?? [])
+
+const restoringId = ref<string | null>(null)
+const restoreError = ref('')
+const restoreMsg = ref('')
+
+function formatPurgeDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+async function restoreCircle(circle: { id: string; name: string }) {
+  restoringId.value = circle.id
+  restoreError.value = ''
+  restoreMsg.value = ''
+  try {
+    await $fetch(`/api/circles/${circle.id}/restore`, { method: 'POST' })
+    restoreMsg.value = t('settings.account.restoreSuccess', { name: circle.name })
+    await refreshDeletedCircles()
+  } catch (err: any) {
+    restoreError.value = err?.data?.message ?? t('settings.account.restoreError')
+  } finally {
+    restoringId.value = null
+  }
+}
+
 // ── Cancel deletion ─────────────────────────────────────────
 const canceling = ref(false)
 
@@ -275,8 +343,12 @@ async function cancelDeletion() {
   canceling.value = true
   try {
     await $fetch('/api/account/cancel-deletion', { method: 'POST' })
+    // Clear the cached user state so the middleware re-fetches and lifts the
+    // /settings/account gate on the next navigation.
+    const { clear } = useUserState()
+    clear()
     await refreshNuxtData()
-    router.replace('/settings/account')
+    router.replace('/')
   } catch {
     // silently fail — user can try again
   } finally {

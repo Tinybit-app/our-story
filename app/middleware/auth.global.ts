@@ -15,4 +15,16 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!session && !publicRoutes.some((r) => to.path.startsWith(r))) {
     return navigateTo("/login")
   }
+
+  // If the user has a valid session but their account is pending deletion,
+  // restrict them to /settings/account (where the cancellation banner is shown).
+  // useUserState caches the result so this adds no extra requests on subsequent
+  // navigations within the same session.
+  if (session && to.path !== "/settings/account") {
+    const { ensure } = useUserState()
+    const state = await ensure()
+    if (state.deletedAt) {
+      return navigateTo("/settings/account")
+    }
+  }
 })

@@ -68,7 +68,8 @@
     "inviteSentTo": "邀请已发送至 {email}。",
     "inviteAlreadySent": "此邮箱已收到邀请。",
     "inviteMaxPending": "你有 10 个待处理的邀请，请等待部分邀请被接受后再试。",
-    "inviteFailed": "邀请发送失败，请重试。"
+    "inviteFailed": "邀请发送失败，请重试。",
+    "circleSettings": "圈子设置"
   },
   "timeline": {
     "emptyTitle": "你的故事从这里开始",
@@ -163,7 +164,9 @@
     "error": "出现错误",
     "expiredDesc": "请联系圈子管理员重新发送邀请。",
     "errorDesc": "请重新点击链接，或请求新的邀请。",
-    "goToSignIn": "前往登录"
+    "goToSignIn": "前往登录",
+    "circleDeleted": "此圈子已被删除",
+    "circleDeletedDesc": "创建者已删除此圈子，你的邀请不再有效。"
   },
   "members": {
     "title": "成员",
@@ -198,7 +201,19 @@
     "transferOwnershipTitle": "将所有权转让给 {name}？",
     "transferOwnershipDesc": "他们将成为新的创建者，你将成为管理员。",
     "confirm": "确认",
-    "roleChangeError": "角色更新失败，请重试。"
+    "roleChangeError": "角色更新失败，请重试。",
+    "dangerZone": "危险操作",
+    "deleteCircle": "删除圈子",
+    "deleteCircleTitle": "删除此圈子",
+    "deleteCircleDesc": "在 30 天后永久删除此圈子及其所有记忆。",
+    "deleteCircleWarningTitle": "确定要删除此圈子吗？",
+    "deleteCircleWarning": "这将永久删除 {memories} 条记忆并移除所有 {members} 位成员。成员将收到通知，并有 30 天时间导出自己的照片，过期后将无法恢复。",
+    "deleteCircleContinue": "继续",
+    "deleteCircleConfirmTitle": "输入圈子名称以确认",
+    "deleteCircleConfirmDesc": "输入「{name}」以永久删除此圈子。",
+    "deleteCircleConfirm": "删除圈子",
+    "deleteCircleNameMismatch": "圈子名称不匹配，请完整输入。",
+    "deleteCircleError": "删除圈子失败，请重试。"
   },
   "member": {
     "joined": "加入于 {date}",
@@ -236,7 +251,14 @@
       "deleteButton": "删除我的账户",
       "deleting": "处理中…",
       "needsTransferWarning": "以下圈子有成员但没有管理员，请先在每个圈子中提升一位成员为管理员：",
-      "needsTransferHint": "进入各圈子的成员页面，将某位成员提升为管理员。"
+      "needsTransferHint": "进入各圈子的成员页面，将某位成员提升为管理员。",
+      "deletedCirclesTitle": "待删除圈子",
+      "deletedCirclesDesc": "以下圈子已安排永久删除，你可以在截止日期前恢复它们。",
+      "purgesOn": "将于 {date} 永久删除",
+      "restoreCircle": "恢复",
+      "restoring": "恢复中…",
+      "restoreSuccess": "「{name}」已恢复。",
+      "restoreError": "恢复圈子失败，请重试。"
     }
   }
 }

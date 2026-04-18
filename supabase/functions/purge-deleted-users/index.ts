@@ -127,5 +127,57 @@ Deno.serve(async (req) => {
     }
   }
 
-  return Response.json({ ok: true, purged: purged.length })
+  // ── Hard-purge circles whose 30-day window has expired ─────
+  const { data: expiredCircles, error: circleFetchError } = await supabase
+    .from("circle")
+    .select("id")
+    .not("deleted_at", "is", null)
+    .lt("deleted_at", cutoff)
+
+  if (circleFetchError) {
+    console.error("[purge-deleted-users] circle fetch failed:", circleFetchError.message)
+  }
+
+  const purgedCircles: string[] = []
+
+  for (const circle of expiredCircles ?? []) {
+    try {
+      // 1. Fetch all memory IDs for this circle
+      const { data: memories } = await supabase
+        .from("memory")
+        .select("id")
+        .eq("circle_id", circle.id)
+
+      const memoryIds = (memories ?? []).map((m: { id: string }) => m.id)
+
+      // 2. Delete storage objects
+      if (memoryIds.length > 0) {
+        const { data: media } = await supabase
+          .from("memorymedia")
+          .select("storage_path")
+          .in("memory_id", memoryIds)
+
+        for (const obj of media ?? []) {
+          await supabase.storage
+            .from("memories-private")
+            .remove([(obj as { storage_path: string }).storage_path])
+        }
+
+        // 3. Delete memory rows (cascades to memorymedia, memorycomment, memoryreaction)
+        await supabase.from("memory").delete().in("id", memoryIds)
+      }
+
+      // 4. Delete CircleMember rows
+      await supabase.from("circlemember").delete().eq("circle_id", circle.id)
+
+      // 5. Delete the circle itself
+      await supabase.from("circle").delete().eq("id", circle.id)
+
+      purgedCircles.push(circle.id)
+    } catch (err) {
+      console.error(`[purge-deleted-users] circle purge failed for ${circle.id}:`, err)
+    }
+  }
+
+  return Response.json({ ok: true, purged: purged.length, purgedCircles: purgedCircles.length })
 })

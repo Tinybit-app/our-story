@@ -5,10 +5,10 @@
 
       <template v-if="errorMsg">
         <h1 class="font-display text-xl font-bold text-foreground mb-3">
-          {{ errorMsg === 'invite_expired' ? t('invite.expired') : t('invite.error') }}
+          {{ errorMsg === 'invite_expired' ? t('invite.expired') : errorMsg === 'invite_circle_deleted' ? t('invite.circleDeleted') : t('invite.error') }}
         </h1>
         <p class="text-sm text-muted-foreground mb-6">
-          {{ errorMsg === 'invite_expired' ? t('invite.expiredDesc') : t('invite.errorDesc') }}
+          {{ errorMsg === 'invite_expired' ? t('invite.expiredDesc') : errorMsg === 'invite_circle_deleted' ? t('invite.circleDeletedDesc') : t('invite.errorDesc') }}
         </p>
         <NuxtLink
           to="/login"
@@ -39,8 +39,30 @@ const errorMsg = ref('')
 const inviteCookie = useCookie('pending_invite_token', { maxAge: 60 * 60 * 24 * 7 })
 
 onMounted(async () => {
+  // Pre-validate the invite before touching auth — this way someone who
+  // clicks a stale link sees the right error immediately, without being
+  // forced through a sign-in flow first.
+  const status = await $fetch<{ status: 'pending' | 'expired' | 'circle_deleted' }>(
+    `/api/invites/${token}/status`
+  ).catch(() => ({ status: 'error' as const }))
+
+  if (status.status === 'expired') {
+    errorMsg.value = 'invite_expired'
+    return
+  }
+
+  if (status.status === 'circle_deleted') {
+    errorMsg.value = 'invite_circle_deleted'
+    return
+  }
+
+  if (status.status !== 'pending') {
+    errorMsg.value = 'error'
+    return
+  }
+
   if (!user.value) {
-    // Not logged in — store token and redirect to login
+    // Invite is valid — store token and send to login
     inviteCookie.value = token
     router.push('/login')
     return

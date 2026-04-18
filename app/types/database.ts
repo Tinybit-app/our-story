@@ -69,6 +69,8 @@ export type Database = {
           circle_type: string
           created_at: string
           created_by: string
+          deleted_at: string | null
+          deletion_initiated_by: string | null
           e2ee_enabled: boolean
           e2ee_enabled_at: string | null
           grace_period_until: string | null
@@ -81,6 +83,8 @@ export type Database = {
           circle_type?: string
           created_at?: string
           created_by: string
+          deleted_at?: string | null
+          deletion_initiated_by?: string | null
           e2ee_enabled?: boolean
           e2ee_enabled_at?: string | null
           grace_period_until?: string | null
@@ -93,6 +97,8 @@ export type Database = {
           circle_type?: string
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
+          deletion_initiated_by?: string | null
           e2ee_enabled?: boolean
           e2ee_enabled_at?: string | null
           grace_period_until?: string | null

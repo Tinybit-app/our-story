@@ -16,19 +16,33 @@
 
         <p class="flex-1 text-sm font-semibold text-foreground text-center">{{ t('members.title') }}</p>
 
-        <!-- Invite button (owner/admin only) -->
-        <button
-          v-if="canManage"
-          class="flex items-center gap-1.5 text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
-          @click="inviteOpen = true"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-          </svg>
-          {{ t('members.invite') }}
-        </button>
-        <div v-else class="w-12" />
+        <!-- Right side: invite + settings (owner/admin only) -->
+        <div class="flex items-center gap-2">
+          <button
+            v-if="canManage"
+            class="flex items-center gap-1.5 text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
+            @click="inviteOpen = true"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+            {{ t('members.invite') }}
+          </button>
+          <!-- Circle settings link (owner only) -->
+          <NuxtLink
+            v-if="data?.myRole === 'owner'"
+            to="/circle-settings"
+            class="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
+            :title="t('nav.circleSettings')"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </NuxtLink>
+          <div v-if="!canManage" class="w-12" />
+        </div>
       </div>
     </header>
 
@@ -390,11 +404,12 @@ const circleId = computed<string | null>(() => circle.value?.id ?? null)
 const circleName = computed(() => circle.value?.name ?? 'your circle')
 
 // ── Members data ───────────────────────────────────────────
-const { data, pending, refresh } = await useAsyncData(
+type MembersResponse = { members: any[]; invites: any[]; myRole: string; memoryCount: number }
+const { data, pending, refresh } = await useAsyncData<MembersResponse>(
   'circle-members',
   () => circleId.value
-    ? $fetch<{ members: any[]; invites: any[]; myRole: string }>(`/api/circles/${circleId.value}/members`)
-    : null,
+    ? $fetch<MembersResponse>(`/api/circles/${circleId.value}/members`)
+    : Promise.resolve(null as any),
   { watch: [circleId] }
 )
 

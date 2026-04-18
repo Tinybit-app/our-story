@@ -68,7 +68,8 @@
     "inviteSentTo": "Invite sent to {email}.",
     "inviteAlreadySent": "An invite was already sent to this email.",
     "inviteMaxPending": "You have 10 pending invites. Wait for some to be accepted first.",
-    "inviteFailed": "Failed to send invite. Please try again."
+    "inviteFailed": "Failed to send invite. Please try again.",
+    "circleSettings": "Circle settings"
   },
   "timeline": {
     "emptyTitle": "Your story starts here",
@@ -163,7 +164,9 @@
     "error": "Something went wrong",
     "expiredDesc": "Ask the circle owner to send a new invite.",
     "errorDesc": "Please try the link again or ask for a new invite.",
-    "goToSignIn": "Go to sign in"
+    "goToSignIn": "Go to sign in",
+    "circleDeleted": "This circle has been deleted",
+    "circleDeletedDesc": "The owner deleted this circle. Your invite is no longer valid."
   },
   "members": {
     "title": "Members",
@@ -198,7 +201,19 @@
     "transferOwnershipTitle": "Transfer ownership to {name}?",
     "transferOwnershipDesc": "They'll become the new owner. You'll become an admin.",
     "confirm": "Confirm",
-    "roleChangeError": "Failed to update role. Please try again."
+    "roleChangeError": "Failed to update role. Please try again.",
+    "dangerZone": "Danger zone",
+    "deleteCircle": "Delete circle",
+    "deleteCircleTitle": "Delete this circle",
+    "deleteCircleDesc": "Permanently delete this circle and all its memories after 30 days.",
+    "deleteCircleWarningTitle": "Are you sure you want to delete this circle?",
+    "deleteCircleWarning": "This will permanently delete {memories} memories and remove all {members} members. Members will be notified and have 30 days to export their own photos before they're gone forever.",
+    "deleteCircleContinue": "Continue",
+    "deleteCircleConfirmTitle": "Type the circle name to confirm",
+    "deleteCircleConfirmDesc": "Type \"{name}\" to permanently delete this circle.",
+    "deleteCircleConfirm": "Delete circle",
+    "deleteCircleNameMismatch": "Circle name doesn't match. Please type it exactly.",
+    "deleteCircleError": "Failed to delete circle. Please try again."
   },
   "member": {
     "joined": "Joined {date}",
@@ -236,7 +251,14 @@
       "deleteButton": "Delete my account",
       "deleting": "Processing…",
       "needsTransferWarning": "The following circles have members but no admin. Please promote someone to admin before deleting your account:",
-      "needsTransferHint": "Go to each circle's members page and promote a member to admin."
+      "needsTransferHint": "Go to each circle's members page and promote a member to admin.",
+      "deletedCirclesTitle": "Pending circle deletions",
+      "deletedCirclesDesc": "These circles are scheduled for permanent deletion. You can restore them before the deadline.",
+      "purgesOn": "Deletes permanently on {date}",
+      "restoreCircle": "Restore",
+      "restoring": "Restoring…",
+      "restoreSuccess": "{name} has been restored.",
+      "restoreError": "Failed to restore circle. Please try again."
     }
   }
 }

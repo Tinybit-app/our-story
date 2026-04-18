@@ -159,6 +159,123 @@ export function buildPurgeWarningEmail(opts: {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Circle deleted — notify all non-owner members
+// ─────────────────────────────────────────────────────────────
+
+export function buildCircleDeletedEmail(opts: {
+  circleName: string
+  ownerName: string
+  purgeDate: string   // e.g. "May 18, 2026"
+  appUrl: string
+  locale: string
+}): { subject: string; html: string } {
+  const { circleName, ownerName, purgeDate, appUrl, locale } = opts
+  const exportUrl = `${appUrl}/settings/account`
+
+  if (locale === "zh-CN") {
+    return {
+      subject: `${ownerName} 已删除「${circleName}」`,
+      html: layout(`
+        <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">${ownerName} 已删除「${circleName}」</h2>
+        <p style="color: #555; margin: 0 0 16px; line-height: 1.6; font-size: 15px;">
+          你有 30 天时间导出自己的照片，之后将永久删除。<strong>${purgeDate}</strong> 后，所有记忆将无法恢复。
+        </p>
+        <p style="margin: 0 0 24px;">
+          ${primaryButton(exportUrl, "导出我的照片 →")}
+        </p>
+      `),
+    }
+  }
+
+  if (locale === "fr") {
+    return {
+      subject: `${ownerName} a supprimé « ${circleName} »`,
+      html: layout(`
+        <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">${ownerName} a supprimé « ${circleName} »</h2>
+        <p style="color: #555; margin: 0 0 16px; line-height: 1.6; font-size: 15px;">
+          Vous avez 30 jours pour exporter vos photos avant qu'elles soient définitivement supprimées. Après le <strong>${purgeDate}</strong>, tous les souvenirs seront irrécupérables.
+        </p>
+        <p style="margin: 0 0 24px;">
+          ${primaryButton(exportUrl, "Exporter mes photos →")}
+        </p>
+      `),
+    }
+  }
+
+  return {
+    subject: `${ownerName} has deleted ${circleName}`,
+    html: layout(`
+      <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">${ownerName} has deleted ${circleName}</h2>
+      <p style="color: #555; margin: 0 0 16px; line-height: 1.6; font-size: 15px;">
+        You have 30 days to export your photos before they're gone forever. After <strong>${purgeDate}</strong>, all memories will be permanently deleted.
+      </p>
+      <p style="margin: 0 0 24px;">
+        ${primaryButton(exportUrl, "Export my photos →")}
+      </p>
+    `),
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Circle deleted — confirmation to the owner (with restore link)
+// ─────────────────────────────────────────────────────────────
+
+export function buildCircleDeletedOwnerEmail(opts: {
+  circleName: string
+  purgeDate: string
+  restoreUrl: string
+  locale: string
+}): { subject: string; html: string } {
+  const { circleName, purgeDate, restoreUrl, locale } = opts
+
+  if (locale === "zh-CN") {
+    return {
+      subject: `「${circleName}」已安排删除`,
+      html: layout(`
+        <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">「${circleName}」将被永久删除</h2>
+        <p style="color: #555; margin: 0 0 16px; line-height: 1.6; font-size: 15px;">
+          删除流程已启动。「<strong>${circleName}</strong>」及其所有内容将于 <strong>${purgeDate}</strong> 永久删除。
+        </p>
+        <p style="color: #555; margin: 0 0 32px; line-height: 1.6; font-size: 14px;">
+          如果你改变了主意，可以在此日期前前往设置页面恢复该圈子。
+        </p>
+        ${primaryButton(restoreUrl, "前往设置 →")}
+      `),
+    }
+  }
+
+  if (locale === "fr") {
+    return {
+      subject: `« ${circleName} » est programmé pour suppression`,
+      html: layout(`
+        <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">« ${circleName} » sera définitivement supprimé</h2>
+        <p style="color: #555; margin: 0 0 16px; line-height: 1.6; font-size: 15px;">
+          La suppression a été lancée. « <strong>${circleName}</strong> » et tout son contenu seront définitivement supprimés le <strong>${purgeDate}</strong>.
+        </p>
+        <p style="color: #555; margin: 0 0 32px; line-height: 1.6; font-size: 14px;">
+          Vous avez changé d'avis ? Vous pouvez restaurer ce cercle depuis vos paramètres avant cette date.
+        </p>
+        ${primaryButton(restoreUrl, "Aller aux paramètres →")}
+      `),
+    }
+  }
+
+  return {
+    subject: `${circleName} is scheduled for deletion`,
+    html: layout(`
+      <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">${circleName} will be permanently deleted</h2>
+      <p style="color: #555; margin: 0 0 16px; line-height: 1.6; font-size: 15px;">
+        Deletion has been initiated. <strong>${circleName}</strong> and all its content will be permanently removed on <strong>${purgeDate}</strong>.
+      </p>
+      <p style="color: #555; margin: 0 0 32px; line-height: 1.6; font-size: 14px;">
+        Changed your mind? You can restore this circle from your settings before that date.
+      </p>
+      ${primaryButton(restoreUrl, "Go to Settings →")}
+    `),
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // Owner auto-promoted to new circle owner
 // ─────────────────────────────────────────────────────────────
 

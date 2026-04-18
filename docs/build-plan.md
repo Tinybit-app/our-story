@@ -35,7 +35,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Member deletion: content choice ("keep as Former member" vs "remove from circles"), reactions always removed
   - Owner deletion: resolve ownership first (auto-promote admin, force transfer, or delete circle)
   - 30-day soft delete + daily hard purge cron
-- [ ] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
+- [x] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
 - [ ] 3.8 Data export (ExportJob): members export own uploads only; owners export full circle
 
 ### Milestone 3.9: Landing Page + Pricing Page (Cold Discovery)

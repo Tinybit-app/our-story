@@ -34,6 +34,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: "Failed to load members." })
   }
 
+  // Fetch memory count for the circle (used by the deletion warning modal)
+  const { count: memoryCount } = await supabase
+    .from("memory")
+    .select("id", { count: "exact", head: true })
+    .eq("circle_id", circleId)
+
   // Fetch pending invites — visible to owner/admin only
   let invites: any[] = []
   if (canManage) {
@@ -57,5 +63,5 @@ export default defineEventHandler(async (event) => {
     joinedAt: m.created_at,
   }))
 
-  return { members: formattedMembers, invites, myRole: myMembership.role }
+  return { members: formattedMembers, invites, myRole: myMembership.role, memoryCount: memoryCount ?? 0 }
 })

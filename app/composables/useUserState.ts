@@ -1,6 +1,7 @@
 interface UserState {
   hasMembership: boolean
   needsProfile: boolean
+  deletedAt: string | null
 }
 
 export const useUserState = () => {

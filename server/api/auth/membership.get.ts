@@ -8,11 +8,12 @@ export default defineEventHandler(async (event) => {
 
   const [{ data: membership }, { data: profile }] = await Promise.all([
     supabase.from("circlemember").select("circle_id").eq("user_id", user.sub).limit(1).maybeSingle(),
-    supabase.from("user").select("first_name").eq("id", user.sub).maybeSingle(),
+    supabase.from("user").select("first_name, deleted_at").eq("id", user.sub).maybeSingle(),
   ])
 
   return {
     hasMembership: !!membership,
     needsProfile: !profile?.first_name,
+    deletedAt: profile?.deleted_at ?? null,
   }
 })

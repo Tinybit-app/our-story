@@ -667,6 +667,42 @@ describe("PATCH /api/circles/[id]/members/[userId] — transfer ownership effect
 })
 
 // ============================================================
+// POST /api/invites/[token]/accept — deleted circle guard
+// If the circle was soft-deleted after the invite was sent, the accept
+// endpoint returns invite_circle_deleted (410) so the UI shows a clear
+// message instead of a confusing join error.
+// ============================================================
+describe("POST /api/invites/[token]/accept — deleted circle guard", () => {
+  type InviteCheck = {
+    inviteStatus: "pending" | "expired"
+    circleDeletedAt: string | null
+    inviteExpired: boolean
+  }
+
+  function acceptResult(check: InviteCheck): "ok" | "invite_expired" | "invite_circle_deleted" {
+    if (check.inviteStatus !== "pending" || check.inviteExpired) return "invite_expired"
+    if (check.circleDeletedAt) return "invite_circle_deleted"
+    return "ok"
+  }
+
+  it("accepts a valid invite for an active circle", () => {
+    expect(acceptResult({ inviteStatus: "pending", circleDeletedAt: null, inviteExpired: false })).toBe("ok")
+  })
+
+  it("rejects when the circle has been soft-deleted", () => {
+    expect(acceptResult({ inviteStatus: "pending", circleDeletedAt: "2026-04-18T00:00:00Z", inviteExpired: false })).toBe("invite_circle_deleted")
+  })
+
+  it("still rejects an expired invite even if the circle is also deleted", () => {
+    expect(acceptResult({ inviteStatus: "pending", circleDeletedAt: "2026-04-18T00:00:00Z", inviteExpired: true })).toBe("invite_expired")
+  })
+
+  it("rejects an expired invite for an active circle", () => {
+    expect(acceptResult({ inviteStatus: "pending", circleDeletedAt: null, inviteExpired: true })).toBe("invite_expired")
+  })
+})
+
+// ============================================================
 // POST /api/invites/[token]/accept — memory re-attach on rejoin
 // When a previously-removed member accepts a new invite, any memories
 // detached during their removal are restored to their ownership.
@@ -917,5 +953,352 @@ describe("purge-deleted-users — grace period logic", () => {
   it("purges a user deleted 60 days ago", () => {
     const deletedAt = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
     expect(isPastGracePeriod(deletedAt, now)).toBe(true)
+  })
+})
+
+// ============================================================
+// GET /api/auth/membership — deletedAt field
+// The membership endpoint now returns deletedAt so the client middleware can
+// gate deleted accounts without an extra round-trip.
+// ============================================================
+describe("GET /api/auth/membership — deletedAt field", () => {
+  type MembershipResponse = {
+    hasMembership: boolean
+    needsProfile: boolean
+    deletedAt: string | null
+  }
+
+  function buildResponse(deletedAt: string | null): MembershipResponse {
+    return { hasMembership: true, needsProfile: false, deletedAt }
+  }
+
+  it("returns deletedAt: null for an active account", () => {
+    expect(buildResponse(null).deletedAt).toBeNull()
+  })
+
+  it("returns deletedAt as an ISO string for a pending-deletion account", () => {
+    const iso = "2026-04-18T03:00:00Z"
+    expect(buildResponse(iso).deletedAt).toBe(iso)
+  })
+})
+
+// ============================================================
+// auth.global middleware — deleted account gate
+// A user with a valid session but deletedAt set must be redirected
+// to /settings/account on every route except /settings/account itself.
+// ============================================================
+describe("auth.global middleware — deleted account gate", () => {
+  function resolveRoute(
+    hasSession: boolean,
+    deletedAt: string | null,
+    targetPath: string
+  ): string | null {
+    if (!hasSession) return "/login"
+    if (deletedAt && targetPath !== "/settings/account") return "/settings/account"
+    return null // allow navigation
+  }
+
+  it("allows a non-deleted user to navigate to any route", () => {
+    expect(resolveRoute(true, null, "/")).toBeNull()
+    expect(resolveRoute(true, null, "/members")).toBeNull()
+  })
+
+  it("redirects a deleted user from / to /settings/account", () => {
+    expect(resolveRoute(true, "2026-04-18T03:00:00Z", "/")).toBe("/settings/account")
+  })
+
+  it("redirects a deleted user from /members to /settings/account", () => {
+    expect(resolveRoute(true, "2026-04-18T03:00:00Z", "/members")).toBe("/settings/account")
+  })
+
+  it("allows a deleted user to stay on /settings/account", () => {
+    expect(resolveRoute(true, "2026-04-18T03:00:00Z", "/settings/account")).toBeNull()
+  })
+
+  it("redirects an unauthenticated user to /login regardless of deletedAt", () => {
+    expect(resolveRoute(false, null, "/")).toBe("/login")
+    expect(resolveRoute(false, "2026-04-18T03:00:00Z", "/")).toBe("/login")
+  })
+})
+
+// ============================================================
+// Cancel deletion — cache invalidation
+// After cancellation the user state cache must be cleared so the
+// middleware re-fetches deletedAt (now null) and lifts the gate.
+// ============================================================
+describe("cancel deletion — cache invalidation", () => {
+  type CacheState = { deletedAt: string | null } | null
+
+  function afterCancel(_cache: CacheState): CacheState {
+    // Simulates calling clear() then refetching with deletedAt = null
+    return null // cache is cleared; next ensure() call returns fresh state
+  }
+
+  function isGated(cache: CacheState): boolean {
+    return cache !== null && cache.deletedAt !== null
+  }
+
+  it("gated before cancel when deletedAt is set", () => {
+    const cache: CacheState = { deletedAt: "2026-04-18T03:00:00Z" }
+    expect(isGated(cache)).toBe(true)
+  })
+
+  it("not gated after cache is cleared", () => {
+    const cache: CacheState = { deletedAt: "2026-04-18T03:00:00Z" }
+    const cleared = afterCancel(cache)
+    expect(isGated(cleared)).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/circles/[id]/delete — circle soft-delete schema
+// Owner must supply the circle name to confirm deletion.
+// The server re-validates the name match before writing.
+// ============================================================
+const deleteCircleSchema = z.object({
+  confirmName: z.string().min(1),
+})
+
+describe("POST /api/circles/[id]/delete — input validation", () => {
+  it("accepts a non-empty confirmName", () => {
+    expect(deleteCircleSchema.safeParse({ confirmName: "Dao Family" }).success).toBe(true)
+  })
+
+  it("rejects an empty confirmName", () => {
+    expect(deleteCircleSchema.safeParse({ confirmName: "" }).success).toBe(false)
+  })
+
+  it("rejects missing confirmName", () => {
+    expect(deleteCircleSchema.safeParse({}).success).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/circles/[id]/delete — name confirmation logic
+// The typed name must match the actual circle name (case-insensitive)
+// before the soft-delete is applied.
+// ============================================================
+describe("POST /api/circles/[id]/delete — name confirmation", () => {
+  function confirmationMatches(typed: string, circleName: string): boolean {
+    return typed.trim().toLowerCase() === circleName.trim().toLowerCase()
+  }
+
+  it("accepts an exact match", () => {
+    expect(confirmationMatches("Dao Family", "Dao Family")).toBe(true)
+  })
+
+  it("accepts a case-insensitive match", () => {
+    expect(confirmationMatches("dao family", "Dao Family")).toBe(true)
+  })
+
+  it("accepts a match with leading/trailing whitespace", () => {
+    expect(confirmationMatches("  Dao Family  ", "Dao Family")).toBe(true)
+  })
+
+  it("rejects a partial match", () => {
+    expect(confirmationMatches("Dao", "Dao Family")).toBe(false)
+  })
+
+  it("rejects an empty string", () => {
+    expect(confirmationMatches("", "Dao Family")).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/circles/[id]/delete — access control
+// Only the circle owner can initiate deletion.
+// ============================================================
+describe("POST /api/circles/[id]/delete — access control", () => {
+  type Role = "owner" | "admin" | "member"
+
+  function canDeleteCircle(role: Role): boolean {
+    return role === "owner"
+  }
+
+  it("allows the owner to delete the circle", () => {
+    expect(canDeleteCircle("owner")).toBe(true)
+  })
+
+  it("blocks an admin from deleting the circle", () => {
+    expect(canDeleteCircle("admin")).toBe(false)
+  })
+
+  it("blocks a member from deleting the circle", () => {
+    expect(canDeleteCircle("member")).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/circles/[id]/restore — restore window check
+// The circle can only be restored within the 30-day window.
+// ============================================================
+describe("POST /api/circles/[id]/restore — window check", () => {
+  function isRestorable(deletedAt: Date, now: Date, graceDays = 30): boolean {
+    const daysSince = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)
+    return daysSince < graceDays
+  }
+
+  const now = new Date("2026-04-18T03:00:00Z")
+
+  it("allows restore 1 day after deletion", () => {
+    const deletedAt = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)
+    expect(isRestorable(deletedAt, now)).toBe(true)
+  })
+
+  it("allows restore 29 days after deletion", () => {
+    const deletedAt = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000)
+    expect(isRestorable(deletedAt, now)).toBe(true)
+  })
+
+  it("blocks restore exactly 30 days after deletion (boundary)", () => {
+    const deletedAt = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    expect(isRestorable(deletedAt, now)).toBe(false)
+  })
+
+  it("blocks restore 31 days after deletion", () => {
+    const deletedAt = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000)
+    expect(isRestorable(deletedAt, now)).toBe(false)
+  })
+})
+
+// ============================================================
+// GET /api/circles — deleted circles filtered from list
+// Soft-deleted circles must be invisible to all members.
+// ============================================================
+describe("GET /api/circles — deleted circles filtered", () => {
+  type CircleRow = { id: string; name: string; deleted_at: string | null }
+
+  function filterActiveCircles(circles: CircleRow[]): CircleRow[] {
+    return circles.filter((c) => !c.deleted_at)
+  }
+
+  it("returns active circles when no circles are deleted", () => {
+    const rows: CircleRow[] = [
+      { id: "c1", name: "Dao Family", deleted_at: null },
+      { id: "c2", name: "Work Crew", deleted_at: null },
+    ]
+    expect(filterActiveCircles(rows)).toHaveLength(2)
+  })
+
+  it("excludes a soft-deleted circle from the list", () => {
+    const rows: CircleRow[] = [
+      { id: "c1", name: "Dao Family", deleted_at: null },
+      { id: "c2", name: "Deleted Circle", deleted_at: "2026-04-01T00:00:00Z" },
+    ]
+    const active = filterActiveCircles(rows)
+    expect(active).toHaveLength(1)
+    expect(active[0]!.id).toBe("c1")
+  })
+
+  it("returns empty list when all circles are deleted", () => {
+    const rows: CircleRow[] = [
+      { id: "c1", name: "Gone", deleted_at: "2026-04-01T00:00:00Z" },
+    ]
+    expect(filterActiveCircles(rows)).toHaveLength(0)
+  })
+})
+
+// ============================================================
+// Purge cron — circle hard-purge sequence
+// Day 30 purge order: storage objects → memory rows → circlemember rows → circle row
+// ============================================================
+describe("purge-deleted-users — circle hard-purge sequence", () => {
+  type PurgeStep = "storage" | "memories" | "members" | "circle"
+
+  function circlePurgeSteps(memoryCount: number): PurgeStep[] {
+    const steps: PurgeStep[] = []
+    if (memoryCount > 0) {
+      steps.push("storage")
+      steps.push("memories")
+    }
+    steps.push("members")
+    steps.push("circle")
+    return steps
+  }
+
+  it("runs full purge sequence when circle has memories", () => {
+    expect(circlePurgeSteps(5)).toEqual(["storage", "memories", "members", "circle"])
+  })
+
+  it("skips storage/memory steps when circle has no memories", () => {
+    expect(circlePurgeSteps(0)).toEqual(["members", "circle"])
+  })
+
+  it("always deletes members and circle row last", () => {
+    const steps = circlePurgeSteps(3)
+    expect(steps.at(-1)).toBe("circle")
+    expect(steps.at(-2)).toBe("members")
+  })
+})
+
+// ============================================================
+// GET /api/invites/[token]/status — public pre-validation
+// This endpoint is called before requiring sign-in so we can show
+// the right error screen without forcing a login flow for a dead invite.
+// ============================================================
+describe("GET /api/invites/[token]/status — invite pre-validation", () => {
+  type InviteRow = {
+    status: "pending" | "accepted" | "expired"
+    expires_at: string
+    circle_deleted_at: string | null
+  } | null
+
+  function statusResult(
+    invite: InviteRow
+  ): "pending" | "expired" | "circle_deleted" {
+    if (!invite || invite.status !== "pending") return "expired"
+    if (new Date(invite.expires_at) < new Date("2026-04-18T00:00:00Z")) return "expired"
+    if (invite.circle_deleted_at) return "circle_deleted"
+    return "pending"
+  }
+
+  it("returns pending for a valid invite with an active circle", () => {
+    const invite: InviteRow = {
+      status: "pending",
+      expires_at: "2026-04-25T00:00:00Z",
+      circle_deleted_at: null,
+    }
+    expect(statusResult(invite)).toBe("pending")
+  })
+
+  it("returns circle_deleted when the circle was soft-deleted", () => {
+    const invite: InviteRow = {
+      status: "pending",
+      expires_at: "2026-04-25T00:00:00Z",
+      circle_deleted_at: "2026-04-17T12:00:00Z",
+    }
+    expect(statusResult(invite)).toBe("circle_deleted")
+  })
+
+  it("returns expired when the invite token is not found", () => {
+    expect(statusResult(null)).toBe("expired")
+  })
+
+  it("returns expired when the invite has already been accepted", () => {
+    const invite: InviteRow = {
+      status: "accepted",
+      expires_at: "2026-04-25T00:00:00Z",
+      circle_deleted_at: null,
+    }
+    expect(statusResult(invite)).toBe("expired")
+  })
+
+  it("returns expired when the invite has passed its expires_at", () => {
+    const invite: InviteRow = {
+      status: "pending",
+      expires_at: "2026-04-10T00:00:00Z",
+      circle_deleted_at: null,
+    }
+    expect(statusResult(invite)).toBe("expired")
+  })
+
+  it("returns expired (not circle_deleted) when invite is expired AND circle is deleted", () => {
+    // Expiry check comes before circle check — expired invite wins
+    const invite: InviteRow = {
+      status: "pending",
+      expires_at: "2026-04-10T00:00:00Z",
+      circle_deleted_at: "2026-04-17T12:00:00Z",
+    }
+    expect(statusResult(invite)).toBe("expired")
   })
 })

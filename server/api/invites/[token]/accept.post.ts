@@ -22,6 +22,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 410, message: "invite_expired" })
   }
 
+  // Check that the circle hasn't been soft-deleted since the invite was sent
+  const { data: circle } = await supabase
+    .from("circle")
+    .select("deleted_at")
+    .eq("id", invite.circle_id)
+    .maybeSingle()
+
+  if (!circle || circle.deleted_at) {
+    throw createError({ statusCode: 410, message: "invite_circle_deleted" })
+  }
+
   // Add member (upsert in case they're already a member)
   await supabase.from("circlemember").upsert({
     user_id: user.sub,
