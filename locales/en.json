@@ -231,20 +231,20 @@
     },
     "hero": {
       "headline": "A private space where your circle builds a shared story.",
-      "subhead": "No ads. No AI training. Invite-only.",
+      "subhead": "For the moments that belong to more than one person.",
       "cta": "Start your circle — free"
     },
     "screenshot": {
       "label": "Timeline screenshot coming soon"
     },
     "howItWorks": {
-      "title": "How it works",
+      "title": "Not storage — storytelling",
       "step1Title": "Invite your circle",
       "step1Desc": "Send a private invite link to the people you want. No public profiles, no strangers.",
-      "step2Title": "Upload your memories",
-      "step2Desc": "Add photos, videos, and notes. They land on a shared timeline, ordered by when they happened.",
-      "step3Title": "Remember together",
-      "step3Desc": "Every member can react, comment, and add their own memories. Your story grows together."
+      "step2Title": "Add meaning, not just media",
+      "step2Desc": "Notes, milestones, and reactions turn photos into memories with context. Stores meaning — not just images.",
+      "step3Title": "Your story keeps growing",
+      "step3Desc": "On This Day surfaces a memory from a year ago. Every member can react, comment, and add their own moments."
     },
     "whoUsesIt": {
       "title": "Who uses it",
@@ -280,13 +280,20 @@
         "bullets": ["Reflection prompts on every upload", "Mood and emotion tags", "Year-in-review generated automatically", "Streak tracker — document every day"]
       }
     },
+    "features": {
+      "title": "More than a photo album"
+    },
     "privacy": {
       "title": "Your photos never leave your circle.",
       "items": ["No ads", "No algorithm", "No AI training on your memories"],
       "sub": "Invite-only. Private by design."
     },
+    "vision": {
+      "quote": "Your story may not feel like much right now — but looking back 20 years from now, you will cherish every memory you saved here.",
+      "body": "A toddler's first messy birthday cake. A quiet Sunday morning. A handwritten note from someone who is no longer here."
+    },
     "pricingSummary": {
-      "text": "Free to start.",
+      "text": "Free to start. Every new circle gets a 14-day Pro trial — no credit card.",
       "link": "See pricing"
     },
     "footer": {

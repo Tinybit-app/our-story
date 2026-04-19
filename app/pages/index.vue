@@ -105,6 +105,22 @@
         />
       </section>
 
+      <!-- Feature highlights -->
+      <section class="max-w-[1280px] mx-auto px-5 pb-20">
+        <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase mb-8 text-center">
+          {{ t('landing.features.title') }}
+        </p>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div v-for="feat in featureHighlights" :key="feat.title" class="bg-card border border-border rounded-2xl p-5 flex flex-col gap-3">
+            <div class="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0" v-html="feat.icon" />
+            <div>
+              <p class="text-sm font-semibold text-foreground mb-1">{{ feat.title }}</p>
+              <p class="text-xs text-muted-foreground leading-relaxed">{{ feat.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- How it works -->
       <section class="bg-card border-y border-border py-20">
         <div class="max-w-[1280px] mx-auto px-5">
@@ -187,6 +203,18 @@
         </div>
       </section>
 
+      <!-- Vision -->
+      <section class="py-24">
+        <div class="max-w-[680px] mx-auto px-5 text-center flex flex-col items-center gap-8">
+          <blockquote class="font-display text-2xl sm:text-3xl font-bold text-foreground leading-snug">
+            "{{ t('landing.vision.quote') }}"
+          </blockquote>
+          <p class="text-sm text-muted-foreground leading-relaxed max-w-sm">
+            {{ t('landing.vision.body') }}
+          </p>
+        </div>
+      </section>
+
       <!-- Pricing summary -->
       <section class="max-w-[1280px] mx-auto px-5 py-16 text-center">
         <p class="text-sm text-muted-foreground">
@@ -261,6 +289,29 @@ const howItWorksSteps = computed(() => [
 ])
 
 const privacyItems = ['No ads', 'No algorithm', 'No AI training on your memories']
+
+const featureHighlights = [
+  {
+    title: 'Milestones',
+    desc: 'Celebrate every first. Preset templates for baby steps, anniversaries, trips, and more — or build your own.',
+    icon: '<svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  },
+  {
+    title: 'Quick notes',
+    desc: 'No photo needed. Capture any moment in words. "First word today: dada."',
+    icon: '<svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
+  },
+  {
+    title: 'On This Day',
+    desc: 'A memory from this day last year, delivered every morning. Your story keeps growing.',
+    icon: '<svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  },
+  {
+    title: 'View-only for family',
+    desc: "Grandma doesn't need an account. Send a link — she can see every memory and tap a heart.",
+    icon: '<svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  },
+]
 
 const circleTypes = [
   { key: 'parents',    bullets: ['Baby age stamp on every memory', 'Developmental milestone categories', 'Weekly digest for grandparents', 'Growth chart and vaccination tracker'] },
