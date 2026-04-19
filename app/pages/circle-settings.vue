@@ -101,6 +101,9 @@
                   {{ t('members.deleteCircleWarning', { memories: membersData?.memoryCount ?? 0, members: membersData?.members?.length ?? 0 }) }}
                 </p>
               </div>
+              <p class="text-xs text-muted-foreground leading-relaxed">
+                {{ t('members.deleteCircleRestoreHint') }}
+              </p>
             </div>
             <div class="px-6 pb-6 flex gap-2">
               <button
@@ -239,8 +242,8 @@ async function confirmDeleteCircle() {
       method: 'POST',
       body: { confirmName: deleteConfirmInput.value.trim() },
     })
-    // Clear the membership cache so the home page guard re-checks and
-    // redirects to /no-circle if this was the user's only circle.
+    // Clear the membership cache so the middleware re-checks membership
+    // and redirects to /no-circle if this was the user's only circle.
     const { clear } = useUserState()
     clear()
     await navigateTo('/')

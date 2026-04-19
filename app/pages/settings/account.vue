@@ -225,14 +225,45 @@
             </p>
             <p v-if="deleteError" class="text-sm text-destructive mb-3">{{ deleteError }}</p>
             <button
-              @click="requestDeletion"
+              @click="confirmingDelete = true"
               :disabled="deleting"
               class="w-full py-3 rounded-[10px] text-sm font-semibold bg-destructive text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
             >
-              {{ deleting ? t('settings.account.deleting') : t('settings.account.deleteButton') }}
+              {{ t('settings.account.deleteButton') }}
             </button>
           </template>
         </div>
+
+        <!-- ── Delete confirmation modal ────────────────── -->
+        <Teleport to="body">
+          <div
+            v-if="confirmingDelete"
+            class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            @click.self="confirmingDelete = false"
+          >
+            <div class="w-full max-w-sm bg-background rounded-2xl border border-border shadow-xl overflow-hidden">
+              <div class="px-5 pt-5 pb-4">
+                <p class="text-base font-semibold text-foreground mb-2">{{ t('settings.account.deleteConfirmTitle') }}</p>
+                <p class="text-sm text-muted-foreground leading-relaxed">{{ t('settings.account.deleteConfirmDesc') }}</p>
+              </div>
+              <div class="flex gap-2 px-5 pb-5">
+                <button
+                  @click="confirmingDelete = false"
+                  class="flex-1 py-2.5 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors"
+                >
+                  {{ t('settings.account.deleteConfirmCancel') }}
+                </button>
+                <button
+                  @click="confirmingDelete = false; requestDeletion()"
+                  :disabled="deleting"
+                  class="flex-1 py-2.5 rounded-[10px] text-sm font-semibold bg-destructive text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                >
+                  {{ deleting ? t('settings.account.deleting') : t('settings.account.deleteConfirmAction') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
 
       </div>
     </main>
@@ -301,6 +332,7 @@ async function requestExport() {
 const deleting = ref(false)
 const deleteError = ref('')
 const keepCircleMemories = ref(true)
+const confirmingDelete = ref(false)
 
 // Pre-load ownership check so the warning is visible before the user clicks delete
 const { data: preflightData } = await useFetch<{ circlesNeedingTransfer: string[] }>(
@@ -355,6 +387,7 @@ async function restoreCircle(circle: { id: string; name: string }) {
   try {
     await $fetch(`/api/circles/${circle.id}/restore`, { method: 'POST' })
     restoreMsg.value = t('settings.account.restoreSuccess', { name: circle.name })
+    useUserState().clear()
     await refreshDeletedCircles()
   } catch (err: any) {
     restoreError.value = err?.data?.message ?? t('settings.account.restoreError')

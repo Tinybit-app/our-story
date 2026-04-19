@@ -29,6 +29,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 410, message: "The 30-day recovery window has passed. This circle cannot be restored." })
   }
 
+  // TODO (Phase 2): enforce circle ownership limit before restoring.
+  // A Free user who deleted their circle, created a new one, and then restores
+  // the old one would end up owning 2 circles. Check active owned circle count
+  // against User.subscription_status here (same logic as create.post.ts).
+
   const { error } = await supabase
     .from("circle")
     .update({ deleted_at: null, deletion_initiated_by: null })

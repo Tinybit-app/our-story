@@ -151,7 +151,10 @@
     "desc": "You may have been removed, or your invite hasn't arrived yet.",
     "createCircle": "Create a new circle",
     "waitingTitle": "Waiting for an invite?",
-    "waitingDesc": "Ask the circle owner to send you an invite link. You'll get an email with a link to join."
+    "waitingDesc": "Ask the circle owner to send you an invite link. You'll get an email with a link to join.",
+    "pendingDeletionTitle": "Recently deleted a circle?",
+    "pendingDeletionDesc": "You have 30 days to restore it before it's permanently deleted.",
+    "pendingDeletionAction": "Restore from Account settings"
   },
   "confirm": {
     "signingIn": "Signing you in…",
@@ -213,7 +216,8 @@
     "deleteCircleConfirmDesc": "Type \"{name}\" to permanently delete this circle.",
     "deleteCircleConfirm": "Delete circle",
     "deleteCircleNameMismatch": "Circle name doesn't match. Please type it exactly.",
-    "deleteCircleError": "Failed to delete circle. Please try again."
+    "deleteCircleError": "Failed to delete circle. Please try again.",
+    "deleteCircleRestoreHint": "Changed your mind? You have 30 days to restore it from Account settings."
   },
   "member": {
     "joined": "Joined {date}",
@@ -251,6 +255,10 @@
       "deleteEmailNote": "You'll receive a confirmation email with a link to cancel any time before that date.",
       "deleteButton": "Delete my account",
       "deleting": "Processing…",
+      "deleteConfirmTitle": "Delete your account?",
+      "deleteConfirmDesc": "Your account will be deactivated immediately. You have 30 days to sign back in and cancel.",
+      "deleteConfirmAction": "Yes, delete my account",
+      "deleteConfirmCancel": "Cancel",
       "needsTransferWarning": "The following circles have members but no admin. Please promote someone to admin before deleting your account:",
       "needsTransferHint": "Go to each circle's members page and promote a member to admin.",
       "deletedCirclesTitle": "Pending circle deletions",

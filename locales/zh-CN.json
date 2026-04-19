@@ -151,7 +151,10 @@
     "desc": "你可能已被移除，或邀请链接尚未送达。",
     "createCircle": "创建新圈子",
     "waitingTitle": "在等待邀请？",
-    "waitingDesc": "请圈子管理员向你发送邀请链接，你将收到一封包含加入链接的邮件。"
+    "waitingDesc": "请圈子管理员向你发送邀请链接，你将收到一封包含加入链接的邮件。",
+    "pendingDeletionTitle": "最近删除了圈子？",
+    "pendingDeletionDesc": "你有 30 天时间在永久删除前恢复它。",
+    "pendingDeletionAction": "前往账户设置恢复"
   },
   "confirm": {
     "signingIn": "正在登录…",
@@ -213,7 +216,8 @@
     "deleteCircleConfirmDesc": "输入「{name}」以永久删除此圈子。",
     "deleteCircleConfirm": "删除圈子",
     "deleteCircleNameMismatch": "圈子名称不匹配，请完整输入。",
-    "deleteCircleError": "删除圈子失败，请重试。"
+    "deleteCircleError": "删除圈子失败，请重试。",
+    "deleteCircleRestoreHint": "改变主意了？你有 30 天时间在账户设置中恢复它。"
   },
   "member": {
     "joined": "加入于 {date}",
@@ -251,6 +255,10 @@
       "deleteEmailNote": "你将收到一封确认邮件，在该日期之前可随时通过邮件中的链接取消删除。",
       "deleteButton": "删除我的账户",
       "deleting": "处理中…",
+      "deleteConfirmTitle": "确认删除账户？",
+      "deleteConfirmDesc": "你的账户将立即停用。你有 30 天时间重新登录并取消删除。",
+      "deleteConfirmAction": "是的，删除我的账户",
+      "deleteConfirmCancel": "取消",
       "needsTransferWarning": "以下圈子有成员但没有管理员，请先在每个圈子中提升一位成员为管理员：",
       "needsTransferHint": "进入各圈子的成员页面，将某位成员提升为管理员。",
       "deletedCirclesTitle": "待删除圈子",
