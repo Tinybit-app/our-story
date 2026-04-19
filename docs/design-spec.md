@@ -1707,7 +1707,6 @@ Features are progressively disclosed: they appear in the UI when first used, not
 | **Anniversary reminder** | Email/push nudge one week before the anniversary date. |
 | **"How we met" pinned memory** | One memory pinned at the top of the timeline as the origin story. |
 | **Couple stats** | Memories together, countries visited, months documented. |
-| **Private mode default** | All memories default to visible only to the two of them. |
 
 #### Family
 *Default features for this type: multi-generational, person-tagged memories*
@@ -1756,21 +1755,21 @@ Features are progressively disclosed: they appear in the UI when first used, not
 
 | Feature | Description |
 |---|---|
-| **Private visibility default** | Memories default to `private` (owner only) instead of `circle`. |
 | **Reflection prompts** | Optional writing prompt on upload: "What made today memorable?" |
 | **Mood/emotion tag** | Tag each memory with a feeling. |
 | **Year-in-review** | Auto-generated annual summary of memories. |
 | **Streak tracker** | "You've documented 7 days in a row." |
 
-**Highest-value, lowest-effort features to build next:**
+> **Note:** `circle_type` is a purely UX/marketing signal — it controls empty-state copy, milestone chips, and which features are proactively suggested, but it does not gate any feature. All features listed under any type are available to all circles regardless of type. If a feature has existing data it remains accessible even after the owner changes the circle type.
 
-| Priority | circle_type | Feature | Why |
+**Highest-value, lowest-effort features to build next** (available to all circles; type influences which are proactively suggested):
+
+| Priority | Feature | Suggested first for | Why |
 |---|---|---|---|
-| 1 | parents | Baby age stamp | Birth date field + computed display — highest emotional value, clear differentiator |
-| 2 | travel | Location tag | Single text field + EXIF GPS auto-fill, shown below the date |
-| 3 | caregiving | Health event types | Add a type selector to the upload modal for caregiving circles |
-| 4 | solo | Private visibility default | One-line change: default `visibility` to `'private'` when `circle_type === 'solo'` |
-| 5 | couple | Anniversary anchoring | Relationship start date field, shown in the header |
+| 1 | Baby age stamp | parents | Birth date field + computed display — highest emotional value, clear differentiator |
+| 2 | Location tag | travel | Single text field + EXIF GPS auto-fill, shown below the date |
+| 3 | Health event types | caregiving | Type selector in upload modal |
+| 4 | Anniversary anchoring | couple | Relationship start date field, shown in the header |
 
 ### Path D — Existing user with no active circle (`/no-circle`)
 
@@ -1780,7 +1779,7 @@ Instead they land on `/no-circle`:
 
 ```
 Removed member refreshes or signs in again
-  → index.vue guard: hasMembership=false, needsProfile=false
+  → auth.global.ts middleware: hasMembership=false, needsProfile=false
   → router.replace('/no-circle')
 ```
 
@@ -1798,7 +1797,7 @@ Removed member refreshes or signs in again
 | `needsProfile: true` | `/onboarding/profile` — brand-new user, complete profile first |
 | `hasMembership: false, needsProfile: false` | Stay on `/no-circle` |
 
-The `/no-circle` page runs its own `onMounted` guard mirroring the index guard to handle the case where a user navigates there directly after gaining a membership.
+All membership-based routing is handled by `auth.global.ts` middleware — there is no page-level `onMounted` guard on `/no-circle`. The middleware runs on every navigation, so if a user gains a membership (e.g. accepts an invite in another tab) and then navigates, they are redirected to `/` automatically.
 
 **Onboarding from `/no-circle`:**
 When the user clicks "Create a new circle", they go to `/onboarding` (circle type picker). The onboarding middleware allows this for users without a membership. Since `needsProfile` is false, the profile step is skipped. They complete the flow and gain a new membership — at which point the onboarding redirect sends them to `/`.
@@ -4145,7 +4144,6 @@ SEO angles: "private baby photo sharing", "baby milestone tracker", "share baby 
 - **Anniversary reminder** — email/push nudge a week before the anniversary
 - **"How we met" pinned memory** — one memory pinned at the top of the timeline as the origin story
 - **Couple stats** — memories together, countries visited, months documented
-- **Private mode default** — all memories default to visible only to the two of them
 
 SEO angles: "couple memory app", "relationship photo timeline", "private photo album for couples"
 
@@ -4204,7 +4202,6 @@ SEO angles: "group travel photo sharing", "trip memory app", "private shared tra
 #### 📔 Solo
 **Default features for this type: personal journal with reflection prompts**
 
-- **Private visibility default** — memories default to `private` (owner only) instead of `circle`
 - **Reflection prompts** — optional writing prompt on upload ("What made today memorable?")
 - **Mood/emotion tag** — tag each memory with a feeling
 - **Year-in-review** — auto-generated annual summary of memories
@@ -4216,15 +4213,14 @@ SEO angles: "private photo journal app", "personal memory timeline", "visual dia
 
 ### Per-type build priority
 
-Highest-value, lowest-effort features to implement first (see build plan §4.10):
+All features below are available to every circle regardless of `circle_type`. The "suggested first for" column only indicates which circle type has it proactively surfaced (empty-state chip, placeholder copy). Highest-value, lowest-effort features to implement first (see build plan §4.10):
 
-| Priority | Type | Feature | Why |
+| Priority | Feature | Suggested first for | Why |
 |---|---|---|---|
-| 1 | parents | **Baby age stamp** | Birth date field + computed age on every memory card. Most distinctive parents feature. Matches top landing page card. |
-| 2 | travel | **Location tag** | Single text field + EXIF GPS auto-fill, shown below the memory date. Low effort, high landing page impact. |
-| 3 | caregiving | **Health event types** | Type selector in upload modal for caregiving circles only. |
-| 4 | solo | **Private visibility default** | One-line change: default `visibility` to `'private'` when `circle_type === 'solo'`. |
-| 5 | couple | **Anniversary anchoring** | Relationship start date at circle creation + display in header + anniversary email trigger. |
+| 1 | **Baby age stamp** | parents | Birth date field + computed age on every memory card. Most distinctive parents feature. Matches top landing page card. |
+| 2 | **Location tag** | travel | Single text field + EXIF GPS auto-fill, shown below the memory date. Low effort, high landing page impact. |
+| 3 | **Health event types** | caregiving | Type selector in upload modal. |
+| 4 | **Anniversary anchoring** | couple | Relationship start date at circle creation + display in header + anniversary email trigger. |
 
 **`tinybit.app`** is the company page (separate site) listing both products. The Our Story landing page lives inside the Our Story app.
 
