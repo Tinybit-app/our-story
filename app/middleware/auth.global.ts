@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const client = useSupabaseClient()
   const publicRoutePrefixes = ["/login", "/confirm", "/invite", "/view"]
-  const publicRoutesExact = ["/", "/pricing"]
+  const publicRoutesExact = ["/", "/pricing", "/privacy", "/terms"]
 
   // getSession() reads from localStorage synchronously (wrapped in a Promise)
   // so this always resolves immediately on the client — no network round-trip.

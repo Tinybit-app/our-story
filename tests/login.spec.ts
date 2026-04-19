@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+// ── Login page ────────────────────────────────────────────────────────────────
+// Tests that require the login page to be loaded first.
 test.describe('Login page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
@@ -28,16 +30,71 @@ test.describe('Login page', () => {
 
     await expect(page.getByText(/check your inbox/i)).toBeVisible()
   })
+})
 
-  test('unauthenticated visit to / shows landing page (not redirected to /login)', async ({ page }) => {
+// ── Landing page ──────────────────────────────────────────────────────────────
+test.describe('Landing page', () => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    // / is the public landing page — unauthenticated visitors stay here.
-    // Protected routes (/timeline, /circle/*) redirect to /login; / does not.
+    await page.waitForLoadState('networkidle')
+  })
+
+  test('unauthenticated visit stays on /', async ({ page }) => {
     await expect(page).toHaveURL('http://localhost:3000/')
   })
 
+  test('shows hero headline', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  })
+
+  test('shows Start free CTA linking to /login', async ({ page }) => {
+    const cta = page.getByRole('link', { name: /start free/i }).first()
+    await expect(cta).toBeVisible()
+    await expect(cta).toHaveAttribute('href', '/login')
+  })
+
+  test('shows How it works section', async ({ page }) => {
+    await expect(page.getByText(/how it works/i)).toBeVisible()
+  })
+
+  test('shows pricing summary link to /pricing', async ({ page }) => {
+    const link = page.getByRole('link', { name: /see pricing/i })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', '/pricing')
+  })
+})
+
+// ── Pricing page ──────────────────────────────────────────────────────────────
+test.describe('Pricing page', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/pricing')
+    await page.waitForLoadState('networkidle')
+  })
+
+  test('unauthenticated visit stays on /pricing', async ({ page }) => {
+    await expect(page).toHaveURL('http://localhost:3000/pricing')
+  })
+
+  test('shows Free, Plus, and Pro tier cards', async ({ page }) => {
+    await expect(page.getByText(/^free$/i).first()).toBeVisible()
+    await expect(page.getByText(/^plus$/i).first()).toBeVisible()
+    await expect(page.getByText(/^pro$/i).first()).toBeVisible()
+  })
+
+  test('shows FAQ section', async ({ page }) => {
+    await expect(page.getByText(/faq/i)).toBeVisible()
+  })
+})
+
+// ── Auth routing ──────────────────────────────────────────────────────────────
+// These tests verify redirect behaviour for protected routes.
+// Each test navigates directly to the target URL with no prior app state
+// so there is no risk of Supabase client initialisation from a prior
+// navigation bleeding into the session check.
+test.describe('Auth routing', () => {
   test('unauthenticated visit to /timeline redirects to /login', async ({ page }) => {
     await page.goto('/timeline')
+    await page.waitForURL(/\/login/, { timeout: 10_000 })
     await expect(page).toHaveURL(/\/login/)
   })
 })

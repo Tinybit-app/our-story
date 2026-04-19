@@ -150,8 +150,8 @@
       <div class="max-w-[1280px] mx-auto px-5 py-6 flex items-center justify-between gap-4 flex-wrap">
         <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase select-none">Our Story</p>
         <div class="flex items-center gap-5">
-          <a href="#" class="text-xs text-muted-foreground hover:text-foreground transition-colors">{{ t('pricing.footer.privacy') }}</a>
-          <a href="#" class="text-xs text-muted-foreground hover:text-foreground transition-colors">{{ t('pricing.footer.terms') }}</a>
+          <NuxtLink to="/privacy" class="text-xs text-muted-foreground hover:text-foreground transition-colors">{{ t('pricing.footer.privacy') }}</NuxtLink>
+          <NuxtLink to="/terms" class="text-xs text-muted-foreground hover:text-foreground transition-colors">{{ t('pricing.footer.terms') }}</NuxtLink>
           <NuxtLink to="/" class="text-xs text-muted-foreground hover:text-foreground transition-colors">{{ t('pricing.footer.home') }}</NuxtLink>
         </div>
       </div>
