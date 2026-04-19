@@ -765,32 +765,105 @@ describe("POST /api/invites/[token]/accept — memory re-attach on rejoin", () =
 })
 
 // ============================================================
-// POST /api/account/export — Step 3.6 data export
-// Tests cover the one-active-job-per-user guard logic.
+// POST /api/account/export — Step 3.8 data export
+// Schema: { circleId: UUID }
+// Rate limit: 1 active job per (user, circle) — not per user globally.
+// Scope: owner/admin → full circle; member → own uploads only.
 // ============================================================
-describe("POST /api/account/export — duplicate job guard", () => {
-  function exportWouldBeBlocked(activeStatus: string | null): boolean {
-    return activeStatus === "pending" || activeStatus === "processing"
+const exportSchema = z.object({
+  circleId: z.uuid(),
+})
+
+describe("POST /api/account/export — schema validation", () => {
+  it("accepts a valid UUID circleId", () => {
+    const r = exportSchema.safeParse({ circleId: "550e8400-e29b-41d4-a716-446655440000" })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects missing circleId", () => {
+    const r = exportSchema.safeParse({})
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects non-UUID circleId", () => {
+    const r = exportSchema.safeParse({ circleId: "not-a-uuid" })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects empty string circleId", () => {
+    const r = exportSchema.safeParse({ circleId: "" })
+    expect(r.success).toBe(false)
+  })
+})
+
+describe("POST /api/account/export — per-circle duplicate job guard", () => {
+  const CIRCLE_A = "550e8400-e29b-41d4-a716-446655440000"
+  const CIRCLE_B = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+
+  type ActiveJob = { circle_id: string; status: string }
+
+  function exportWouldBeBlocked(activeJobs: ActiveJob[], circleId: string): boolean {
+    return activeJobs.some(
+      (j) => j.circle_id === circleId && (j.status === "pending" || j.status === "processing"),
+    )
   }
 
-  it("allows export when no active job exists", () => {
-    expect(exportWouldBeBlocked(null)).toBe(false)
+  it("allows export when no active jobs exist", () => {
+    expect(exportWouldBeBlocked([], CIRCLE_A)).toBe(false)
   })
 
-  it("blocks export when a pending job already exists", () => {
-    expect(exportWouldBeBlocked("pending")).toBe(true)
+  it("blocks export when a pending job exists for the same circle", () => {
+    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: "pending" }], CIRCLE_A)).toBe(true)
   })
 
-  it("blocks export when a processing job already exists", () => {
-    expect(exportWouldBeBlocked("processing")).toBe(true)
+  it("blocks export when a processing job exists for the same circle", () => {
+    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: "processing" }], CIRCLE_A)).toBe(true)
   })
 
-  it("allows export after a previously completed job", () => {
-    expect(exportWouldBeBlocked("complete")).toBe(false)
+  it("allows export for a different circle even when another circle has an active job", () => {
+    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: "pending" }], CIRCLE_B)).toBe(false)
   })
 
-  it("allows export after a previously failed job", () => {
-    expect(exportWouldBeBlocked("failed")).toBe(false)
+  it("allows export after a completed job for the same circle", () => {
+    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: "complete" }], CIRCLE_A)).toBe(false)
+  })
+
+  it("allows export after a failed job for the same circle", () => {
+    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: "failed" }], CIRCLE_A)).toBe(false)
+  })
+})
+
+describe("POST /api/account/export — export scope by role", () => {
+  function getScopeFilter(role: string, userId: string, circleId: string) {
+    const isOwnerOrAdmin = role === "owner" || role === "admin"
+    return isOwnerOrAdmin
+      ? { circle_id: circleId }
+      : { circle_id: circleId, owner_user_id: userId }
+  }
+
+  const USER = "user-123"
+  const CIRCLE = "circle-abc"
+
+  it("owner gets full-circle filter (no owner_user_id constraint)", () => {
+    const filter = getScopeFilter("owner", USER, CIRCLE)
+    expect(filter).toEqual({ circle_id: CIRCLE })
+    expect("owner_user_id" in filter).toBe(false)
+  })
+
+  it("admin gets full-circle filter (no owner_user_id constraint)", () => {
+    const filter = getScopeFilter("admin", USER, CIRCLE)
+    expect(filter).toEqual({ circle_id: CIRCLE })
+    expect("owner_user_id" in filter).toBe(false)
+  })
+
+  it("member gets own-uploads-only filter", () => {
+    const filter = getScopeFilter("member", USER, CIRCLE)
+    expect(filter).toEqual({ circle_id: CIRCLE, owner_user_id: USER })
+  })
+
+  it("caregiver gets own-uploads-only filter", () => {
+    const filter = getScopeFilter("caregiver", USER, CIRCLE)
+    expect(filter).toEqual({ circle_id: CIRCLE, owner_user_id: USER })
   })
 })
 

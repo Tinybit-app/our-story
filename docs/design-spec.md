@@ -1489,13 +1489,16 @@ Export can be gigabytes — synchronous generation would timeout. Use a job queu
 
 ### Flow
 ```
-User requests export (account settings)
-  → INSERT into ExportJob { user_id, status: "pending" }
+User selects a circle and requests export (account settings)
+  → POST /api/account/export { circleId }
+  → API validates membership, checks for active job for this (user, circle)
+  → INSERT into ExportJob { user_id, circle_id, status: "pending" }
   → Supabase Edge Function triggered (via pg_net or scheduled poll every 5 min)
+  → Resolve user's role in the circle (owner/admin vs member)
   → Stream files from Supabase Storage in chunks (avoid loading all into memory)
   → Build zip using JSZip, write to temp storage bucket
   → Generate signed URL (expiry: 24 hours)
-  → Send download link via Resend email
+  → Send download link via Resend email (subject includes circle name)
   → UPDATE ExportJob { status: "complete", download_url, expires_at }
 ```
 
@@ -1504,6 +1507,7 @@ User requests export (account settings)
 ExportJob
   - id
   - user_id
+  - circle_id         ← scopes export to a single circle
   - status: "pending" | "processing" | "complete" | "failed"
   - download_url (nullable)
   - expires_at (nullable)
@@ -1511,8 +1515,13 @@ ExportJob
 ```
 
 ### Export scope
-- **Members** can export only their own uploads (GDPR portability applies to data you provided, not data others uploaded)
-- **Owners** can export the full circle — all members' memories, with attribution in metadata
+- **Members** export only their own uploads from the selected circle (GDPR portability covers data you provided)
+- **Owners and admins** export the full circle — all members' uploads, with `uploaded_by` in metadata
+
+### Export UI
+- Export button lives in account settings (`/settings/account`)
+- If the user belongs to one circle: auto-selected, no selector shown
+- If the user belongs to multiple circles: circle selector dropdown shown above the button
 
 ### Export contents
 - Original media files (photos + videos)
@@ -1520,7 +1529,7 @@ ExportJob
 - Folder structure: `/YYYY-MM/memory-id/photo.jpg + metadata.json`
 
 ### Limits
-- One active export job per user at a time
+- One active export job per user per circle (parallel exports of different circles allowed)
 - Temp zip deleted from storage after 24 hours (scheduled cleanup)
 - Required for GDPR Article 20 (data portability)
 

@@ -3,8 +3,12 @@ import JSZip from "https://esm.sh/jszip@3"
 import { Resend } from "https://esm.sh/resend@4"
 
 // Triggered by pg_net webhook on ExportJob INSERT, or polled every 5 minutes.
-// Picks up the oldest pending ExportJob, builds a zip of the user's memories,
-// uploads it to storage, and emails a 24h signed download link.
+// Picks up the oldest pending ExportJob, builds a zip of memories scoped to
+// the requested circle, and emails a 24h signed download link.
+//
+// Scope rules:
+//   - owner / admin → all memories in the circle (every member's uploads)
+//   - member / caregiver → only the requesting user's own uploads
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,7 +28,7 @@ Deno.serve(async (req) => {
   // Claim the oldest pending job
   const { data: job, error: claimError } = await supabase
     .from("exportjob")
-    .select("id, user_id")
+    .select("id, user_id, circle_id")
     .eq("status", "pending")
     .order("created_at")
     .limit(1)
@@ -46,24 +50,49 @@ Deno.serve(async (req) => {
     .eq("id", job.id)
 
   try {
-    // Fetch all memories owned by this user
-    const { data: memories } = await supabase
+    // Resolve circle name and user's role in that circle
+    const [circleResult, memberResult] = await Promise.all([
+      supabase
+        .from("circle")
+        .select("name")
+        .eq("id", job.circle_id)
+        .maybeSingle(),
+      supabase
+        .from("circlemember")
+        .select("role")
+        .eq("circle_id", job.circle_id)
+        .eq("user_id", job.user_id)
+        .maybeSingle(),
+    ])
+
+    const circleName: string = circleResult.data?.name ?? "Your circle"
+    const role: string = memberResult.data?.role ?? "member"
+    const isOwnerOrAdmin = role === "owner" || role === "admin"
+
+    // Fetch memories — full circle for owners/admins, own uploads only for members
+    let memoriesQuery = supabase
       .from("memory")
-      .select("id, memory_date, note, milestone_label, visibility, circle:circle_id(name), memorymedia(storage_path, media_type)")
-      .eq("owner_user_id", job.user_id)
+      .select("id, memory_date, note, milestone_label, visibility, owner_user_id, memorymedia(storage_path, media_type)")
+      .eq("circle_id", job.circle_id)
+
+    if (!isOwnerOrAdmin) {
+      memoriesQuery = memoriesQuery.eq("owner_user_id", job.user_id)
+    }
+
+    const { data: memories } = await memoriesQuery
 
     const zip = new JSZip()
 
     for (const memory of memories ?? []) {
       const folder = zip.folder(`${(memory.memory_date as string).slice(0, 7)}/${memory.id}`)!
-      const circle = memory.circle as any
 
       const meta = {
         date: memory.memory_date,
         note: memory.note,
         milestone_label: memory.milestone_label,
         visibility: memory.visibility,
-        circle_name: circle?.name ?? null,
+        circle_name: circleName,
+        uploaded_by: isOwnerOrAdmin ? (memory.owner_user_id ?? null) : undefined,
       }
       folder.file("metadata.json", JSON.stringify(meta, null, 2))
 
@@ -112,8 +141,8 @@ Deno.serve(async (req) => {
       await resend.emails.send({
         from: "Our Story <hello@our-story.tinybit.app>",
         to: userEmail,
-        subject: "Your Our Story export is ready",
-        html: `<p>Your data export is ready. <a href="${signedUrlData.signedUrl}">Download your memories</a> — link expires in 24 hours.</p>`,
+        subject: `Your "${circleName}" export is ready`,
+        html: `<p>Your export of <strong>${circleName}</strong> is ready. <a href="${signedUrlData.signedUrl}">Download your memories</a> — link expires in 24 hours.</p>`,
       })
     }
 

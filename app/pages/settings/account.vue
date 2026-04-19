@@ -56,12 +56,23 @@
         <div>
           <h2 class="text-base font-semibold text-foreground mb-1">{{ t('settings.account.exportTitle') }}</h2>
           <p class="text-sm text-muted-foreground mb-4">{{ t('settings.account.exportDesc') }}</p>
+
+          <!-- Circle selector — only shown when user belongs to more than one circle -->
+          <select
+            v-if="exportCircles.length > 1"
+            v-model="selectedCircleId"
+            class="w-full mb-4 px-3 py-2.5 border border-border rounded-[10px] text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          >
+            <option value="" disabled>{{ t('settings.account.exportSelectCircle') }}</option>
+            <option v-for="c in exportCircles" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+
           <p v-if="exportMsg" class="text-sm mb-3" :class="exportError ? 'text-destructive' : 'text-green-600 dark:text-green-400'">
             {{ exportMsg }}
           </p>
           <button
             @click="requestExport"
-            :disabled="exporting"
+            :disabled="exporting || !selectedCircleId"
             class="px-5 py-2.5 border border-border rounded-[10px] text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-40 transition-colors"
           >
             {{ exporting ? t('settings.account.exporting') : t('settings.account.exportButton') }}
@@ -248,16 +259,30 @@ const purgePreviewDate = computed(() => {
 })
 
 // ── Export ──────────────────────────────────────────────────
+const { data: circlesData } = await useFetch<{ circles: { id: string; name: string }[] }>('/api/circles')
+const exportCircles = computed(() => circlesData.value?.circles ?? [])
+const selectedCircleId = ref<string>('')
+watch(exportCircles, (list) => {
+  if (!selectedCircleId.value) {
+    const first = list[0]
+    if (first) selectedCircleId.value = first.id
+  }
+}, { immediate: true })
+
 const exporting = ref(false)
 const exportMsg = ref('')
 const exportError = ref(false)
 
 async function requestExport() {
+  if (!selectedCircleId.value) return
   exporting.value = true
   exportMsg.value = ''
   exportError.value = false
   try {
-    const res = await $fetch<{ message: string }>('/api/account/export', { method: 'POST' })
+    const res = await $fetch<{ message: string }>('/api/account/export', {
+      method: 'POST',
+      body: { circleId: selectedCircleId.value },
+    })
     exportMsg.value = res.message ?? t('settings.account.exportQueued')
   } catch (err: any) {
     exportError.value = true

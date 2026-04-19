@@ -38,7 +38,13 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
   - Danger zone UI moved to dedicated `/circle-settings` page (previously in members page)
   - `useUserState().clear()` called before post-deletion redirect so middleware re-checks membership
-- [ ] 3.8 Data export (ExportJob): members export own uploads only; owners export full circle
+- [ ] 3.8 Data export (ExportJob): single-circle scope; members export own uploads only; owners/admins export full circle *(implementation complete — pending end-to-end test)*
+  - Circle selector shown in account settings when user belongs to more than one circle; auto-selected when only one
+  - Rate limit: 1 active job per (user, circle) — parallel exports of different circles allowed
+  - Edge Function resolves role via CircleMember query; full-circle vs own-uploads filter applied server-side
+  - Email subject includes circle name; download link expires in 24 hours
+  - Migration 012: `circle_id` column added to ExportJob; index on (user_id, circle_id, status)
+  - **Blocked:** no trigger wires `process-export` Edge Function yet — `pg_net` INSERT trigger and `pg_cron` 5-min poll both unimplemented; need to wire before testing
 
 ### Milestone 3.9: Landing Page + Pricing Page (Cold Discovery)
 - [ ] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
