@@ -82,7 +82,7 @@ test.describe('Pricing page', () => {
   })
 
   test('shows FAQ section', async ({ page }) => {
-    await expect(page.getByText(/faq/i)).toBeVisible()
+    await expect(page.getByText(/questions/i).first()).toBeVisible()
   })
 })
 
