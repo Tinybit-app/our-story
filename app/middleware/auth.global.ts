@@ -23,15 +23,17 @@ export default defineNuxtRouteMiddleware(async (to) => {
     const noMembershipRoutes = ["/onboarding", "/settings/account", "/invite"]
     const needsMembership = !noMembershipRoutes.some((r) => to.path.startsWith(r))
 
+    // Always load state for authenticated users so we can gate deleted accounts
+    // regardless of which route they're navigating to.
+    const { ensure } = useUserState()
+    const state = await ensure()
+
+    // Account pending deletion → restrict to settings only (applies to all routes)
+    if (state.deletedAt && !to.path.startsWith("/settings/account")) {
+      return navigateTo("/settings/account")
+    }
+
     if (needsMembership) {
-      const { ensure } = useUserState()
-      const state = await ensure()
-
-      // Account pending deletion → restrict to settings
-      if (state.deletedAt) {
-        return navigateTo("/settings/account")
-      }
-
       if (to.path === "/no-circle") {
         // Already on the right page but bounce away if state has changed
         if (state.needsProfile) return navigateTo("/onboarding/profile")

@@ -3,16 +3,18 @@
     <!-- Header -->
     <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
-        <NuxtLink
-          to="/"
-          class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          {{ t('common.back') }}
-        </NuxtLink>
-        <span class="text-border">·</span>
+        <template v-if="!pendingDeletionDate">
+          <NuxtLink
+            to="/"
+            class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            {{ t('common.back') }}
+          </NuxtLink>
+          <span class="text-border">·</span>
+        </template>
         <p class="text-sm font-semibold text-foreground">{{ t('settings.account.title') }}</p>
       </div>
     </header>
