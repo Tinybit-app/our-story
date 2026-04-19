@@ -168,13 +168,6 @@
     "circleDeleted": "This circle has been deleted",
     "circleDeletedDesc": "The owner deleted this circle. Your invite is no longer valid."
   },
-  "soloNudge": {
-    "title": "This is a solo circle",
-    "desc": "Solo circles are just for you. Choose a shared type to invite someone, or invite them anyway and keep it solo.",
-    "switchAndInvite": "Switch type & invite",
-    "inviteAnyway": "Invite anyway",
-    "switching": "Switching…"
-  },
   "members": {
     "title": "Members",
     "invite": "Invite",

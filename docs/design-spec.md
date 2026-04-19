@@ -1593,66 +1593,41 @@ Implemented via `useCircleTypeConfig` composable (`app/composables/useCircleType
 
 ---
 
-### Path A — Circle creator (shared from day one)
-Critical for retention — user must reach the "aha moment" (first shared memory) in one session.
+### Path A — Circle creator
 
 ```
 Sign up (magic link or Google)
   → Value proposition screens (3 swipeable, skippable)
   → "Who is this story for?" (see circle type picker below)
   → Name your circle ("The Dao Family", "Barcelona Trip Crew", etc.)
-  → Invite first member (email) — or skip to solo
+  → Invite first member (email) — or skip
   → Upload first memory
   → Add a note
-  → Share to circle timeline
   → "Your story has begun"
 ```
 
-### Path B — Solo mode (private journal, invite later)
-For users who want to start privately — tracking their own life, travels, or memories — before inviting anyone.
+### Path B — Solo start (invite later, or never)
+For users who want to start privately before inviting anyone — or who simply want a personal timeline.
 
 ```
 Sign up (magic link or Google)
   → "Who is this story for?"
   → Select: "Just me for now"
   → Name your story ("My Story", "My 2026", etc.)
-  → Upload first memory (private by default)
-  → Add a note
-  → "Your personal story has begun — invite others whenever you're ready"
+  → Upload first memory
+  → "Your story has begun — invite others whenever you're ready"
 ```
 
-Solo mode UX rules:
-- All memories default to private visibility
-- No invite prompt during onboarding — but persistent soft CTA: "Invite someone to your story →"
-- No collaborative features shown (no challenges, no guest uploads) until first member joins
-- On This Day works exactly the same — daily nostalgia for solo users is just as valuable
-- Timeline looks identical — just no other contributors
+Solo start UX rules:
+- Invite UI is always present — owner's discretion whether they use it
+- On This Day works exactly the same — daily nostalgia is just as valuable for solo users
+- Timeline looks identical — just no other contributors until someone is invited
 
-Solo-to-circle upgrade:
-```
-User taps "Invite someone to your story" (from nav dropdown or members page)
-  → SoloInviteNudge dialog appears:
-      "This is a solo circle. Choose a shared type to invite someone,
-       or invite them anyway and keep it solo."
-      → Type picker (6 options: couple, family, friends, parents, caregiving, travel)
-      → [Switch type & invite] → PATCH /api/circles/[id] updates circle_type,
-                                  then standard invite dialog opens
-      → [Invite anyway]        → standard invite dialog opens without type change
-      → [Cancel]               → nudge closes, no action
-  → On first member joining:
-      "Your story just got bigger — [name] has joined"
-  → Prompt: "Want to share any of your memories with them?"
-      → User selects which existing memories to make circle-visible
-  → Circle mode activated — no data lost, full continuity
-```
+**Privacy rule: private memories never auto-share.** When a new member joins, no existing memories change visibility. Every memory the owner created stays at its current `visibility` value until they explicitly change it. The sharing prompt is an invitation — not a default.
 
-**PATCH /api/circles/[id]** — owner-only endpoint for updating `circle_type`. Accepts `{ circleType: z.enum(CIRCLE_TYPES) }`. Used by the solo invite nudge. Implemented at `server/api/circles/[id]/index.patch.ts`.
+This is a trust-critical rule. A user who stored personal memories must never discover that a new member can see them because they forgot to check a setting. Implementation must enforce this at the DB level: `Memory.visibility` is never mutated by the invite/join flow. Only an explicit user action can change visibility to `"circle"`.
 
-**SoloInviteNudge.vue** — `app/components/SoloInviteNudge.vue`. Shown when `circle.circle_type === 'solo'` and the user is the owner. Presents a 2-column type picker (all shared types, no solo) with "Switch type & invite" and "Invite anyway" actions. After a successful switch the local circle data is patched in memory so the nudge doesn't re-trigger on the next open.
-
-**Privacy rule: private memories never auto-share.** When a solo user's first member joins, no existing memories change visibility. Every memory the solo user created stays `visibility: "private"` until they explicitly set it to `"circle"`. The sharing prompt is an invitation — not a default. The default must always be "keep private."
-
-This is a trust-critical rule. A user who stored personal memories in solo mode must never discover that a new member can see them because they forgot to check a setting. Implementation must enforce this at the DB level: `Memory.visibility` is never mutated by the invite/join flow. Only an explicit user action (the sharing prompt selection, or later from the memory detail screen) can change visibility to `"circle"`.
+**PATCH /api/circles/[id]** — owner-only endpoint for updating `circle_type`. Accepts `{ circleType: z.enum(CIRCLE_TYPES) }`. Used by the type picker in `/circle-settings`. Implemented at `server/api/circles/[id]/index.patch.ts`.
 
 ### Path C — Invited member
 Already covered above in invite-before-signup flow.
@@ -1660,18 +1635,19 @@ Already covered above in invite-before-signup flow.
 ---
 
 ### Circle type picker (shown during onboarding)
-Determines default milestone templates and suggested first steps.
+
+**`circle_type` is a purely a UX and marketing signal.** It sets copy, empty state, and milestone chip defaults. It does not gate any features — all features are available to all circles regardless of type. The owner can change their circle type at any time from `/circle-settings`.
 
 ```
 "Who is this story for?"
-  → 👶 New parents       → preloads baby milestone templates
-  → 👫 Couples           → preloads relationship milestone templates
-  → 👨‍👩‍👧‍👦 Family            → preloads general family milestone templates
-  → 👯 Friend group      → preloads friendship milestone templates
-  → 🧓 Caregiving family → preloads health/life event templates
-  → 🌍 Travel group      → preloads trip/destination templates
-  → 📔 Just me           → solo mode, personal milestone templates
-  → ✏️  Other            → blank, fully custom
+  → 👶 New parents       → preloads baby milestone chips, parents copy
+  → 👫 Couples           → preloads relationship milestone chips, couple copy
+  → 👨‍👩‍👧‍👦 Family            → preloads family milestone chips, family copy
+  → 👯 Friend group      → preloads friendship milestone chips, friends copy
+  → 🧓 Caregiving family → preloads health/life event chips, caregiving copy
+  → 🌍 Travel group      → preloads trip/destination chips, travel copy
+  → 📔 Just me           → preloads personal milestone chips, solo copy
+  → ✏️  Other            → blank chips, generic copy
 ```
 
 Stored as:
@@ -1685,9 +1661,13 @@ Used to:
 - Pre-populate milestone quick-pick chips in the upload modal
 - Personalise empty state copy (headline + body — see table above)
 - Inform push notification copy ("Your circle" vs "Your family" vs "Your crew")
+- Drive landing page per-type card copy and SEO targeting
 
-- Skip steps allowed but nudge user back to complete
-- Empty state always shows "Upload your first memory" CTA — copy adapts to circle_type
+Not used to:
+- Gate any features — all features available to all circles
+- Restrict invite functionality — invite UI always present regardless of type
+
+Empty state always shows "Upload your first memory" CTA — copy adapts to `circle_type`.
 
 **Implemented differentiation (shipped):**
 
@@ -1703,10 +1683,12 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | travel | Arrived · Best meal · Hidden gem · Adventure · Last day |
 | solo | Achievement · New chapter · Goal reached · Reflection · Memory |
 
-**Per-type feature roadmap (not yet implemented):**
+**Feature roadmap (available to all circles — type sets which are surfaced by default):**
+
+Features are progressively disclosed: they appear in the UI when first used, not all at once. Type influences which features are proactively suggested in empty states and onboarding prompts, but any feature can be used by any circle regardless of type.
 
 #### Parents
-*Core differentiation: time is relative to the baby*
+*Default features for this type: time is relative to the baby*
 
 | Feature | Description |
 |---|---|
@@ -1717,7 +1699,7 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | **Weekly digest** | "Your baby is 6 months old this week" summary email with recent memories. |
 
 #### Couple
-*Core differentiation: shared relationship timeline with anniversary anchoring*
+*Default features for this type: shared relationship timeline with anniversary anchoring*
 
 | Feature | Description |
 |---|---|
@@ -1728,7 +1710,7 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | **Private mode default** | All memories default to visible only to the two of them. |
 
 #### Family
-*Core differentiation: multi-generational, person-tagged memories*
+*Default features for this type: multi-generational, person-tagged memories*
 
 | Feature | Description |
 |---|---|
@@ -1738,7 +1720,7 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | **Family tree light** | Simple list of circle members with their relationship labels (Grandma, Uncle, etc.). |
 
 #### Friends
-*Core differentiation: event-centric and trip-focused*
+*Default features for this type: event-centric and trip-focused*
 
 | Feature | Description |
 |---|---|
@@ -1748,7 +1730,7 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | **Memory count milestones** | Celebrate 50th, 100th memory with a banner. |
 
 #### Caregiving
-*Core differentiation: structured health log alongside emotional memories*
+*Default features for this type: structured health log alongside emotional memories*
 
 | Feature | Description |
 |---|---|
@@ -1759,7 +1741,7 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | **PDF export** | Structured health timeline export for medical appointments. |
 
 #### Travel
-*Core differentiation: geography and itinerary awareness*
+*Default features for this type: geography and itinerary awareness*
 
 | Feature | Description |
 |---|---|
@@ -1770,7 +1752,7 @@ All per-type copy is centralised in `app/composables/useCircleTypeConfig.ts`:
 | **"Before you leave" prompt** | Nudge to add a final memory on the last day of the trip. |
 
 #### Solo
-*Core differentiation: personal journal with reflection prompts*
+*Default features for this type: personal journal with reflection prompts*
 
 | Feature | Description |
 |---|---|
@@ -4144,7 +4126,7 @@ The "Who uses it" section of the landing page should expand into per-type featur
 ---
 
 #### 👶 Parents
-**Core differentiation: time is relative to the baby**
+**Default features: time is relative to the baby**
 
 - **Baby age stamp** — every memory automatically shows the baby's age ("3 months, 2 weeks") based on a birth date set at circle creation
 - **Developmental milestone categories** — predefined milestone tracks (Motor, Language, Social, First foods) with completion checkboxes
@@ -4157,7 +4139,7 @@ SEO angles: "private baby photo sharing", "baby milestone tracker", "share baby 
 ---
 
 #### 💑 Couple
-**Core differentiation: shared relationship timeline with anniversary anchoring**
+**Default features: shared relationship timeline with anniversary anchoring**
 
 - **Relationship start date** — set once, used to calculate "Year 3 together", "1,200 days"
 - **Anniversary reminder** — email/push nudge a week before the anniversary
@@ -4170,7 +4152,7 @@ SEO angles: "couple memory app", "relationship photo timeline", "private photo a
 ---
 
 #### 👨‍👩‍👧‍👦 Family
-**Core differentiation: multi-generational, person-tagged memories**
+**Default features for this type: multi-generational, person-tagged memories**
 
 - **Person tags** — tag which family members appear in a memory (grandma, dad, the kids)
 - **"This day last year"** — surface a memory from exactly 1 year ago in a weekly digest
@@ -4182,7 +4164,7 @@ SEO angles: "family memory app", "private family photo sharing", "family photo a
 ---
 
 #### 👯 Friends
-**Core differentiation: event-centric and trip-focused**
+**Default features for this type: event-centric and trip-focused**
 
 - **Trip/event containers** — group memories inside a named event (Barcelona Trip, NYE 2025)
 - **"Who was there" tag** — tag which members attended an event
@@ -4194,7 +4176,7 @@ SEO angles: "shared photo album for friends", "group trip photo sharing app", "f
 ---
 
 #### 🤍 Caregiving
-**Core differentiation: structured health log alongside emotional memories**
+**Default features for this type: structured health log alongside emotional memories**
 
 - **Daily log entry** — simple structured note: mood (1–5), energy, notes — separate from photo memories
 - **Medication/appointment reminders** — upcoming event alerts
@@ -4207,7 +4189,7 @@ SEO angles: "caregiving journal app", "dementia care memory app", "family caregi
 ---
 
 #### ✈️ Travel
-**Core differentiation: geography and itinerary awareness**
+**Default features for this type: geography and itinerary awareness**
 
 - **Location tag** — city/country on each memory, auto-suggested from EXIF GPS data
 - **Trip itinerary** — ordered list of destinations with dates, memories attached to each stop
@@ -4220,7 +4202,7 @@ SEO angles: "group travel photo sharing", "trip memory app", "private shared tra
 ---
 
 #### 📔 Solo
-**Core differentiation: personal journal with reflection prompts**
+**Default features for this type: personal journal with reflection prompts**
 
 - **Private visibility default** — memories default to `private` (owner only) instead of `circle`
 - **Reflection prompts** — optional writing prompt on upload ("What made today memorable?")

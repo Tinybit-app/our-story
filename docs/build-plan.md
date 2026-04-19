@@ -66,14 +66,14 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 4.8 Invite pre-validation: `GET /api/invites/[token]/status` (public, no auth) shows circle-deleted or expired error before requiring sign-in
 - [x] 4.9 Circle type differentiation:
   - Per-type empty state copy, milestone placeholder, and milestone quick-pick chips (`useCircleTypeConfig` composable)
-  - `PATCH /api/circles/[id]` endpoint for owner to update `circle_type`
-  - Solo invite nudge (`SoloInviteNudge.vue`): intercepts invite flow for solo circles, offers type switch or "invite anyway"
-- [ ] 4.10 Per-type features — phase 1 (highest-value, lowest-effort; see design spec §Per-type feature roadmap):
-  - [ ] 4.10.1 Parents — baby age stamp: `date_of_birth` field on circle creation + computed age display on memory cards
-  - [ ] 4.10.2 Travel — location tag: single text field on upload modal + EXIF GPS auto-fill, shown below memory date
-  - [ ] 4.10.3 Caregiving — health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal
-  - [ ] 4.10.4 Solo — private visibility default: default `visibility` to `'private'` when `circle_type === 'solo'`
-  - [ ] 4.10.5 Couple — anniversary anchoring: relationship start date field at circle creation, anniversary display in header
+  - `PATCH /api/circles/[id]` endpoint for owner to update `circle_type` (used in `/circle-settings` type picker)
+  - **Design decision:** `circle_type` is a purely UX/marketing signal — sets copy, chips, and empty state only. Does not gate any features. All features available to all circles regardless of type. Invite UI always present. Owner can change type freely from `/circle-settings`.
+- [ ] 4.10 Feature roadmap — phase 1 (available to all circles; type influences which are proactively suggested; see design spec §Feature roadmap):
+  - [ ] 4.10.1 Baby age stamp: `date_of_birth` field on circle + computed age display on memory cards (suggested first for `parents` circles)
+  - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
+  - [ ] 4.10.3 Health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal (suggested first for `caregiving` circles)
+  - [ ] 4.10.4 Anniversary anchoring: relationship start date field at circle creation, display in header (suggested first for `couple` circles)
+  - [ ] 4.10.5 Circle type picker in `/circle-settings`: owner can change `circle_type` at any time
 - [ ] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
 - [ ] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)
 
