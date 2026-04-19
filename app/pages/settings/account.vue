@@ -408,7 +408,7 @@ async function cancelDeletion() {
     const { clear } = useUserState()
     clear()
     await refreshNuxtData()
-    router.replace('/')
+    router.replace('/timeline')
   } catch {
     // silently fail — user can try again
   } finally {

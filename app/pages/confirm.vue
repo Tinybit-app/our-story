@@ -36,7 +36,7 @@ async function checkMembership() {
     if (needsProfile) {
       router.push("/onboarding/profile")
     } else {
-      router.push(hasMembership ? "/" : "/onboarding")
+      router.push(hasMembership ? "/timeline" : "/onboarding")
     }
   } catch {
     errorMsg.value = t('confirm.error')

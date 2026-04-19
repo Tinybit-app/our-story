@@ -223,6 +223,152 @@
     "joined": "Joined {date}",
     "memories": "{n} memory | {n} memories"
   },
+  "landing": {
+    "nav": {
+      "signIn": "Sign in",
+      "startFree": "Start free",
+      "goToTimeline": "Go to timeline"
+    },
+    "hero": {
+      "headline": "A private space where your circle builds a shared story.",
+      "subhead": "No ads. No AI training. Invite-only.",
+      "cta": "Start your circle — free"
+    },
+    "screenshot": {
+      "label": "Timeline screenshot coming soon"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "step1Title": "Invite your circle",
+      "step1Desc": "Send a private invite link to the people you want. No public profiles, no strangers.",
+      "step2Title": "Upload your memories",
+      "step2Desc": "Add photos, videos, and notes. They land on a shared timeline, ordered by when they happened.",
+      "step3Title": "Remember together",
+      "step3Desc": "Every member can react, comment, and add their own memories. Your story grows together."
+    },
+    "whoUsesIt": {
+      "title": "Who uses it",
+      "startCircle": "Start a {type} circle"
+    },
+    "circleTypes": {
+      "parents": {
+        "tagline": "Document every first — together.",
+        "bullets": ["Baby age stamp on every memory", "Developmental milestone categories", "Weekly digest for grandparents", "Growth chart and vaccination tracker"]
+      },
+      "couple": {
+        "tagline": "Your relationship, from the very beginning.",
+        "bullets": ["Relationship start date & anniversary reminder", "\"How we met\" pinned memory", "Couple stats — memories, countries, months documented", "Private timeline just for the two of you"]
+      },
+      "family": {
+        "tagline": "One place for the whole family.",
+        "bullets": ["Person tags — grandma, dad, the kids", "\"This day last year\" in weekly digest", "Event grouping — Christmas, Summer holiday", "Multi-generational, invite-only access"]
+      },
+      "friends": {
+        "tagline": "Your trips and moments, all in one place.",
+        "bullets": ["Trip and event containers", "\"Who was there\" tags", "Reaction leaderboard — most-loved photo", "Memory count milestones to celebrate together"]
+      },
+      "caregiving": {
+        "tagline": "A structured log alongside the emotional moments.",
+        "bullets": ["Daily mood and energy log", "Health event types — Doctor visit, Good day, Treatment", "Care team notes visible only to admins", "Export as PDF for medical appointments"]
+      },
+      "travel": {
+        "tagline": "Every stop on your journey, remembered.",
+        "bullets": ["Location tag with EXIF auto-fill", "Trip itinerary with destinations and dates", "Map view showing where memories were taken", "Trip stats — countries, days, km covered"]
+      },
+      "solo": {
+        "tagline": "Your personal story, beautifully kept.",
+        "bullets": ["Reflection prompts on every upload", "Mood and emotion tags", "Year-in-review generated automatically", "Streak tracker — document every day"]
+      }
+    },
+    "privacy": {
+      "title": "Your photos never leave your circle.",
+      "items": ["No ads", "No algorithm", "No AI training on your memories"],
+      "sub": "Invite-only. Private by design."
+    },
+    "pricingSummary": {
+      "text": "Free to start.",
+      "link": "See pricing"
+    },
+    "footer": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "pricing": "Pricing"
+    }
+  },
+  "pricing": {
+    "nav": {
+      "backToHome": "Back to home",
+      "startFree": "Start free"
+    },
+    "headline": "Simple, honest pricing.",
+    "subhead": "Start free. Upgrade when your story grows.",
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "priceSub": "Forever free",
+        "storage": "5 GB",
+        "circles": "1 circle",
+        "members": "Up to 10 members",
+        "cta": "Start free"
+      },
+      "plus": {
+        "name": "Plus",
+        "price": "$4.99",
+        "priceSub": "per month",
+        "storage": "50 GB",
+        "circles": "Unlimited circles",
+        "members": "Up to 20 members",
+        "cta": "Upgrade to Plus"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$9.99",
+        "priceSub": "per month",
+        "storage": "500 GB",
+        "circles": "Unlimited + Pro features",
+        "members": "Unlimited members",
+        "cta": "Join waitlist",
+        "badge": "Coming soon"
+      }
+    },
+    "features": {
+      "basicTimeline": "Basic timeline",
+      "albums": "Albums †",
+      "milestones": "Milestones",
+      "comments": "Comments",
+      "reactions": "Reactions",
+      "search": "Search",
+      "onThisDay": "On This Day",
+      "notificationPrefs": "Notification prefs",
+      "offlineUpload": "Offline upload",
+      "timeCapsule": "Time capsule",
+      "yearInReview": "Year in Review",
+      "voiceReactions": "Voice reactions",
+      "collaborativeMemory": "Collaborative memory",
+      "albumsFootnote": "† Coming in Phase 2 — already included in your Free plan, no upgrade needed."
+    },
+    "faq": {
+      "title": "Questions",
+      "q1": "Can I cancel anytime?",
+      "a1": "Yes. No commitment, cancel in one tap from settings.",
+      "q2": "What happens to my photos if I cancel?",
+      "a2": "They stay. Forever. Downgrading to Free restricts new uploads if you're over 5 GB, but never hides or deletes existing memories.",
+      "q3": "Is my data private?",
+      "a3": "Yes. Invite-only. No ads. No AI training. No data selling. Your photos are stored privately and never leave our servers.",
+      "q4": "Do grandparents need to pay?",
+      "a4": "No. Joining a circle is always free. Only circle owners pay.",
+      "q5": "What counts toward the 5 GB limit?",
+      "a5": "Photos and videos you upload. Memories shared by other members don't count against your quota.",
+      "q6": "Can I try Pro before paying?",
+      "a6": "Yes — every new circle gets a free 14-day Pro trial when you upload your first memory. No credit card needed."
+    },
+    "footer": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "home": "Home"
+    }
+  },
   "settings": {
     "account": {
       "title": "Account settings",

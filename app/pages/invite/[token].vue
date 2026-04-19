@@ -78,7 +78,7 @@ async function acceptInvite() {
     // Refresh user state so the index page guard sees hasMembership: true
     const { refresh } = useUserState()
     await refresh()
-    router.push(`/?circle=${result.circleId}&welcome=1`)
+    router.push(`/timeline?circle=${result.circleId}&welcome=1`)
   } catch (err: any) {
     // Always clear the cookie — a stale token must not trap the user here on retry
     inviteCookie.value = null

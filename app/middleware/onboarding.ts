@@ -4,7 +4,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   // Profile page: only accessible when profile is incomplete
   if (to.path === '/onboarding/profile') {
-    if (!needsProfile) return navigateTo(hasMembership ? '/' : '/onboarding')
+    if (!needsProfile) return navigateTo(hasMembership ? '/timeline' : '/onboarding')
     return
   }
 
@@ -14,7 +14,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Invite page: requires the circleId cookie (set after creating a circle in /onboarding/name)
   if (to.path === '/onboarding/invite') {
     const circleIdCookie = useCookie('onboarding_circle_id')
-    if (!circleIdCookie.value) return navigateTo(hasMembership ? '/' : '/onboarding')
+    if (!circleIdCookie.value) return navigateTo(hasMembership ? '/timeline' : '/onboarding')
     return
   }
 

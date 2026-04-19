@@ -246,7 +246,7 @@ async function confirmDeleteCircle() {
     // and redirects to /no-circle if this was the user's only circle.
     const { clear } = useUserState()
     clear()
-    await navigateTo('/')
+    await navigateTo('/timeline')
   } catch (err: any) {
     deleteError.value = err?.data?.message ?? t('members.deleteCircleError')
   } finally {

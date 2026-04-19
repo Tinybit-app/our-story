@@ -47,19 +47,21 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **Blocked:** no trigger wires `process-export` Edge Function yet — `pg_net` INSERT trigger and `pg_cron` 5-min poll both unimplemented; need to wire before testing
 
 ### Milestone 3.9: Landing Page + Pricing Page (Cold Discovery)
-- [ ] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
-- [ ] 3.9.2 Hero: headline ("A private space where your circle builds a shared story."), subhead, single CTA ("Start your circle — free")
-- [ ] 3.9.3 How it works: 3-step explainer (invite → upload → remember) + product screenshot
-- [ ] 3.9.4 "Who uses it" — per-type feature cards (7 cards, one per circle type):
+- [x] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
+- [x] 3.9.2 Hero: headline ("A private space where your circle builds a shared story."), subhead, single CTA ("Start your circle — free")
+- [x] 3.9.3 How it works: 3-step explainer (invite → upload → remember) + screenshot placeholder
+- [x] 3.9.4 "Who uses it" — per-type feature cards (7 cards, one per circle type):
   - Each card: emoji icon, type name, core differentiation tagline, 3–4 feature bullets, "Start a [type] circle →" CTA
   - Copy source: design spec §Circle-type landing page sections
   - Cards are the primary depth signal — show the product is purpose-built, not generic
-- [ ] 3.9.5 Privacy proof block: "Your photos never leave your circle. No ads. No algorithm. No AI training on your memories."
-- [ ] 3.9.6 Pricing summary: one line + link to /pricing
-- [ ] 3.9.7 SEO: `<title>`, meta description, OG tags — primary: "private photo sharing for family"; per-type: baby/couple/travel/caregiving angles (see design spec §SEO targets)
-- [ ] 3.9.8 `/pricing` route — tier comparison table (Free / Plus / Pro "coming soon"), FAQ (cancel, photos on cancel, privacy, grandparents), CTA per tier
+- [x] 3.9.5 Privacy proof block: "Your photos never leave your circle. No ads. No algorithm. No AI training on your memories."
+- [x] 3.9.6 Pricing summary: one line + link to /pricing
+- [x] 3.9.7 SEO: `<title>`, meta description, OG tags via `useSeoMeta()`; `/` and `/pricing` prerendered at build time via `routeRules`
+- [x] 3.9.8 `/pricing` route — tier comparison table (Free / Plus / Pro "coming soon"), FAQ (cancel, photos on cancel, privacy, grandparents), CTA per tier
 - Note: single focused page — not a multi-page marketing site; lives inside the Nuxt app as the `/` route
-- Note: see design spec §Cold Discovery Strategy and §Pricing Page for full copy and structure
+- Note: timeline moved from `/` to `/timeline/index.vue`; all internal navigations updated
+- Note: screenshot placeholder in "What it looks like" section — replace with real screenshot before launch
+- Note: `landing.*` and `pricing.*` i18n keys added to `locales/en.json` (English only)
 
 ### Milestone 4: Onboarding & Circle Creation
 - [x] 4.1 Onboarding flow (circle type picker → name → invite)

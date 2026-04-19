@@ -5,7 +5,7 @@
     <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
         <NuxtLink
-          to="/"
+          to="/timeline"
           class="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ const month = Number(route.params.month)
 
 // Redirect to home if route params are invalid
 if (!year || !month || month < 1 || month > 12 || year < 2000 || year > 2100) {
-  await navigateTo('/')
+  await navigateTo('/timeline')
 }
 
 const monthLabel = computed(() =>

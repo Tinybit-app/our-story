@@ -87,6 +87,6 @@ function finish() {
   const newCircleId = circleIdCookie.value
   circleTypeCookie.value = null
   circleIdCookie.value = null
-  router.push(newCircleId ? `/?circle=${newCircleId}` : '/')
+  router.push(newCircleId ? `/timeline?circle=${newCircleId}` : '/timeline')
 }
 </script>

@@ -1,6 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const client = useSupabaseClient()
-  const publicRoutes = ["/login", "/confirm", "/invite", "/view"]
+  const publicRoutePrefixes = ["/login", "/confirm", "/invite", "/view"]
+  const publicRoutesExact = ["/", "/pricing"]
 
   // getSession() reads from localStorage synchronously (wrapped in a Promise)
   // so this always resolves immediately on the client — no network round-trip.
@@ -8,11 +9,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // ref is null for a tick before Supabase fires INITIAL_SESSION.
   const { data: { session } } = await client.auth.getSession()
 
+  // Authenticated users on the login page → send to the app
   if (session && to.path === "/login") {
-    return navigateTo("/")
+    return navigateTo("/timeline")
   }
 
-  if (!session && !publicRoutes.some((r) => to.path.startsWith(r))) {
+  if (!session && !publicRoutePrefixes.some((r) => to.path.startsWith(r)) && !publicRoutesExact.includes(to.path)) {
     return navigateTo("/login")
   }
 
@@ -37,7 +39,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       if (to.path === "/no-circle") {
         // Already on the right page but bounce away if state has changed
         if (state.needsProfile) return navigateTo("/onboarding/profile")
-        if (state.hasMembership) return navigateTo("/")
+        if (state.hasMembership) return navigateTo("/timeline")
         return
       }
 

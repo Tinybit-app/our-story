@@ -82,7 +82,7 @@ async function save() {
 
     const { refresh } = useUserState()
     const { hasMembership } = await refresh()
-    router.push(hasMembership ? '/' : '/onboarding')
+    router.push(hasMembership ? '/timeline' : '/onboarding')
   } catch (err: any) {
     errorMsg.value = err?.data?.message ?? t('common.errorGeneric')
   } finally {

@@ -60,7 +60,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: "/login",
       callback: "/confirm",
-      exclude: ["/invite/*", "/view/*"],
+      exclude: ["/invite/*", "/view/*", "/", "/pricing"],
     },
   },
 
@@ -72,6 +72,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    "/": { prerender: true },
+    "/pricing": { prerender: true },
     "/api/**": {
       cors: false, // handled manually in security-headers middleware
       headers: {

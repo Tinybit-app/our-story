@@ -92,7 +92,7 @@ async function createCircle() {
       circleTypeCookie.value = null
       const newCircleId = circleId
       circleIdCookie.value = null
-      router.push(`/?circle=${newCircleId}`)
+      router.push(`/timeline?circle=${newCircleId}`)
     } else {
       router.push('/onboarding/invite')
     }
