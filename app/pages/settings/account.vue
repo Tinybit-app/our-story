@@ -5,7 +5,7 @@
       <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
         <template v-if="!pendingDeletionDate">
           <NuxtLink
-            to="/"
+            to="/timeline"
             class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
