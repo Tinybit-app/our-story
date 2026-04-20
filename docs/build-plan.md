@@ -117,8 +117,12 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - Note: see design spec §Localization for full setup code and priority language rationale
 
 ### Milestone 9: Viewer-Role Access
-- [ ] 9.1 Generate view-only JWT link
-- [ ] 9.2 View-only page (no auth required)
+- [ ] 9.1 Generate view-only JWT link (UI in app — "Share link" button on timeline/settings)
+  - When built, offer two modes: "full timeline" (default) and "share a selection" (owner picks specific memories)
+- [x] 9.2 View-only page `/view?token=<jwt>` (no auth required) — implemented in §4.5
+  - Shows circle-visible memories, newest first, max 50, ordered by memory_date
+  - Photos and videos supported (mediaType detected server-side from file extension)
+  - First-open splash, guest reactions with name prompt, expired-link UX
 - Note: tech-savvy family members should be invited as full members — viewer role is for anyone who won't create an account, not a grandparent-specific path
 
 ### Milestone 9.5: Guest Contributor / Event QR Code *(Phase 3 — do not build in Phase 1)*

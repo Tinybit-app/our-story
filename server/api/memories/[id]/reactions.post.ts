@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
   // Return fresh reactions for this memory
   const { data: reactions } = await supabase
     .from("memoryreaction")
-    .select("id, emoji, user_id, user!user_id(first_name, last_name)")
+    .select("id, emoji, user_id, guest_name, user!user_id(first_name, last_name)")
     .eq("memory_id", memoryId)
 
   return { reactions: reactions ?? [] }

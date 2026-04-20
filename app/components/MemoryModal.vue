@@ -707,7 +707,8 @@ async function saveEdit() {
 type Reaction = {
   id: string;
   emoji: string;
-  user_id: string;
+  user_id: string | null;
+  guest_name: string | null;
   user: { first_name: string | null; last_name: string | null } | null;
 };
 const localReactions = ref<Reaction[]>([]);
@@ -726,6 +727,9 @@ const reactionGroups = computed(() => {
     if (r.user_id === currentUserId.value) {
       g.mine = true;
       g.names.unshift(t('common.you'));
+    } else if (!r.user_id) {
+      // Guest reaction from viewer link — use guest_name if available
+      g.names.push(r.guest_name ?? t('common.someone'));
     } else {
       g.names.push(r.user?.first_name ?? t('common.someone'));
     }

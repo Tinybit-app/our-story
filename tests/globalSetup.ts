@@ -2,6 +2,22 @@ import { chromium, type FullConfig } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
 
+// Load .env so local dev runs pick up SUPABASE_SERVICE_ROLE_KEY etc.
+// (Playwright doesn't auto-load .env for globalSetup scripts)
+const envPath = path.resolve(process.cwd(), '.env')
+if (fs.existsSync(envPath)) {
+  const raw = fs.readFileSync(envPath, 'utf-8')
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq === -1) continue
+    const key = trimmed.slice(0, eq).trim()
+    const val = trimmed.slice(eq + 1).trim()
+    if (!(key in process.env)) process.env[key] = val
+  }
+}
+
 // Local Supabase credentials — read from env vars.
 // Add to your .env (gitignored):
 //   SUPABASE_URL=http://127.0.0.1:54321    (or NUXT_PUBLIC_SUPABASE_URL)

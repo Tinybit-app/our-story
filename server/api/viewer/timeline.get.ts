@@ -50,11 +50,13 @@ export default defineEventHandler(async (event) => {
   const memoriesWithUrls = await Promise.all(
     (memories ?? []).map(async (m: any) => {
       const media = m.memorymedia?.[0]
-      if (!media?.storage_path) return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: null }
+      if (!media?.storage_path) return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: null, mediaType: null }
+      const ext = media.storage_path.split('.').pop()?.toLowerCase() ?? ''
+      const mediaType: 'video' | 'image' = ['mp4', 'mov', 'webm', 'qt'].includes(ext) ? 'video' : 'image'
       const { data } = await supabase.storage
-        .from("memories")
+        .from("memories-private")
         .createSignedUrl(media.storage_path, 60 * 60)
-      return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: data?.signedUrl ?? null }
+      return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: data?.signedUrl ?? null, mediaType }
     })
   )
 

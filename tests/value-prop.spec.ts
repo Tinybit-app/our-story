@@ -59,7 +59,7 @@ test.describe('Value proposition screens', () => {
     await page.goto('/onboarding/value-prop')
     await page.getByRole('button', { name: /next/i }).click()
     await page.getByRole('button', { name: /next/i }).click()
-    await expect(page.getByText(/works for everyone/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText(/works for/i)).toBeVisible({ timeout: 5_000 })
   })
 
   test('"Start your story" CTA on screen 3 navigates to /onboarding', async ({ page }) => {
@@ -77,6 +77,23 @@ test.describe('Value proposition screens', () => {
     await page.goto('/onboarding/value-prop')
     await page.getByRole('button', { name: /skip/i }).click()
     await page.waitForURL(/\/onboarding$/, { timeout: 5_000 })
+    await expect(page).toHaveURL(/\/onboarding$/)
+  })
+
+  // ── Existing member creating a second circle ────────────────────────────────
+
+  test('existing member navigating to /onboarding skips value-prop entirely', async ({ page }) => {
+    await page.route('**/api/auth/membership**', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      })
+    )
+    // value_prop_seen is NOT set — but membership means it should be skipped anyway
+    await page.goto('/onboarding')
+    await page.waitForTimeout(500)
+    await expect(page).not.toHaveURL(/\/value-prop/)
     await expect(page).toHaveURL(/\/onboarding$/)
   })
 

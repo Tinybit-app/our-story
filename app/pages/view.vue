@@ -103,8 +103,16 @@
               :key="memory.id"
               class="rounded-2xl border border-border bg-card overflow-hidden"
             >
+              <video
+                v-if="memory.signedUrl && memory.mediaType === 'video'"
+                :src="memory.signedUrl"
+                class="w-full aspect-[4/3] object-cover"
+                controls
+                playsinline
+                preload="metadata"
+              />
               <img
-                v-if="memory.signedUrl"
+                v-else-if="memory.signedUrl"
                 :src="memory.signedUrl"
                 :alt="memory.note ?? 'Memory'"
                 class="w-full aspect-[4/3] object-cover"
@@ -117,13 +125,30 @@
                   {{ memory.note }}
                 </p>
                 <!-- Reaction button -->
-                <button
-                  @click="reactToMemory(memory.id)"
-                  class="mt-3 flex items-center gap-2 text-2xl hover:scale-110 transition-transform active:scale-95"
-                  aria-label="React with heart"
-                >
-                  ❤️
-                </button>
+                <div class="mt-3 flex items-center gap-2">
+                  <button
+                    @click="reactToMemory(memory.id)"
+                    :disabled="reactedIds.has(memory.id)"
+                    class="flex items-center gap-1.5 transition-all active:scale-95"
+                    :class="reactedIds.has(memory.id)
+                      ? 'text-rose-500 cursor-default'
+                      : 'text-muted-foreground hover:text-rose-500 hover:scale-110'"
+                    :aria-label="reactedIds.has(memory.id) ? 'You reacted' : 'React with heart'"
+                  >
+                    <svg class="w-5 h-5 transition-all" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :fill="reactedIds.has(memory.id) ? 'currentColor' : 'none'">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <span class="text-xs font-medium">
+                      {{ reactedIds.has(memory.id) ? 'Sent' : 'React' }}
+                    </span>
+                  </button>
+                  <Transition name="fade">
+                    <span v-if="justReactedId === memory.id" class="text-xs text-rose-500 font-medium">
+                      ✓ Reaction sent!
+                    </span>
+                  </Transition>
+                </div>
               </div>
             </article>
           </div>
@@ -194,7 +219,7 @@ const showSplash = ref(false)
 interface ViewerTimeline {
   circleName: string
   ownerFirstName: string | null
-  memories: Array<{ id: string; memory_date: string; note: string | null; signedUrl: string | null }>
+  memories: Array<{ id: string; memory_date: string; note: string | null; signedUrl: string | null; mediaType: 'image' | 'video' | null }>
 }
 
 const timeline = ref<ViewerTimeline | null>(null)
@@ -204,6 +229,8 @@ const errorType = ref<"expired" | "invalid" | null>(null)
 const showNamePrompt = ref(false)
 const guestName = ref("")
 const pendingReactionMemoryId = ref<string | null>(null)
+const reactedIds = ref(new Set<string>())
+const justReactedId = ref<string | null>(null)
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -286,6 +313,9 @@ async function submitReaction(memoryId: string, name: string) {
       method: "POST",
       body: { viewerToken: token.value, memoryId, emoji: "❤️", guestName: name },
     })
+    reactedIds.value = new Set([...reactedIds.value, memoryId])
+    justReactedId.value = memoryId
+    setTimeout(() => { justReactedId.value = null }, 2000)
   } catch {
     // Best-effort — silently swallow errors on the viewer page
   }
@@ -301,5 +331,13 @@ async function submitReaction(memoryId: string, name: string) {
 .slide-up-leave-to {
   opacity: 0;
   transform: translateY(16px);
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

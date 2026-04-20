@@ -1869,7 +1869,8 @@ Owner generates view-only link
 
 Viewer opens link
   → Server verifies JWT signature (no Supabase account needed)
-  → Read-only API routes: fetch circle timeline, photos, comments
+  → Read-only API routes: fetch circle timeline (circle-visible only, newest 50, ordered by memory_date)
+  → Supports photos and videos; mediaType detected server-side from file extension
   → Cannot upload or comment
   → Can react (one-tap heart — see email reactions below)
   → Bottom CTA: "Join to add your own memories →"
@@ -1877,6 +1878,8 @@ Viewer opens link
 
 - No DB record needed for viewer — stateless JWT
 - Rotate viewer link on demand (owner can revoke and regenerate)
+- Timeline scope: all circle-visible memories, newest first, max 50. No month filter.
+- **Curated links (owner selects specific memories):** deferred to Milestone 9.1. When the link-generation UI is built, offer two modes — "full timeline" (default) and "share a selection" (owner picks memories). Not worth implementing before 9.1 since there is no UI to drive selection.
 
 **Expired link UX:**
 A grandparent who bookmarks the view-only link and opens it 31 days later must not see a generic error. On JWT expiry, show:
