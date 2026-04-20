@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(11);
+SELECT plan(15);
 
 -- ============================================================
 -- FIXTURES
@@ -188,6 +188,80 @@ SELECT is(
    WHERE circle_id = '10000000-0000-0000-0000-000000000001' AND visibility = 'circle'),
   1,
   'caregiver can read circle-visibility memories'
+);
+
+-- ============================================================
+-- TEST 12: admin can insert a CircleMember (owner/admin gate)
+-- Promote user_b to admin in Circle A, then verify they can add user_c.
+-- ============================================================
+RESET ROLE;
+UPDATE public.CircleMember
+  SET role = 'admin'
+  WHERE user_id = '00000000-0000-0000-0000-000000000002'
+    AND circle_id = '10000000-0000-0000-0000-000000000001';
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT lives_ok(
+  $$INSERT INTO public.CircleMember (user_id, circle_id, role)
+    VALUES ('00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'member')$$,
+  'admin can add a new member to a circle'
+);
+
+-- ============================================================
+-- TEST 13: member of a soft-deleted circle can no longer read
+-- the circle row (get_my_circle_ids excludes deleted_at IS NOT NULL)
+-- ============================================================
+RESET ROLE;
+-- Soft-delete Circle A (set deleted_at via superuser to bypass RLS)
+UPDATE public.Circle
+  SET deleted_at = now()
+  WHERE id = '10000000-0000-0000-0000-000000000001';
+SET LOCAL ROLE authenticated;
+
+-- user_b is still a CircleMember but circle is soft-deleted
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT is(
+  (SELECT count(*)::int FROM public.Circle
+   WHERE id = '10000000-0000-0000-0000-000000000001'),
+  0,
+  'member cannot see a soft-deleted circle'
+);
+
+-- ============================================================
+-- TEST 14: member of a soft-deleted circle can no longer read
+-- memories that belonged to the deleted circle
+-- ============================================================
+SELECT is(
+  (SELECT count(*)::int FROM public.Memory
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  0,
+  'member cannot read memories from a soft-deleted circle'
+);
+
+-- ============================================================
+-- TEST 15: CircleInvite has no permissive SELECT policy —
+-- authenticated users cannot read invites directly
+-- (all invite reads go through service-role API routes)
+-- ============================================================
+RESET ROLE;
+INSERT INTO public.CircleInvite (id, circle_id, email, token, status)
+VALUES (
+  '30000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000002',
+  'invited@test.com',
+  '40000000-0000-0000-0000-000000000001',
+  'pending'
+);
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000003');  -- user_c is owner of Circle B
+
+SELECT is(
+  (SELECT count(*)::int FROM public.CircleInvite
+   WHERE id = '30000000-0000-0000-0000-000000000001'),
+  0,
+  'authenticated user cannot SELECT CircleInvite directly (no permissive policy)'
 );
 
 SELECT * FROM finish();

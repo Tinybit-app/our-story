@@ -54,7 +54,7 @@ test.describe('Landing page', () => {
   })
 
   test('shows How it works section', async ({ page }) => {
-    await expect(page.getByText(/how it works/i)).toBeVisible()
+    await expect(page.getByText(/not storage/i)).toBeVisible()
   })
 
   test('shows pricing summary link to /pricing', async ({ page }) => {

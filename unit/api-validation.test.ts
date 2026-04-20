@@ -120,6 +120,121 @@ describe("POST /api/circles/invite — input validation", () => {
 })
 
 // ============================================================
+// POST /api/circles/invite — max pending invites cap
+// Route: server/api/circles/invite.post.ts
+// ============================================================
+describe("POST /api/circles/invite — max pending invites cap", () => {
+  // Mirrors the route check: (count ?? 0) >= 10 → 429
+  function isAtMaxPendingInvites(pendingCount: number): boolean {
+    return (pendingCount ?? 0) >= 10
+  }
+
+  it("allows invite when there are 0 pending invites", () => {
+    expect(isAtMaxPendingInvites(0)).toBe(false)
+  })
+
+  it("allows invite when there are 9 pending invites (one below cap)", () => {
+    expect(isAtMaxPendingInvites(9)).toBe(false)
+  })
+
+  it("blocks invite when there are exactly 10 pending invites (at cap)", () => {
+    expect(isAtMaxPendingInvites(10)).toBe(true)
+  })
+
+  it("blocks invite when there are more than 10 pending invites", () => {
+    expect(isAtMaxPendingInvites(11)).toBe(true)
+  })
+
+  it("treats a null count as 0 (Supabase may return null for empty tables)", () => {
+    expect(isAtMaxPendingInvites(null as unknown as number)).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/circles/invite — role gate
+// Route: server/api/circles/invite.post.ts
+// ============================================================
+describe("POST /api/circles/invite — role gate", () => {
+  // Mirrors the route check: only 'owner' and 'admin' may send invites
+  function canSendInvite(role: string | null | undefined): boolean {
+    return role === "owner" || role === "admin"
+  }
+
+  it("allows owner to send invites", () => {
+    expect(canSendInvite("owner")).toBe(true)
+  })
+
+  it("allows admin to send invites", () => {
+    expect(canSendInvite("admin")).toBe(true)
+  })
+
+  it("blocks member from sending invites", () => {
+    expect(canSendInvite("member")).toBe(false)
+  })
+
+  it("blocks viewer from sending invites", () => {
+    expect(canSendInvite("viewer")).toBe(false)
+  })
+
+  it("blocks when user has no membership in the circle (null row)", () => {
+    expect(canSendInvite(null)).toBe(false)
+  })
+
+  it("blocks when membership row exists but role is undefined", () => {
+    expect(canSendInvite(undefined)).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/circles/invite — old invite expiry before re-invite
+// Route: server/api/circles/invite.post.ts
+// ============================================================
+describe("POST /api/circles/invite — expiry of previous invite before re-invite", () => {
+  type InviteStatus = "pending" | "expired" | "accepted"
+
+  interface Invite {
+    email: string
+    status: InviteStatus
+  }
+
+  // Mirrors the route: expire any pending rows for the email, then insert fresh.
+  // Returns the status of the old invite after the expiry step.
+  function expireExistingPendingInvite(
+    existing: Invite | null,
+    targetEmail: string,
+  ): InviteStatus | null {
+    if (!existing || existing.email !== targetEmail || existing.status !== "pending") {
+      return existing?.status ?? null
+    }
+    return "expired"
+  }
+
+  it("expires a pending invite for the same email before re-inviting", () => {
+    const existing = { email: "grandma@example.com", status: "pending" as InviteStatus }
+    expect(expireExistingPendingInvite(existing, "grandma@example.com")).toBe("expired")
+  })
+
+  it("does not touch an already-expired invite (no double-expiry)", () => {
+    const existing = { email: "grandma@example.com", status: "expired" as InviteStatus }
+    expect(expireExistingPendingInvite(existing, "grandma@example.com")).toBe("expired")
+  })
+
+  it("does not touch an accepted invite when re-inviting the same person", () => {
+    const existing = { email: "grandma@example.com", status: "accepted" as InviteStatus }
+    expect(expireExistingPendingInvite(existing, "grandma@example.com")).toBe("accepted")
+  })
+
+  it("does not affect an invite for a different email", () => {
+    const existing = { email: "other@example.com", status: "pending" as InviteStatus }
+    expect(expireExistingPendingInvite(existing, "grandma@example.com")).toBe("pending")
+  })
+
+  it("handles the case where no prior invite exists for the email", () => {
+    expect(expireExistingPendingInvite(null, "grandma@example.com")).toBeNull()
+  })
+})
+
+// ============================================================
 // GET /api/timeline — schema from server/api/timeline.get.ts
 // ============================================================
 const timelineQuerySchema = z.object({

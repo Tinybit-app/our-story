@@ -11,6 +11,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // All other onboarding routes require a complete profile
   if (needsProfile) return navigateTo('/onboarding/profile')
 
+  // Value-prop page: only for first-time users (no membership yet)
+  if (to.path === '/onboarding/value-prop') {
+    if (hasMembership) return navigateTo('/onboarding')
+    return
+  }
+
   // Invite page: requires the circleId cookie (set after creating a circle in /onboarding/name)
   if (to.path === '/onboarding/invite') {
     const circleIdCookie = useCookie('onboarding_circle_id')
@@ -25,8 +31,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // /onboarding (index): accessible to any authenticated user who wants to create
-  // a circle — including existing members creating a second circle. Do NOT block
-  // on hasMembership here. The circle type picker is the entry point for all
-  // circle creation, both first-time and subsequent.
+  // /onboarding (index): for first-time users (no membership), show value-prop
+  // screens first unless already seen. Existing members creating a second circle
+  // skip value-prop and go straight to the circle type picker.
+  if (to.path === '/onboarding' && !hasMembership) {
+    const { hasSeen } = useValuePropSeen()
+    if (!hasSeen()) return navigateTo('/onboarding/value-prop')
+  }
 })

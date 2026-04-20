@@ -82,8 +82,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - [ ] 4.10.3 Health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal (suggested first for `caregiving` circles)
   - [ ] 4.10.4 Anniversary anchoring: relationship start date field at circle creation, display in header (suggested first for `couple` circles)
   - [ ] 4.10.5 Circle type picker in `/circle-settings`: owner can change `circle_type` at any time
-- [ ] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
-- [ ] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)
+- [x] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
+- [x] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)
 
 ### Milestone 5: Media Upload
 - [x] 5.1 Upload Edge Function (quota check, size check, storage)
