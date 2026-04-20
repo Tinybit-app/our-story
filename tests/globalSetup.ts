@@ -10,7 +10,7 @@ import * as path from 'path'
 // Values for local dev are printed by `supabase status`.
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NUXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.SUPABASE_KEY ?? process.env.NUXT_PUBLIC_SUPABASE_KEY ?? ''
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NUXT_SUPABASE_SECRET_KEY ?? ''
 
 // Cookie name: sb-{hostname.split('.')[0]}-auth-token
 // For http://127.0.0.1:54321, hostname = '127.0.0.1', split('.')[0] = '127'
