@@ -115,6 +115,46 @@
 
           <div v-if="isOwner" class="h-px bg-border" />
 
+          <!-- Anniversary date — couple circles, owner only -->
+          <div v-if="isOwner && circle.circle_type === 'couple'">
+            <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
+              Anniversary
+            </h2>
+            <p class="text-xs text-muted-foreground mb-4">
+              Set your anniversary date. It will appear on your timeline as "Year N together" and drive reminder emails.
+            </p>
+            <div class="flex gap-2 items-start">
+              <input
+                v-model="anniversaryDateInput"
+                type="date"
+                aria-label="Anniversary date"
+                class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                :style="{ colorScheme: isDark ? 'dark' : 'light' }"
+              />
+              <button
+                :disabled="savingAnniversary || anniversaryDateInput === (circle.anniversary_date ?? '')"
+                class="flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                @click="saveAnniversary"
+              >
+                {{ savingAnniversary ? '…' : 'Save' }}
+              </button>
+              <button
+                v-if="circle.anniversary_date"
+                :disabled="savingAnniversary"
+                class="flex-shrink-0 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-border transition-colors disabled:opacity-40"
+                title="Clear anniversary date"
+                @click="clearAnniversary"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <p v-if="anniversaryError" class="text-xs text-destructive mt-2">{{ anniversaryError }}</p>
+          </div>
+
+          <div v-if="isOwner && circle.circle_type === 'couple'" class="h-px bg-border" />
+
           <!-- Danger zone (owner only) -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-4">
@@ -333,6 +373,40 @@ async function removeChild(childId: string) {
   } finally {
     removingChildId.value = null
   }
+}
+
+// ── Anniversary date ───────────────────────────────────────
+const anniversaryDateInput = ref(circle.value?.anniversary_date ?? '')
+const savingAnniversary = ref(false)
+const anniversaryError = ref('')
+
+// Keep input in sync if circles data reloads
+watch(circle, (c) => {
+  if (!savingAnniversary.value) {
+    anniversaryDateInput.value = c?.anniversary_date ?? ''
+  }
+})
+
+async function saveAnniversary() {
+  if (!circleId.value || savingAnniversary.value) return
+  savingAnniversary.value = true
+  anniversaryError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}`, {
+      method: 'PATCH',
+      body: { anniversaryDate: anniversaryDateInput.value || null },
+    })
+    await refreshNuxtData()
+  } catch (err: any) {
+    anniversaryError.value = err?.data?.message ?? 'Failed to save anniversary date. Please try again.'
+  } finally {
+    savingAnniversary.value = false
+  }
+}
+
+async function clearAnniversary() {
+  anniversaryDateInput.value = ''
+  await saveAnniversary()
 }
 
 // ── Circle deletion ────────────────────────────────────────

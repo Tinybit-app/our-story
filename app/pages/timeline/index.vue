@@ -62,6 +62,13 @@
               </NuxtLink>
             </template>
           </div>
+          <!-- Anniversary display: "Year N together · Since [date]" -->
+          <p
+            v-if="anniversaryDisplay"
+            class="text-[10px] text-muted-foreground/70 leading-none mt-1 select-none"
+          >
+            {{ anniversaryDisplay }}
+          </p>
         </div>
 
         <!-- Year pill -->
@@ -624,6 +631,28 @@ const circle = computed(() => {
   return allCircles.value[0] ?? null;
 });
 const circleId = computed<string | null>(() => circle.value?.id ?? null);
+
+// Anniversary display for couple circles
+const anniversaryDisplay = computed(() => {
+  const c = circle.value
+  if (c?.circle_type !== 'couple' || !c?.anniversary_date) return null
+
+  const since = new Date(c.anniversary_date)
+  const now = new Date()
+  // Compute full years elapsed
+  let years = now.getFullYear() - since.getFullYear()
+  const monthDiff = now.getMonth() - since.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < since.getDate())) years--
+
+  const sinceLabel = since.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
+
+  if (years < 1) {
+    // Under a year: show days
+    const days = Math.floor((now.getTime() - since.getTime()) / 86400000)
+    return `${days} day${days !== 1 ? 's' : ''} together · Since ${sinceLabel}`
+  }
+  return `Year ${years + 1} together · Since ${sinceLabel}`
+})
 
 interface ChildProfile { id: string; name: string; date_of_birth: string }
 interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }

@@ -4164,8 +4164,8 @@ SEO angles: "private baby photo sharing", "baby milestone tracker", "share baby 
 #### 💑 Couple
 **Default features: shared relationship timeline with anniversary anchoring**
 
-- **Relationship start date** — set once, used to calculate "Year 3 together", "1,200 days"
-- **Anniversary reminder** — email/push nudge a week before the anniversary
+- **Anniversary date** — set once in circle settings (`Circle.anniversary_date`); timeline header shows "Year N together · Since [date]" or "X days together". Owner can change or clear it at any time. **Implemented (§4.10.4).**
+- **Anniversary reminder** *(Milestone 12)* — email/push nudge a week before the anniversary date
 - **"How we met" pinned memory** — one memory pinned at the top of the timeline as the origin story
 - **Couple stats** — memories together, countries visited, months documented
 
@@ -4200,11 +4200,13 @@ SEO angles: "shared photo album for friends", "group trip photo sharing app", "f
 #### 🤍 Caregiving
 **Default features for this type: structured health log alongside emotional memories**
 
-- **Daily log entry** — simple structured note: mood (1–5), energy, notes — separate from photo memories
-- **Medication/appointment reminders** — upcoming event alerts
-- **Health event types** — tag memories as: Doctor visit · Good day · Hard day · Treatment · Milestone
-- **Care team notes** — private notes visible only to admins (not the care recipient if they're a member)
-- **Export as PDF** — structured health timeline export for medical appointments
+> **Phase 1 note:** `circle_type = 'caregiving'` exists and drives copy/milestone chips. The caregiving-specific feature set below is deferred to Phase 2 — it serves a different emotional use case (health logging, clinical context) that doesn't fit the core product tone, and caregiving families are not in the 0→50 user target. The `caregiver` *role* (nanny/babysitter on a parents circle) is unaffected and already implemented.
+
+- **Daily log entry** *(Phase 2)* — simple structured note: mood (1–5), energy, notes — separate from photo memories
+- **Medication/appointment reminders** *(Phase 2)* — upcoming event alerts
+- **Health event types** *(Phase 2)* — tag memories as: Doctor visit · Hard day · Treatment · Milestone
+- **Care team notes** *(Phase 2)* — private notes visible only to admins (not the care recipient if they're a member)
+- **Export as PDF** *(Phase 2)* — structured health timeline export for medical appointments
 
 SEO angles: "caregiving journal app", "dementia care memory app", "family caregiver photo log"
 
@@ -4244,8 +4246,8 @@ All features below are available to every circle regardless of `circle_type`. Th
 | 1 | **Baby age stamp** | parents | Per-memory child tagging (`memory_children` junction table) + computed age shown as accent-tinted pill badges (baby icon + name + age) on tagged memory cards. Child profiles managed in circle settings. For `parents` circles the upload picker is visually prominent; available on all circle types. **Implemented (§4.10.1).** |
 | 2 | **Member tagging** | family, friends | Per-memory member tagging (`memory_members` junction table). Uploader tags circle members via chip-picker at upload. Tagged members get email notification. `PolaroidCard`: muted "with" label + overlapping avatar bubbles (max 4, "+N" overflow) below age pills. `MemoryModal` view mode: "with" label + avatar+name chips. Edit mode: combined chip-picker. **Implemented (§4.10.6).** |
 | 3 | **Location tag** | travel | Single text field + EXIF GPS auto-fill, shown below the memory date. Low effort, high landing page impact. |
-| 4 | **Health event types** | caregiving | Type selector in upload modal. |
-| 5 | **Anniversary anchoring** | couple | Relationship start date at circle creation + display in header + anniversary email trigger. |
+| 4 | **Health event types** | caregiving | ~~Cut from Phase 1.~~ Caregiving-specific features (health log, clinical notes, PDF export) serve a different emotional use case than the core product and are deferred to Phase 2. `circle_type = 'caregiving'` and the `caregiver` role remain; only the feature set is deferred. |
+| 5 | **Anniversary anchoring** | couple | `Circle.anniversary_date DATE` (migration 020). Owner sets it in `/circle-settings`; timeline header shows "Year N together · Since [date]" or "X days together". Anniversary reminder email deferred to Milestone 12 (retention hooks). `Circle.date_of_birth` dropped in same migration (unused since ChildProfile took over). **Implemented (§4.10.4).** |
 
 **`tinybit.app`** is the company page (separate site) listing both products. The Our Story landing page lives inside the Our Story app.
 

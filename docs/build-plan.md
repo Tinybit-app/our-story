@@ -107,8 +107,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
     - `memory_members.user_id` FK targets `public.User(id)` (not `auth.users`) so PostgREST can join profile data (migration 019)
     - Tests: 6 E2E tests (`tests/member-tagging.spec.ts`), 3 RLS tests (total 27)
   - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
-  - [ ] 4.10.3 Health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal (suggested first for `caregiving` circles)
-  - [ ] 4.10.4 Anniversary anchoring: relationship start date field at circle creation, display in header (suggested first for `couple` circles)
+  - [ ] ~~4.10.3 Health event types~~ — **cut from Phase 1.** Caregiving as a circle type serves a fundamentally different emotional use case (health logging, clinical notes, PDF export) that doesn't fit the core product tone and isn't in the 0→50 user target. `circle_type = 'caregiving'` remains in the enum for copy/chips; caregiving-specific features are deferred to Phase 2. The `caregiver` *role* (nanny/babysitter on a parents circle) is unaffected — already implemented.
+  - [x] 4.10.4 Anniversary anchoring: `anniversary_date DATE` on `Circle` (migration 020, also drops unused `date_of_birth`); owner sets date in `/circle-settings` (couple circles only); timeline header shows "Year N together · Since [date]" / "X days together" computed from today; `PATCH /api/circles/:id` accepts `anniversaryDate`; RLS tests 16-18 updated to cover `anniversary_date`
   - [ ] 4.10.5 Circle type picker in `/circle-settings`: owner can change `circle_type` at any time
 - [x] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
 - [x] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)

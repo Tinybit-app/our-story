@@ -5,9 +5,9 @@ const CIRCLE_TYPES = ["parents", "couple", "family", "friends", "caregiving", "t
 
 const schema = z.object({
   circleType: z.enum(CIRCLE_TYPES).optional(),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-}).refine((d) => d.circleType !== undefined || d.dateOfBirth !== undefined, {
-  message: "At least one field (circleType or dateOfBirth) must be provided.",
+  anniversaryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+}).refine((d) => d.circleType !== undefined || d.anniversaryDate !== undefined, {
+  message: "At least one field (circleType or anniversaryDate) must be provided.",
 })
 
 export default defineEventHandler(async (event) => {
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
   const result = schema.safeParse(await readBody(event))
   if (!result.success) throw createError({ statusCode: 400, message: "Invalid request body." })
-  const { circleType, dateOfBirth } = result.data
+  const { circleType, anniversaryDate } = result.data
 
   // Requesting user must be the owner
   const { data: membership } = await supabase
@@ -35,9 +35,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: "Only the circle owner can update circle settings." })
   }
 
-  const updates: { circle_type?: string; date_of_birth?: string | null } = {}
+  const updates: { circle_type?: string; anniversary_date?: string | null } = {}
   if (circleType !== undefined) updates.circle_type = circleType
-  if (dateOfBirth !== undefined) updates.date_of_birth = dateOfBirth
+  if (anniversaryDate !== undefined) updates.anniversary_date = anniversaryDate
 
   const { error } = await supabase
     .from("circle")

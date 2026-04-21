@@ -209,52 +209,52 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- TEST 16: member (user_b) can read date_of_birth on their circle
+-- TEST 16: member (user_b) can read anniversary_date on their circle
 -- ============================================================
--- Seed date_of_birth as superuser so we can verify member visibility
+-- Seed anniversary_date as superuser so we can verify member visibility
 RESET ROLE;
 UPDATE public.Circle
-  SET date_of_birth = '2024-03-15'
+  SET anniversary_date = '2022-06-15'
   WHERE id = '10000000-0000-0000-0000-000000000001';
 SET LOCAL ROLE authenticated;
 SELECT set_auth('00000000-0000-0000-0000-000000000002');
 
 SELECT is(
-  (SELECT date_of_birth FROM public.Circle
+  (SELECT anniversary_date FROM public.Circle
    WHERE id = '10000000-0000-0000-0000-000000000001'),
-  '2024-03-15'::date,
-  'member can read date_of_birth from their circle'
+  '2022-06-15'::date,
+  'member can read anniversary_date from their circle'
 );
 
 -- ============================================================
--- TEST 17: owner (user_a) can update date_of_birth
+-- TEST 17: owner (user_a) can update anniversary_date
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000001');
 SET LOCAL ROLE authenticated;
 
 SELECT lives_ok(
-  $$UPDATE public.Circle SET date_of_birth = '2024-06-01'
+  $$UPDATE public.Circle SET anniversary_date = '2021-09-14'
     WHERE id = '10000000-0000-0000-0000-000000000001'$$,
-  'owner can update date_of_birth on their circle'
+  'owner can update anniversary_date on their circle'
 );
 
 -- ============================================================
--- TEST 18: admin (user_b) cannot update date_of_birth
+-- TEST 18: admin (user_b) cannot update anniversary_date
 -- (Circle UPDATE policy is owner-only — silently no-ops)
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000002');
 SET LOCAL ROLE authenticated;
 
 UPDATE public.Circle
-  SET date_of_birth = '2000-01-01'
+  SET anniversary_date = '2000-01-01'
   WHERE id = '10000000-0000-0000-0000-000000000001';
 
 RESET ROLE;
 SELECT is(
-  (SELECT date_of_birth FROM public.Circle
+  (SELECT anniversary_date FROM public.Circle
    WHERE id = '10000000-0000-0000-0000-000000000001'),
-  '2024-06-01'::date,
-  'admin (non-owner) cannot update date_of_birth — row unchanged'
+  '2021-09-14'::date,
+  'admin (non-owner) cannot update anniversary_date — row unchanged'
 );
 SET LOCAL ROLE authenticated;
 
