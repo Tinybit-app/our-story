@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(27);
+SELECT plan(29);
 
 -- ============================================================
 -- FIXTURES
@@ -440,6 +440,40 @@ SELECT throws_ok(
   'new row violates row-level security policy for table "memory_members"',
   'non-uploader cannot insert memory_members for a memory they did not upload'
 );
+
+-- ============================================================
+-- TEST 28: owner (user_a) can update circle_type
+-- ============================================================
+RESET ROLE;
+UPDATE public.Circle SET deleted_at = NULL WHERE id = '10000000-0000-0000-0000-000000000001';
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+
+SELECT lives_ok(
+  $$UPDATE public.Circle SET circle_type = 'couple'
+    WHERE id = '10000000-0000-0000-0000-000000000001'$$,
+  'owner can update circle_type on their circle'
+);
+
+-- ============================================================
+-- TEST 29: admin (user_b) cannot update circle_type
+-- (Circle UPDATE policy is owner-only — silently no-ops)
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+UPDATE public.Circle
+  SET circle_type = 'travel'
+  WHERE id = '10000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT circle_type FROM public.Circle
+   WHERE id = '10000000-0000-0000-0000-000000000001'),
+  'couple',
+  'admin (non-owner) cannot update circle_type — row unchanged'
+);
+SET LOCAL ROLE authenticated;
 
 SELECT * FROM finish();
 ROLLBACK;

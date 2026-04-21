@@ -635,23 +635,8 @@ const circleId = computed<string | null>(() => circle.value?.id ?? null);
 // Anniversary display for couple circles
 const anniversaryDisplay = computed(() => {
   const c = circle.value
-  if (c?.circle_type !== 'couple' || !c?.anniversary_date) return null
-
-  const since = new Date(c.anniversary_date)
-  const now = new Date()
-  // Compute full years elapsed
-  let years = now.getFullYear() - since.getFullYear()
-  const monthDiff = now.getMonth() - since.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < since.getDate())) years--
-
-  const sinceLabel = since.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
-
-  if (years < 1) {
-    // Under a year: show days
-    const days = Math.floor((now.getTime() - since.getTime()) / 86400000)
-    return `${days} day${days !== 1 ? 's' : ''} together · Since ${sinceLabel}`
-  }
-  return `Year ${years + 1} together · Since ${sinceLabel}`
+  if (c?.circle_type !== 'couple') return null
+  return computeAnniversaryDisplay(c?.anniversary_date, new Date(), locale.value)
 })
 
 interface ChildProfile { id: string; name: string; date_of_birth: string }

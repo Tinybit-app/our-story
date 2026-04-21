@@ -108,15 +108,15 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
     - Tests: 6 E2E tests (`tests/member-tagging.spec.ts`), 3 RLS tests (total 27)
   - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
   - [ ] ~~4.10.3 Health event types~~ — **cut from Phase 1.** Caregiving as a circle type serves a fundamentally different emotional use case (health logging, clinical notes, PDF export) that doesn't fit the core product tone and isn't in the 0→50 user target. `circle_type = 'caregiving'` remains in the enum for copy/chips; caregiving-specific features are deferred to Phase 2. The `caregiver` *role* (nanny/babysitter on a parents circle) is unaffected — already implemented.
-  - [x] 4.10.4 Anniversary anchoring: `anniversary_date DATE` on `Circle` (migration 020, also drops unused `date_of_birth`); owner sets date in `/circle-settings` (couple circles only); timeline header shows "Year N together · Since [date]" / "X days together" computed from today; `PATCH /api/circles/:id` accepts `anniversaryDate`; RLS tests 16-18 updated to cover `anniversary_date`
-  - [ ] 4.10.5 Circle type picker in `/circle-settings`: owner can change `circle_type` at any time
+  - [x] 4.10.4 Anniversary anchoring: `anniversary_date DATE` on `Circle` (migration 020, also drops unused `date_of_birth`); owner sets date in `/circle-settings` (couple circles only); timeline header shows "Year N together · Since [date]" / "X days together" computed from today; `PATCH /api/circles/:id` accepts `anniversaryDate`; RLS tests 16-18 updated to cover `anniversary_date`. Logic extracted to `app/composables/useAnniversaryDisplay.ts` (`computeAnniversaryDisplay`); 13 unit tests (`unit/useAnniversaryDisplay.test.ts`); 6 E2E tests (`tests/anniversary.spec.ts`)
+  - [x] 4.10.5 Circle type picker in `/circle-settings`: owner-only 2-column grid of all 8 types (matching onboarding), pre-selected on current type; save button enabled only when selection differs; calls `PATCH /api/circles/:id` with `circleType`; the `custom` type is labelled "Other" (no i18n key needed). No migration required — endpoint already supported `circleType`. 6 E2E tests (`tests/circle-type.spec.ts`); RLS tests 28-29 (total 29) verify owner can update `circle_type` and admin cannot.
 - [x] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
 - [x] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)
 
 ### Milestone 5: Media Upload
 - [x] 5.1 Upload Edge Function (quota check, size check, storage)
 - [x] 5.2 Upload UI component (file picker, preview, progress bar)
-- [ ] 5.3 Batch upload with automatic mem_date detection (multi-select, EXIF extraction, per-item progress)
+- [x] 5.3 Batch upload with automatic mem_date detection (multi-select, EXIF extraction, per-item progress). `multiple` file input; `extractExifDate()` tries `DateTimeOriginal → CreateDate → DateTime → file.lastModified → today`; videos skip EXIF entirely; group-date field shown when N > 1; sequential uploads with per-item progress overlay. No "from photo" source label (spec simplified — date is pre-filled silently). No new API surface — reuses existing `upload-media` edge function per file.
 
 
 ### Milestone 6: Timeline

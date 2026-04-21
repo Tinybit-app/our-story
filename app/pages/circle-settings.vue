@@ -31,7 +31,7 @@
 
         <template v-else>
 
-          <!-- Circle info (read-only for now) -->
+          <!-- Circle info -->
           <div>
             <div class="flex items-center gap-4 py-2">
               <div class="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center flex-shrink-0">
@@ -48,6 +48,44 @@
           </div>
 
           <div class="h-px bg-border" />
+
+          <!-- Circle type picker — owner only -->
+          <div v-if="isOwner">
+            <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
+              Circle type
+            </h2>
+            <p class="text-xs text-muted-foreground mb-4">
+              Controls milestone suggestions, empty-state copy, and notification language. You can change this at any time.
+            </p>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                v-for="type in circleTypeOptions"
+                :key="type.value"
+                class="rounded-xl px-4 py-3.5 text-left border transition-colors"
+                :class="selectedCircleType === type.value
+                  ? 'border-foreground bg-secondary'
+                  : 'border-border bg-card hover:border-foreground/30'"
+                @click="selectedCircleType = type.value"
+              >
+                <p class="text-sm font-medium text-foreground leading-snug">{{ type.label }}</p>
+                <p class="text-xs text-muted-foreground mt-0.5">{{ type.description }}</p>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2 mt-3">
+              <button
+                :disabled="savingCircleType || selectedCircleType === circle.circle_type"
+                class="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                @click="saveCircleType"
+              >
+                {{ savingCircleType ? '…' : 'Save' }}
+              </button>
+            </div>
+            <p v-if="circleTypeError" class="text-xs text-destructive mt-2">{{ circleTypeError }}</p>
+          </div>
+
+          <div v-if="isOwner" class="h-px bg-border" />
 
           <!-- Children (baby age stamps) — owner only -->
           <div v-if="isOwner">
@@ -302,6 +340,46 @@ const circleTypeLabel = computed(() => {
   const key = circle.value?.circle_type
   return key && CIRCLE_TYPE_KEYS[key] ? t(CIRCLE_TYPE_KEYS[key]) : ''
 })
+
+const circleTypeOptions = computed(() => [
+  { value: 'parents',    label: t('circleType.parents.label'),    description: t('circleType.parents.description') },
+  { value: 'couple',     label: t('circleType.couple.label'),     description: t('circleType.couple.description') },
+  { value: 'family',     label: t('circleType.family.label'),     description: t('circleType.family.description') },
+  { value: 'friends',    label: t('circleType.friends.label'),    description: t('circleType.friends.description') },
+  { value: 'caregiving', label: t('circleType.caregiving.label'), description: t('circleType.caregiving.description') },
+  { value: 'travel',     label: t('circleType.travel.label'),     description: t('circleType.travel.description') },
+  { value: 'solo',       label: t('circleType.solo.label'),       description: t('circleType.solo.description') },
+  { value: 'custom',     label: 'Other',                          description: 'Generic milestones' },
+])
+
+// ── Circle type picker ─────────────────────────────────────
+const selectedCircleType = ref(circle.value?.circle_type ?? '')
+const savingCircleType = ref(false)
+const circleTypeError = ref('')
+
+// Keep in sync if circles data reloads
+watch(circle, (c) => {
+  if (!savingCircleType.value) {
+    selectedCircleType.value = c?.circle_type ?? ''
+  }
+})
+
+async function saveCircleType() {
+  if (!circleId.value || savingCircleType.value) return
+  savingCircleType.value = true
+  circleTypeError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}`, {
+      method: 'PATCH',
+      body: { circleType: selectedCircleType.value },
+    })
+    await refreshNuxtData()
+  } catch (err: any) {
+    circleTypeError.value = err?.data?.message ?? 'Failed to save. Please try again.'
+  } finally {
+    savingCircleType.value = false
+  }
+}
 
 // ── Members + memory count (for deletion warning) ──────────
 type MembersResponse = { members: any[]; invites: any[]; myRole: string; memoryCount: number }

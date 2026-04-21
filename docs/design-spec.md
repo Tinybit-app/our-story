@@ -1181,45 +1181,41 @@ Users should be able to select multiple photos/videos at once and have the corre
 #### UX flow
 
 1. File input has `multiple` attribute — user selects 1–N files
-2. For each file, the client extracts the capture date (see below) before showing the review UI
-3. A batch review sheet opens showing:
-   - Scrollable list of thumbnails with filename and detected date per item
-   - A small "from photo" label next to EXIF-sourced dates so the user knows it was auto-detected
-   - Editable date picker per item (user can correct any wrong date before uploading)
-   - Optional shared note that applies to all memories in the batch
-   - Remove button (×) to drop individual items from the batch
-4. "Upload N" button uploads sequentially — one at a time — with per-item progress and an overall progress bar
-5. Each completed item shows a check overlay; failed items show an error badge with a short reason
-6. When all items finish (success or failure), the button becomes "Done"
-7. Each successful upload emits an `uploaded` event with the new `memoryId` (same contract as single upload)
+2. For each photo, the client extracts the capture date via EXIF before showing the review UI; videos fall back immediately to `file.lastModified`
+3. A bottom-sheet opens showing:
+   - **Single file:** full detail view — date picker, note, milestone chip picker, child tags, member tags
+   - **Multiple files:** thumbnail strip (scrollable) + a shared group-date field at the top; individual items can be expanded inline to edit their note/milestone/tags; remove button (×) per item
+4. "Upload N memories" button (or "Upload memory" for one) uploads sequentially — one at a time — with per-item progress overlay and spinner
+5. Each completed item shows a check overlay; failed items show an error overlay with a short reason
+6. When all items finish, the button becomes "Done" and a close button appears
+7. Emits an `uploaded` event after each successful upload so the timeline refreshes
 
 #### Date detection priority
 
-| Source | When used | UI label |
-|---|---|---|
-| EXIF `DateTimeOriginal` | Preferred for photos — the actual shutter moment | "from photo" |
-| EXIF `DateTimeDigitized` | Fallback if `DateTimeOriginal` is absent | "from photo" |
-| `file.lastModified` | Videos, or if EXIF parsing fails/returns no date | (no label — silent fallback) |
+| Source | When used |
+|---|---|
+| EXIF `DateTimeOriginal` | Preferred for photos — the actual shutter moment |
+| EXIF `CreateDate` | Fallback if `DateTimeOriginal` is absent (XMP equivalent) |
+| EXIF `DateTime` | Last EXIF fallback |
+| `file.lastModified` | Videos, or if EXIF parsing fails / returns no date |
+| Today | Last resort if `file.lastModified` is 0 |
 
-EXIF parsing is client-side only using the `exifr` library (browser-compatible, ~60 KB gzipped, handles JPEG/HEIC/WebP/TIFF). For videos there is no reliable client-side EXIF access, so `file.lastModified` is used — this is accurate enough for most cases (iOS/Mac preserve original capture time in the filesystem timestamp when exporting from Photos).
+No "from photo" source label is shown in the UI — the date field is pre-filled silently and the user can correct it before uploading.
+
+EXIF parsing is client-side using the `exifr` library. Implemented in `extractExifDate(file)` in `app/components/UploadMemory.vue`:
 
 ```ts
-// Date extraction logic (runs before review sheet opens)
-async function extractDate(file: File): Promise<{ date: string; source: 'exif' | 'file_modified' }> {
-  const fallback = {
-    date: new Date(file.lastModified).toISOString().split('T')[0],
-    source: 'file_modified' as const,
-  }
-  if (file.type.startsWith('video/')) return fallback
+async function extractExifDate(file: File): Promise<string> {
   try {
-    const exifr = await import('exifr')
-    const exif = await exifr.parse(file, { DateTimeOriginal: true, DateTimeDigitized: true })
-    const raw: Date | undefined = exif?.DateTimeOriginal ?? exif?.DateTimeDigitized
-    if (raw && !isNaN(raw.getTime())) {
-      return { date: raw.toISOString().split('T')[0], source: 'exif' }
+    const exif = await exifr.parse(file)
+    const raw = exif?.DateTimeOriginal ?? exif?.CreateDate ?? exif?.DateTime
+    if (raw) {
+      const d = raw instanceof Date ? raw : new Date(String(raw))
+      if (!isNaN(d.getTime())) return dateFromTimestamp(d.getTime())
     }
-  } catch { /* fall through */ }
-  return fallback
+  } catch {}
+  if (file.lastModified) return dateFromTimestamp(file.lastModified)
+  return today()
 }
 ```
 
@@ -1418,8 +1414,11 @@ Owner-only page (`app/pages/circle-settings.vue`) accessible via:
 - Gear icon next to the circle name in the home header (`index.vue`)
 - Gear icon in the members page header (`members.vue`)
 
-Contains:
-- Circle name + type display (read-only info)
+Contains (owner-only sections shown to owner; non-owners are redirected to `/members`):
+- Circle name + current type (read-only display row)
+- **Circle type picker** — 2-column grid of all 8 types, pre-selected on current type; save enabled only when selection changes; calls `PATCH /api/circles/:id` with `circleType`. **Implemented (§4.10.5).**
+- **Children** — add/remove `ChildProfile` entries (name + date of birth); drives baby age stamps on memory cards
+- **Anniversary date** — date input for couple circles only; drives "Year N together" timeline header. **Implemented (§4.10.4).**
 - **Danger zone** — 2-step delete circle flow (moved here from `/members`)
 
 The delete circle flow was moved from the members page to a dedicated settings page to avoid accidental deletion and to keep the members page focused on member management.
@@ -1648,7 +1647,7 @@ Solo start UX rules:
 
 This is a trust-critical rule. A user who stored personal memories must never discover that a new member can see them because they forgot to check a setting. Implementation must enforce this at the DB level: `Memory.visibility` is never mutated by the invite/join flow. Only an explicit user action can change visibility to `"circle"`.
 
-**PATCH /api/circles/[id]** — owner-only endpoint for updating `circle_type`. Accepts `{ circleType: z.enum(CIRCLE_TYPES) }`. Used by the type picker in `/circle-settings`. Implemented at `server/api/circles/[id]/index.patch.ts`.
+**PATCH /api/circles/[id]** — owner-only endpoint for updating `circle_type`. Accepts `{ circleType: z.enum(CIRCLE_TYPES) }`. Used by the type picker in `/circle-settings` (`app/pages/circle-settings.vue`). Implemented at `server/api/circles/[id]/index.patch.ts`. **Implemented (§4.10.5).**
 
 ### Path C — Invited member
 Already covered above in invite-before-signup flow.
@@ -4164,7 +4163,7 @@ SEO angles: "private baby photo sharing", "baby milestone tracker", "share baby 
 #### 💑 Couple
 **Default features: shared relationship timeline with anniversary anchoring**
 
-- **Anniversary date** — set once in circle settings (`Circle.anniversary_date`); timeline header shows "Year N together · Since [date]" or "X days together". Owner can change or clear it at any time. **Implemented (§4.10.4).**
+- **Anniversary date** — set once in circle settings (`Circle.anniversary_date`); timeline header shows "Year N together · Since [date]" or "X days together". Owner can change or clear it at any time. Logic lives in `app/composables/useAnniversaryDisplay.ts` (`computeAnniversaryDisplay`). **Implemented (§4.10.4).**
 - **Anniversary reminder** *(Milestone 12)* — email/push nudge a week before the anniversary date
 - **"How we met" pinned memory** — one memory pinned at the top of the timeline as the origin story
 - **Couple stats** — memories together, countries visited, months documented
@@ -5107,7 +5106,7 @@ Capacitor wraps Nuxt with ~zero code changes. The jump from PWA to native app in
 - [ ] Auth — magic link + Google login (Supabase Auth)
 - [ ] Create circle + invite members (email invite, token-based)
 - [ ] Upload photo/video to timeline
-- [ ] Batch upload with per-item EXIF date detection (multi-select, date review before submit)
+- [x] Batch upload with per-item EXIF date detection (multi-select, date review before submit) — **Implemented (§5.3)**
 - [ ] Quick note (text-only memory, no photo required)
 - [ ] Add note to memory
 - [ ] Share to circle / keep private
