@@ -10,6 +10,8 @@
  *  2. No avatar bubbles when memory_members is empty
  *  3. Upload form shows member chips when the circle has members
  *  4. Tagging a member calls POST /api/memories/:id/members
+ *  5. "with" label appears before avatar bubbles on the polaroid card
+ *  6. "with" label is absent when no members are tagged
  */
 
 import { test, expect } from '@playwright/test'
@@ -202,6 +204,31 @@ test.describe('Member tagging (4.10.6)', () => {
     // Wait for the members POST to fire
     await page.waitForTimeout(800)
     expect(membersBody).toMatchObject({ userIds: [MEMBER.userId] })
+  })
+
+  test('"with" label appears before avatar bubbles when a member is tagged', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page)
+    await mockTimeline(page, [makeMemory('mem-1', { memoryMembers: [MEMBER] })], [MEMBER])
+
+    await page.goto('/timeline')
+    // The "with" label is rendered immediately before the avatar row
+    await expect(page.getByText('with')).toBeVisible({ timeout: 10_000 })
+    // Initials "SL" (Sarah Lee) appear alongside the label
+    await expect(page.getByText('SL')).toBeVisible()
+  })
+
+  test('"with" label is absent when no members are tagged', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page)
+    // Memory has no tagged members
+    await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
+
+    await page.goto('/timeline')
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    // No member avatars or "with" label
+    await expect(page.getByText('SL')).not.toBeVisible()
+    await expect(page.getByText('with')).not.toBeVisible()
   })
 
 })

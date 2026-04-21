@@ -238,24 +238,43 @@
         </template>
       </p>
 
-      <!-- Baby age stamps (one per child) -->
-      <p v-for="child in childAges" :key="child.name" class="text-[10px] mt-[3px] leading-tight">
-        <span class="text-muted-foreground/70">{{ child.name }} · </span><span class="font-medium" style="color: hsl(var(--accent))">{{ child.age }}</span>
-      </p>
-
-      <!-- Tagged member avatar bubbles -->
-      <div v-if="taggedMembers.length" class="flex items-center justify-center mt-[5px]">
-        <div
-          v-for="(mm, i) in taggedMembersVisible"
-          :key="mm.user_id"
-          class="w-[18px] h-[18px] rounded-full overflow-hidden bg-secondary border-[1.5px] border-card flex items-center justify-center text-[7px] font-bold text-foreground flex-shrink-0"
-          :style="{ marginLeft: i === 0 ? '0' : '-5px', zIndex: taggedMembersVisible.length - i }"
-          :title="mm.user?.first_name ?? ''"
+      <!-- Child age pills -->
+      <div v-if="childAges.length" class="flex flex-wrap justify-center gap-[3px] mt-[6px]">
+        <span
+          v-for="child in childAges"
+          :key="child.name"
+          class="inline-flex items-center gap-[3px] px-[6px] py-[2px] rounded-full text-[9px] leading-none font-medium"
+          style="background: hsl(var(--accent) / 0.14); color: hsl(var(--accent));"
         >
-          <img v-if="mm.user?.avatar_url" :src="mm.user.avatar_url" class="w-full h-full object-cover" />
-          <span v-else>{{ ((mm.user?.first_name?.[0] ?? '') + (mm.user?.last_name?.[0] ?? '')).toUpperCase() || '?' }}</span>
+          <!-- baby face icon -->
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.8;flex-shrink:0">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2"/>
+            <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/>
+            <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+          <span>{{ child.name }}</span>
+          <span style="opacity:0.5">·</span>
+          <span style="opacity:0.85">{{ child.age }}</span>
+        </span>
+      </div>
+
+      <!-- Tagged member row: "with [avatars]" -->
+      <div v-if="taggedMembers.length" class="flex items-center justify-center gap-[5px] mt-[5px]">
+        <span class="text-[9px] leading-none" style="color: hsl(var(--muted-foreground) / 0.55); letter-spacing: .04em;">with</span>
+        <div class="flex items-center">
+          <div
+            v-for="(mm, i) in taggedMembersVisible"
+            :key="mm.user_id"
+            class="w-[18px] h-[18px] rounded-full overflow-hidden bg-secondary border-[1.5px] border-card flex items-center justify-center text-[7px] font-bold text-foreground flex-shrink-0"
+            :style="{ marginLeft: i === 0 ? '0' : '-5px', zIndex: taggedMembersVisible.length - i }"
+            :title="mm.user?.first_name ?? ''"
+          >
+            <img v-if="mm.user?.avatar_url" :src="mm.user.avatar_url" class="w-full h-full object-cover" />
+            <span v-else>{{ ((mm.user?.first_name?.[0] ?? '') + (mm.user?.last_name?.[0] ?? '')).toUpperCase() || '?' }}</span>
+          </div>
+          <span v-if="taggedMembersOverflow > 0" class="text-[9px] text-muted-foreground ml-1">+{{ taggedMembersOverflow }}</span>
         </div>
-        <span v-if="taggedMembersOverflow > 0" class="text-[9px] text-muted-foreground ml-1">+{{ taggedMembersOverflow }}</span>
       </div>
     </div>
   </article>

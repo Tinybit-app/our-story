@@ -88,23 +88,24 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
     - `GET /api/circles/:id/children` — member-accessible list; `POST` — owner adds child; `DELETE /api/circles/:id/children/:childId` — owner removes
     - Children manager in `/circle-settings` (owner only): list existing children with remove, add form with name + DOB
     - Age stamp driven by `memory.memory_children` — only appears when children are explicitly tagged on a specific memory; absent on untagged memories regardless of circle type
-    - Age stamp rendered in `PolaroidCard` caption and `MemoryModal` as `"Emma · 3 months, 2 weeks"` per child (accent colour, hidden when none tagged)
-    - Supports multiple children (e.g. twins, siblings) — one stamp row per tagged child
+    - Age stamp rendered in `PolaroidCard` caption and `MemoryModal` as pill badges: accent-tinted rounded pill with a baby face SVG icon, child name, and computed age (`"Emma · 3 months, 2 weeks"`); hidden when no children are tagged
+    - Supports multiple children (e.g. twins, siblings) — one pill per tagged child, displayed in a flex-wrap row
     - Upload form: child chip-picker shown for all circle types; label in accent colour for `parents` circles for visual prominence
     - Edit mode in `MemoryModal`: child chip-picker lets owner update tagged children after upload
     - RLS: members can read ChildProfile and memory_children; only owner can insert/delete
-    - Tests: 17 unit tests for `computeBabyAge`, 5 E2E tests, 3 RLS tests for ChildProfile + 3 for memory_children (total 24)
+    - Tests: 17 unit tests for `computeBabyAge`, 7 E2E tests (including pill display and modal pill), 3 RLS tests for ChildProfile + 3 for memory_children (total 24)
   - [x] 4.10.6 Member tagging ("Who's in this memory?"): per-memory tagging of circle members via `memory_members` junction table
     - Migration 017: `memory_members` table (memory_id, user_id) — RLS: members can read, uploader can insert/delete
     - `POST /api/memories/[id]/members` — replace-all endpoint; notifies newly-tagged members by email (fire-and-forget); validates userIds are circle members
     - `GET /api/timeline` extended: each memory embeds `memory_members(user_id, user!user_id(id, first_name, last_name, avatar_url))`; response includes `members[]` for the upload-form picker
     - Upload form: member chips (avatar + first name) combined with child chips in a single "Who's in this memory?" section; available on all circle types; batch mode applies shared selection to all items
-    - `MemoryModal` view mode: tagged member avatars (photo or initials + first name) shown after age stamps
+    - `MemoryModal` view mode: "with" label (small-caps muted) + avatar chips (photo or initials + first name) shown below child age pills
     - `MemoryModal` edit mode: combined chip-picker; `saveEdit` calls PATCH + `/children` + `/members` in parallel
-    - `PolaroidCard`: overlapping avatar bubbles (max 4 + "+N" overflow) below age stamps
+    - `PolaroidCard`: muted "with" label + overlapping avatar bubbles (max 4 + "+N" overflow), below child age pills; clearly separates people-in-photo from date/author metadata
     - Tagged member receives email: "X tagged you in a memory in [Circle]" (en + zh-CN)
     - RLS: members can read `memory_members`; only the uploader (owner_user_id) can insert/delete — same as `memory_children`
-    - Tests: 4 E2E tests (`tests/member-tagging.spec.ts`), 3 RLS tests (total 27)
+    - `memory_members.user_id` FK targets `public.User(id)` (not `auth.users`) so PostgREST can join profile data (migration 019)
+    - Tests: 6 E2E tests (`tests/member-tagging.spec.ts`), 3 RLS tests (total 27)
   - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
   - [ ] 4.10.3 Health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal (suggested first for `caregiving` circles)
   - [ ] 4.10.4 Anniversary anchoring: relationship start date field at circle creation, display in header (suggested first for `couple` circles)

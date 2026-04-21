@@ -36,7 +36,6 @@ export default defineEventHandler(async (event) => {
     .order("date_of_birth", { ascending: true })
 
   if (childError) console.error("[timeline] childprofile query failed:", childError.message)
-  console.log(`[timeline] circleId=${circleId} children=${JSON.stringify(childProfiles)}`)
 
   const children: Array<{ id: string; name: string; date_of_birth: string }> =
     childProfiles ?? []

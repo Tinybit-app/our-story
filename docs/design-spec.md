@@ -4151,7 +4151,7 @@ The "Who uses it" section of the landing page should expand into per-type featur
 #### 👶 Parents
 **Default features: time is relative to the baby**
 
-- **Baby age stamp** — tag children on individual memories at upload time; the memory card shows each tagged child's age ("Emma · 3 months, 2 weeks"). Untagged memories show no stamp. Supports multiple children (twins, siblings). Child profiles (name + date of birth) are managed in circle settings.
+- **Baby age stamp** — tag children on individual memories at upload time; the memory card shows each tagged child's age as an accent-tinted pill badge with a baby icon ("Emma · 3 months, 2 weeks"). Untagged memories show no stamp. Supports multiple children (twins, siblings). Child profiles (name + date of birth) are managed in circle settings.
 - **Developmental milestone categories** — predefined milestone tracks (Motor, Language, Social, First foods) with completion checkboxes
 - **Growth chart** — weight/height log entries alongside photos, visualized as a simple chart
 - **Vaccination tracker** — date-stamped health events separate from memories
@@ -4176,7 +4176,7 @@ SEO angles: "couple memory app", "relationship photo timeline", "private photo a
 #### 👨‍👩‍👧‍👦 Family
 **Default features for this type: multi-generational, person-tagged memories**
 
-- **Person tags** — tag which circle members appear in a memory; avatar bubbles on cards, email notification to tagged members, editable after upload (implemented — §4.10.6)
+- **Person tags** — tag which circle members appear in a memory; a muted "with" label + avatar bubbles on cards (max 4, "+N" overflow), email notification to tagged members, editable after upload (implemented — §4.10.6)
 - **"This day last year"** — surface a memory from exactly 1 year ago in a weekly digest
 - **Event grouping** — cluster memories by event (Christmas 2024, Summer holiday) rather than just month
 - **Family tree light** — simple list of circle members with their relationship labels (Grandma, Uncle, etc.)
@@ -4189,7 +4189,7 @@ SEO angles: "family memory app", "private family photo sharing", "family photo a
 **Default features for this type: event-centric and trip-focused**
 
 - **Trip/event containers** — group memories inside a named event (Barcelona Trip, NYE 2025)
-- **"Who was there" tag** — tag which members attended an event (implemented as member tagging — §4.10.6)
+- **"Who was there" tag** — tag which members attended an event (implemented as member tagging — §4.10.6); shown as "with" label + avatar bubbles on cards
 - **Reaction leaderboard** — fun stat: most-reacted photo, most-active member
 - **Memory count milestones** — celebrate 50th, 100th memory with a banner
 
@@ -4241,8 +4241,8 @@ All features below are available to every circle regardless of `circle_type`. Th
 
 | Priority | Feature | Suggested first for | Why |
 |---|---|---|---|
-| 1 | **Baby age stamp** | parents | Per-memory child tagging (`memory_children` junction table) + computed age on tagged memory cards. Child profiles managed in circle settings. For `parents` circles the upload picker is visually prominent; available on all circle types. **Implemented (§4.10.1).** |
-| 2 | **Member tagging** | family, friends | Per-memory member tagging (`memory_members` junction table). Uploader tags circle members via chip-picker at upload. Tagged members get email notification. Avatar bubbles on PolaroidCard (max 4, "+N" overflow). Edit mode in MemoryModal. **Implemented (§4.10.6).** |
+| 1 | **Baby age stamp** | parents | Per-memory child tagging (`memory_children` junction table) + computed age shown as accent-tinted pill badges (baby icon + name + age) on tagged memory cards. Child profiles managed in circle settings. For `parents` circles the upload picker is visually prominent; available on all circle types. **Implemented (§4.10.1).** |
+| 2 | **Member tagging** | family, friends | Per-memory member tagging (`memory_members` junction table). Uploader tags circle members via chip-picker at upload. Tagged members get email notification. `PolaroidCard`: muted "with" label + overlapping avatar bubbles (max 4, "+N" overflow) below age pills. `MemoryModal` view mode: "with" label + avatar+name chips. Edit mode: combined chip-picker. **Implemented (§4.10.6).** |
 | 3 | **Location tag** | travel | Single text field + EXIF GPS auto-fill, shown below the memory date. Low effort, high landing page impact. |
 | 4 | **Health event types** | caregiving | Type selector in upload modal. |
 | 5 | **Anniversary anchoring** | couple | Relationship start date at circle creation + display in header + anniversary email trigger. |

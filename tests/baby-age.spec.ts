@@ -10,6 +10,8 @@
  *  3. Circle settings shows a children manager (owner only)
  *  4. Adding a child calls POST /api/circles/:id/children
  *  5. Upload form shows child picker when the circle has children
+ *  6. Age stamp pill shows child name and age as a combined pill badge on the card
+ *  7. Modal caption tab shows child age pill when the memory is opened
  */
 
 import { test, expect } from '@playwright/test'
@@ -213,6 +215,41 @@ test.describe('Baby age stamp (4.10.1)', () => {
 
     // The child picker should show the child's name as a selectable chip
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 5_000 })
+  })
+
+  test('age stamp pill shows child name and age together on the polaroid card', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page)
+    await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
+
+    await page.goto('/timeline')
+    // Both name and age appear in the pill badge — they must both be visible simultaneously
+    await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
+    const agePill = page.locator('span', { hasText: 'Emma' }).filter({ hasText: '3 months, 2 weeks' })
+    await expect(agePill).toBeVisible()
+  })
+
+  test('modal caption tab shows child age pill when memory is opened', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page)
+    await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
+
+    // Stub reactions and comments so the modal can fully open
+    await page.route('**/api/memories/mem-1/reactions', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ reactions: [] }) })
+    )
+    await page.route('**/api/memories/mem-1/comments', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) })
+    )
+
+    await page.goto('/timeline')
+    // Open the memory by clicking its card (the note text identifies it)
+    await page.getByText('A cute moment').click()
+
+    // Wait for modal to open — the caption tab is default
+    // Both name and age must be visible in the modal caption area
+    await expect(page.getByText('Emma').nth(1)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('3 months, 2 weeks').nth(1)).toBeVisible()
   })
 
 })

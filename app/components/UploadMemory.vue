@@ -163,7 +163,7 @@
           </div>
 
           <!-- Scrollable content -->
-          <div class="overflow-y-auto flex-1 px-5 py-4">
+          <div class="scroll-styled overflow-y-auto flex-1 px-5 py-4">
             <!-- Single item -->
             <template v-if="items.length === 1">
               <div

@@ -189,7 +189,7 @@
           <!-- Caption tab -->
           <div
             v-show="activeTab === 'caption'"
-            class="caption-scroll flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-4"
+            class="scroll-styled flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-4"
           >
             <!-- View mode -->
             <template v-if="!editing">
@@ -242,13 +242,28 @@
                   <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
                 </template>
               </p>
-              <template v-if="childAges.length">
-                <p v-for="child in childAges" :key="child.name" class="text-[11px] leading-snug">
-                  <span class="text-muted-foreground/70">{{ child.name }} · </span><span class="font-medium" style="color: hsl(var(--accent))">{{ child.age }}</span>
-                </p>
-              </template>
-              <!-- Tagged member avatars -->
-              <div v-if="memory?.memory_members?.length" class="flex items-center gap-1.5 flex-wrap mt-1.5">
+              <!-- Child age pills -->
+              <div v-if="childAges.length" class="flex flex-wrap gap-1.5 mt-2">
+                <span
+                  v-for="child in childAges"
+                  :key="child.name"
+                  class="inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[11px] leading-none font-medium"
+                  style="background: hsl(var(--accent) / 0.13); color: hsl(var(--accent));"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.8;flex-shrink:0">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2"/>
+                    <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>
+                  </svg>
+                  <span>{{ child.name }}</span>
+                  <span style="opacity:0.45">·</span>
+                  <span style="opacity:0.85">{{ child.age }}</span>
+                </span>
+              </div>
+              <!-- Tagged members: "with" label + avatar+name chips -->
+              <div v-if="memory?.memory_members?.length" class="flex items-center gap-2 flex-wrap mt-2">
+                <span class="text-[10px] font-semibold tracking-[.08em] uppercase" style="color: hsl(var(--muted-foreground) / 0.55);">with</span>
                 <div
                   v-for="mm in memory.memory_members"
                   :key="mm.user_id"
@@ -376,12 +391,24 @@
                   <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
                 </template>
               </p>
-              <template v-if="childAges.length">
-                <p v-for="child in childAges" :key="child.name" class="text-[11px] leading-snug">
-                  <span class="text-muted-foreground/70">{{ child.name }} · </span>
-                  <span class="font-medium" style="color: hsl(var(--accent))">{{ child.age }}</span>
-                </p>
-              </template>
+              <div v-if="childAges.length" class="flex flex-wrap gap-1.5 mt-2">
+                <span
+                  v-for="child in childAges"
+                  :key="child.name"
+                  class="inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[11px] leading-none font-medium"
+                  style="background: hsl(var(--accent) / 0.13); color: hsl(var(--accent));"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.8;flex-shrink:0">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2"/>
+                    <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>
+                  </svg>
+                  <span>{{ child.name }}</span>
+                  <span style="opacity:0.45">·</span>
+                  <span style="opacity:0.85">{{ child.age }}</span>
+                </span>
+              </div>
               <div class="mb-3" />
             </template>
 
@@ -496,7 +523,7 @@
 
             <!-- Comment thread — scrollable -->
             <div
-              class="caption-scroll flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-4"
+              class="scroll-styled flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-4"
             >
               <div v-if="comments.length > 0" class="space-y-3">
                 <div
@@ -1232,29 +1259,3 @@ onUnmounted(() => {
   document.body.style.overflow = "";
 });
 </script>
-
-<style scoped>
-.caption-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: hsl(var(--accent) / 0.4) hsl(var(--accent) / 0.06);
-}
-
-.caption-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-
-.caption-scroll::-webkit-scrollbar-track {
-  background: hsl(var(--accent) / 0.06);
-  border-radius: 999px;
-}
-
-.caption-scroll::-webkit-scrollbar-thumb {
-  background: hsl(var(--accent) / 0.38);
-  border-radius: 999px;
-  transition: background 200ms ease;
-}
-
-.caption-scroll::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--accent) / 0.65);
-}
-</style>
