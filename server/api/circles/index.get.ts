@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
 
   const { data, error } = await supabase
     .from("circlemember")
-    .select("role, circle:circle_id(id, name, circle_type, deleted_at, members:circlemember(count))")
+    .select("role, circle:circle_id(id, name, circle_type, date_of_birth, deleted_at, members:circlemember(count))")
     .eq("user_id", user.sub)
     .order("created_at")
 

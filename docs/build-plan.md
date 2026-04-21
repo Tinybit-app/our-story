@@ -77,7 +77,16 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `PATCH /api/circles/[id]` endpoint for owner to update `circle_type` (used in `/circle-settings` type picker)
   - **Design decision:** `circle_type` is a purely UX/marketing signal — sets copy, chips, and empty state only. Does not gate any features. All features available to all circles regardless of type. Invite UI always present. Owner can change type freely from `/circle-settings`.
 - [ ] 4.10 Feature roadmap — phase 1 (available to all circles; type influences which are proactively suggested; see design spec §Feature roadmap):
-  - [ ] 4.10.1 Baby age stamp: `date_of_birth` field on circle + computed age display on memory cards (suggested first for `parents` circles)
+  - [x] 4.10.1 Baby age stamp: `date_of_birth` field on circle + computed age display on memory cards (suggested first for `parents` circles)
+    - Migration 014: `date_of_birth DATE` added to `Circle` table (nullable)
+    - `computeBabyAge(dob, memoryDate)` composable in `app/composables/useBabyAge.ts`
+    - Age format: days (1–13) → weeks (14d–1mo) → "N months[, W weeks]" (1–11mo) → "N years[, M months]" (1y+)
+    - `GET /api/timeline` returns `dateOfBirth` alongside memories; `PATCH /api/circles/:id` accepts `dateOfBirth`
+    - `GET /api/circles` returns `date_of_birth` per circle
+    - Birth date input in `/circle-settings` (owner only)
+    - Age stamp rendered in `PolaroidCard` caption and `MemoryModal` (accent colour, hidden when null)
+    - RLS: members can read, only owner can update (existing Circle UPDATE policy)
+    - Tests: 17 unit tests for `computeBabyAge`, 4 E2E tests, 3 new RLS tests (total 18)
   - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
   - [ ] 4.10.3 Health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal (suggested first for `caregiving` circles)
   - [ ] 4.10.4 Anniversary anchoring: relationship start date field at circle creation, display in header (suggested first for `couple` circles)

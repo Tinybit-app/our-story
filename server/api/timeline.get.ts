@@ -28,6 +28,15 @@ export default defineEventHandler(async (event) => {
 
   if (!membership) throw createError({ statusCode: 403 })
 
+  // Fetch circle's date_of_birth for baby age stamp display
+  const { data: circle } = await supabase
+    .from("circle")
+    .select("date_of_birth")
+    .eq("id", circleId)
+    .maybeSingle()
+
+  const dateOfBirth: string | null = (circle as any)?.date_of_birth ?? null
+
   let query = supabase
     .from("memory")
     .select(`
@@ -60,7 +69,7 @@ export default defineEventHandler(async (event) => {
       console.error("[timeline] month query failed:", error.message)
       throw createError({ statusCode: 500, message: "Failed to load timeline." })
     }
-    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null }
+    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null, dateOfBirth }
   }
 
   // Cursor-based pagination for the main timeline
@@ -84,7 +93,7 @@ export default defineEventHandler(async (event) => {
   const last = memoriesWithUrls[memoriesWithUrls.length - 1]
   const nextCursor = last ? `${last.memory_date},${last.id}` : null
 
-  return { memories: memoriesWithUrls, nextCursor }
+  return { memories: memoriesWithUrls, nextCursor, dateOfBirth }
 })
 
 async function attachSignedUrls(supabase: any, memories: any[]) {

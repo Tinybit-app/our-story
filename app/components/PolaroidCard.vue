@@ -237,18 +237,25 @@
           <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
         </template>
       </p>
+
+      <!-- Baby age stamp -->
+      <p v-if="babyAge" class="text-[10px] mt-[3px] font-medium" style="color: hsl(var(--accent))">
+        {{ babyAge }}
+      </p>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
 import type { Memory } from "~/composables/useTimeline";
+import { computeBabyAge } from "~/composables/useBabyAge";
 const { t, locale } = useI18n()
 
 const props = defineProps<{
   memory: Memory;
   index: number;
   wide?: boolean;
+  dateOfBirth?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -305,6 +312,10 @@ const formattedDate = computed(() => {
     day: "numeric",
   });
 });
+
+const babyAge = computed(() =>
+  computeBabyAge(props.dateOfBirth ?? null, props.memory.memory_date)
+);
 
 // owner_user_id is null for detached (former member) memories
 const isFormerMember = computed(() => props.memory.owner_user_id === null);

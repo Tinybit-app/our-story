@@ -49,6 +49,35 @@
 
           <div class="h-px bg-border" />
 
+          <!-- Baby age stamp — owner only -->
+          <div v-if="isOwner">
+            <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
+              Baby age stamp
+            </h2>
+            <p class="text-xs text-muted-foreground mb-4">
+              Set a birth date so every memory card shows how old the baby was at the time of the photo.
+            </p>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="dateOfBirth"
+                type="date"
+                aria-label="Baby's date of birth"
+                class="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                :disabled="savingDob"
+                class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                @click="saveDateOfBirth"
+              >
+                {{ savingDob ? '…' : 'Save' }}
+              </button>
+            </div>
+            <p v-if="dobSaved" class="text-xs text-green-600 mt-2">Saved!</p>
+            <p v-if="dobError" class="text-xs text-destructive mt-2">{{ dobError }}</p>
+          </div>
+
+          <div v-if="isOwner" class="h-px bg-border" />
+
           <!-- Danger zone (owner only) -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-4">
@@ -207,6 +236,36 @@ watchEffect(() => {
     navigateTo('/members')
   }
 })
+
+// ── Baby age stamp ─────────────────────────────────────────
+const dateOfBirth = ref<string>(circle.value?.date_of_birth ?? '')
+const savingDob = ref(false)
+const dobSaved = ref(false)
+const dobError = ref('')
+
+watch(() => circle.value?.date_of_birth, (val) => {
+  dateOfBirth.value = val ?? ''
+})
+
+async function saveDateOfBirth() {
+  if (!circleId.value) return
+  savingDob.value = true
+  dobSaved.value = false
+  dobError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}`, {
+      method: 'PATCH',
+      body: { dateOfBirth: dateOfBirth.value || null },
+    })
+    dobSaved.value = true
+    setTimeout(() => { dobSaved.value = false }, 2500)
+    await refreshNuxtData()
+  } catch (err: any) {
+    dobError.value = err?.data?.message ?? 'Failed to save. Please try again.'
+  } finally {
+    savingDob.value = false
+  }
+}
 
 // ── Circle deletion ────────────────────────────────────────
 const deleteDialogOpen = ref(false)

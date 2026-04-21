@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(15);
+SELECT plan(18);
 
 -- ============================================================
 -- FIXTURES
@@ -207,6 +207,56 @@ SELECT lives_ok(
     VALUES ('00000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'member')$$,
   'admin can add a new member to a circle'
 );
+
+-- ============================================================
+-- TEST 16: member (user_b) can read date_of_birth on their circle
+-- ============================================================
+-- Seed date_of_birth as superuser so we can verify member visibility
+RESET ROLE;
+UPDATE public.Circle
+  SET date_of_birth = '2024-03-15'
+  WHERE id = '10000000-0000-0000-0000-000000000001';
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT is(
+  (SELECT date_of_birth FROM public.Circle
+   WHERE id = '10000000-0000-0000-0000-000000000001'),
+  '2024-03-15'::date,
+  'member can read date_of_birth from their circle'
+);
+
+-- ============================================================
+-- TEST 17: owner (user_a) can update date_of_birth
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$UPDATE public.Circle SET date_of_birth = '2024-06-01'
+    WHERE id = '10000000-0000-0000-0000-000000000001'$$,
+  'owner can update date_of_birth on their circle'
+);
+
+-- ============================================================
+-- TEST 18: admin (user_b) cannot update date_of_birth
+-- (Circle UPDATE policy is owner-only — silently no-ops)
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+UPDATE public.Circle
+  SET date_of_birth = '2000-01-01'
+  WHERE id = '10000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT date_of_birth FROM public.Circle
+   WHERE id = '10000000-0000-0000-0000-000000000001'),
+  '2024-06-01'::date,
+  'admin (non-owner) cannot update date_of_birth — row unchanged'
+);
+SET LOCAL ROLE authenticated;
 
 -- ============================================================
 -- TEST 13: member of a soft-deleted circle can no longer read

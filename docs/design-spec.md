@@ -1701,7 +1701,7 @@ Features are progressively disclosed: they appear in the UI when first used, not
 
 | Feature | Description |
 |---|---|
-| **Baby age stamp** | Every memory card shows baby's age at time of photo ("3 months, 2 weeks"). Requires a `date_of_birth` field set at circle creation. |
+| **Baby age stamp** | Every memory card shows baby's age at time of photo ("3 months, 2 weeks"). `date_of_birth DATE` stored on the `Circle` table (nullable). Owner sets it in `/circle-settings`. `computeBabyAge(dob, memoryDate)` formats: 1–13 days → "N days old"; 14d–1mo → "N weeks old"; 1–11mo → "N months[, W weeks]"; 1y+ → "N years[, M months]". Shown in accent colour below the date on polaroid cards and in the memory modal. Hidden (null) when no birth date is set. |
 | **Developmental milestone tracks** | Predefined milestone categories (Motor, Language, Social, First foods) with completion checkboxes. |
 | **Growth chart** | Weight/height log entries alongside photos, visualized as a simple chart. |
 | **Vaccination tracker** | Date-stamped health events separate from memories. |

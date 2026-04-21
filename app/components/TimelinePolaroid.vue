@@ -69,6 +69,7 @@
               :memory="memory"
               :index="i"
               :wide="isWideMemory(memory.id)"
+              :date-of-birth="props.dateOfBirth ?? null"
               @open="$emit('openMemory', $event)"
               @reaction-update="$emit('reactionUpdate', $event)"
             />
@@ -112,6 +113,7 @@ const props = defineProps<{
   loading: boolean
   hasNextPage: boolean
   circleType?: string | null
+  dateOfBirth?: string | null
 }>()
 
 const typeConfig = computed(() => useCircleTypeConfig(props.circleType))

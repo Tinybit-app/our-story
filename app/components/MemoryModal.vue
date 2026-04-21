@@ -235,13 +235,15 @@
                   </svg>
                 </button>
               </div>
-              <p class="text-[12px] mb-3">
+              <p class="text-[12px] mb-1">
                 <span class="text-muted-foreground">{{ formattedDate }}</span>
                 <template v-if="authorName">
                   <span class="text-muted-foreground"> · </span>
                   <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
                 </template>
               </p>
+              <p v-if="babyAge" class="text-[11px] font-medium mb-3" style="color: hsl(var(--accent))">{{ babyAge }}</p>
+              <div v-else class="mb-3" />
             </template>
 
             <!-- Edit mode -->
@@ -311,13 +313,15 @@
                   </div>
                 </div>
               </div>
-              <p class="text-[12px] mb-3">
+              <p class="text-[12px] mb-1">
                 <span class="text-muted-foreground">{{ formattedDate }}</span>
                 <template v-if="authorName">
                   <span class="text-muted-foreground"> · </span>
                   <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
                 </template>
               </p>
+              <p v-if="babyAge" class="text-[11px] font-medium mb-3" style="color: hsl(var(--accent))">{{ babyAge }}</p>
+              <div v-else class="mb-3" />
             </template>
 
             <!-- Reactions -->
@@ -561,6 +565,7 @@
 
 <script setup lang="ts">
 import type { Memory } from "~/composables/useTimeline";
+import { computeBabyAge } from "~/composables/useBabyAge";
 const { t, locale } = useI18n()
 
 const props = defineProps<{
@@ -568,6 +573,7 @@ const props = defineProps<{
   startIndex: number | null;
   originRect: DOMRect | null;
   tilt: number;
+  dateOfBirth?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -624,6 +630,11 @@ const formattedDate = computed(() => {
     day: "numeric",
     year: "numeric",
   });
+});
+
+const babyAge = computed(() => {
+  if (!memory.value) return null;
+  return computeBabyAge(props.dateOfBirth ?? null, memory.value.memory_date);
 });
 
 const isFormerMember = computed(() => memory.value?.owner_user_id === null);

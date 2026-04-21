@@ -250,6 +250,7 @@
         :loading="loading"
         :has-next-page="!!nextCursor"
         :circle-type="circle?.circle_type ?? null"
+        :date-of-birth="dateOfBirth"
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
@@ -478,6 +479,7 @@
       :start-index="selectedMemoryIndex"
       :origin-rect="selectedRect"
       :tilt="selectedTilt"
+      :date-of-birth="dateOfBirth"
       @close="selectedMemoryIndex = null"
       @update="onMemoryUpdate"
     />
@@ -623,6 +625,7 @@ const circleId = computed<string | null>(() => circle.value?.id ?? null);
 
 const memoriesFlat = ref<Memory[]>([]);
 const nextCursor = ref<string | null>(null);
+const dateOfBirth = ref<string | null>(null);
 const loading = ref(false);
 
 async function fetchTimeline(cursor?: string) {
@@ -632,6 +635,7 @@ async function fetchTimeline(cursor?: string) {
     const data = await $fetch<{
       memories: Memory[];
       nextCursor: string | null;
+      dateOfBirth: string | null;
     }>("/api/timeline", {
       query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
     });
@@ -639,6 +643,7 @@ async function fetchTimeline(cursor?: string) {
       ? [...memoriesFlat.value, ...data.memories]
       : data.memories;
     nextCursor.value = data.nextCursor;
+    if (!cursor) dateOfBirth.value = data.dateOfBirth ?? null;
   } catch (err) {
     console.error("[timeline] fetch error:", err);
   } finally {
