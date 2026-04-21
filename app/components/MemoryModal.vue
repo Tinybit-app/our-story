@@ -242,8 +242,26 @@
                   <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
                 </template>
               </p>
-              <p v-if="babyAge" class="text-[11px] font-medium mb-3" style="color: hsl(var(--accent))">{{ babyAge }}</p>
-              <div v-else class="mb-3" />
+              <template v-if="childAges.length">
+                <p v-for="child in childAges" :key="child.name" class="text-[11px] leading-snug">
+                  <span class="text-muted-foreground/70">{{ child.name }} · </span><span class="font-medium" style="color: hsl(var(--accent))">{{ child.age }}</span>
+                </p>
+              </template>
+              <!-- Tagged member avatars -->
+              <div v-if="memory?.memory_members?.length" class="flex items-center gap-1.5 flex-wrap mt-1.5">
+                <div
+                  v-for="mm in memory.memory_members"
+                  :key="mm.user_id"
+                  class="flex items-center gap-1"
+                >
+                  <div class="w-5 h-5 rounded-full overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center text-[8px] font-bold text-foreground">
+                    <img v-if="mm.user?.avatar_url" :src="mm.user.avatar_url" class="w-full h-full object-cover" />
+                    <span v-else>{{ ((mm.user?.first_name?.[0] ?? '') + (mm.user?.last_name?.[0] ?? '')).toUpperCase() || '?' }}</span>
+                  </div>
+                  <span class="text-[11px] text-muted-foreground">{{ mm.user?.first_name ?? t('common.someone') }}</span>
+                </div>
+              </div>
+              <div class="mb-3" />
             </template>
 
             <!-- Edit mode -->
@@ -295,6 +313,44 @@
                   class="w-full bg-secondary rounded-lg px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed"
                   style="max-height: 140px; overflow-y: auto"
                 />
+                <!-- Combined people picker: members + children -->
+                <div v-if="props.members?.length || props.children?.length" class="mt-3">
+                  <p class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em] mb-1.5">
+                    {{ t('modal.whoIsIn') }}
+                  </p>
+                  <div class="flex flex-wrap gap-1.5">
+                    <!-- Member chips -->
+                    <button
+                      v-for="member in props.members"
+                      :key="member.userId"
+                      type="button"
+                      class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                      :class="editMemberIds.includes(member.userId)
+                        ? 'bg-accent/15 border-accent/40 text-foreground'
+                        : 'bg-secondary border-border text-muted-foreground hover:text-foreground'"
+                      @click="toggleEditMember(member.userId)"
+                    >
+                      <span class="w-4 h-4 rounded-full overflow-hidden bg-border flex-shrink-0 flex items-center justify-center text-[7px] font-bold">
+                        <img v-if="member.avatarUrl" :src="member.avatarUrl" class="w-full h-full object-cover" />
+                        <span v-else>{{ memberInitials(member) }}</span>
+                      </span>
+                      {{ member.firstName ?? t('common.someone') }}
+                    </button>
+                    <!-- Child chips -->
+                    <button
+                      v-for="child in props.children"
+                      :key="child.id"
+                      type="button"
+                      class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                      :class="editChildIds.includes(child.id)
+                        ? 'bg-accent/15 border-accent/40 text-foreground'
+                        : 'bg-secondary border-border text-muted-foreground hover:text-foreground'"
+                      @click="toggleEditChild(child.id)"
+                    >
+                      {{ child.name }}
+                    </button>
+                  </div>
+                </div>
                 <div class="flex items-center justify-end mt-1.5">
                   <div class="flex items-center gap-2">
                     <button
@@ -320,8 +376,13 @@
                   <span :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'">{{ authorName }}</span>
                 </template>
               </p>
-              <p v-if="babyAge" class="text-[11px] font-medium mb-3" style="color: hsl(var(--accent))">{{ babyAge }}</p>
-              <div v-else class="mb-3" />
+              <template v-if="childAges.length">
+                <p v-for="child in childAges" :key="child.name" class="text-[11px] leading-snug">
+                  <span class="text-muted-foreground/70">{{ child.name }} · </span>
+                  <span class="font-medium" style="color: hsl(var(--accent))">{{ child.age }}</span>
+                </p>
+              </template>
+              <div class="mb-3" />
             </template>
 
             <!-- Reactions -->
@@ -568,12 +629,16 @@ import type { Memory } from "~/composables/useTimeline";
 import { computeBabyAge } from "~/composables/useBabyAge";
 const { t, locale } = useI18n()
 
+interface ChildProfile { id: string; name: string; date_of_birth: string }
+interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
+
 const props = defineProps<{
   memories: Memory[];
   startIndex: number | null;
   originRect: DOMRect | null;
   tilt: number;
-  dateOfBirth?: string | null;
+  children?: ChildProfile[];
+  members?: CircleMember[];
 }>();
 
 const emit = defineEmits<{
@@ -632,9 +697,11 @@ const formattedDate = computed(() => {
   });
 });
 
-const babyAge = computed(() => {
-  if (!memory.value) return null;
-  return computeBabyAge(props.dateOfBirth ?? null, memory.value.memory_date);
+const childAges = computed(() => {
+  if (!memory.value) return [];
+  return (memory.value.memory_children ?? [])
+    .map((mc) => ({ name: mc.childprofile.name, age: computeBabyAge(mc.childprofile.date_of_birth, memory.value!.memory_date) }))
+    .filter((c) => c.age !== null) as Array<{ name: string; age: string }>;
 });
 
 const isFormerMember = computed(() => memory.value?.owner_user_id === null);
@@ -663,6 +730,8 @@ const noteExpanded = ref(false);
 const saving = ref(false);
 const editNote = ref("");
 const editMilestone = ref("");
+const editChildIds = ref<string[]>([]);
+const editMemberIds = ref<string[]>([]);
 const editTextareaEl = ref<HTMLTextAreaElement>();
 
 const isOwner = computed(
@@ -674,8 +743,26 @@ const isOwner = computed(
 function startEditing() {
   editNote.value = memory.value?.note ?? "";
   editMilestone.value = memory.value?.milestone_label ?? "";
+  editChildIds.value = (memory.value?.memory_children ?? []).map((mc) => mc.child_id);
+  editMemberIds.value = (memory.value?.memory_members ?? []).map((mm) => mm.user_id);
   editing.value = true;
   nextTick(() => editTextareaEl.value?.focus());
+}
+
+function toggleEditChild(childId: string) {
+  const idx = editChildIds.value.indexOf(childId);
+  if (idx === -1) editChildIds.value = [...editChildIds.value, childId];
+  else editChildIds.value = editChildIds.value.filter((id) => id !== childId);
+}
+
+function toggleEditMember(userId: string) {
+  const idx = editMemberIds.value.indexOf(userId);
+  if (idx === -1) editMemberIds.value = [...editMemberIds.value, userId];
+  else editMemberIds.value = editMemberIds.value.filter((id) => id !== userId);
+}
+
+function memberInitials(member: CircleMember): string {
+  return ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?';
 }
 
 function cancelEditing() {
@@ -686,26 +773,59 @@ async function saveEdit() {
   if (saving.value || !memory.value) return;
   saving.value = true;
   try {
-    const { memory: updated } = await $fetch<{
-      memory: {
-        id: string;
-        note: string | null;
-        milestone_label: string | null;
-        milestone_is_custom: boolean;
-      };
-    }>(`/api/memories/${memory.value.id}`, {
-      method: "PATCH",
-      body: {
-        note: editNote.value.trim() || null,
-        milestone_label: editMilestone.value.trim() || null,
-      },
-    });
+    const [{ memory: updated }] = await Promise.all([
+      $fetch<{
+        memory: {
+          id: string;
+          note: string | null;
+          milestone_label: string | null;
+          milestone_is_custom: boolean;
+        };
+      }>(`/api/memories/${memory.value.id}`, {
+        method: "PATCH",
+        body: {
+          note: editNote.value.trim() || null,
+          milestone_label: editMilestone.value.trim() || null,
+        },
+      }),
+      $fetch(`/api/memories/${memory.value.id}/children`, {
+        method: "POST",
+        body: { childIds: editChildIds.value },
+      }),
+      $fetch(`/api/memories/${memory.value.id}/members`, {
+        method: "POST",
+        body: { userIds: editMemberIds.value },
+      }),
+    ]);
+
+    // Reconstruct memory_children from editChildIds + available children profiles
+    const updatedMemoryChildren = editChildIds.value
+      .map((childId) => {
+        const child = props.children?.find((c) => c.id === childId);
+        return child
+          ? { child_id: childId, childprofile: { id: child.id, name: child.name, date_of_birth: child.date_of_birth } }
+          : null;
+      })
+      .filter(Boolean) as Memory["memory_children"];
+
+    // Reconstruct memory_members from editMemberIds + available member profiles
+    const updatedMemoryMembers = editMemberIds.value
+      .map((userId) => {
+        const member = props.members?.find((m) => m.userId === userId);
+        return member
+          ? { user_id: userId, user: { id: member.userId, first_name: member.firstName, last_name: member.lastName, avatar_url: member.avatarUrl } }
+          : null;
+      })
+      .filter(Boolean) as Memory["memory_members"];
+
     // Propagate to parent memoriesFlat
     emit("update", {
       id: updated.id,
       note: updated.note,
       milestone_label: updated.milestone_label,
       milestone_is_custom: updated.milestone_is_custom,
+      memory_children: updatedMemoryChildren,
+      memory_members: updatedMemoryMembers,
     });
     editing.value = false;
   } catch (err) {
@@ -768,7 +888,7 @@ async function toggleReaction(emoji: string) {
   } else {
     localReactions.value = [
       ...localReactions.value,
-      { id: "optimistic", emoji, user_id: userId, user: null },
+      { id: "optimistic", emoji, user_id: userId, guest_name: null, user: null },
     ];
   }
 
@@ -782,7 +902,7 @@ async function toggleReaction(emoji: string) {
     emit("update", { id: memoryId, memoryreaction: reactions });
   } catch (err) {
     console.error("[MemoryModal] reaction error:", err);
-    localReactions.value = [...(memory.value?.memoryreaction ?? [])];
+    localReactions.value = [...(memory.value?.memoryreaction ?? [])] as Reaction[];
   }
 }
 
@@ -850,7 +970,7 @@ async function navigate(dir: "prev" | "next") {
 
   // Switch to new memory
   currentIndex.value = newIdx;
-  localReactions.value = [...(props.memories[newIdx]?.memoryreaction ?? [])];
+  localReactions.value = [...(props.memories[newIdx]?.memoryreaction ?? [])] as Reaction[];
   comments.value = [];
   commentDraft.value = "";
   allCommentsVisible.value = false;
@@ -859,6 +979,8 @@ async function navigate(dir: "prev" | "next") {
   noteExpanded.value = false;
   editNote.value = "";
   editMilestone.value = "";
+  editChildIds.value = [];
+  editMemberIds.value = [];
   editingCommentId.value = null;
   commentEditDraft.value = "";
 
@@ -1074,7 +1196,7 @@ watch(
   async (idx) => {
     if (idx !== null && idx !== undefined) {
       currentIndex.value = idx;
-      localReactions.value = [...(props.memories[idx]?.memoryreaction ?? [])];
+      localReactions.value = [...(props.memories[idx]?.memoryreaction ?? [])] as Reaction[];
       comments.value = [];
       commentDraft.value = "";
       allCommentsVisible.value = false;
@@ -1082,6 +1204,8 @@ watch(
       editing.value = false;
       editNote.value = "";
       editMilestone.value = "";
+      editChildIds.value = [];
+      editMemberIds.value = [];
       visible.value = true;
       await nextTick();
       await runEnterAnimation();

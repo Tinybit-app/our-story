@@ -49,31 +49,68 @@
 
           <div class="h-px bg-border" />
 
-          <!-- Baby age stamp — owner only -->
+          <!-- Children (baby age stamps) — owner only -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-              Baby age stamp
+              Children
             </h2>
             <p class="text-xs text-muted-foreground mb-4">
-              Set a birth date so every memory card shows how old the baby was at the time of the photo.
+              Add each child's name and date of birth. Memory cards will show their age at the time of the photo.
             </p>
-            <div class="flex items-center gap-3">
-              <input
-                v-model="dateOfBirth"
-                type="date"
-                aria-label="Baby's date of birth"
-                class="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <button
-                :disabled="savingDob"
-                class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
-                @click="saveDateOfBirth"
+
+            <!-- Existing children list -->
+            <div v-if="children.length" class="space-y-2 mb-4">
+              <div
+                v-for="child in children"
+                :key="child.id"
+                class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-border bg-secondary/40"
               >
-                {{ savingDob ? '…' : 'Save' }}
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-foreground truncate">{{ child.name }}</p>
+                  <p class="text-xs text-muted-foreground">{{ formatDob(child.date_of_birth) }}</p>
+                </div>
+                <button
+                  class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  :disabled="removingChildId === child.id"
+                  @click="removeChild(child.id)"
+                >
+                  <svg v-if="removingChildId !== child.id" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                  </svg>
+                  <div v-else class="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Add child form -->
+            <div v-if="children.length < 10" class="flex flex-col gap-2">
+              <div class="flex gap-2">
+                <input
+                  v-model="newChildName"
+                  type="text"
+                  placeholder="Name"
+                  maxlength="100"
+                  class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <input
+                  v-model="newChildDob"
+                  type="date"
+                  aria-label="Date of birth"
+                  class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  :style="{ colorScheme: isDark ? 'dark' : 'light' }"
+                />
+              </div>
+              <button
+                :disabled="addingChild || !newChildName.trim() || !newChildDob"
+                class="self-start px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                @click="addChild"
+              >
+                {{ addingChild ? '…' : '+ Add child' }}
               </button>
             </div>
-            <p v-if="dobSaved" class="text-xs text-green-600 mt-2">Saved!</p>
-            <p v-if="dobError" class="text-xs text-destructive mt-2">{{ dobError }}</p>
+            <p v-else class="text-xs text-muted-foreground">Maximum of 10 children reached.</p>
+
+            <p v-if="childrenError" class="text-xs text-destructive mt-2">{{ childrenError }}</p>
           </div>
 
           <div v-if="isOwner" class="h-px bg-border" />
@@ -197,6 +234,12 @@
 definePageMeta({})
 const { t } = useI18n()
 const router = useRouter()
+const colorMode = useColorMode()
+const isDark = computed(() =>
+  colorMode.preference === 'system'
+    ? colorMode.value === 'dark'
+    : colorMode.preference === 'dark'
+)
 
 // ── Circle ─────────────────────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
@@ -237,33 +280,58 @@ watchEffect(() => {
   }
 })
 
-// ── Baby age stamp ─────────────────────────────────────────
-const dateOfBirth = ref<string>(circle.value?.date_of_birth ?? '')
-const savingDob = ref(false)
-const dobSaved = ref(false)
-const dobError = ref('')
+// ── Children ───────────────────────────────────────────────
+interface ChildProfile { id: string; name: string; date_of_birth: string }
 
-watch(() => circle.value?.date_of_birth, (val) => {
-  dateOfBirth.value = val ?? ''
-})
+const { data: childrenData, refresh: refreshChildren } = await useAsyncData<{ children: ChildProfile[] }>(
+  'circle-settings-children',
+  () => circleId.value
+    ? $fetch<{ children: ChildProfile[] }>(`/api/circles/${circleId.value}/children`)
+    : Promise.resolve({ children: [] }),
+  { watch: [circleId] }
+)
+const children = computed(() => childrenData.value?.children ?? [])
 
-async function saveDateOfBirth() {
-  if (!circleId.value) return
-  savingDob.value = true
-  dobSaved.value = false
-  dobError.value = ''
+const newChildName = ref('')
+const newChildDob = ref('')
+const addingChild = ref(false)
+const removingChildId = ref<string | null>(null)
+const childrenError = ref('')
+
+function formatDob(dob: string) {
+  return new Date(dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+async function addChild() {
+  if (!circleId.value || !newChildName.value.trim() || !newChildDob.value) return
+  addingChild.value = true
+  childrenError.value = ''
   try {
-    await $fetch(`/api/circles/${circleId.value}`, {
-      method: 'PATCH',
-      body: { dateOfBirth: dateOfBirth.value || null },
+    await $fetch(`/api/circles/${circleId.value}/children`, {
+      method: 'POST',
+      body: { name: newChildName.value.trim(), dateOfBirth: newChildDob.value },
     })
-    dobSaved.value = true
-    setTimeout(() => { dobSaved.value = false }, 2500)
-    await refreshNuxtData()
+    newChildName.value = ''
+    newChildDob.value = ''
+    await refreshChildren()
   } catch (err: any) {
-    dobError.value = err?.data?.message ?? 'Failed to save. Please try again.'
+    childrenError.value = err?.data?.message ?? 'Failed to add child. Please try again.'
   } finally {
-    savingDob.value = false
+    addingChild.value = false
+  }
+}
+
+async function removeChild(childId: string) {
+  if (!circleId.value) return
+  removingChildId.value = childId
+  childrenError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}/children/${childId}`, { method: 'DELETE' })
+    await refreshChildren()
+  } catch (err: any) {
+    childrenError.value = err?.data?.message ?? 'Failed to remove child. Please try again.'
+  } finally {
+    removingChildId.value = null
   }
 }
 

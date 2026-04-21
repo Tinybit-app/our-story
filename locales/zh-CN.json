@@ -105,7 +105,8 @@
     "noComments": "暂无评论",
     "viewOlderComments": "查看 {n} 条更早的评论",
     "editNote": "编辑备注",
-    "editComment": "编辑评论"
+    "editComment": "编辑评论",
+    "whoIsIn": "这条记忆中有谁？"
   },
   "upload": {
     "addMemory": "添加记忆",
@@ -115,6 +116,8 @@
     "note": "备注",
     "milestone": "里程碑",
     "whenWas": "这是什么时候？",
+    "whoIsIn": "这条记忆里有谁？",
+    "tagPeople": "标记人物（应用于所有）",
     "cancel": "取消",
     "upload": "上传",
     "uploadN": "上传 {n} 个",

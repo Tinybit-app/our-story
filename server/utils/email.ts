@@ -276,6 +276,43 @@ export function buildCircleDeletedOwnerEmail(opts: {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Tagged in a memory
+// ─────────────────────────────────────────────────────────────
+
+export function buildTaggedInMemoryEmail(opts: {
+  taggedByName: string
+  circleName: string
+  appUrl: string
+  locale: string
+}): { subject: string; html: string } {
+  const { taggedByName, circleName, appUrl, locale } = opts
+
+  if (locale === 'zh-CN') {
+    return {
+      subject: `${taggedByName} 在「${circleName}」的一条记忆中标记了你`,
+      html: layout(`
+        <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">${taggedByName} 在记忆中标记了你</h2>
+        <p style="color: #555; margin: 0 0 24px; line-height: 1.6; font-size: 15px;">
+          你被标记在了「<strong>${circleName}</strong>」中的一条记忆里。打开 Our Story 查看它。
+        </p>
+        ${primaryButton(appUrl, "查看记忆 →")}
+      `),
+    }
+  }
+
+  return {
+    subject: `${taggedByName} tagged you in a memory`,
+    html: layout(`
+      <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 12px;">${taggedByName} tagged you in a memory</h2>
+      <p style="color: #555; margin: 0 0 24px; line-height: 1.6; font-size: 15px;">
+        You've been tagged in a memory in <strong>${circleName}</strong>. Open Our Story to see it.
+      </p>
+      ${primaryButton(appUrl, "View memory →")}
+    `),
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // Owner auto-promoted to new circle owner
 // ─────────────────────────────────────────────────────────────
 

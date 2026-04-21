@@ -105,7 +105,8 @@
     "noComments": "No comments yet",
     "viewOlderComments": "View {n} older comment | View {n} older comments",
     "editNote": "Edit note",
-    "editComment": "Edit comment"
+    "editComment": "Edit comment",
+    "whoIsIn": "Who's in this memory?"
   },
   "upload": {
     "addMemory": "Add a memory",
@@ -115,6 +116,8 @@
     "note": "Note",
     "milestone": "Milestone",
     "whenWas": "When was this?",
+    "whoIsIn": "Who's in this memory?",
+    "tagPeople": "Tag people (applies to all)",
     "cancel": "Cancel",
     "upload": "Upload",
     "uploadN": "Upload {n}",

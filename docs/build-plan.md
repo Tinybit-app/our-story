@@ -77,16 +77,34 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `PATCH /api/circles/[id]` endpoint for owner to update `circle_type` (used in `/circle-settings` type picker)
   - **Design decision:** `circle_type` is a purely UX/marketing signal — sets copy, chips, and empty state only. Does not gate any features. All features available to all circles regardless of type. Invite UI always present. Owner can change type freely from `/circle-settings`.
 - [ ] 4.10 Feature roadmap — phase 1 (available to all circles; type influences which are proactively suggested; see design spec §Feature roadmap):
-  - [x] 4.10.1 Baby age stamp: `date_of_birth` field on circle + computed age display on memory cards (suggested first for `parents` circles)
-    - Migration 014: `date_of_birth DATE` added to `Circle` table (nullable)
+  - [x] 4.10.1 Baby age stamp: `ChildProfile` table (name + date_of_birth per child) + per-memory child tagging + computed age display on memory cards (suggested first for `parents` circles)
+    - Migration 014: `date_of_birth DATE` added to `Circle` table (nullable) — superseded by migration 015
+    - Migration 015: `ChildProfile` table (id, circle_id, name, date_of_birth) with owner-only RLS; tightened from migration 004's permissive member policies
+    - Migration 016: `memory_children` junction table (memory_id, child_id) — maps each memory to the children tagged in it; RLS: members can read, owner can insert/delete
     - `computeBabyAge(dob, memoryDate)` composable in `app/composables/useBabyAge.ts`
     - Age format: days (1–13) → weeks (14d–1mo) → "N months[, W weeks]" (1–11mo) → "N years[, M months]" (1y+)
-    - `GET /api/timeline` returns `dateOfBirth` alongside memories; `PATCH /api/circles/:id` accepts `dateOfBirth`
-    - `GET /api/circles` returns `date_of_birth` per circle
-    - Birth date input in `/circle-settings` (owner only)
-    - Age stamp rendered in `PolaroidCard` caption and `MemoryModal` (accent colour, hidden when null)
-    - RLS: members can read, only owner can update (existing Circle UPDATE policy)
-    - Tests: 17 unit tests for `computeBabyAge`, 4 E2E tests, 3 new RLS tests (total 18)
+    - `GET /api/timeline` returns `children[]` (for upload picker) alongside memories; each memory embeds `memory_children(child_id, childprofile(id, name, date_of_birth))`
+    - `POST /api/memories/[id]/children` — owner tags/re-tags children on a memory (replace-all semantics: delete + insert)
+    - `GET /api/circles/:id/children` — member-accessible list; `POST` — owner adds child; `DELETE /api/circles/:id/children/:childId` — owner removes
+    - Children manager in `/circle-settings` (owner only): list existing children with remove, add form with name + DOB
+    - Age stamp driven by `memory.memory_children` — only appears when children are explicitly tagged on a specific memory; absent on untagged memories regardless of circle type
+    - Age stamp rendered in `PolaroidCard` caption and `MemoryModal` as `"Emma · 3 months, 2 weeks"` per child (accent colour, hidden when none tagged)
+    - Supports multiple children (e.g. twins, siblings) — one stamp row per tagged child
+    - Upload form: child chip-picker shown for all circle types; label in accent colour for `parents` circles for visual prominence
+    - Edit mode in `MemoryModal`: child chip-picker lets owner update tagged children after upload
+    - RLS: members can read ChildProfile and memory_children; only owner can insert/delete
+    - Tests: 17 unit tests for `computeBabyAge`, 5 E2E tests, 3 RLS tests for ChildProfile + 3 for memory_children (total 24)
+  - [x] 4.10.6 Member tagging ("Who's in this memory?"): per-memory tagging of circle members via `memory_members` junction table
+    - Migration 017: `memory_members` table (memory_id, user_id) — RLS: members can read, uploader can insert/delete
+    - `POST /api/memories/[id]/members` — replace-all endpoint; notifies newly-tagged members by email (fire-and-forget); validates userIds are circle members
+    - `GET /api/timeline` extended: each memory embeds `memory_members(user_id, user!user_id(id, first_name, last_name, avatar_url))`; response includes `members[]` for the upload-form picker
+    - Upload form: member chips (avatar + first name) combined with child chips in a single "Who's in this memory?" section; available on all circle types; batch mode applies shared selection to all items
+    - `MemoryModal` view mode: tagged member avatars (photo or initials + first name) shown after age stamps
+    - `MemoryModal` edit mode: combined chip-picker; `saveEdit` calls PATCH + `/children` + `/members` in parallel
+    - `PolaroidCard`: overlapping avatar bubbles (max 4 + "+N" overflow) below age stamps
+    - Tagged member receives email: "X tagged you in a memory in [Circle]" (en + zh-CN)
+    - RLS: members can read `memory_members`; only the uploader (owner_user_id) can insert/delete — same as `memory_children`
+    - Tests: 4 E2E tests (`tests/member-tagging.spec.ts`), 3 RLS tests (total 27)
   - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
   - [ ] 4.10.3 Health event types: type selector (Doctor visit · Good day · Hard day · Milestone · Treatment) in upload modal (suggested first for `caregiving` circles)
   - [ ] 4.10.4 Anniversary anchoring: relationship start date field at circle creation, display in header (suggested first for `couple` circles)

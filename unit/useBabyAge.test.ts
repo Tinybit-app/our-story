@@ -7,8 +7,8 @@
  *   (when memory predates birth).
  *
  * From design spec (§4.10.1):
- *   "Every memory card shows baby's age at time of photo ('3 months, 2 weeks').
- *    Requires a date_of_birth field set at circle creation."
+ *   "Every memory card shows each child's age at time of photo ('Emma · 3 months, 2 weeks').
+ *    Children are managed via the ChildProfile table (name + date_of_birth per child)."
  */
 
 import { describe, it, expect } from "vitest"

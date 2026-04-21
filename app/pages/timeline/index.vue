@@ -250,7 +250,6 @@
         :loading="loading"
         :has-next-page="!!nextCursor"
         :circle-type="circle?.circle_type ?? null"
-        :date-of-birth="dateOfBirth"
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
@@ -410,6 +409,8 @@
       ref="uploadRef"
       :circle-id="circleId"
       :circle-type="circle?.circle_type ?? null"
+      :children="children"
+      :members="members"
       hide-trigger
       @uploaded="onUploaded"
     />
@@ -479,7 +480,8 @@
       :start-index="selectedMemoryIndex"
       :origin-rect="selectedRect"
       :tilt="selectedTilt"
-      :date-of-birth="dateOfBirth"
+      :children="children"
+      :members="members"
       @close="selectedMemoryIndex = null"
       @update="onMemoryUpdate"
     />
@@ -623,10 +625,15 @@ const circle = computed(() => {
 });
 const circleId = computed<string | null>(() => circle.value?.id ?? null);
 
+interface ChildProfile { id: string; name: string; date_of_birth: string }
+interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
+
 const memoriesFlat = ref<Memory[]>([]);
 const nextCursor = ref<string | null>(null);
-const dateOfBirth = ref<string | null>(null);
+const children = ref<ChildProfile[]>([]);
+const members = ref<CircleMember[]>([]);
 const loading = ref(false);
+
 
 async function fetchTimeline(cursor?: string) {
   if (loading.value || !circleId.value) return;
@@ -635,7 +642,8 @@ async function fetchTimeline(cursor?: string) {
     const data = await $fetch<{
       memories: Memory[];
       nextCursor: string | null;
-      dateOfBirth: string | null;
+      children: ChildProfile[];
+      members: CircleMember[];
     }>("/api/timeline", {
       query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
     });
@@ -643,7 +651,10 @@ async function fetchTimeline(cursor?: string) {
       ? [...memoriesFlat.value, ...data.memories]
       : data.memories;
     nextCursor.value = data.nextCursor;
-    if (!cursor) dateOfBirth.value = data.dateOfBirth ?? null;
+    if (!cursor) {
+      children.value = data.children ?? [];
+      members.value = data.members ?? [];
+    }
   } catch (err) {
     console.error("[timeline] fetch error:", err);
   } finally {
@@ -718,7 +729,10 @@ function switchCircle(id: string) {
   circleSwitcherOpen.value = false;
   memoriesFlat.value = [];
   nextCursor.value = null;
-  router.push({ query: { circle: id } });
+  // Only put ?circle= in the URL when it's not the default first circle,
+  // so single-circle users see a clean /timeline URL.
+  const isDefault = allCircles.value[0]?.id === id;
+  router.push({ query: isDefault ? {} : { circle: id } });
 }
 
 function startNewCircle() {

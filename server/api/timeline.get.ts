@@ -28,19 +28,60 @@ export default defineEventHandler(async (event) => {
 
   if (!membership) throw createError({ statusCode: 403 })
 
-  // Fetch circle's date_of_birth for baby age stamp display
-  const { data: circle } = await supabase
-    .from("circle")
-    .select("date_of_birth")
-    .eq("id", circleId)
-    .maybeSingle()
+  // Fetch child profiles for baby age stamp display + upload picker
+  const { data: childProfiles, error: childError } = await (supabase as any)
+    .from("childprofile")
+    .select("id, name, date_of_birth")
+    .eq("circle_id", circleId)
+    .order("date_of_birth", { ascending: true })
 
-  const dateOfBirth: string | null = (circle as any)?.date_of_birth ?? null
+  if (childError) console.error("[timeline] childprofile query failed:", childError.message)
+  console.log(`[timeline] circleId=${circleId} children=${JSON.stringify(childProfiles)}`)
 
-  let query = supabase
+  const children: Array<{ id: string; name: string; date_of_birth: string }> =
+    childProfiles ?? []
+
+  // Fetch circle members for the people picker in the upload form.
+  // Two-step: get user_ids from circlemember, then fetch profiles from user table.
+  const { data: memberRows, error: memberError } = await supabase
+    .from("circlemember")
+    .select("user_id")
+    .eq("circle_id", circleId)
+    .order("created_at")
+
+  if (memberError) console.error("[timeline] members query failed:", memberError.message)
+
+  const memberUserIds = (memberRows ?? []).map((m: any) => m.user_id as string)
+
+  let members: Array<{ userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }> = []
+
+  if (memberUserIds.length > 0) {
+    const { data: profileRows, error: profileError } = await supabase
+      .from("user")
+      .select("id, first_name, last_name, avatar_url")
+      .in("id", memberUserIds)
+
+    if (profileError) console.error("[timeline] member profiles query failed:", profileError.message)
+
+    // Preserve the circlemember order
+    const profileMap = new Map((profileRows ?? []).map((p: any) => [p.id, p]))
+    members = memberUserIds.map((uid) => {
+      const p = profileMap.get(uid)
+      return {
+        userId: uid,
+        firstName: p?.first_name ?? null,
+        lastName: p?.last_name ?? null,
+        avatarUrl: p?.avatar_url ?? null,
+      }
+    })
+  }
+
+  let query = (supabase as any)
     .from("memory")
     .select(`
       id, owner_user_id, former_owner_name, former_owner_user_id, visibility, note, memory_date, milestone_label, milestone_is_custom, created_at,
+      memory_children(child_id, childprofile(id, name, date_of_birth)),
+      memory_members(user_id, user:user_id(id, first_name, last_name, avatar_url)),
       memorymedia(id, storage_path, media_type, file_size),
       user!owner_user_id(first_name, last_name, avatar_url),
       memoryreaction(id, emoji, user_id, guest_name, user!user_id(first_name, last_name)),
@@ -69,7 +110,7 @@ export default defineEventHandler(async (event) => {
       console.error("[timeline] month query failed:", error.message)
       throw createError({ statusCode: 500, message: "Failed to load timeline." })
     }
-    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null, dateOfBirth }
+    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null, children, members }
   }
 
   // Cursor-based pagination for the main timeline
@@ -93,7 +134,7 @@ export default defineEventHandler(async (event) => {
   const last = memoriesWithUrls[memoriesWithUrls.length - 1]
   const nextCursor = last ? `${last.memory_date},${last.id}` : null
 
-  return { memories: memoriesWithUrls, nextCursor, dateOfBirth }
+  return { memories: memoriesWithUrls, nextCursor, children, members }
 })
 
 async function attachSignedUrls(supabase: any, memories: any[]) {

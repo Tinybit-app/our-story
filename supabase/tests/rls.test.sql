@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(18);
+SELECT plan(27);
 
 -- ============================================================
 -- FIXTURES
@@ -312,6 +312,133 @@ SELECT is(
    WHERE id = '30000000-0000-0000-0000-000000000001'),
   0,
   'authenticated user cannot SELECT CircleInvite directly (no permissive policy)'
+);
+
+-- ============================================================
+-- TEST 19: member (user_b) can read ChildProfile in their circle
+-- ============================================================
+-- Seed a child profile as superuser
+RESET ROLE;
+-- Restore Circle A (soft-deleted in test 13) so we can insert ChildProfile
+UPDATE public.Circle SET deleted_at = NULL WHERE id = '10000000-0000-0000-0000-000000000001';
+INSERT INTO public.ChildProfile (id, circle_id, name, date_of_birth)
+VALUES ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Baby Emma', '2024-01-01');
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT is(
+  (SELECT count(*)::int FROM public.ChildProfile WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  1,
+  'member can read ChildProfile in their circle'
+);
+
+-- ============================================================
+-- TEST 20: owner (user_a) can insert a ChildProfile
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+
+SELECT lives_ok(
+  $$INSERT INTO public.ChildProfile (circle_id, name, date_of_birth)
+    VALUES ('10000000-0000-0000-0000-000000000001', 'Baby Noah', '2024-06-01')$$,
+  'owner can insert a ChildProfile'
+);
+
+-- ============================================================
+-- TEST 21: member (user_b, now admin) cannot insert a ChildProfile
+-- (ChildProfile insert is owner-only, not owner+admin)
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT throws_ok(
+  $$INSERT INTO public.ChildProfile (circle_id, name, date_of_birth)
+    VALUES ('10000000-0000-0000-0000-000000000001', 'Sneaky Baby', '2024-03-01')$$,
+  'new row violates row-level security policy for table "childprofile"',
+  'admin (non-owner) cannot insert a ChildProfile'
+);
+
+-- ============================================================
+-- TEST 22: member (user_b / admin) can read memory_children
+--          for a circle-visible memory in their circle
+-- ============================================================
+-- Seed a memory_children record linking the circle memory to Baby Emma
+RESET ROLE;
+INSERT INTO public.memory_children (memory_id, child_id)
+VALUES ('20000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT is(
+  (SELECT count(*)::int FROM public.memory_children
+   WHERE memory_id = '20000000-0000-0000-0000-000000000002'),
+  1,
+  'member can read memory_children for a circle-visible memory they belong to'
+);
+
+-- ============================================================
+-- TEST 23: owner (user_a) can insert a memory_children record
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+
+SELECT lives_ok(
+  $$INSERT INTO public.memory_children (memory_id, child_id)
+    VALUES ('20000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001')$$,
+  'owner can insert memory_children for their own memory'
+);
+
+-- ============================================================
+-- TEST 24: non-owner (user_b / admin) cannot insert memory_children
+--          for a memory they do not own
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT throws_ok(
+  $$INSERT INTO public.memory_children (memory_id, child_id)
+    VALUES ('20000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001')$$,
+  'new row violates row-level security policy for table "memory_children"',
+  'non-owner cannot insert memory_children for a memory they do not own'
+);
+
+-- ============================================================
+-- TEST 25: member (user_b) can read memory_members for a
+--          circle-visible memory in their circle
+-- ============================================================
+-- Seed a memory_members record as superuser (user_b tagged in the circle memory)
+RESET ROLE;
+INSERT INTO public.memory_members (memory_id, user_id)
+VALUES ('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT is(
+  (SELECT count(*)::int FROM public.memory_members
+   WHERE memory_id = '20000000-0000-0000-0000-000000000002'),
+  1,
+  'member can read memory_members for a circle-visible memory they belong to'
+);
+
+-- ============================================================
+-- TEST 26: uploader (user_a) can insert a memory_members record
+--          for a memory they own
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+
+SELECT lives_ok(
+  $$INSERT INTO public.memory_members (memory_id, user_id)
+    VALUES ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')$$,
+  'uploader can insert memory_members for their own memory'
+);
+
+-- ============================================================
+-- TEST 27: non-uploader (user_b / admin) cannot insert memory_members
+--          for a memory they did not upload
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+
+SELECT throws_ok(
+  $$INSERT INTO public.memory_members (memory_id, user_id)
+    VALUES ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003')$$,
+  'new row violates row-level security policy for table "memory_members"',
+  'non-uploader cannot insert memory_members for a memory they did not upload'
 );
 
 SELECT * FROM finish();

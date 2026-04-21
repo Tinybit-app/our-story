@@ -238,10 +238,25 @@
         </template>
       </p>
 
-      <!-- Baby age stamp -->
-      <p v-if="babyAge" class="text-[10px] mt-[3px] font-medium" style="color: hsl(var(--accent))">
-        {{ babyAge }}
+      <!-- Baby age stamps (one per child) -->
+      <p v-for="child in childAges" :key="child.name" class="text-[10px] mt-[3px] leading-tight">
+        <span class="text-muted-foreground/70">{{ child.name }} · </span><span class="font-medium" style="color: hsl(var(--accent))">{{ child.age }}</span>
       </p>
+
+      <!-- Tagged member avatar bubbles -->
+      <div v-if="taggedMembers.length" class="flex items-center justify-center mt-[5px]">
+        <div
+          v-for="(mm, i) in taggedMembersVisible"
+          :key="mm.user_id"
+          class="w-[18px] h-[18px] rounded-full overflow-hidden bg-secondary border-[1.5px] border-card flex items-center justify-center text-[7px] font-bold text-foreground flex-shrink-0"
+          :style="{ marginLeft: i === 0 ? '0' : '-5px', zIndex: taggedMembersVisible.length - i }"
+          :title="mm.user?.first_name ?? ''"
+        >
+          <img v-if="mm.user?.avatar_url" :src="mm.user.avatar_url" class="w-full h-full object-cover" />
+          <span v-else>{{ ((mm.user?.first_name?.[0] ?? '') + (mm.user?.last_name?.[0] ?? '')).toUpperCase() || '?' }}</span>
+        </div>
+        <span v-if="taggedMembersOverflow > 0" class="text-[9px] text-muted-foreground ml-1">+{{ taggedMembersOverflow }}</span>
+      </div>
     </div>
   </article>
 </template>
@@ -255,7 +270,6 @@ const props = defineProps<{
   memory: Memory;
   index: number;
   wide?: boolean;
-  dateOfBirth?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -313,9 +327,16 @@ const formattedDate = computed(() => {
   });
 });
 
-const babyAge = computed(() =>
-  computeBabyAge(props.dateOfBirth ?? null, props.memory.memory_date)
+const childAges = computed(() =>
+  (props.memory.memory_children ?? [])
+    .map((mc) => ({ name: mc.childprofile.name, age: computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date) }))
+    .filter((c) => c.age !== null) as Array<{ name: string; age: string }>
 );
+
+const MAX_AVATARS = 4;
+const taggedMembers = computed(() => props.memory.memory_members ?? []);
+const taggedMembersVisible = computed(() => taggedMembers.value.slice(0, MAX_AVATARS));
+const taggedMembersOverflow = computed(() => Math.max(0, taggedMembers.value.length - MAX_AVATARS));
 
 // owner_user_id is null for detached (former member) memories
 const isFormerMember = computed(() => props.memory.owner_user_id === null);

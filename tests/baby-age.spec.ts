@@ -1,11 +1,15 @@
 /**
  * Baby age stamp E2E tests (build plan §4.10.1)
  *
+ * Model: per-memory child tagging via `memory_children` junction table.
+ * Age stamps only appear when children are explicitly tagged on a memory.
+ *
  * Tests:
- *  1. Baby age stamp appears on polaroid cards when date_of_birth is set
- *  2. Baby age stamp is absent when date_of_birth is null
- *  3. Circle settings shows a birth date input (owner only)
- *  4. Saving a birth date calls PATCH /api/circles/:id with dateOfBirth
+ *  1. Baby age stamp appears on polaroid cards when children are tagged on the memory
+ *  2. Baby age stamp is absent when no children are tagged on the memory
+ *  3. Circle settings shows a children manager (owner only)
+ *  4. Adding a child calls POST /api/circles/:id/children
+ *  5. Upload form shows child picker when the circle has children
  */
 
 import { test, expect } from '@playwright/test'
@@ -17,9 +21,13 @@ test.use({ storageState: 'tests/.auth/user.json' })
 
 const CIRCLE_ID = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa'
 const MEMORY_DATE = '2024-04-15T00:00:00.000Z' // April 15, 2024
-const DATE_OF_BIRTH = '2024-01-01'              // Jan 1, 2024 → "3 months, 2 weeks"
+const CHILD = { id: 'child-1', name: 'Emma', date_of_birth: '2024-01-01' } // Jan 1, 2024 → "3 months, 2 weeks"
 
-function makeMemory(id: string) {
+/**
+ * Build a base memory. Pass `memoryChildren` to tag children on this specific memory —
+ * the age stamp is derived from `memory_children`, not from a global children array.
+ */
+function makeMemory(id: string, memoryChildren: typeof CHILD[] = []) {
   return {
     id,
     owner_user_id: 'user-1',
@@ -35,6 +43,12 @@ function makeMemory(id: string) {
     user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
     memoryreaction: [],
     memorycomment: [],
+    // Per-memory child tags — age stamp is computed from these, not from the top-level children array
+    memory_children: memoryChildren.map((c) => ({
+      child_id: c.id,
+      childprofile: { id: c.id, name: c.name, date_of_birth: c.date_of_birth },
+    })),
+    memory_members: [],
   }
 }
 
@@ -48,9 +62,8 @@ function mockMembership(page: any) {
   )
 }
 
-function mockCircles(page: any, dateOfBirth: string | null) {
+function mockCircles(page: any) {
   return page.route('**/api/circles**', (route: any) => {
-    // Pass non-GET calls through to the real server
     if (route.request().method() !== 'GET') return route.continue()
     route.fulfill({
       status: 200,
@@ -60,7 +73,6 @@ function mockCircles(page: any, dateOfBirth: string | null) {
           id: CIRCLE_ID,
           name: 'Smith Family',
           circle_type: 'parents',
-          date_of_birth: dateOfBirth,
           memberCount: 2,
           role: 'owner',
         }],
@@ -69,16 +81,32 @@ function mockCircles(page: any, dateOfBirth: string | null) {
   })
 }
 
-function mockTimeline(page: any, dateOfBirth: string | null) {
+/**
+ * Mock the timeline API. `circleChildren` is the list of children available for the upload
+ * form picker — it does NOT drive age stamps. Age stamps come from `memory.memory_children`.
+ */
+function mockTimeline(page: any, memories: ReturnType<typeof makeMemory>[], circleChildren: typeof CHILD[] = []) {
   return page.route('**/api/timeline**', (route: any) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        memories: [makeMemory('mem-1')],
+        memories,
         nextCursor: null,
-        dateOfBirth,
+        children: circleChildren,
+        members: [],
       }),
+    })
+  })
+}
+
+function mockChildrenApi(page: any, children: typeof CHILD[]) {
+  return page.route('**/api/circles/*/children**', (route: any) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ children }),
     })
   })
 }
@@ -87,31 +115,35 @@ function mockTimeline(page: any, dateOfBirth: string | null) {
 
 test.describe('Baby age stamp (4.10.1)', () => {
 
-  test('age stamp appears on polaroid card when date_of_birth is set', async ({ page }) => {
+  test('age stamp appears on polaroid card when children are tagged on the memory', async ({ page }) => {
     await mockMembership(page)
-    await mockCircles(page, DATE_OF_BIRTH)
-    await mockTimeline(page, DATE_OF_BIRTH)
+    await mockCircles(page)
+    // Tag CHILD on this specific memory — age stamp derives from memory_children
+    await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
 
     await page.goto('/timeline')
-    // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks"
+    // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks", labeled with the child's name
+    await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('3 months, 2 weeks')).toBeVisible({ timeout: 10_000 })
   })
 
-  test('age stamp is not shown when date_of_birth is null', async ({ page }) => {
+  test('age stamp is not shown when no children are tagged on the memory', async ({ page }) => {
     await mockMembership(page)
-    await mockCircles(page, null)
-    await mockTimeline(page, null)
+    await mockCircles(page)
+    // Memory has no tagged children even though the circle has a child profile
+    await mockTimeline(page, [makeMemory('mem-1')], [CHILD])
 
     await page.goto('/timeline')
     // Wait for the header circle name — confirms timeline loaded
     await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
-    // No age stamp should be present
+    // No age stamp should be present (memory_children is empty)
     await expect(page.getByText(/months|weeks|days old|year/i)).not.toBeVisible()
   })
 
-  test('circle settings shows a birth date input for owners', async ({ page }) => {
+  test('circle settings shows children manager for owners', async ({ page }) => {
     await mockMembership(page)
-    await mockCircles(page, null)
+    await mockCircles(page)
+    await mockChildrenApi(page, [])
     await page.route('**/api/circles/*/members**', (route) =>
       route.fulfill({
         status: 200,
@@ -121,13 +153,14 @@ test.describe('Baby age stamp (4.10.1)', () => {
     )
 
     await page.goto('/circle-settings')
-    await expect(page.getByLabel("Baby's date of birth")).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByRole('button', { name: /save/i })).toBeVisible()
+    await expect(page.getByPlaceholder('Name')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: /add child/i })).toBeVisible()
   })
 
-  test('saving birth date sends PATCH request with dateOfBirth', async ({ page }) => {
+  test('adding a child calls POST /api/circles/:id/children', async ({ page }) => {
     await mockMembership(page)
-    await mockCircles(page, null)
+    await mockCircles(page)
+    await mockChildrenApi(page, [])
     await page.route('**/api/circles/*/members**', (route) =>
       route.fulfill({
         status: 200,
@@ -136,23 +169,50 @@ test.describe('Baby age stamp (4.10.1)', () => {
       })
     )
 
-    let patchBody: any = null
-    await page.route('**/api/circles/**', async (route) => {
-      if (route.request().method() === 'PATCH') {
-        patchBody = JSON.parse(route.request().postData() ?? '{}')
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) })
+    let postBody: any = null
+    await page.route('**/api/circles/*/children', async (route) => {
+      if (route.request().method() === 'POST') {
+        postBody = JSON.parse(route.request().postData() ?? '{}')
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ child: { id: 'child-new', name: 'Emma', date_of_birth: '2024-01-01' } }),
+        })
       } else {
         await route.continue()
       }
     })
 
     await page.goto('/circle-settings')
-    await page.getByLabel("Baby's date of birth").fill('2024-01-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByPlaceholder('Name').fill('Emma')
+    await page.getByLabel('Date of birth').fill('2024-01-01')
+    await page.getByRole('button', { name: /add child/i }).click()
 
-    // Wait briefly for the PATCH to fire
+    // Wait briefly for the POST to fire
     await page.waitForTimeout(500)
-    expect(patchBody).toMatchObject({ dateOfBirth: '2024-01-01' })
+    expect(postBody).toMatchObject({ name: 'Emma', dateOfBirth: '2024-01-01' })
+  })
+
+  test('upload form shows child picker when the circle has children', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page)
+    // Pass CHILD in circleChildren — the timeline API returns this alongside memories
+    // so UploadMemory has the list of children to render in the picker
+    await mockTimeline(page, [makeMemory('mem-1')], [CHILD])
+
+    await page.goto('/timeline')
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+
+    // Trigger the file input to open the upload form with a mock file
+    const fileInput = page.locator('input[type="file"]').first()
+    await fileInput.setInputFiles({
+      name: 'photo.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('fake-image-data'),
+    })
+
+    // The child picker should show the child's name as a selectable chip
+    await expect(page.getByText('Emma')).toBeVisible({ timeout: 5_000 })
   })
 
 })
