@@ -195,12 +195,25 @@
             <template v-if="!editing">
               <div class="flex items-start justify-between gap-2 group/meta">
                 <div class="flex-1 min-w-0">
-                  <p
+                  <div
                     v-if="memory?.milestone_label"
-                    class="text-[10px] font-bold text-accent tracking-[.2em] uppercase mb-1.5"
+                    class="flex items-center gap-1.5 mb-1.5 group/milestone"
                   >
-                    ✦ {{ memory.milestone_label }}
-                  </p>
+                    <p class="text-[10px] font-bold text-accent tracking-[.2em] uppercase leading-none">
+                      ✦ {{ memory.milestone_label }}
+                    </p>
+                    <!-- Share card re-entry point — always accessible after the initial prompt -->
+                    <button
+                      class="opacity-0 group-hover/milestone:opacity-100 flex items-center justify-center w-4 h-4 rounded text-accent/60 hover:text-accent hover:bg-accent/10 transition-all flex-shrink-0"
+                      :title="t('milestone.shareTitle')"
+                      @click="openShareCard"
+                    >
+                      <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                      </svg>
+                    </button>
+                  </div>
                   <p
                     v-if="memory?.note"
                     class="text-[15px] text-foreground leading-relaxed mb-2 overflow-auto break-all"
@@ -898,6 +911,27 @@ async function saveEdit() {
   } finally {
     saving.value = false;
   }
+}
+
+// Open the share card on demand (re-entry point from the ✦ milestone badge)
+function openShareCard() {
+  if (!memory.value?.milestone_label) return;
+  const firstMedia = memory.value.memorymedia.find((m) => m.media_type !== "video");
+  if (!firstMedia?.url) return;
+
+  const childAges = (memory.value.memory_children ?? [])
+    .map((mc) => {
+      const age = computeBabyAge(mc.childprofile.date_of_birth, memory.value!.memory_date);
+      return age ? { name: mc.childprofile.name, age } : null;
+    })
+    .filter(Boolean) as Array<{ name: string; age: string }>;
+
+  shareCardData.value = {
+    photoUrl: firstMedia.thumbnailUrl ?? firstMedia.url,
+    milestoneLabel: memory.value.milestone_label,
+    memoryDate: memory.value.memory_date,
+    childAges,
+  };
 }
 
 type Reaction = {
