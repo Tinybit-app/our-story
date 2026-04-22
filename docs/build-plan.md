@@ -125,8 +125,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 
 ### Milestone 7: Memory Features
 - [x] 7.1 ~~Share to circle (visibility toggle)~~ — **cut.** All uploads are `circle`-visible; no private memory concept within a circle. Users who want a personal-only timeline create a `solo` circle. The `private` visibility value remains in the DB enum and RLS for schema continuity but the UI never exposes it.
-- [ ] 7.2 Milestones (picker + custom milestone)
-- [ ] 7.2.1 Milestone share card — after saving a milestone, offer a branded canvas card (Instagram Stories / WhatsApp format) with "Made with Our Story" CTA — primary acquisition channel for new parents
+- [x] 7.2 Milestones (picker + custom milestone) — free-text `milestone_label` field in upload form and `MemoryModal` edit mode; circle-type-aware quick-pick chips via `useCircleTypeConfig`; label stored and displayed with ✦ badge. `milestone_is_custom` is a dead column (chips store display text directly, not i18n keys — drop in a future migration). 7.2.1 triggers on `milestone_label IS NOT NULL`.
+- [ ] 7.2.1 Milestone share card — after saving a milestone (`milestone_label IS NOT NULL`), offer a branded canvas card (Instagram Stories / WhatsApp format) with "Made with Our Story" CTA — primary acquisition channel for new parents
 - [ ] 7.3 Quick note (text-only memory, no photo required)
 - [ ] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
 - [ ] 7.5 Media download & share (save to device, shareable card with watermark)

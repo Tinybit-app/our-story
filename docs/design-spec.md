@@ -133,13 +133,11 @@ Most consumer apps have no support. Responding to a frustrated user within hours
 
 #### Data model
 ```sql
--- milestone_label supports both i18n preset keys AND free-form custom text
 Memory
-  - milestone_label (nullable)
-  - milestone_is_custom (bool, default false)
-
--- If milestone_is_custom = false: milestone_label is an i18n key ("first_steps")
--- If milestone_is_custom = true:  milestone_label is free-form user text ("10 years of friendship!")
+  - milestone_label (nullable)  -- display text; null means no milestone
+  -- milestone_is_custom is a dead column — chips store display text directly,
+  -- not i18n keys, so the preset/custom distinction is meaningless. Drop in a
+  -- future migration. 7.2.1 triggers on milestone_label IS NOT NULL only.
 ```
 
 ### 3. Context & Memory
@@ -379,7 +377,7 @@ Memory
   - is_collaborative (bool)
   - contributions_open (bool)
   - milestone_label (i18n key, e.g. "first_steps" — nullable)
-  - milestone_is_custom (bool, default false)  -- true when milestone_label is free-form text, false when it's an i18n key
+  - milestone_is_custom (bool, default false)  -- DEAD COLUMN. Chips store display text directly, not i18n keys, so preset/custom distinction is meaningless. Drop in a future additive migration.
 
 MemoryMedia
   - id, memory_id, contribution_id (nullable)
@@ -3935,7 +3933,8 @@ April 2026 · 10 months old
 
 **Rules:**
 - Card is generated client-side (canvas API) — no server round-trip
-- Offered automatically after saving a milestone memory: "Share this milestone?"
+- Triggered when `milestone_label IS NOT NULL` after upload or edit — no dependency on `milestone_is_custom` (dead column)
+- Offered automatically after saving: "Share this milestone?"
 - Share targets: Instagram Stories (9:16), WhatsApp (1:1 square), copy image
 - The Our Story wordmark is small but present — when another new parent asks "what app is that?", the answer is visible
 - No login required to view the landing page the link opens
