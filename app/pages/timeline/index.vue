@@ -632,11 +632,11 @@ const circle = computed(() => {
 });
 const circleId = computed<string | null>(() => circle.value?.id ?? null);
 
-// Anniversary display for couple circles
+// Anniversary display — available to all circle types
 const anniversaryDisplay = computed(() => {
   const c = circle.value
-  if (c?.circle_type !== 'couple') return null
-  return computeAnniversaryDisplay(c?.anniversary_date, new Date(), locale.value)
+  if (!c?.anniversary_date) return null
+  return computeAnniversaryDisplay(c.anniversary_date, new Date(), locale.value, c.circle_type, c.name)
 })
 
 interface ChildProfile { id: string; name: string; date_of_birth: string }

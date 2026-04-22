@@ -2,9 +2,10 @@
  * Anniversary display unit tests (build plan §4.10.4)
  *
  * Covers:
- *   computeAnniversaryDisplay(anniversaryDate, now, locale)
- *   — returns "Year N together · Since [date]" for 1+ years
- *   — returns "N days together · Since [date]" for < 1 year
+ *   computeAnniversaryDisplay(anniversaryDate, now, locale, circleType, circleName)
+ *   — returns "Year N together · Since [date]" for couple circles with 1+ years
+ *   — returns "Year N of [name] · Since [date]" for non-couple circles with 1+ years
+ *   — returns "N days together · Since [date]" for < 1 year (all types)
  *   — returns null for null/undefined input or a future date
  */
 
@@ -55,31 +56,62 @@ describe("computeAnniversaryDisplay", () => {
     expect(result).toContain("Jan 11, 2026")
   })
 
-  // ── one year boundary ────────────────────────────────────────────────────────
+  it("uses 'days together' phrasing for non-couple circles under one year", () => {
+    const result = computeAnniversaryDisplay("2026-01-11", NOW, "en", "family", "The Smiths")
+    expect(result).toMatch(/^100 days together · Since/)
+  })
 
-  it("returns 'Year 2 together' on the exact one-year anniversary", () => {
+  // ── one year boundary — couple ────────────────────────────────────────────────
+
+  it("returns 'Year 2 together' on the exact one-year anniversary (couple)", () => {
     // 2025-04-21 → exactly 1 year before NOW
     const result = computeAnniversaryDisplay("2025-04-21", NOW)
     expect(result).toMatch(/^Year 2 together · Since/)
   })
 
-  it("still shows days for one day before the one-year mark", () => {
+  it("still shows days for one day before the one-year mark (couple)", () => {
     // 2025-04-22 → 364 days before NOW (not yet a full year)
     const result = computeAnniversaryDisplay("2025-04-22", NOW)
     expect(result).toMatch(/^364 days together · Since/)
   })
 
-  // ── multiple years ────────────────────────────────────────────────────────────
+  // ── one year boundary — non-couple ───────────────────────────────────────────
 
-  it("returns 'Year 3 together' for exactly 2 years elapsed", () => {
+  it("returns 'Year 2 of [name]' on the exact one-year anniversary (family)", () => {
+    const result = computeAnniversaryDisplay("2025-04-21", NOW, "en", "family", "The Smiths")
+    expect(result).toMatch(/^Year 2 of The Smiths · Since/)
+  })
+
+  it("returns 'Year 2 of [name]' on the exact one-year anniversary (friends)", () => {
+    const result = computeAnniversaryDisplay("2025-04-21", NOW, "en", "friends", "Barcelona Crew")
+    expect(result).toMatch(/^Year 2 of Barcelona Crew · Since/)
+  })
+
+  // ── multiple years — couple ───────────────────────────────────────────────────
+
+  it("returns 'Year 3 together' for exactly 2 years elapsed (couple)", () => {
     const result = computeAnniversaryDisplay("2024-04-21", NOW)
     expect(result).toMatch(/^Year 3 together · Since/)
   })
 
-  it("returns 'Year 5 together' for 4 full years elapsed", () => {
+  it("returns 'Year 5 together' for 4 full years elapsed (couple)", () => {
     const result = computeAnniversaryDisplay("2022-04-21", NOW)
     expect(result).toMatch(/^Year 5 together · Since/)
   })
+
+  // ── multiple years — non-couple ───────────────────────────────────────────────
+
+  it("returns 'Year 3 of [name]' for exactly 2 years elapsed (family)", () => {
+    const result = computeAnniversaryDisplay("2024-04-21", NOW, "en", "family", "The Smiths")
+    expect(result).toMatch(/^Year 3 of The Smiths · Since/)
+  })
+
+  it("returns 'Year 5 of [name]' for 4 full years elapsed (parents)", () => {
+    const result = computeAnniversaryDisplay("2022-04-21", NOW, "en", "parents", "Johnson Family")
+    expect(result).toMatch(/^Year 5 of Johnson Family · Since/)
+  })
+
+  // ── calendar-awareness ────────────────────────────────────────────────────────
 
   it("is calendar-aware: mid-year date not yet reached counts one fewer year", () => {
     // NOW is April 21; anniversary is June 15 — hasn't happened yet this year
@@ -88,9 +120,15 @@ describe("computeAnniversaryDisplay", () => {
     expect(result).toMatch(/^Year 3 together · Since/)
   })
 
-  it("shows the since date in the multi-year label", () => {
+  it("shows the since date in the multi-year label (couple)", () => {
     const result = computeAnniversaryDisplay("2021-09-14", NOW, "en")
     expect(result).toContain("Sep 14, 2021")
     expect(result).toMatch(/^Year 5 together/)
+  })
+
+  it("shows the since date in the multi-year label (non-couple)", () => {
+    const result = computeAnniversaryDisplay("2021-09-14", NOW, "en", "family", "The Smiths")
+    expect(result).toContain("Sep 14, 2021")
+    expect(result).toMatch(/^Year 5 of The Smiths/)
   })
 })

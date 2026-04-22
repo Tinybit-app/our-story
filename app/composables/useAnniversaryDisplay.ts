@@ -1,21 +1,25 @@
 /**
- * computeAnniversaryDisplay — returns a human-readable anniversary label
- * for couple circles.
+ * computeAnniversaryDisplay — returns a human-readable anniversary label.
  *
  * Rules:
  *   - null/undefined anniversaryDate → null
  *   - future date                    → null (date not yet reached)
  *   - < 1 year                       → "N days together · Since [date]"
- *   - 1+ years                       → "Year N together · Since [date]"
+ *   - 1+ years, couple               → "Year N together · Since [date]"
+ *   - 1+ years, other types          → "Year N of [circleName] · Since [date]"
  *
  * @param anniversaryDate ISO date string (YYYY-MM-DD) or null/undefined
  * @param now             Reference date (defaults to today; injectable for tests)
  * @param locale          BCP 47 locale tag for date formatting (e.g. 'en', 'zh-CN')
+ * @param circleType      Circle type — determines label phrasing
+ * @param circleName      Circle name — used in label for non-couple circles
  */
 export function computeAnniversaryDisplay(
   anniversaryDate: string | null | undefined,
   now: Date = new Date(),
   locale: string = 'en',
+  circleType: string = 'couple',
+  circleName: string = '',
 ): string | null {
   if (!anniversaryDate) return null
 
@@ -49,5 +53,9 @@ export function computeAnniversaryDisplay(
     return `${label} together · Since ${sinceLabel}`
   }
 
-  return `Year ${years + 1} together · Since ${sinceLabel}`
+  if (circleType === 'couple') {
+    return `Year ${years + 1} together · Since ${sinceLabel}`
+  }
+
+  return `Year ${years + 1} of ${circleName} · Since ${sinceLabel}`
 }

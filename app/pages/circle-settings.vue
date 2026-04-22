@@ -153,13 +153,13 @@
 
           <div v-if="isOwner" class="h-px bg-border" />
 
-          <!-- Anniversary date — couple circles, owner only -->
-          <div v-if="isOwner && circle.circle_type === 'couple'">
+          <!-- Anniversary date — all circle types, owner only -->
+          <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
               Anniversary
             </h2>
             <p class="text-xs text-muted-foreground mb-4">
-              Set your anniversary date. It will appear on your timeline as "Year N together" and drive reminder emails.
+              Set an anniversary date to display on your timeline.
             </p>
             <div class="flex gap-2 items-start">
               <input
@@ -191,7 +191,7 @@
             <p v-if="anniversaryError" class="text-xs text-destructive mt-2">{{ anniversaryError }}</p>
           </div>
 
-          <div v-if="isOwner && circle.circle_type === 'couple'" class="h-px bg-border" />
+          <div v-if="isOwner" class="h-px bg-border" />
 
           <!-- Danger zone (owner only) -->
           <div v-if="isOwner">
