@@ -266,21 +266,12 @@ A new parent sharing their Year in Review to Instagram Stories is seen by 200–
 
 ## Memory Model
 
-### Two layers
-| Layer | Description |
-|---|---|
-| Personal Memory | Default for every upload. Private, owned by uploader. |
-| Circle Memory | Intentionally shared. Visible to invited circle members. |
-
-### Key UX action: "Share to Circle"
-- Upload → default to personal
-- One tap: "Add to circle story"
-- Language matters: not "move to shared folder" — "add to circle story"
+### One layer: circle memories
+Every upload goes directly to the circle timeline — all circle members see it. There is no private memory concept within a circle. If a user wants a personal-only timeline, they create a `solo` circle (just themselves).
 
 ### Tab structure
 1. **Circle** (main timeline) — default landing
-2. **My Memories** (private)
-3. **Albums / Milestones**
+2. **Albums / Milestones**
 
 ---
 
@@ -291,10 +282,10 @@ A new parent sharing their Year in Review to Instagram Stories is seen by 200–
 - Recommended internal cap: ~10 circles per account (not user-visible)
 
 ### Visibility within a circle
-- Two levels: `private` (only you) | `circle` (everyone in the circle)
-- Access control within a circle is intentionally not supported in Phase 1–2 — it creates hidden content in a shared space, which breeds confusion and suspicion in family contexts
-- If you need a different audience, create a separate circle — that's a clean boundary with no awkwardness
-- **`group` visibility is Phase 3 only** — the `Group` and `GroupMember` tables are in the schema for future use, but `Memory.visibility` must only accept `"private"` and `"circle"` in Phase 1–2. Do not implement group-scoped memories until Phase 3. The DB enum should reflect this: add `"group"` only in the Phase 3 migration.
+- All memories are `circle`-visible — every member of a circle can see every memory in it.
+- There is no per-memory private toggle. Hidden content in a shared space breeds confusion and suspicion in family contexts; a clean circle boundary is a better solution.
+- If a user wants a smaller audience, they create a separate circle — that's a clean boundary with no awkwardness.
+- `Memory.visibility` is always `"circle"` in Phase 1–2. The `"private"` value exists in the DB enum and RLS for schema continuity but the UI never exposes it. **`group` visibility is Phase 3 only** — do not add it earlier.
 
 ### Invitation System
 - **Magic link** (recommended): generate invite token → `yourapp.com/invite?token=abc123`
@@ -366,13 +357,12 @@ CircleMember
   - role: "owner" | "admin" | "member" | "caregiver"
     -- owner:    billing, delete circle, transfer ownership
     -- admin:    invite/remove members, delete any memory, manage groups
-    -- member:   upload, comment, react, view private memories, delete own
+    -- member:   upload, comment, react, delete own
     -- caregiver: upload to circle timeline, view circle timeline, react (emoji only)
-    --            cannot: comment, view private memories, invite members, delete any memory,
+    --            cannot: comment, invite members, delete any memory,
     --            see member list details beyond first name, access settings
     --            use case: nanny, babysitter, daycare worker — they document the child's day
     --            but should not have social access to the full circle feed or member data
-    --            uploads by caregiver: always visibility="circle", cannot set private
     --            displayed in member list as "[Name] · Caregiver"
     --            on removal: same flow as member deletion (keep or remove their uploads)
   - memorial_status: "active" | "memorial"
@@ -381,7 +371,7 @@ CircleMember
 
 Memory
   - id, owner_user_id, circle_id
-  - visibility: "private" | "circle"  -- Phase 3 adds "group"; do not add earlier
+  - visibility: "circle"  -- always circle; "private" exists in enum/RLS but UI never exposes it. Phase 3 adds "group".
   - note TEXT (nullable)  -- text content; required for Quick Notes (no media), optional for photo/video memories
   - alt_text TEXT (nullable)  -- accessibility description; user-provided or auto-suggested; never auto-generated silently
   - memory_date (user-set or EXIF — drives timeline order)
@@ -688,12 +678,11 @@ Passkeys (Face ID / Touch ID / Windows Hello) are the long-term answer for frict
 | Action | Owner | Admin | Member | Caregiver |
 |---|---|---|---|---|
 | View circle timeline | Yes | Yes | Yes | Yes |
-| Upload to circle timeline | Yes | Yes | Yes | Yes (circle-visible only — cannot set private) |
+| Upload to circle timeline | Yes | Yes | Yes | Yes |
 | Comment | Yes | Yes | Yes | No |
 | React (emoji) | Yes | Yes | Yes | Yes |
 | React (voice/video) | Yes | Yes | Yes | No |
 | Delete own memory | Yes | Yes | Yes | No |
-| View private memories | Yes | Yes | Yes | No |
 | View member list | Yes | Yes | Yes | First name only |
 | Invite members | Yes | Yes | No | No |
 | Remove members | Yes | Yes | No | No |
@@ -716,8 +705,10 @@ USING (
   )
 );
 
--- Private memories only readable by their owner
--- (this is RESTRICTIVE — AND'd with permissive policies above)
+-- Note: "private" visibility exists in the enum and RLS for schema continuity
+-- but the UI never exposes it — all uploads are circle-visible.
+-- These policies are kept in place in case private is introduced later (Phase 3+)
+-- but are effectively no-ops in Phase 1–2 since no memories have visibility='private'.
 CREATE POLICY "private memories owner only"
 ON Memory FOR SELECT
 AS RESTRICTIVE
@@ -725,8 +716,6 @@ USING (
   visibility != 'private' OR owner_user_id = auth.uid()
 );
 
--- Caregivers cannot read private memories
--- (also RESTRICTIVE — must be AND'd, not OR'd, to actually restrict)
 CREATE POLICY "caregiver cannot read private memories"
 ON Memory FOR SELECT
 AS RESTRICTIVE
@@ -1627,7 +1616,7 @@ Sign up (magic link or Google)
 ```
 
 ### Path B — Solo start (invite later, or never)
-For users who want to start privately before inviting anyone — or who simply want a personal timeline.
+For users who want a personal timeline before inviting anyone — or who simply want a personal timeline with no other contributors. They select `circle_type = 'solo'` during onboarding. All memories are still `circle`-visible, but since they are the only member there is no distinction in practice.
 
 ```
 Sign up (magic link or Google)
@@ -1642,10 +1631,6 @@ Solo start UX rules:
 - Invite UI is always present — owner's discretion whether they use it
 - On This Day works exactly the same — daily nostalgia is just as valuable for solo users
 - Timeline looks identical — just no other contributors until someone is invited
-
-**Privacy rule: private memories never auto-share.** When a new member joins, no existing memories change visibility. Every memory the owner created stays at its current `visibility` value until they explicitly change it. The sharing prompt is an invitation — not a default.
-
-This is a trust-critical rule. A user who stored personal memories must never discover that a new member can see them because they forgot to check a setting. Implementation must enforce this at the DB level: `Memory.visibility` is never mutated by the invite/join flow. Only an explicit user action can change visibility to `"circle"`.
 
 **PATCH /api/circles/[id]** — owner-only endpoint for updating `circle_type`. Accepts `{ circleType: z.enum(CIRCLE_TYPES) }`. Used by the type picker in `/circle-settings` (`app/pages/circle-settings.vue`). Implemented at `server/api/circles/[id]/index.patch.ts`. **Implemented (§4.10.5).**
 
@@ -5109,7 +5094,7 @@ Capacitor wraps Nuxt with ~zero code changes. The jump from PWA to native app in
 - [x] Batch upload with per-item EXIF date detection (multi-select, date review before submit) — **Implemented (§5.3)**
 - [ ] Quick note (text-only memory, no photo required)
 - [ ] Add note to memory
-- [ ] Share to circle / keep private
+- [x] All uploads are circle-visible by default — no private memory toggle (solo circle = personal timeline)
 - [ ] Comments + emoji reactions
 - [ ] Milestones (first steps, first birthday, first day of school)
 - [ ] Magic link view-only for grandparents (stateless JWT)

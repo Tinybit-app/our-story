@@ -124,7 +124,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 6.2 Timeline UI — Polaroid Wall (monthly sections, year badge, jump modal, month overflow page)
 
 ### Milestone 7: Memory Features
-- [ ] 7.1 Share to circle (visibility toggle)
+- [x] 7.1 ~~Share to circle (visibility toggle)~~ — **cut.** All uploads are `circle`-visible; no private memory concept within a circle. Users who want a personal-only timeline create a `solo` circle. The `private` visibility value remains in the DB enum and RLS for schema continuity but the UI never exposes it.
 - [ ] 7.2 Milestones (picker + custom milestone)
 - [ ] 7.2.1 Milestone share card — after saving a milestone, offer a branded canvas card (Instagram Stories / WhatsApp format) with "Made with Our Story" CTA — primary acquisition channel for new parents
 - [ ] 7.3 Quick note (text-only memory, no photo required)
