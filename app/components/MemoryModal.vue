@@ -670,6 +670,7 @@
     :milestone-label="shareCardData.milestoneLabel"
     :memory-date="shareCardData.memoryDate"
     :child-ages="shareCardData.childAges"
+    :on-demand="shareCardData.onDemand"
     @close="shareCardData = null"
   />
 </template>
@@ -786,6 +787,7 @@ interface ShareCardData {
   milestoneLabel: string;
   memoryDate: string;
   childAges: Array<{ name: string; age: string }>;
+  onDemand?: boolean;
 }
 const shareCardData = ref<ShareCardData | null>(null);
 const editChildIds = ref<string[]>([]);
@@ -931,6 +933,7 @@ function openShareCard() {
     milestoneLabel: memory.value.milestone_label,
     memoryDate: memory.value.memory_date,
     childAges,
+    onDemand: true,
   };
 }
 

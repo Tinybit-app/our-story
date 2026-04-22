@@ -117,8 +117,9 @@
             </div>
           </div>
 
-          <!-- Skip -->
+          <!-- Skip — only shown when this is a prompt (upload flow), not when opened on demand -->
           <button
+            v-if="!onDemand"
             class="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors mt-3 py-1"
             @click="emit('close')"
           >
@@ -138,6 +139,7 @@ const props = defineProps<{
   milestoneLabel: string
   memoryDate: string
   childAges?: Array<{ name: string; age: string }>
+  onDemand?: boolean
 }>()
 
 const emit = defineEmits<{ close: [] }>()
