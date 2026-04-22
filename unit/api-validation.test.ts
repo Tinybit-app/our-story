@@ -1630,3 +1630,124 @@ describe("PATCH /api/circles/[id] — access control", () => {
   })
 })
 
+// ============================================================
+// POST /api/memories/quick-note — text-only memory creation
+// Route: server/api/memories/quick-note.post.ts
+// ============================================================
+const quickNoteSchema = z.object({
+  circleId: z.string().uuid(),
+  note: z.string().min(1).max(500),
+  memoryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  milestoneLabel: z.string().max(40).nullable().optional(),
+  childIds: z.array(z.string().uuid()).max(10).optional(),
+  memberIds: z.array(z.string().uuid()).max(50).optional(),
+})
+
+describe("POST /api/memories/quick-note — input validation", () => {
+  const VALID_UUID = "123e4567-e89b-12d3-a456-426614174000"
+  const VALID_DATE = "2024-06-15"
+
+  it("accepts minimal valid payload", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "First word today: dada",
+      memoryDate: VALID_DATE,
+    }).success).toBe(true)
+  })
+
+  it("accepts full payload with all optional fields", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "First steps!",
+      memoryDate: VALID_DATE,
+      milestoneLabel: "First steps",
+      childIds: [VALID_UUID],
+      memberIds: [VALID_UUID],
+    }).success).toBe(true)
+  })
+
+  it("accepts null milestoneLabel (clearing a milestone)", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "Just a note",
+      memoryDate: VALID_DATE,
+      milestoneLabel: null,
+    }).success).toBe(true)
+  })
+
+  it("rejects empty note", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "",
+      memoryDate: VALID_DATE,
+    }).success).toBe(false)
+  })
+
+  it("rejects note longer than 500 characters", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "a".repeat(501),
+      memoryDate: VALID_DATE,
+    }).success).toBe(false)
+  })
+
+  it("rejects milestoneLabel longer than 40 characters", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "A note",
+      memoryDate: VALID_DATE,
+      milestoneLabel: "a".repeat(41),
+    }).success).toBe(false)
+  })
+
+  it("rejects invalid circleId (not a UUID)", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: "not-a-uuid",
+      note: "A note",
+      memoryDate: VALID_DATE,
+    }).success).toBe(false)
+  })
+
+  it("rejects memoryDate with wrong format (DD-MM-YYYY)", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "A note",
+      memoryDate: "15-06-2024",
+    }).success).toBe(false)
+  })
+
+  it("rejects missing memoryDate", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "A note",
+    }).success).toBe(false)
+  })
+
+  it("rejects childIds list exceeding 10 items", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "A note",
+      memoryDate: VALID_DATE,
+      childIds: Array(11).fill(VALID_UUID),
+    }).success).toBe(false)
+  })
+
+  it("rejects memberIds list exceeding 50 items", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "A note",
+      memoryDate: VALID_DATE,
+      memberIds: Array(51).fill(VALID_UUID),
+    }).success).toBe(false)
+  })
+
+  it("rejects invalid UUID inside childIds", () => {
+    expect(quickNoteSchema.safeParse({
+      circleId: VALID_UUID,
+      note: "A note",
+      memoryDate: VALID_DATE,
+      childIds: ["not-a-uuid"],
+    }).success).toBe(false)
+  })
+})
+

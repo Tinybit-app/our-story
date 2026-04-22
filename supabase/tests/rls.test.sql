@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(31);
+SELECT plan(33);
 
 -- ============================================================
 -- FIXTURES
@@ -259,7 +259,54 @@ SELECT is(
 SET LOCAL ROLE authenticated;
 
 -- ============================================================
--- TEST 19: owner (user_a) can update circle name
+-- TEST 19: circle member (user_a) can insert a Memory (quick note)
+-- Policy: "members can insert memories" — owner_user_id = auth.uid()
+--         AND circle_id IN get_my_circle_ids()
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility, note, memory_date)
+    VALUES (
+      '30000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000001',
+      'circle',
+      'First word today: dada',
+      '2024-06-15'
+    )$$,
+  'circle member can insert a memory (quick note) into their own circle'
+);
+
+-- ============================================================
+-- TEST 20: non-member (user_c) cannot insert a Memory into Circle A
+-- ============================================================
+-- user_c has no CircleMember row for Circle A
+RESET ROLE;
+INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+VALUES ('00000000-0000-0000-0000-000000000003', 'user_c@test.com', '', now(), now(), now())
+ON CONFLICT DO NOTHING;
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000003');
+
+SELECT throws_ok(
+  $$INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility, note, memory_date)
+    VALUES (
+      '30000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003',
+      '10000000-0000-0000-0000-000000000001',
+      'circle',
+      'Sneaky note',
+      '2024-06-15'
+    )$$,
+  'new row violates row-level security policy for table "memory"',
+  'non-member cannot insert a memory into a circle they do not belong to'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 32: owner (user_a) can update circle name
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000001');
 SET LOCAL ROLE authenticated;
@@ -271,7 +318,7 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- TEST 20: admin (user_b) cannot update circle name
+-- TEST 33: admin (user_b) cannot update circle name
 -- (Circle UPDATE policy is owner-only — silently no-ops)
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000002');
