@@ -243,8 +243,8 @@ test.describe('Baby age stamp (4.10.1)', () => {
     )
 
     await page.goto('/timeline')
-    // Open the memory by clicking its card (the note text identifies it)
-    await page.getByText('A cute moment').click()
+    // Open the memory by clicking its card — use first() since the note text can appear in multiple locations
+    await page.getByText('A cute moment').first().click()
 
     // Wait for modal to open — the caption tab is default
     // Both name and age must be visible in the modal caption area

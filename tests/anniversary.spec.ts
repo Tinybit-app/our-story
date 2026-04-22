@@ -171,7 +171,7 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     })
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(page.getByText('Anniversary')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Anniversary', { exact: true })).toBeVisible({ timeout: 10_000 })
     await expect(page.locator('input[aria-label="Anniversary date"]')).toBeVisible()
   })
 
@@ -188,7 +188,7 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
     // Wait for the settings page to load (danger zone is always present)
     await expect(page.getByText(/danger zone/i)).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('Anniversary')).not.toBeVisible()
+    await expect(page.getByText('Anniversary', { exact: true })).not.toBeVisible()
     await expect(page.locator('input[aria-label="Anniversary date"]')).not.toBeVisible()
   })
 
@@ -219,9 +219,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
     await expect(page.locator('input[aria-label="Anniversary date"]')).toBeVisible({ timeout: 10_000 })
 
-    // Set a date and save
+    // Set a date and save — scope to the anniversary section to avoid matching the circle type Save button
     await page.locator('input[aria-label="Anniversary date"]').fill('2022-06-15')
-    await page.getByRole('button', { name: 'Save' }).click()
+    await page.locator('input[aria-label="Anniversary date"]').locator('../..').getByRole('button', { name: 'Save' }).click()
 
     await page.waitForTimeout(500)
     expect(patchBody).toMatchObject({ anniversaryDate: '2022-06-15' })
