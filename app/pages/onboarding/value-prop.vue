@@ -23,81 +23,76 @@
 
           <!-- Screen 1: The pain -->
           <template v-if="currentScreen === 1">
-            <!-- Typographic chat illustration — no emoji -->
             <div class="rounded-2xl bg-card border border-border px-5 py-5 mb-8 space-y-3 overflow-hidden relative">
-              <p class="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest mb-4">Family Chat</p>
+              <p class="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest mb-4">{{ t('valueProp.screen1.chatLabel') }}</p>
               <div class="space-y-2.5">
                 <div class="flex gap-2.5 items-start opacity-40">
                   <div class="w-[2px] rounded-full bg-accent self-stretch shrink-0" />
                   <div>
-                    <p class="text-[10px] text-muted-foreground font-medium mb-0.5">Mum</p>
-                    <p class="text-xs text-foreground/70 leading-snug">"Did anyone see the photo from today?"</p>
+                    <p class="text-[10px] text-muted-foreground font-medium mb-0.5">{{ t('valueProp.screen1.chatName1') }}</p>
+                    <p class="text-xs text-foreground/70 leading-snug">{{ t('valueProp.screen1.chatMsg1') }}</p>
                   </div>
                 </div>
                 <div class="flex gap-2.5 items-start opacity-60">
                   <div class="w-[2px] rounded-full bg-accent self-stretch shrink-0" />
                   <div>
-                    <p class="text-[10px] text-muted-foreground font-medium mb-0.5">Dad</p>
-                    <p class="text-xs text-foreground/70 leading-snug">"Which one? There are 200 messages…"</p>
+                    <p class="text-[10px] text-muted-foreground font-medium mb-0.5">{{ t('valueProp.screen1.chatName2') }}</p>
+                    <p class="text-xs text-foreground/70 leading-snug">{{ t('valueProp.screen1.chatMsg2') }}</p>
                   </div>
                 </div>
                 <div class="flex gap-2.5 items-start">
                   <div class="w-[2px] rounded-full bg-border self-stretch shrink-0" />
                   <div>
-                    <p class="text-[10px] text-muted-foreground font-medium mb-0.5">You</p>
-                    <p class="text-xs text-muted-foreground leading-snug italic">Scrolling… scrolling…</p>
+                    <p class="text-[10px] text-muted-foreground font-medium mb-0.5">{{ t('valueProp.screen1.chatName3') }}</p>
+                    <p class="text-xs text-muted-foreground leading-snug italic">{{ t('valueProp.screen1.chatMsg3') }}</p>
                   </div>
                 </div>
               </div>
             </div>
             <h1 class="text-[1.6rem] font-bold text-foreground leading-[1.25] tracking-tight mb-3">
-              Photos get buried.<br>
-              Moments get lost.<br>
-              <span class="text-accent">They deserved better.</span>
+              {{ t('valueProp.screen1.heading1') }}<br>
+              {{ t('valueProp.screen1.heading2') }}<br>
+              <span class="text-accent">{{ t('valueProp.screen1.heading3') }}</span>
             </h1>
             <p class="text-sm text-muted-foreground leading-relaxed">
-              Our Story keeps the memories that matter — beautifully, and forever.
+              {{ t('valueProp.screen1.body') }}
             </p>
           </template>
 
           <!-- Screen 2: The solution -->
           <template v-else-if="currentScreen === 2">
-            <!-- Memory timeline illustration -->
             <div class="rounded-2xl bg-card border border-border px-5 py-5 mb-8">
               <div class="flex items-stretch gap-4">
-                <!-- Timeline spine -->
                 <div class="flex flex-col items-center pt-1.5 pb-1">
                   <div class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
                   <div class="w-[1px] flex-1 bg-gradient-to-b from-accent/40 to-border/30 my-1" />
                   <div class="w-1.5 h-1.5 rounded-full bg-border shrink-0" />
                 </div>
-                <!-- Entries -->
                 <div class="flex-1 space-y-4">
                   <div>
-                    <p class="font-['Caveat'] text-base text-accent leading-none mb-0.5">June 12, 2024</p>
-                    <p class="text-sm font-semibold text-foreground">First steps</p>
-                    <p class="text-[11px] text-muted-foreground mt-0.5">3 reactions from the family</p>
+                    <p class="font-['Caveat'] text-base text-accent leading-none mb-0.5">{{ t('valueProp.screen2.date1') }}</p>
+                    <p class="text-sm font-semibold text-foreground">{{ t('valueProp.screen2.milestone1') }}</p>
+                    <p class="text-[11px] text-muted-foreground mt-0.5">{{ t('valueProp.screen2.reactions1') }}</p>
                   </div>
                   <div class="opacity-55">
-                    <p class="font-['Caveat'] text-base text-muted-foreground leading-none mb-0.5">August 3, 2024</p>
-                    <p class="text-sm font-semibold text-foreground">First word: "Dada"</p>
-                    <p class="text-[11px] text-muted-foreground mt-0.5">Milestone</p>
+                    <p class="font-['Caveat'] text-base text-muted-foreground leading-none mb-0.5">{{ t('valueProp.screen2.date2') }}</p>
+                    <p class="text-sm font-semibold text-foreground">{{ t('valueProp.screen2.milestone2') }}</p>
+                    <p class="text-[11px] text-muted-foreground mt-0.5">{{ t('valueProp.screen2.milestoneLabel') }}</p>
                   </div>
                 </div>
               </div>
             </div>
             <h1 class="text-[1.6rem] font-bold text-foreground leading-[1.25] tracking-tight mb-3">
-              Your circle's story,<br>
-              <span class="text-accent">beautifully kept.</span>
+              {{ t('valueProp.screen2.heading1') }}<br>
+              <span class="text-accent">{{ t('valueProp.screen2.heading2') }}</span>
             </h1>
             <p class="text-sm text-muted-foreground leading-relaxed">
-              Notes, milestones, and reactions — not just another folder of files.
+              {{ t('valueProp.screen2.body') }}
             </p>
           </template>
 
           <!-- Screen 3: The promise -->
           <template v-else>
-            <!-- Device illustration using SVG lines -->
             <div class="rounded-2xl bg-card border border-border px-5 py-6 mb-8 flex items-center justify-around gap-2">
               <!-- Phone -->
               <div class="flex flex-col items-center gap-2">
@@ -106,7 +101,7 @@
                   <line x1="14" y1="5.5" x2="22" y2="5.5" stroke-width="1.5" />
                   <circle cx="18" cy="53" r="2" />
                 </svg>
-                <p class="text-[11px] text-muted-foreground text-center leading-tight">iPhone &<br>Android</p>
+                <p class="text-[11px] text-muted-foreground text-center leading-tight whitespace-pre-line">{{ t('valueProp.screen3.deviceLabel') }}</p>
               </div>
               <!-- Divider -->
               <div class="h-12 w-px bg-border" />
@@ -116,15 +111,15 @@
                   <rect x="2" y="2" width="44" height="32" rx="4" />
                   <polyline points="2,2 24,20 46,2" />
                 </svg>
-                <p class="text-[11px] text-muted-foreground text-center leading-tight">View by<br>email link</p>
+                <p class="text-[11px] text-muted-foreground text-center leading-tight whitespace-pre-line">{{ t('valueProp.screen3.emailLabel') }}</p>
               </div>
             </div>
             <h1 class="text-[1.6rem] font-bold text-foreground leading-[1.25] tracking-tight mb-3">
-              Works for<br>
-              <span class="text-accent">everyone.</span>
+              {{ t('valueProp.screen3.heading1') }}<br>
+              <span class="text-accent">{{ t('valueProp.screen3.heading2') }}</span>
             </h1>
             <p class="text-sm text-muted-foreground leading-relaxed">
-              iPhone, Android, or just an email. No one in the family gets left out.
+              {{ t('valueProp.screen3.body') }}
             </p>
           </template>
 
@@ -135,23 +130,23 @@
       <div class="mt-10 flex flex-col gap-3">
         <button
           v-if="currentScreen < 3"
-          @click="next"
           class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+          @click="next"
         >
-          Next
+          {{ t('valueProp.next') }}
         </button>
         <button
           v-else
-          @click="finish"
           class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+          @click="finish"
         >
-          Start your story
+          {{ t('valueProp.start') }}
         </button>
         <button
-          @click="skip"
           class="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+          @click="skip"
         >
-          Skip
+          {{ t('valueProp.skip') }}
         </button>
       </div>
 
@@ -162,6 +157,7 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'onboarding' })
 
+const { t } = useI18n()
 const router = useRouter()
 const { hasSeen, markAsSeen } = useValuePropSeen()
 const currentScreen = ref(1)

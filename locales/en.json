@@ -426,6 +426,42 @@
       "restoreError": "Failed to restore circle. Please try again."
     }
   },
+  "valueProp": {
+    "screen1": {
+      "chatLabel": "Family Chat",
+      "chatName1": "Mum",
+      "chatMsg1": "\"Did anyone see the photo from today?\"",
+      "chatName2": "Dad",
+      "chatMsg2": "\"Which one? There are 200 messages…\"",
+      "chatName3": "You",
+      "chatMsg3": "Scrolling… scrolling…",
+      "heading1": "Photos get buried.",
+      "heading2": "Moments get lost.",
+      "heading3": "They deserved better.",
+      "body": "Our Story keeps the memories that matter — beautifully, and forever."
+    },
+    "screen2": {
+      "date1": "June 12, 2024",
+      "milestone1": "First steps",
+      "reactions1": "3 reactions from the family",
+      "date2": "August 3, 2024",
+      "milestone2": "First word: \"Dada\"",
+      "milestoneLabel": "Milestone",
+      "heading1": "Your circle's story,",
+      "heading2": "beautifully kept.",
+      "body": "Notes, milestones, and reactions — not just another folder of files."
+    },
+    "screen3": {
+      "deviceLabel": "iPhone &\nAndroid",
+      "emailLabel": "View by\nemail link",
+      "heading1": "Works for",
+      "heading2": "everyone.",
+      "body": "iPhone, Android, or just an email. No one in the family gets left out."
+    },
+    "next": "Next",
+    "start": "Start your story",
+    "skip": "Skip"
+  },
   "milestone": {
     "shareLabel": "Milestone",
     "shareTitle": "Share this milestone",

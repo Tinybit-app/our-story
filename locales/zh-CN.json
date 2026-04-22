@@ -273,6 +273,42 @@
       "restoreError": "恢复圈子失败，请重试。"
     }
   },
+  "valueProp": {
+    "screen1": {
+      "chatLabel": "家庭群聊",
+      "chatName1": "妈妈",
+      "chatMsg1": "「有人看到今天的照片了吗？」",
+      "chatName2": "爸爸",
+      "chatMsg2": "「哪张？已经有200条消息了……」",
+      "chatName3": "你",
+      "chatMsg3": "滑啊滑……",
+      "heading1": "照片被埋没。",
+      "heading2": "记忆渐消散。",
+      "heading3": "它们本该被珍藏。",
+      "body": "Our Story 帮你守护那些值得铭记的时刻 — 美好，永恒。"
+    },
+    "screen2": {
+      "date1": "2024年6月12日",
+      "milestone1": "第一步",
+      "reactions1": "3 位家人的回应",
+      "date2": "2024年8月3日",
+      "milestone2": "第一个字：「爸爸」",
+      "milestoneLabel": "里程碑",
+      "heading1": "你们的故事，",
+      "heading2": "被美好地珍藏。",
+      "body": "备注、里程碑与回应 — 不只是一个文件夹。"
+    },
+    "screen3": {
+      "deviceLabel": "iPhone 与\nAndroid",
+      "emailLabel": "通过邮件\n链接查看",
+      "heading1": "人人",
+      "heading2": "都能用。",
+      "body": "iPhone、Android，或只是一封邮件。家里没有人会被落下。"
+    },
+    "next": "下一步",
+    "start": "开始你的故事",
+    "skip": "跳过"
+  },
   "milestone": {
     "shareLabel": "里程碑",
     "shareTitle": "分享这个里程碑",
