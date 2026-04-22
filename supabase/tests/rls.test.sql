@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(29);
+SELECT plan(31);
 
 -- ============================================================
 -- FIXTURES
@@ -255,6 +255,38 @@ SELECT is(
    WHERE id = '10000000-0000-0000-0000-000000000001'),
   '2021-09-14'::date,
   'admin (non-owner) cannot update anniversary_date — row unchanged'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 19: owner (user_a) can update circle name
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$UPDATE public.Circle SET name = 'Renamed Circle'
+    WHERE id = '10000000-0000-0000-0000-000000000001'$$,
+  'owner can update circle name'
+);
+
+-- ============================================================
+-- TEST 20: admin (user_b) cannot update circle name
+-- (Circle UPDATE policy is owner-only — silently no-ops)
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+UPDATE public.Circle
+  SET name = 'Hacked Name'
+  WHERE id = '10000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT name FROM public.Circle
+   WHERE id = '10000000-0000-0000-0000-000000000001'),
+  'Renamed Circle',
+  'admin (non-owner) cannot update circle name — row unchanged'
 );
 SET LOCAL ROLE authenticated;
 

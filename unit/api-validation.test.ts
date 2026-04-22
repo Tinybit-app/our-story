@@ -1545,10 +1545,9 @@ describe("GET /api/invites/[token]/status — invite pre-validation", () => {
 })
 
 // ============================================================
-// PATCH /api/circles/[id] — circle type update
-// Owner-only endpoint to change circle_type (e.g. solo → couple).
-// Used by the solo invite nudge when the owner wants to switch type
-// before inviting their first member.
+// PATCH /api/circles/[id] — circle settings update
+// Owner-only endpoint to update name, circle_type, and/or anniversary_date.
+// At least one field must be provided.
 // ============================================================
 const CIRCLE_TYPES_ALL = [
   "parents", "couple", "family", "friends",
@@ -1556,7 +1555,11 @@ const CIRCLE_TYPES_ALL = [
 ] as const
 
 const patchCircleSchema = z.object({
-  circleType: z.enum(CIRCLE_TYPES_ALL),
+  name: z.string().min(1).max(100).optional(),
+  circleType: z.enum(CIRCLE_TYPES_ALL).optional(),
+  anniversaryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+}).refine((d) => d.name !== undefined || d.circleType !== undefined || d.anniversaryDate !== undefined, {
+  message: "At least one field (name, circleType, or anniversaryDate) must be provided.",
 })
 
 describe("PATCH /api/circles/[id] — input validation", () => {
@@ -1566,36 +1569,64 @@ describe("PATCH /api/circles/[id] — input validation", () => {
     }
   })
 
+  it("accepts a valid name", () => {
+    expect(patchCircleSchema.safeParse({ name: "The Smiths" }).success).toBe(true)
+  })
+
+  it("accepts a valid anniversaryDate", () => {
+    expect(patchCircleSchema.safeParse({ anniversaryDate: "2022-06-15" }).success).toBe(true)
+  })
+
+  it("accepts null anniversaryDate (clear)", () => {
+    expect(patchCircleSchema.safeParse({ anniversaryDate: null }).success).toBe(true)
+  })
+
+  it("accepts all three fields together", () => {
+    expect(patchCircleSchema.safeParse({
+      name: "The Smiths",
+      circleType: "family",
+      anniversaryDate: "2020-01-01",
+    }).success).toBe(true)
+  })
+
   it("rejects an unknown circleType", () => {
     expect(patchCircleSchema.safeParse({ circleType: "household" }).success).toBe(false)
   })
 
-  it("rejects a missing circleType", () => {
-    expect(patchCircleSchema.safeParse({}).success).toBe(false)
+  it("rejects empty name", () => {
+    expect(patchCircleSchema.safeParse({ name: "" }).success).toBe(false)
   })
 
-  it("rejects circleType as null", () => {
-    expect(patchCircleSchema.safeParse({ circleType: null }).success).toBe(false)
+  it("rejects name longer than 100 characters", () => {
+    expect(patchCircleSchema.safeParse({ name: "a".repeat(101) }).success).toBe(false)
+  })
+
+  it("rejects anniversaryDate with wrong format", () => {
+    expect(patchCircleSchema.safeParse({ anniversaryDate: "15-06-2022" }).success).toBe(false)
+  })
+
+  it("rejects when no fields are provided", () => {
+    expect(patchCircleSchema.safeParse({}).success).toBe(false)
   })
 })
 
 describe("PATCH /api/circles/[id] — access control", () => {
   type Role = "owner" | "admin" | "member"
 
-  function canUpdateCircleType(role: Role): boolean {
+  function canUpdateCircleSettings(role: Role): boolean {
     return role === "owner"
   }
 
-  it("allows the owner to change the circle type", () => {
-    expect(canUpdateCircleType("owner")).toBe(true)
+  it("allows the owner to update circle settings", () => {
+    expect(canUpdateCircleSettings("owner")).toBe(true)
   })
 
-  it("blocks an admin from changing the circle type", () => {
-    expect(canUpdateCircleType("admin")).toBe(false)
+  it("blocks an admin from updating circle settings", () => {
+    expect(canUpdateCircleSettings("admin")).toBe(false)
   })
 
-  it("blocks a member from changing the circle type", () => {
-    expect(canUpdateCircleType("member")).toBe(false)
+  it("blocks a member from updating circle settings", () => {
+    expect(canUpdateCircleSettings("member")).toBe(false)
   })
 })
 
