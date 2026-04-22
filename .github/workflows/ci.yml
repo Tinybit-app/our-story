@@ -43,10 +43,13 @@ jobs:
 
           # Try every known format across CLI versions, then fall back to JWT regex
           ANON_KEY=$(echo "$STATUS"     | grep -i 'anon key:'                 | awk '{print $NF}')
-          [ -z "$ANON_KEY" ] && ANON_KEY=$(echo "$STATUS_ENV" | grep -E '^ANON_KEY=|^PUBLISHABLE_KEY=' | head -1 | cut -d= -f2-)
+          # Prefer ANON_KEY (JWT) over PUBLISHABLE_KEY (new non-JWT format); strip surrounding quotes from --output env format
+          [ -z "$ANON_KEY" ] && ANON_KEY=$(echo "$STATUS_ENV" | grep '^ANON_KEY=' | head -1 | cut -d= -f2- | tr -d '"')
+          [ -z "$ANON_KEY" ] && ANON_KEY=$(echo "$STATUS_ENV" | grep '^PUBLISHABLE_KEY=' | head -1 | cut -d= -f2- | tr -d '"')
 
           SERVICE_KEY=$(echo "$STATUS"     | grep -i 'service_role key:'          | awk '{print $NF}')
-          [ -z "$SERVICE_KEY" ] && SERVICE_KEY=$(echo "$STATUS_ENV" | grep -E '^SERVICE_ROLE_KEY=|^SECRET_KEY=' | head -1 | cut -d= -f2-)
+          # Prefer SERVICE_ROLE_KEY (JWT) over SECRET_KEY (new non-JWT sb_secret_... format); strip surrounding quotes from --output env format
+          [ -z "$SERVICE_KEY" ] && SERVICE_KEY=$(echo "$STATUS_ENV" | grep '^SERVICE_ROLE_KEY=' | head -1 | cut -d= -f2- | tr -d '"')
           # Last resort: extract the second JWT token from the full output (anon is first, service role is second)
           [ -z "$SERVICE_KEY" ] && SERVICE_KEY=$(echo "$STATUS$STATUS_ENV" | grep -oE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' | sed -n '2p')
 
