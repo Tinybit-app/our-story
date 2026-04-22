@@ -272,5 +272,18 @@
       "restoreSuccess": "「{name}」已恢复。",
       "restoreError": "恢复圈子失败，请重试。"
     }
+  },
+  "milestone": {
+    "shareLabel": "里程碑",
+    "shareTitle": "分享这个里程碑",
+    "shareSubtitle": "下载精美卡片，分享到 Instagram 限时动态或微信。",
+    "formatStories": "竖版（9:16）",
+    "formatSquare": "方版（1:1）",
+    "saveInstagram": "保存到 Instagram 动态",
+    "saveWhatsapp": "保存到微信",
+    "copyImage": "复制图片",
+    "copied": "已复制！",
+    "skip": "暂时跳过",
+    "corsError": "无法加载照片，请先下载后再试。"
   }
 }

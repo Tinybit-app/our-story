@@ -3931,13 +3931,15 @@ April 2026 · 10 months old
     ourstory.tinybit.app
 ```
 
-**Rules:**
-- Card is generated client-side (canvas API) — no server round-trip
+**Rules (implemented — §7.2.1):**
+- Card is generated client-side (`MilestoneShareModal`, canvas API) — no server round-trip
 - Triggered when `milestone_label IS NOT NULL` after upload or edit — no dependency on `milestone_is_custom` (dead column)
-- Offered automatically after saving: "Share this milestone?"
-- Share targets: Instagram Stories (9:16), WhatsApp (1:1 square), copy image
-- The Our Story wordmark is small but present — when another new parent asks "what app is that?", the answer is visible
-- No login required to view the landing page the link opens
+  - Upload: shown automatically after a single upload with milestone completes (batch uploads skip to avoid multi-prompt complexity)
+  - Edit: shown when milestone label transitions from null → non-null (i.e., newly set, not just modified)
+- Two formats with UI toggle: 9:16 (Instagram Stories, 1080×1920) and 1:1 square (WhatsApp, 1080×1080)
+- Share actions: Web Share API with file on mobile; download fallback on desktop; clipboard copy
+- CORS handling: upload uses local blob URL (no CORS issue); MemoryModal uses signed URL with `crossOrigin=anonymous`; graceful error state if blocked
+- The Our Story wordmark is small but present — "what app is that?" answer is visible in every share
 
 **Why this drives acquisition:**
 New parents share milestone moments constantly. They're already going to share the photo somewhere. Offering a beautifully formatted card makes Our Story the *format* for that share — the app's name spreads as a side effect, exactly as Nike Run Club's post-run card made NRC synonymous with running photos.

@@ -574,11 +574,22 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Milestone share card — shown after a single upload with a milestone label -->
+    <MilestoneShareModal
+      v-if="pendingShareCard"
+      :photo-url="pendingShareCard.photoUrl"
+      :milestone-label="pendingShareCard.milestoneLabel"
+      :memory-date="pendingShareCard.memoryDate"
+      :child-ages="pendingShareCard.childAges"
+      @close="onShareCardClose"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import exifr from "exifr";
+import { computeBabyAge } from "~/composables/useBabyAge";
 const { t } = useI18n();
 
 interface ChildProfile {
@@ -625,12 +636,20 @@ const emit = defineEmits<{ uploaded: [] }>();
 const supabase = useSupabaseClient();
 const config = useRuntimeConfig();
 
+interface ShareCardData {
+  photoUrl: string;
+  milestoneLabel: string;
+  memoryDate: string;
+  childAges: Array<{ name: string; age: string }>;
+}
+
 const fileInput = ref<HTMLInputElement>();
 const items = ref<UploadItem[]>([]);
 const groupDate = ref(today());
 const groupChildIds = ref<string[]>([]);
 const groupMemberIds = ref<string[]>([]);
 const globalError = ref("");
+const pendingShareCard = ref<ShareCardData | null>(null);
 
 function memberInitials(member: CircleMember): string {
   return (
@@ -860,12 +879,39 @@ async function uploadAll() {
   }
 }
 
-// Auto-close with a brief checkmark moment after all uploads succeed
+// Auto-close with a brief checkmark moment after all uploads succeed.
+// For a single upload with a milestone label, show the share card prompt first.
 watch(allDone, (done) => {
   if (!done) return;
   emit("uploaded");
-  setTimeout(() => cancel(), 1000);
+
+  const item = items.value[0];
+  if (items.value.length === 1 && item?.milestoneLabel.trim()) {
+    const childAges = item.selectedChildIds
+      .map((id) => props.children?.find((c) => c.id === id))
+      .filter(Boolean)
+      .map((child) => {
+        const age = computeBabyAge(child!.date_of_birth, `${item.date}T00:00:00Z`);
+        return age ? { name: child!.name, age } : null;
+      })
+      .filter(Boolean) as Array<{ name: string; age: string }>;
+
+    pendingShareCard.value = {
+      photoUrl: item.previewUrl,
+      milestoneLabel: item.milestoneLabel.trim(),
+      memoryDate: `${item.date}T00:00:00Z`,
+      childAges,
+    };
+    // The upload sheet stays open behind the share modal; cancel() is called after share dismissed
+  } else {
+    setTimeout(() => cancel(), 1000);
+  }
 });
+
+function onShareCardClose() {
+  pendingShareCard.value = null;
+  cancel();
+}
 
 function cancel() {
   items.value.forEach((i) => URL.revokeObjectURL(i.previewUrl));

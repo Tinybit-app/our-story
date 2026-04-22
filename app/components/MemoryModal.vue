@@ -649,6 +649,16 @@
       <!-- /polaroid -->
     </div>
   </Teleport>
+
+  <!-- Milestone share card — offered when a milestone label is newly set in edit mode -->
+  <MilestoneShareModal
+    v-if="shareCardData"
+    :photo-url="shareCardData.photoUrl"
+    :milestone-label="shareCardData.milestoneLabel"
+    :memory-date="shareCardData.memoryDate"
+    :child-ages="shareCardData.childAges"
+    @close="shareCardData = null"
+  />
 </template>
 
 <script setup lang="ts">
@@ -757,6 +767,14 @@ const noteExpanded = ref(false);
 const saving = ref(false);
 const editNote = ref("");
 const editMilestone = ref("");
+
+interface ShareCardData {
+  photoUrl: string;
+  milestoneLabel: string;
+  memoryDate: string;
+  childAges: Array<{ name: string; age: string }>;
+}
+const shareCardData = ref<ShareCardData | null>(null);
 const editChildIds = ref<string[]>([]);
 const editMemberIds = ref<string[]>([]);
 const editTextareaEl = ref<HTMLTextAreaElement>();
@@ -844,6 +862,8 @@ async function saveEdit() {
       })
       .filter(Boolean) as Memory["memory_members"];
 
+    const prevMilestone = memory.value.milestone_label;
+
     // Propagate to parent memoriesFlat
     emit("update", {
       id: updated.id,
@@ -853,6 +873,26 @@ async function saveEdit() {
       memory_members: updatedMemoryMembers,
     });
     editing.value = false;
+
+    // Offer share card when a milestone is newly set (not just edited) and a photo is available
+    if (updated.milestone_label && !prevMilestone) {
+      const firstMedia = memory.value.memorymedia.find((m) => m.media_type !== "video");
+      if (firstMedia?.url) {
+        const childAges = updatedMemoryChildren
+          .map((mc) => {
+            const age = computeBabyAge(mc.childprofile.date_of_birth, memory.value!.memory_date);
+            return age ? { name: mc.childprofile.name, age } : null;
+          })
+          .filter(Boolean) as Array<{ name: string; age: string }>;
+
+        shareCardData.value = {
+          photoUrl: firstMedia.thumbnailUrl ?? firstMedia.url,
+          milestoneLabel: updated.milestone_label,
+          memoryDate: memory.value.memory_date,
+          childAges,
+        };
+      }
+    }
   } catch (err) {
     console.error("[MemoryModal] failed to save edit:", err);
   } finally {

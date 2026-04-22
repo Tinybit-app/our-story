@@ -126,7 +126,16 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 ### Milestone 7: Memory Features
 - [x] 7.1 ~~Share to circle (visibility toggle)~~ — **cut.** All uploads are `circle`-visible; no private memory concept within a circle. Users who want a personal-only timeline create a `solo` circle. The `private` visibility value remains in the DB enum and RLS for schema continuity but the UI never exposes it.
 - [x] 7.2 Milestones (picker + custom milestone) — free-text `milestone_label` field in upload form and `MemoryModal` edit mode; circle-type-aware quick-pick chips via `useCircleTypeConfig`; label stored and displayed with ✦ badge. `milestone_is_custom` is a dead column (chips store display text directly, not i18n keys — drop in a future migration). 7.2.1 triggers on `milestone_label IS NOT NULL`.
-- [ ] 7.2.1 Milestone share card — after saving a milestone (`milestone_label IS NOT NULL`), offer a branded canvas card (Instagram Stories / WhatsApp format) with "Made with Our Story" CTA — primary acquisition channel for new parents
+- [x] 7.2.1 Milestone share card — after saving a milestone (`milestone_label IS NOT NULL`), offer a branded canvas card (Instagram Stories / WhatsApp format) with "Our Story" watermark CTA — primary acquisition channel for new parents
+  - Triggered automatically: single upload with milestone label → share prompt shown after upload completes; MemoryModal edit → shown when milestone label newly added (was null, now non-null)
+  - Card generated entirely client-side via Canvas API — no server round-trip, no public URL required
+  - Two formats: 9:16 (Instagram Stories, 1080×1920) and 1:1 square (WhatsApp/general, 1080×1080); toggle in UI
+  - Card design: full-bleed photo (cover-fit) → bottom vignette gradient → italic serif milestone label (with word-wrap) → month/year date → child age pills (if tagged) → "Our Story" wordmark + `ourstory.tinybit.app` URL
+  - Share actions: native Web Share API (files) on mobile; download fallback on desktop; clipboard copy (`navigator.clipboard.write`)
+  - CORS: uses `crossOrigin = 'anonymous'` on photo load; graceful error state if signed URL blocks canvas draw (only an issue in MemoryModal — upload uses local blob URL)
+  - `MilestoneShareModal` component (`app/components/MilestoneShareModal.vue`); preview canvas renders at device pixel ratio for crispness; download canvas renders at full resolution
+  - i18n: `milestone.*` keys in `locales/en.json` and `locales/zh-CN.json`
+  - No migration, no API changes — purely client-side feature
 - [ ] 7.3 Quick note (text-only memory, no photo required)
 - [ ] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
 - [ ] 7.5 Media download & share (save to device, shareable card with watermark)

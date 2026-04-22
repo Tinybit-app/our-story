@@ -425,5 +425,18 @@
       "restoreSuccess": "{name} has been restored.",
       "restoreError": "Failed to restore circle. Please try again."
     }
+  },
+  "milestone": {
+    "shareLabel": "Milestone",
+    "shareTitle": "Share this milestone",
+    "shareSubtitle": "Download a beautifully designed card to share on Instagram Stories or WhatsApp.",
+    "formatStories": "Stories (9:16)",
+    "formatSquare": "Square (1:1)",
+    "saveInstagram": "Save for Instagram Stories",
+    "saveWhatsapp": "Save for WhatsApp",
+    "copyImage": "Copy image",
+    "copied": "Copied!",
+    "skip": "Skip for now",
+    "corsError": "Could not load photo — try downloading it first."
   }
 }
