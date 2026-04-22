@@ -283,6 +283,7 @@
     "saveWhatsapp": "保存到微信",
     "copyImage": "复制图片",
     "copied": "已复制！",
+    "downloadImage": "下载图片",
     "skip": "暂时跳过",
     "corsError": "无法加载照片，请先下载后再试。"
   }

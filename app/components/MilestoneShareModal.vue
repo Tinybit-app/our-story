@@ -86,18 +86,35 @@
               {{ format === '9:16' ? t('milestone.saveInstagram') : t('milestone.saveWhatsapp') }}
             </button>
 
-            <!-- Copy to clipboard -->
-            <button
-              class="w-full flex items-center justify-center gap-2 bg-secondary border border-border text-foreground rounded-[12px] py-2.5 text-sm font-medium hover:bg-border disabled:opacity-50 transition-colors"
-              :disabled="generating || !!drawError"
-              @click="copyImage"
-            >
-              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path v-if="!copied" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6" />
-                <path v-else d="M20 6 9 17l-5-5" />
-              </svg>
-              {{ copied ? t('milestone.copied') : t('milestone.copyImage') }}
-            </button>
+            <!-- Secondary row: copy + download -->
+            <div class="flex gap-2">
+              <!-- Copy to clipboard -->
+              <button
+                class="flex-1 flex items-center justify-center gap-1.5 bg-secondary border border-border text-foreground rounded-[12px] py-2.5 text-sm font-medium hover:bg-border disabled:opacity-50 transition-colors"
+                :disabled="generating || !!drawError"
+                @click="copyImage"
+              >
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path v-if="!copied" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6" />
+                  <path v-else d="M20 6 9 17l-5-5" />
+                </svg>
+                {{ copied ? t('milestone.copied') : t('milestone.copyImage') }}
+              </button>
+
+              <!-- Download -->
+              <button
+                class="flex-1 flex items-center justify-center gap-1.5 bg-secondary border border-border text-foreground rounded-[12px] py-2.5 text-sm font-medium hover:bg-border disabled:opacity-50 transition-colors"
+                :disabled="generating || !!drawError"
+                @click="downloadImage"
+              >
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {{ t('milestone.downloadImage') }}
+              </button>
+            </div>
           </div>
 
           <!-- Skip -->
@@ -114,8 +131,6 @@
 </template>
 
 <script setup lang="ts">
-import { computeBabyAge } from '~/composables/useBabyAge'
-
 const { t, locale } = useI18n()
 
 const props = defineProps<{
@@ -320,6 +335,19 @@ async function shareOrDownload() {
   } finally {
     generating.value = false
   }
+}
+
+async function downloadImage() {
+  if (generating.value) return
+  const blob = await buildBlob()
+  if (!blob) return
+  const filename = `milestone-${format.value === '9:16' ? 'stories' : 'square'}.png`
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 async function copyImage() {

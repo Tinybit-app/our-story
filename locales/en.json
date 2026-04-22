@@ -436,6 +436,7 @@
     "saveWhatsapp": "Save for WhatsApp",
     "copyImage": "Copy image",
     "copied": "Copied!",
+    "downloadImage": "Download image",
     "skip": "Skip for now",
     "corsError": "Could not load photo — try downloading it first."
   }
