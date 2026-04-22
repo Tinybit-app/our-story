@@ -11,16 +11,28 @@
 
         <div class="px-5 pt-4 pb-5">
           <!-- Header -->
-          <div class="mb-4">
-            <p class="text-[10px] font-bold tracking-[.18em] text-accent uppercase mb-0.5">
-              ✦ {{ t('milestone.shareLabel') }}
-            </p>
-            <h2 class="text-sm font-semibold text-foreground leading-snug">
-              {{ t('milestone.shareTitle') }}
-            </h2>
-            <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              {{ t('milestone.shareSubtitle') }}
-            </p>
+          <div class="flex items-start justify-between gap-2 mb-4">
+            <div>
+              <p class="text-[10px] font-bold tracking-[.18em] text-accent uppercase mb-0.5">
+                ✦ {{ t('milestone.shareLabel') }}
+              </p>
+              <h2 class="text-sm font-semibold text-foreground leading-snug">
+                {{ t('milestone.shareTitle') }}
+              </h2>
+              <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                {{ t('milestone.shareSubtitle') }}
+              </p>
+            </div>
+            <button
+              v-if="onDemand"
+              class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors mt-0.5"
+              :aria-label="t('modal.cancel')"
+              @click="emit('close')"
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
 
           <!-- Card preview -->
