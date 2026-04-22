@@ -1,7 +1,7 @@
 <template>
   <article
     ref="articleEl"
-    class="relative bg-card flex-shrink-0 cursor-pointer select-none shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)] transition-[transform,box-shadow] duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)] p-[8px] pb-[15px]"
+    class="polaroid-card relative bg-card flex-shrink-0 cursor-pointer select-none shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)] p-[8px] pb-[15px]"
     :class="wide ? 'w-[290px]' : 'w-[210px]'"
     :style="{
       transform: isHovered
@@ -439,3 +439,10 @@ watch(isHovered, (hovered) => {
   if (!hovered) pickerOpen.value = false;
 });
 </script>
+
+<style scoped>
+.polaroid-card {
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+</style>

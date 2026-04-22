@@ -134,6 +134,8 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockTimeline(page, [makeMemory('mem-1')])
 
     await page.goto('/timeline')
+    // Wait for the circles mock to load (confirms page is fully hydrated)
+    await expect(page.getByRole('button', { name: 'Our Story' })).toBeVisible({ timeout: 15_000 })
     // The header should show the anniversary subtitle
     await expect(page.getByText(/together · Since/)).toBeVisible({ timeout: 10_000 })
   })
