@@ -273,6 +273,25 @@
       "restoreError": "恢复圈子失败，请重试。"
     }
   },
+  "quickNote": {
+    "title": "快速记录",
+    "notePlaceholder": "发生了什么？（例：今天说了第一个字：「爸爸」）",
+    "milestonePlaceholder": "✦ 里程碑…（可选）",
+    "whenWas": "这是什么时候？",
+    "whoIsIn": "这条记忆里有谁？",
+    "save": "保存记录",
+    "saving": "保存中…",
+    "saved": "已保存",
+    "errorEmpty": "记录不能为空。",
+    "errorFailed": "保存失败，请重试。"
+  },
+  "addMemory": {
+    "title": "添加记忆",
+    "photoVideo": "照片或视频",
+    "photoVideoDesc": "从相册上传",
+    "quickNote": "快速记录",
+    "quickNoteDesc": "用文字捕捉一个时刻"
+  },
   "valueProp": {
     "screen1": {
       "circleTypeTag": "家庭",

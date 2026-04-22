@@ -426,6 +426,25 @@
       "restoreError": "Failed to restore circle. Please try again."
     }
   },
+  "quickNote": {
+    "title": "Quick note",
+    "notePlaceholder": "What happened? (e.g. First word today: \"dada\")",
+    "milestonePlaceholder": "✦ Milestone… (optional)",
+    "whenWas": "When was this?",
+    "whoIsIn": "Who's in this memory?",
+    "save": "Save note",
+    "saving": "Saving…",
+    "saved": "Note saved",
+    "errorEmpty": "Note can't be empty.",
+    "errorFailed": "Failed to save note. Please try again."
+  },
+  "addMemory": {
+    "title": "Add a memory",
+    "photoVideo": "Photo or video",
+    "photoVideoDesc": "Upload from your camera roll",
+    "quickNote": "Quick note",
+    "quickNoteDesc": "Capture a moment in words"
+  },
   "valueProp": {
     "screen1": {
       "circleTypeTag": "Family",

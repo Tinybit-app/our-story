@@ -93,7 +93,7 @@
         <button
           v-if="circleId"
           class="flex-shrink-0 flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 active:scale-95 transition-all"
-          @click="uploadRef?.open()"
+          @click="addMemorySheetOpen = true"
         >
           <svg
             class="w-3.5 h-3.5 flex-shrink-0"
@@ -422,6 +422,24 @@
       @uploaded="onUploaded"
     />
 
+    <!-- Add memory choice sheet -->
+    <AddMemorySheet
+      :open="addMemorySheetOpen"
+      @close="addMemorySheetOpen = false"
+      @photo="onChoosePhoto"
+      @quick-note="onChooseQuickNote"
+    />
+
+    <!-- Quick note form -->
+    <QuickNoteForm
+      v-if="quickNoteOpen && circleId"
+      :circle-id="circleId"
+      :members="members"
+      :children="children"
+      @close="quickNoteOpen = false"
+      @saved="onQuickNoteSaved"
+    />
+
     <!-- Circle switcher -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
@@ -589,6 +607,25 @@ const userInitials = computed(() => {
 const menuOpen = ref(false);
 const menuRef = ref<HTMLElement>();
 const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>();
+
+// ── Add memory sheet ───────────────────────────────────────
+const addMemorySheetOpen = ref(false);
+const quickNoteOpen = ref(false);
+
+function onChoosePhoto() {
+  addMemorySheetOpen.value = false;
+  nextTick(() => uploadRef.value?.open());
+}
+
+function onChooseQuickNote() {
+  addMemorySheetOpen.value = false;
+  quickNoteOpen.value = true;
+}
+
+async function onQuickNoteSaved() {
+  quickNoteOpen.value = false;
+  await refreshNuxtData();
+}
 onClickOutside(menuRef, () => {
   menuOpen.value = false;
 });
