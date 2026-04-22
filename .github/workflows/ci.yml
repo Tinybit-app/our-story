@@ -36,13 +36,20 @@ jobs:
 
       - name: Export Supabase env vars
         run: |
-          # Plain-text `supabase status` has a stable format across all CLI versions:
-          #   anon key: eyJ...
-          #   service_role key: eyJ...
           STATUS=$(supabase status 2>&1)
-          echo "=== supabase status ===" && echo "$STATUS" && echo "==="
-          ANON_KEY=$(echo "$STATUS" | grep 'anon key:' | awk '{print $NF}')
-          SERVICE_KEY=$(echo "$STATUS" | grep 'service_role key:' | awk '{print $NF}')
+          STATUS_ENV=$(supabase status --output env 2>&1)
+          echo "=== supabase status ==="        && echo "$STATUS"     && echo "==="
+          echo "=== supabase status --output env ===" && echo "$STATUS_ENV" && echo "==="
+
+          # Try every known format across CLI versions, then fall back to JWT regex
+          ANON_KEY=$(echo "$STATUS"     | grep -i 'anon key:'                 | awk '{print $NF}')
+          [ -z "$ANON_KEY" ] && ANON_KEY=$(echo "$STATUS_ENV" | grep -E '^ANON_KEY=|^PUBLISHABLE_KEY=' | head -1 | cut -d= -f2-)
+
+          SERVICE_KEY=$(echo "$STATUS"     | grep -i 'service_role key:'          | awk '{print $NF}')
+          [ -z "$SERVICE_KEY" ] && SERVICE_KEY=$(echo "$STATUS_ENV" | grep -E '^SERVICE_ROLE_KEY=|^SECRET_KEY=' | head -1 | cut -d= -f2-)
+          # Last resort: extract the second JWT token from the full output (anon is first, service role is second)
+          [ -z "$SERVICE_KEY" ] && SERVICE_KEY=$(echo "$STATUS$STATUS_ENV" | grep -oE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' | sed -n '2p')
+
           if [ -z "$SERVICE_KEY" ]; then
             echo "ERROR: SERVICE_KEY is empty — check supabase status output above" >&2
             exit 1
@@ -52,7 +59,7 @@ jobs:
           echo "NUXT_SUPABASE_SECRET_KEY=$SERVICE_KEY" >> $GITHUB_ENV
           echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_KEY" >> $GITHUB_ENV
           echo "JWT_SECRET=ci-placeholder-secret-not-used-in-tests" >> $GITHUB_ENV
-          echo "ANON_KEY starts: ${ANON_KEY:0:20}"
+          echo "ANON_KEY starts:    ${ANON_KEY:0:20}"
           echo "SERVICE_KEY starts: ${SERVICE_KEY:0:20}"
 
       - name: Run DB tests (RLS policies)
