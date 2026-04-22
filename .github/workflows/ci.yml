@@ -37,17 +37,22 @@ jobs:
       - name: Export Supabase env vars
         run: |
           STATUS_ENV=$(supabase status --output env 2>&1)
-          # Supabase CLI v2 renamed: ANON_KEY→PUBLISHABLE_KEY, SERVICE_ROLE_KEY→SECRET_KEY
-          ANON_KEY=$(echo "$STATUS_ENV" | grep 'PUBLISHABLE_KEY=' | cut -d= -f2-)
-          SERVICE_KEY=$(echo "$STATUS_ENV" | grep 'SECRET_KEY=' | cut -d= -f2-)
+          echo "=== supabase status output ===" && echo "$STATUS_ENV" && echo "==="
+          # Anchor greps with ^ to avoid partial matches; try both CLI v1 and v2 key names
+          ANON_KEY=$(echo "$STATUS_ENV" | grep -E '^PUBLISHABLE_KEY=|^ANON_KEY=' | head -1 | cut -d= -f2-)
+          SERVICE_KEY=$(echo "$STATUS_ENV" | grep -E '^SECRET_KEY=|^SERVICE_ROLE_KEY=' | head -1 | cut -d= -f2-)
+          if [ -z "$SERVICE_KEY" ]; then
+            echo "ERROR: SERVICE_KEY is empty — check supabase status output above" >&2
+            exit 1
+          fi
           # URL is always fixed for local Supabase
           echo "NUXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
           echo "NUXT_PUBLIC_SUPABASE_KEY=$ANON_KEY" >> $GITHUB_ENV
           echo "NUXT_SUPABASE_SECRET_KEY=$SERVICE_KEY" >> $GITHUB_ENV
           echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_KEY" >> $GITHUB_ENV
           echo "JWT_SECRET=ci-placeholder-secret-not-used-in-tests" >> $GITHUB_ENV
-          echo "NUXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321"
-          echo "NUXT_PUBLIC_SUPABASE_KEY starts: ${ANON_KEY:0:20}"
+          echo "ANON_KEY starts: ${ANON_KEY:0:20}"
+          echo "SERVICE_KEY starts: ${SERVICE_KEY:0:20}"
 
       - name: Run DB tests (RLS policies)
         run: |
