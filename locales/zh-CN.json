@@ -275,6 +275,7 @@
   },
   "valueProp": {
     "screen1": {
+      "circleTypeTag": "家庭",
       "chatLabel": "家庭群聊",
       "chatName1": "妈妈",
       "chatMsg1": "「有人看到今天的照片了吗？」",
@@ -288,22 +289,28 @@
       "body": "Our Story 帮你守护那些值得铭记的时刻 — 美好，永恒。"
     },
     "screen2": {
-      "date1": "2024年6月12日",
-      "milestone1": "第一步",
-      "reactions1": "3 位家人的回应",
-      "date2": "2024年8月3日",
-      "milestone2": "第一个字：「爸爸」",
+      "circleTypeTag": "朋友 · 旅行",
+      "date1": "2024年7月14日",
+      "milestone1": "圣托里尼之旅",
+      "reactions1": "5位朋友回应了 · 里程碑",
+      "date2": "2024年1月1日",
+      "milestone2": "十年的友谊",
       "milestoneLabel": "里程碑",
       "heading1": "你们的故事，",
       "heading2": "被美好地珍藏。",
-      "body": "备注、里程碑与回应 — 不只是一个文件夹。"
+      "body": "备注、里程碑与回应 — 无论你们是什么圈子。"
     },
     "screen3": {
-      "deviceLabel": "iPhone 与\nAndroid",
-      "emailLabel": "通过邮件\n链接查看",
-      "heading1": "人人",
-      "heading2": "都能用。",
-      "body": "iPhone、Android，或只是一封邮件。家里没有人会被落下。"
+      "circleTypeTag": "情侣",
+      "date1": "2019年6月15日",
+      "entry1": "初次约会",
+      "entryTag1": "✦ 一切的开始",
+      "date2": "2021年9月4日",
+      "entry2": "她说了「是」",
+      "entryTag2": "✦ 订婚",
+      "heading1": "适合",
+      "heading2": "每一个圈子。",
+      "body": "家庭、情侣、朋友、旅行团 — 你们共同故事的唯一归处。"
     },
     "next": "下一步",
     "start": "开始你的故事",

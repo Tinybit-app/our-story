@@ -21,10 +21,13 @@
       <Transition name="slide" mode="out-in">
         <div :key="currentScreen">
 
-          <!-- Screen 1: The pain -->
+          <!-- Screen 1: The pain — Family -->
           <template v-if="currentScreen === 1">
             <div class="rounded-2xl bg-card border border-border px-5 py-5 mb-8 space-y-3 overflow-hidden relative">
-              <p class="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest mb-4">{{ t('valueProp.screen1.chatLabel') }}</p>
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest">{{ t('valueProp.screen1.chatLabel') }}</p>
+                <span class="text-[10px] font-semibold text-accent/70 tracking-wide">{{ t('valueProp.screen1.circleTypeTag') }}</span>
+              </div>
               <div class="space-y-2.5">
                 <div class="flex gap-2.5 items-start opacity-40">
                   <div class="w-[2px] rounded-full bg-accent self-stretch shrink-0" />
@@ -59,9 +62,13 @@
             </p>
           </template>
 
-          <!-- Screen 2: The solution -->
+          <!-- Screen 2: The solution — Friends & Travel -->
           <template v-else-if="currentScreen === 2">
             <div class="rounded-2xl bg-card border border-border px-5 py-5 mb-8">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest">{{ t('valueProp.screen2.milestoneLabel') }}</p>
+                <span class="text-[10px] font-semibold text-accent/70 tracking-wide">{{ t('valueProp.screen2.circleTypeTag') }}</span>
+              </div>
               <div class="flex items-stretch gap-4">
                 <div class="flex flex-col items-center pt-1.5 pb-1">
                   <div class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
@@ -91,27 +98,31 @@
             </p>
           </template>
 
-          <!-- Screen 3: The promise -->
+          <!-- Screen 3: The promise — Couple -->
           <template v-else>
-            <div class="rounded-2xl bg-card border border-border px-5 py-6 mb-8 flex items-center justify-around gap-2">
-              <!-- Phone -->
-              <div class="flex flex-col items-center gap-2">
-                <svg viewBox="0 0 36 60" class="w-8 h-auto text-foreground/80" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="2" width="32" height="56" rx="5" />
-                  <line x1="14" y1="5.5" x2="22" y2="5.5" stroke-width="1.5" />
-                  <circle cx="18" cy="53" r="2" />
-                </svg>
-                <p class="text-[11px] text-muted-foreground text-center leading-tight whitespace-pre-line">{{ t('valueProp.screen3.deviceLabel') }}</p>
+            <div class="rounded-2xl bg-card border border-border px-5 py-5 mb-8">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest">{{ t('valueProp.screen2.milestoneLabel') }}</p>
+                <span class="text-[10px] font-semibold text-accent/70 tracking-wide">{{ t('valueProp.screen3.circleTypeTag') }}</span>
               </div>
-              <!-- Divider -->
-              <div class="h-12 w-px bg-border" />
-              <!-- Envelope / email -->
-              <div class="flex flex-col items-center gap-2">
-                <svg viewBox="0 0 48 36" class="w-10 h-auto text-foreground/80" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="2" width="44" height="32" rx="4" />
-                  <polyline points="2,2 24,20 46,2" />
-                </svg>
-                <p class="text-[11px] text-muted-foreground text-center leading-tight whitespace-pre-line">{{ t('valueProp.screen3.emailLabel') }}</p>
+              <div class="flex items-stretch gap-4">
+                <div class="flex flex-col items-center pt-1.5 pb-1">
+                  <div class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+                  <div class="w-[1px] flex-1 bg-gradient-to-b from-accent/40 to-border/30 my-1" />
+                  <div class="w-1.5 h-1.5 rounded-full bg-border shrink-0" />
+                </div>
+                <div class="flex-1 space-y-4">
+                  <div>
+                    <p class="font-['Caveat'] text-base text-accent leading-none mb-0.5">{{ t('valueProp.screen3.date1') }}</p>
+                    <p class="text-sm font-semibold text-foreground">{{ t('valueProp.screen3.entry1') }}</p>
+                    <p class="text-[11px] text-muted-foreground mt-0.5">{{ t('valueProp.screen3.entryTag1') }}</p>
+                  </div>
+                  <div class="opacity-55">
+                    <p class="font-['Caveat'] text-base text-muted-foreground leading-none mb-0.5">{{ t('valueProp.screen3.date2') }}</p>
+                    <p class="text-sm font-semibold text-foreground">{{ t('valueProp.screen3.entry2') }}</p>
+                    <p class="text-[11px] text-muted-foreground mt-0.5">{{ t('valueProp.screen3.entryTag2') }}</p>
+                  </div>
+                </div>
               </div>
             </div>
             <h1 class="text-[1.6rem] font-bold text-foreground leading-[1.25] tracking-tight mb-3">
