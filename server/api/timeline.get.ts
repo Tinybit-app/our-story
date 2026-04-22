@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
   let query = (supabase as any)
     .from("memory")
     .select(`
-      id, owner_user_id, former_owner_name, former_owner_user_id, visibility, note, memory_date, milestone_label, milestone_is_custom, created_at,
+      id, owner_user_id, former_owner_name, former_owner_user_id, visibility, note, memory_date, milestone_label, created_at,
       memory_children(child_id, childprofile(id, name, date_of_birth)),
       memory_members(user_id, user:user_id(id, first_name, last_name, avatar_url)),
       memorymedia(id, storage_path, media_type, file_size),

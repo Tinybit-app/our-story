@@ -18,7 +18,6 @@ export interface Memory {
   note: string | null
   memory_date: string
   milestone_label: string | null
-  milestone_is_custom: boolean
   created_at: string
   memory_children: { child_id: string; childprofile: { id: string; name: string; date_of_birth: string } }[]
   memory_members: { user_id: string; user: { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null } | null }[]

@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     .from("memory")
     .update(updates)
     .eq("id", memoryId)
-    .select("id, note, milestone_label, milestone_is_custom")
+    .select("id, note, milestone_label")
     .maybeSingle()
 
   if (error) {

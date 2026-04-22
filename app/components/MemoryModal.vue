@@ -806,7 +806,6 @@ async function saveEdit() {
           id: string;
           note: string | null;
           milestone_label: string | null;
-          milestone_is_custom: boolean;
         };
       }>(`/api/memories/${memory.value.id}`, {
         method: "PATCH",
@@ -850,7 +849,6 @@ async function saveEdit() {
       id: updated.id,
       note: updated.note,
       milestone_label: updated.milestone_label,
-      milestone_is_custom: updated.milestone_is_custom,
       memory_children: updatedMemoryChildren,
       memory_members: updatedMemoryMembers,
     });

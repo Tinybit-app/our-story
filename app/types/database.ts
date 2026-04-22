@@ -241,7 +241,6 @@ export type Database = {
           id: string
           is_collaborative: boolean
           memory_date: string
-          milestone_is_custom: boolean
           milestone_label: string | null
           note: string | null
           owner_user_id: string | null
@@ -258,7 +257,6 @@ export type Database = {
           id?: string
           is_collaborative?: boolean
           memory_date?: string
-          milestone_is_custom?: boolean
           milestone_label?: string | null
           note?: string | null
           owner_user_id?: string | null
@@ -275,7 +273,6 @@ export type Database = {
           id?: string
           is_collaborative?: boolean
           memory_date?: string
-          milestone_is_custom?: boolean
           milestone_label?: string | null
           note?: string | null
           owner_user_id?: string | null
