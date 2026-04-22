@@ -49,6 +49,33 @@
 
           <div class="h-px bg-border" />
 
+          <!-- Circle name — owner only -->
+          <div v-if="isOwner">
+            <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
+              Circle name
+            </h2>
+            <div class="flex gap-2">
+              <input
+                v-model="circleNameInput"
+                type="text"
+                maxlength="100"
+                placeholder="Circle name"
+                class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                @keyup.enter="saveCircleName"
+              />
+              <button
+                :disabled="savingCircleName || !circleNameInput.trim() || circleNameInput.trim() === circle.name"
+                class="flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                @click="saveCircleName"
+              >
+                {{ savingCircleName ? '…' : 'Save' }}
+              </button>
+            </div>
+            <p v-if="circleNameError" class="text-xs text-destructive mt-2">{{ circleNameError }}</p>
+          </div>
+
+          <div v-if="isOwner" class="h-px bg-border" />
+
           <!-- Circle type picker — owner only -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
@@ -351,6 +378,36 @@ const circleTypeOptions = computed(() => [
   { value: 'solo',       label: t('circleType.solo.label'),       description: t('circleType.solo.description') },
   { value: 'custom',     label: 'Other',                          description: 'Generic milestones' },
 ])
+
+// ── Circle name ────────────────────────────────────────────
+const circleNameInput = ref(circle.value?.name ?? '')
+const savingCircleName = ref(false)
+const circleNameError = ref('')
+
+watch(circle, (c) => {
+  if (!savingCircleName.value) {
+    circleNameInput.value = c?.name ?? ''
+  }
+})
+
+async function saveCircleName() {
+  if (!circleId.value || savingCircleName.value) return
+  const trimmed = circleNameInput.value.trim()
+  if (!trimmed || trimmed === circle.value?.name) return
+  savingCircleName.value = true
+  circleNameError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}`, {
+      method: 'PATCH',
+      body: { name: trimmed },
+    })
+    await refreshNuxtData()
+  } catch (err: any) {
+    circleNameError.value = err?.data?.message ?? 'Failed to save circle name. Please try again.'
+  } finally {
+    savingCircleName.value = false
+  }
+}
 
 // ── Circle type picker ─────────────────────────────────────
 const selectedCircleType = ref(circle.value?.circle_type ?? '')
