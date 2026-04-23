@@ -241,6 +241,7 @@ async function drawCard(
   const dateSize = format.value === '9:16' ? Math.round(targetW * 0.035) : Math.round(targetW * 0.030)
   const dateLabel = new Date(props.memoryDate).toLocaleDateString(locale.value, {
     month: 'long',
+    day: 'numeric',
     year: 'numeric',
   })
   ctx.font = `${dateSize}px system-ui, -apple-system, sans-serif`
