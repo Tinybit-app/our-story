@@ -257,6 +257,7 @@
         :loading="loading"
         :has-next-page="!!nextCursor"
         :circle-type="circle?.circle_type ?? null"
+        :recently-added-ids="recentlyAddedIds"
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
@@ -437,7 +438,7 @@
       :members="members"
       :children="children"
       @close="quickNoteOpen = false"
-      @saved="onQuickNoteSaved"
+      @saved="onQuickNoteSaved($event)"
     />
 
     <!-- Circle switcher -->
@@ -629,6 +630,50 @@ const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>();
 const addMemorySheetOpen = ref(false);
 const quickNoteOpen = ref(false);
 
+// Recently-added IDs drive the entrance animation in TimelinePolaroid.
+// Using a Set inside a ref; we replace the ref value to trigger reactivity.
+const recentlyAddedIds = ref<Set<string>>(new Set());
+
+function markNew(id: string, duration = 2200) {
+  recentlyAddedIds.value = new Set([...recentlyAddedIds.value, id]);
+  setTimeout(() => {
+    recentlyAddedIds.value = new Set([...recentlyAddedIds.value].filter((x) => x !== id));
+  }, duration);
+}
+
+// Fetch the first page of the timeline and merge new/updated memories into
+// the existing flat list — no clearing, so existing cards stay in place.
+async function silentRefresh() {
+  if (!circleId.value) return;
+  try {
+    const data = await $fetch<{
+      memories: Memory[];
+      nextCursor: string | null;
+      children: typeof children.value;
+      members: typeof members.value;
+    }>("/api/timeline", { query: { circleId: circleId.value } });
+
+    const existingIds = new Set(memoriesFlat.value.map((m) => m.id));
+    const brandNew = data.memories.filter((m) => !existingIds.has(m.id));
+
+    if (brandNew.length || data.memories.length) {
+      // Replace optimistic / update existing entries, prepend genuinely new ones
+      const merged = [
+        ...brandNew,
+        ...memoriesFlat.value.map(
+          (m) => data.memories.find((d) => d.id === m.id) ?? m,
+        ),
+      ].sort((a, b) => b.memory_date.localeCompare(a.memory_date));
+      memoriesFlat.value = merged;
+    }
+
+    // Update cursor only if this is still the first page
+    if (!nextCursor.value) nextCursor.value = data.nextCursor;
+  } catch {
+    // Non-critical — timeline keeps its current (possibly optimistic) state
+  }
+}
+
 function onChoosePhoto() {
   addMemorySheetOpen.value = false;
   nextTick(() => uploadRef.value?.open());
@@ -639,11 +684,71 @@ function onChooseQuickNote() {
   quickNoteOpen.value = true;
 }
 
-function onQuickNoteSaved() {
+interface SavedNoteData {
+  memoryId: string;
+  note: string;
+  memoryDate: string;
+  milestoneLabel: string | null;
+  childIds: string[];
+  memberIds: string[];
+}
+
+function onQuickNoteSaved(data: SavedNoteData) {
   quickNoteOpen.value = false;
-  memoriesFlat.value = [];
-  nextCursor.value = null;
-  fetchTimeline();
+
+  // Build an optimistic Memory from the form data + already-fetched profile/member lists.
+  const optimistic: Memory = {
+    id: data.memoryId,
+    owner_user_id: authUser.value?.id ?? null,
+    former_owner_name: null,
+    former_owner_user_id: null,
+    visibility: "circle",
+    note: data.note,
+    memory_date: data.memoryDate,
+    milestone_label: data.milestoneLabel,
+    created_at: new Date().toISOString(),
+    memorymedia: [],
+    memoryreaction: [],
+    memorycomment: [],
+    memory_children: data.childIds
+      .map((id) => {
+        const c = children.value.find((ch) => ch.id === id);
+        return c
+          ? { child_id: id, childprofile: { id: c.id, name: c.name, date_of_birth: c.date_of_birth } }
+          : null;
+      })
+      .filter(Boolean) as Memory["memory_children"],
+    memory_members: data.memberIds
+      .map((userId) => {
+        const m = members.value.find((mm) => mm.userId === userId);
+        return m
+          ? {
+              user_id: userId,
+              user: {
+                id: userId,
+                first_name: m.firstName,
+                last_name: m.lastName,
+                avatar_url: m.avatarUrl,
+              },
+            }
+          : null;
+      })
+      .filter(Boolean) as Memory["memory_members"],
+    user: {
+      first_name: profile.value?.firstName ?? null,
+      last_name: profile.value?.lastName ?? null,
+      avatar_url: profile.value?.avatarUrl ?? null,
+    },
+  };
+
+  // Prepend optimistically — sorted list keeps it at the top if it's today's date.
+  memoriesFlat.value = [optimistic, ...memoriesFlat.value].sort((a, b) =>
+    b.memory_date.localeCompare(a.memory_date),
+  );
+  markNew(data.memoryId);
+
+  // Background: silently reconcile with server truth after a short delay.
+  setTimeout(silentRefresh, 1500);
 }
 onClickOutside(menuRef, () => {
   menuOpen.value = false;
@@ -733,9 +838,9 @@ async function fetchTimeline(cursor?: string) {
 }
 
 function onUploaded() {
-  memoriesFlat.value = [];
-  nextCursor.value = null;
-  fetchTimeline();
+  // Give the server a moment to finish writing the record and generating signed URLs,
+  // then merge new memories in without clearing the existing list.
+  setTimeout(silentRefresh, 800);
 }
 
 onMounted(() => fetchTimeline());

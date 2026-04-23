@@ -126,7 +126,10 @@ const props = defineProps<{
   children?: Array<{ id: string; name: string }>
 }>()
 
-const emit = defineEmits<{ close: []; saved: [] }>()
+const emit = defineEmits<{
+  close: []
+  saved: [{ memoryId: string; note: string; memoryDate: string; milestoneLabel: string | null; childIds: string[]; memberIds: string[] }]
+}>()
 
 // ── State ──────────────────────────────────────────────────────────────────
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
@@ -166,18 +169,31 @@ async function save() {
   }
   saving.value = true
   try {
-    await $fetch('/api/memories/quick-note', {
+    const savedNote = note.value.trim()
+    const savedDate = memoryDate.value
+    const savedMilestone = milestoneLabel.value.trim() || null
+    const savedChildIds = [...selectedChildIds.value]
+    const savedMemberIds = [...selectedMemberIds.value]
+
+    const data = await $fetch<{ memoryId: string }>('/api/memories/quick-note', {
       method: 'POST',
       body: {
         circleId: props.circleId,
-        note: note.value.trim(),
-        memoryDate: memoryDate.value,
-        milestoneLabel: milestoneLabel.value.trim() || null,
-        childIds: selectedChildIds.value,
-        memberIds: selectedMemberIds.value,
+        note: savedNote,
+        memoryDate: savedDate,
+        milestoneLabel: savedMilestone,
+        childIds: savedChildIds,
+        memberIds: savedMemberIds,
       },
     })
-    emit('saved')
+    emit('saved', {
+      memoryId: data.memoryId,
+      note: savedNote,
+      memoryDate: savedDate,
+      milestoneLabel: savedMilestone,
+      childIds: savedChildIds,
+      memberIds: savedMemberIds,
+    })
   } catch {
     error.value = t('quickNote.errorFailed')
   } finally {

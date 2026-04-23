@@ -64,23 +64,28 @@
           <!-- Polaroid grid -->
           <div class="flex flex-wrap gap-6">
             <template v-for="(memory, i) in group.memories" :key="memory.id">
-              <!-- Text-only quick notes get the postcard card -->
-              <QuickNoteCard
-                v-if="!memory.memorymedia.length && memory.note"
-                :memory="memory"
-                :index="i"
-                @open="$emit('openMemory', $event)"
-                @reaction-update="$emit('reactionUpdate', $event)"
-              />
-              <!-- Photo / video memories get the polaroid -->
-              <PolaroidCard
-                v-else
-                :memory="memory"
-                :index="i"
-                :wide="isWideMemory(memory.id)"
-                @open="$emit('openMemory', $event)"
-                @reaction-update="$emit('reactionUpdate', $event)"
-              />
+              <div
+                class="flex-shrink-0"
+                :class="props.recentlyAddedIds?.has(memory.id) ? 'memory-enter' : ''"
+              >
+                <!-- Text-only quick notes get the postcard card -->
+                <QuickNoteCard
+                  v-if="!memory.memorymedia.length && memory.note"
+                  :memory="memory"
+                  :index="i"
+                  @open="$emit('openMemory', $event)"
+                  @reaction-update="$emit('reactionUpdate', $event)"
+                />
+                <!-- Photo / video memories get the polaroid -->
+                <PolaroidCard
+                  v-else
+                  :memory="memory"
+                  :index="i"
+                  :wide="isWideMemory(memory.id)"
+                  @open="$emit('openMemory', $event)"
+                  @reaction-update="$emit('reactionUpdate', $event)"
+                />
+              </div>
             </template>
 
             <!-- See more card -->
@@ -122,6 +127,7 @@ const props = defineProps<{
   loading: boolean
   hasNextPage: boolean
   circleType?: string | null
+  recentlyAddedIds?: Set<string>
 }>()
 
 const typeConfig = computed(() => useCircleTypeConfig(props.circleType))
@@ -216,3 +222,31 @@ function scrollToYear(year: number) {
 
 defineExpose({ scrollToYear })
 </script>
+
+<style scoped>
+@keyframes memoryEnter {
+  from {
+    opacity: 0;
+    translate: 0 -18px;
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes newGlow {
+  0%   { box-shadow: 0 0 0 2px hsl(var(--accent) / 0.45), 0 6px 20px hsl(var(--accent) / 0.18); }
+  60%  { box-shadow: 0 0 0 2px hsl(var(--accent) / 0.45), 0 6px 20px hsl(var(--accent) / 0.18); }
+  100% { box-shadow: none; }
+}
+
+.memory-enter {
+  animation:
+    memoryEnter 420ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    newGlow 2000ms ease-out forwards;
+  border-radius: 4px;
+}
+</style>
