@@ -41,12 +41,18 @@
           {{ t('timeline.memories', memories.length) }}
         </p>
         <div class="flex flex-wrap gap-5">
-          <PolaroidCard
-            v-for="(memory, i) in memories"
-            :key="memory.id"
-            :memory="memory"
-            :index="i"
-          />
+          <template v-for="(memory, i) in memories" :key="memory.id">
+            <QuickNoteCard
+              v-if="!memory.memorymedia.length && memory.note"
+              :memory="memory"
+              :index="i"
+            />
+            <PolaroidCard
+              v-else
+              :memory="memory"
+              :index="i"
+            />
+          </template>
         </div>
       </div>
 

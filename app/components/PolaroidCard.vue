@@ -81,21 +81,33 @@
         </div>
       </template>
 
-      <!-- Note-only: lined paper look -->
+      <!-- Note-only: serif quote card -->
       <div
         v-else-if="memory.note"
-        class="w-full h-full flex items-center justify-center p-3"
-        style="
-          background-color: color-mix(in srgb, var(--accent) 12%, var(--card));
-          background-image: repeating-linear-gradient(
-            transparent,
-            transparent 23px,
-            color-mix(in srgb, var(--border) 80%, transparent) 24px
-          );
-        "
+        class="w-full h-full relative flex flex-col justify-center px-4 pt-6 pb-3"
+        style="background-color: color-mix(in srgb, var(--accent) 8%, var(--card));"
       >
+        <!-- Decorative opening quote mark -->
+        <span
+          class="absolute top-0 left-2.5 leading-none select-none pointer-events-none"
+          style="
+            font-size: 56px;
+            font-family: Georgia, 'Times New Roman', serif;
+            color: hsl(var(--accent) / 0.22);
+            line-height: 1;
+          "
+          aria-hidden="true"
+        >&ldquo;</span>
+
         <p
-          class="text-[13px] text-foreground leading-6 line-clamp-4 text-center"
+          class="line-clamp-5 text-left"
+          style="
+            font-size: 12px;
+            line-height: 1.6;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-style: italic;
+            color: hsl(var(--foreground));
+          "
         >
           {{ memory.note }}
         </p>

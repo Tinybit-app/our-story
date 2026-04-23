@@ -136,7 +136,14 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `MilestoneShareModal` component (`app/components/MilestoneShareModal.vue`); preview canvas renders at device pixel ratio for crispness; download canvas renders at full resolution
   - i18n: `milestone.*` keys in `locales/en.json` and `locales/zh-CN.json`
   - No migration, no API changes — purely client-side feature
-- [ ] 7.3 Quick note (text-only memory, no photo required)
+- [x] 7.3 Quick note (text-only memory, no photo required)
+  - `AddMemorySheet` bottom sheet (choice: "Photo or video" vs "Quick note") replaces direct upload trigger on timeline
+  - `QuickNoteForm` modal: textarea (auto-focus), optional milestone label, date picker (defaults today via `toLocaleDateString('en-CA')`), people/child chips
+  - `POST /api/memories/quick-note` — creates Memory row with no MemoryMedia; validates membership; optionally tags children/members
+  - `todayIso()` helper uses local timezone (not UTC) so date matches user's wall clock
+  - i18n: `quickNote.*`, `addMemory.*` keys in `locales/en.json` and `locales/zh-CN.json`
+  - Timeline refreshed via `refreshNuxtData()` after save; existing PolaroidCard lined-paper treatment handles no-media case
+  - Tests: 7 E2E tests (`tests/quick-note.spec.ts`), 12 unit validation tests, RLS tests 19-20 (member can insert, non-member blocked)
 - [ ] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
 - [ ] 7.5 Media download & share (save to device, shareable card with watermark)
 

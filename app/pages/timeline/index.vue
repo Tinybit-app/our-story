@@ -622,9 +622,11 @@ function onChooseQuickNote() {
   quickNoteOpen.value = true;
 }
 
-async function onQuickNoteSaved() {
+function onQuickNoteSaved() {
   quickNoteOpen.value = false;
-  await refreshNuxtData();
+  memoriesFlat.value = [];
+  nextCursor.value = null;
+  fetchTimeline();
 }
 onClickOutside(menuRef, () => {
   menuOpen.value = false;

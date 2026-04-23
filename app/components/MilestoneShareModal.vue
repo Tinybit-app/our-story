@@ -7,7 +7,7 @@
       <!-- Sheet -->
       <div class="relative bg-background w-full sm:max-w-sm rounded-t-[24px] sm:rounded-[24px] shadow-2xl overflow-hidden">
         <!-- Accent stripe -->
-        <div class="h-[3px] bg-gradient-to-r from-accent via-pink-400 to-orange-300" />
+        <div class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60" />
 
         <div class="px-5 pt-4 pb-5">
           <!-- Header -->

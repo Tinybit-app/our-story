@@ -63,15 +63,25 @@
 
           <!-- Polaroid grid -->
           <div class="flex flex-wrap gap-6">
-            <PolaroidCard
-              v-for="(memory, i) in group.memories"
-              :key="memory.id"
-              :memory="memory"
-              :index="i"
-              :wide="isWideMemory(memory.id)"
-              @open="$emit('openMemory', $event)"
-              @reaction-update="$emit('reactionUpdate', $event)"
-            />
+            <template v-for="(memory, i) in group.memories" :key="memory.id">
+              <!-- Text-only quick notes get the postcard card -->
+              <QuickNoteCard
+                v-if="!memory.memorymedia.length && memory.note"
+                :memory="memory"
+                :index="i"
+                @open="$emit('openMemory', $event)"
+                @reaction-update="$emit('reactionUpdate', $event)"
+              />
+              <!-- Photo / video memories get the polaroid -->
+              <PolaroidCard
+                v-else
+                :memory="memory"
+                :index="i"
+                :wide="isWideMemory(memory.id)"
+                @open="$emit('openMemory', $event)"
+                @reaction-update="$emit('reactionUpdate', $event)"
+              />
+            </template>
 
             <!-- See more card -->
             <NuxtLink
