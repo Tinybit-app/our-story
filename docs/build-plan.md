@@ -138,12 +138,15 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - No migration, no API changes — purely client-side feature
 - [x] 7.3 Quick note (text-only memory, no photo required)
   - `AddMemorySheet` bottom sheet (choice: "Photo or video" vs "Quick note") replaces direct upload trigger on timeline
-  - `QuickNoteForm` modal: textarea (auto-focus), optional milestone label, date picker (defaults today via `toLocaleDateString('en-CA')`), people/child chips
+  - `QuickNoteForm` modal: textarea (auto-focus), optional milestone label, date picker (defaults today via `toLocaleDateString('en-CA')`), people/child chips; accent stripe matches `AddMemorySheet`
   - `POST /api/memories/quick-note` — creates Memory row with no MemoryMedia; validates membership; optionally tags children/members
   - `todayIso()` helper uses local timezone (not UTC) so date matches user's wall clock
   - i18n: `quickNote.*`, `addMemory.*` keys in `locales/en.json` and `locales/zh-CN.json`
-  - Timeline refreshed via `refreshNuxtData()` after save; existing PolaroidCard lined-paper treatment handles no-media case
-  - Tests: 7 E2E tests (`tests/quick-note.spec.ts`), 12 unit validation tests, RLS tests 19-20 (member can insert, non-member blocked)
+  - Timeline refresh: resets `memoriesFlat` + `nextCursor` then calls `fetchTimeline()` directly (not `refreshNuxtData()` which is a no-op for manually fetched data)
+  - **`QuickNoteCard`** (`app/components/QuickNoteCard.vue`) — postcard-style card, 210px wide, tilts with same physics as PolaroidCard; red pin, italic "Quick note" label + hairline divider (distinct from milestone stamp), milestone stamp if present, note text (12.5px, line-clamp-5), divider, footer row 1 (date · author + emoji picker button), footer row 2 (reaction chips), child age pills, tagged member avatars
+  - **`QuickNoteModal`** (`app/components/QuickNoteModal.vue`) — dedicated detail modal for note-only memories; no tabs; editorial quote top area (warm accent-tinted bg, 130px Georgia `"` mark, italic 17px note text, "Quick note" label top-right, date bottom-right, milestone stamp); slim info row (date · author, edit pencil for owner, child pills, tagged members, reactions with tooltips + emoji picker); edit mode (milestone + note inputs, people picker, save/cancel — no internal scrollbar); full comments section (input + thread with inline editing); same open/close spring animation as `MemoryModal` (flies from card origin rect)
+  - Routing: `onOpenMemory` checks `!memory.memorymedia.length && memory.note` → opens `QuickNoteModal`; photo/video memories continue to open `MemoryModal` — wired in both `timeline/index.vue` and `timeline/[year]/[month].vue`
+  - Tests: 11 E2E tests (`tests/quick-note.spec.ts` — 7 creation flow + 4 QuickNoteModal), 12 unit validation tests, RLS tests 19-20 (member can insert, non-member blocked)
 - [ ] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
 - [ ] 7.5 Media download & share (save to device, shareable card with watermark)
 

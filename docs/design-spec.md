@@ -148,13 +148,24 @@ Memory
 #### Lower-friction memory types
 Every memory does not need a photo. Requiring a photo raises the documentation bar too high for daily habit formation.
 
-**Quick note — MVP**
+**Quick note — implemented (§7.3)**
 
 Text-only memory. No photo required.
 - "First word today: 'dada'" — captures the moment in 5 seconds
-- Appears on the timeline as a text card (distinct visual treatment from photo memories)
 - `MemoryMedia` row is omitted — just a `Memory` row with `note` and no media
-- Upload flow: `+` button → bottom sheet with "Photo/Video" and "Quick Note" options. Photo is default, unchanged.
+- Upload flow: "Add memory" button → `AddMemorySheet` bottom sheet → "Photo or video" or "Quick note"
+
+**Creation (`QuickNoteForm`):** textarea (auto-focus), optional milestone label, date picker (defaults to today in local timezone), people/child chips. Accent stripe `from-amber-900/80 via-accent to-amber-200/60` matches `AddMemorySheet`.
+
+**Timeline card (`QuickNoteCard`):** postcard format, 210px wide, same tilt/hover physics as `PolaroidCard`. Red pin, italic "Quick note" label + hairline divider (visually distinct from milestone stamp), milestone stamp if present, note text (12.5px Georgia, line-clamp-5), postcard divider, footer row 1 (date · author + emoji picker trigger), footer row 2 (reaction chips, full-width, wraps cleanly), child age pills, tagged member avatars.
+
+**Detail modal (`QuickNoteModal`):** dedicated component — not `MemoryModal`. No tabs. Layout:
+- *Top area:* warm accent-tinted background (`color-mix(accent 6%, card)`), 130px decorative `"` quote mark (Georgia, `rgba(200,168,130,.16)`), italic 17px note text, "Quick note" label top-right, date bottom-right, milestone stamp if present. Min-height 190px.
+- *Info row:* date · author, edit pencil (owner only), child age pills, tagged members with "with" label, reactions (chips with name tooltips) + emoji picker.
+- *Edit mode:* milestone input + note textarea + people/child picker + save/cancel; expands naturally within `max-height: 82vh` (no internal scrollbar).
+- *Comments:* full comment input + thread (inline edit of own comments, "view older" pagination). Same open/close spring animation as `MemoryModal` (flies from `QuickNoteCard` origin rect).
+
+Routing: `onOpenMemory` branches on `!memory.memorymedia.length && memory.note` → `QuickNoteModal`; photo/video memories → `MemoryModal`. Implemented in `timeline/index.vue` and `timeline/[year]/[month].vue`.
 
 **Voice memo — Phase 2**
 
@@ -5093,7 +5104,7 @@ Capacitor wraps Nuxt with ~zero code changes. The jump from PWA to native app in
 - [ ] Create circle + invite members (email invite, token-based)
 - [ ] Upload photo/video to timeline
 - [x] Batch upload with per-item EXIF date detection (multi-select, date review before submit) — **Implemented (§5.3)**
-- [ ] Quick note (text-only memory, no photo required)
+- [x] Quick note (text-only memory, no photo required) — **Implemented (§7.3)**
 - [ ] Add note to memory
 - [x] All uploads are circle-visible by default — no private memory toggle (solo circle = personal timeline)
 - [ ] Comments + emoji reactions
