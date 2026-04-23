@@ -46,17 +46,39 @@
               v-if="!memory.memorymedia.length && memory.note"
               :memory="memory"
               :index="i"
+              @open="onOpenMemory"
+              @reaction-update="onReactionUpdate"
             />
             <PolaroidCard
               v-else
               :memory="memory"
               :index="i"
+              @open="onOpenMemory"
+              @reaction-update="onReactionUpdate"
             />
           </template>
         </div>
       </div>
 
     </main>
+    <!-- Quick note modal -->
+    <QuickNoteModal
+      :memory="selectedQuickNote"
+      :origin-rect="selectedRect"
+      :tilt="selectedTilt"
+      @close="selectedQuickNote = null"
+      @update="onMemoryUpdate"
+    />
+
+    <!-- Photo/video memory modal -->
+    <MemoryModal
+      :memories="memories"
+      :start-index="selectedMemoryIndex"
+      :origin-rect="selectedRect"
+      :tilt="selectedTilt"
+      @close="selectedMemoryIndex = null"
+      @update="onMemoryUpdate"
+    />
   </div>
 </template>
 
@@ -82,6 +104,33 @@ const circleId = computed<string | null>(() => circlesData.value?.circles?.[0]?.
 
 const memories = ref<Memory[]>([])
 const loading = ref(false)
+
+// ── Modals ─────────────────────────────────────────────────
+const selectedQuickNote = ref<Memory | null>(null)
+const selectedMemoryIndex = ref<number | null>(null)
+const selectedRect = ref<DOMRect | null>(null)
+const selectedTilt = ref(0)
+
+function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; rect: DOMRect }) {
+  selectedRect.value = rect
+  selectedTilt.value = tilt
+  if (!memory.memorymedia.length && memory.note) {
+    selectedQuickNote.value = null
+    nextTick(() => { selectedQuickNote.value = memory })
+  } else {
+    selectedMemoryIndex.value = memories.value.findIndex((m) => m.id === memory.id)
+  }
+}
+
+function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
+  const i = memories.value.findIndex((m) => m.id === patch.id)
+  if (i !== -1) memories.value[i] = { ...memories.value[i], ...patch } as Memory
+}
+
+function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions: any[] }) {
+  const i = memories.value.findIndex((m) => m.id === memoryId)
+  if (i !== -1) memories.value[i] = { ...memories.value[i], memoryreaction: reactions } as Memory
+}
 
 onMounted(async () => {
   if (!circleId.value) return

@@ -499,7 +499,18 @@
       </div>
     </Transition>
 
-    <!-- Memory detail modal -->
+    <!-- Quick note detail modal -->
+    <QuickNoteModal
+      :memory="selectedQuickNote"
+      :origin-rect="selectedRect"
+      :tilt="selectedTilt"
+      :children="children"
+      :members="members"
+      @close="selectedQuickNote = null"
+      @update="onMemoryUpdate"
+    />
+
+    <!-- Memory detail modal (photo/video memories) -->
     <MemoryModal
       :memories="memoriesFlat"
       :start-index="selectedMemoryIndex"
@@ -526,6 +537,7 @@ function monthAbbr(month: number): string {
 
 // ── Memory modal ───────────────────────────────────────────
 const selectedMemoryIndex = ref<number | null>(null);
+const selectedQuickNote = ref<Memory | null>(null);
 const selectedRect = ref<DOMRect | null>(null);
 const selectedTilt = ref(0);
 
@@ -538,11 +550,16 @@ function onOpenMemory({
   tilt: number;
   rect: DOMRect;
 }) {
-  selectedMemoryIndex.value = memoriesFlat.value.findIndex(
-    (m) => m.id === memory.id,
-  );
   selectedRect.value = rect;
   selectedTilt.value = tilt;
+  if (!memory.memorymedia.length && memory.note) {
+    selectedQuickNote.value = null;
+    nextTick(() => { selectedQuickNote.value = memory; });
+  } else {
+    selectedMemoryIndex.value = memoriesFlat.value.findIndex(
+      (m) => m.id === memory.id,
+    );
+  }
 }
 
 function onMemoryUpdate(patch: Pick<Memory, "id"> & Partial<Memory>) {
