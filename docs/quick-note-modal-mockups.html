@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Note Modal — A & D, Light + Dark</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0e0c0b;
+      color: #e8e2db;
+      min-height: 100vh;
+      padding: 52px 48px 80px;
+    }
+
+    /* ── Page header ──────────────────────────────────────── */
+    .page-header { margin-bottom: 60px; }
+    .page-header .eyebrow {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: hsl(33, 40%, 65%); margin-bottom: 8px;
+    }
+    .page-header h1 {
+      font-size: 22px; font-weight: 600;
+      letter-spacing: -.02em; color: #f0ebe4; margin-bottom: 6px;
+    }
+    .page-header p { font-size: 13px; color: #666; }
+
+    /* ── Grid: 2 columns (light | dark) × 2 rows (A | D) ─── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 64px 40px;
+    }
+    .cell { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Column headers */
+    .col-header {
+      font-size: 9.5px; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: #555; margin-bottom: -48px; /* pull up to sit above the first row */
+    }
+    .col-headers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 40px;
+      margin-bottom: 16px;
+    }
+    .row-label {
+      font-size: 13px; font-weight: 600; color: #f0ebe4;
+    }
+    .row-desc {
+      font-size: 11.5px; color: #666; line-height: 1.6;
+      max-width: 420px;
+    }
+    .mode-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: #555;
+    }
+    .mode-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+
+    /* ── Shared modal chrome ──────────────────────────────── */
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(0,0,0,.55), 0 4px 16px rgba(0,0,0,.3);
+    }
+    .modal-pin {
+      position: absolute;
+      top: -7px; left: 50%;
+      transform: translateX(-50%);
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #d64040;
+      box-shadow: 0 2px 8px rgba(214,64,64,.5);
+      opacity: .9; z-index: 20;
+    }
+    .modal-close {
+      position: absolute; top: 0; right: 0;
+      transform: translate(50%, -50%); z-index: 20;
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; line-height: 1;
+    }
+
+    /* ── Caption area (identical for all four) ────────────── */
+    .modal-caption { display: flex; flex-direction: column; }
+    .tab-bar {
+      display: flex; flex-shrink: 0;
+      padding: 0 12px;
+    }
+    .tab {
+      padding: 9px 12px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .06em;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active { border-bottom-color: hsl(33, 40%, 65%); color: hsl(33, 40%, 65%); }
+    .caption-body { padding: 12px 14px 10px; }
+    .caption-milestone {
+      font-size: 8.5px; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: hsl(33, 40%, 65%); margin-bottom: 5px;
+    }
+    .caption-note { font-size: 13px; line-height: 1.65; margin-bottom: 7px; }
+    .caption-meta { font-size: 10px; color: hsl(26, 10%, 49%); margin-bottom: 7px; }
+    .caption-pill {
+      display: inline-block;
+      font-size: 9px; font-weight: 600;
+      padding: 2px 8px; border-radius: 99px;
+      background: hsl(33, 40%, 65%, .14);
+      color: hsl(33, 40%, 65%);
+    }
+    .comment-stub {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px 12px;
+    }
+    .comment-avatar {
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 7.5px; font-weight: 700;
+    }
+    .comment-input {
+      flex: 1; height: 26px; border-radius: 13px;
+      font-size: 10.5px; padding: 0 12px;
+      display: flex; align-items: center;
+    }
+
+    /* ═══════════════════════════════════════
+       OPTION A — Editorial Quote
+       Light & Dark variants
+    ═══════════════════════════════════════ */
+
+    /* A Light */
+    .modal.a-light { background: #fff; }
+    .modal.a-light .modal-close { background: hsl(20,16%,14%); color: #fff; }
+    .modal.a-light .tab-bar { border-bottom: 1px solid hsl(30,14%,88%); }
+    .modal.a-light .tab { color: hsl(26,10%,49%); }
+    .modal.a-light .tab.active { color: hsl(33,40%,65%); }
+    .modal.a-light .modal-caption { border-top: 1px solid hsl(30,14%,88%); }
+    .modal.a-light .caption-note { color: hsl(20,16%,14%); }
+    .modal.a-light .comment-stub { border-top: 1px solid hsl(30,14%,88%); }
+    .modal.a-light .comment-avatar { background: hsl(33,14%,88%); color: hsl(26,10%,49%); }
+    .modal.a-light .comment-input { background: hsl(33,14%,88%); color: hsl(26,10%,49%); }
+
+    .top-a-light {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: hsl(33, 22%, 95%);
+      display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 36px 40px 28px;
+      overflow: hidden;
+    }
+    .top-a-light .big-quote {
+      position: absolute; top: -12px; left: 20px;
+      font-size: 160px; font-family: 'Lora', serif;
+      color: rgba(200,168,130,.20); line-height: 1;
+      user-select: none; pointer-events: none;
+    }
+    .top-a-light .note-label {
+      position: absolute; top: 16px; right: 16px;
+      font-size: 9px; font-style: italic;
+      color: hsl(26,10%,49%); opacity: .55;
+    }
+    .top-a-light .note-milestone {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 3px; margin-bottom: 14px;
+      background: hsl(33,40%,65%,.88);
+      border: 1px solid hsl(33,40%,65%,.5);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.92);
+      position: relative; z-index: 1;
+    }
+    .top-a-light .note-text {
+      font-family: 'Lora', Georgia, serif;
+      font-style: italic; font-size: 19px;
+      line-height: 1.7; color: hsl(20,16%,14%);
+      position: relative; z-index: 1;
+    }
+    .top-a-light .note-date {
+      position: absolute; bottom: 14px; right: 18px;
+      font-size: 9.5px; color: hsl(26,10%,49%); opacity: .55;
+    }
+
+    /* A Dark */
+    .modal.a-dark { background: hsl(20,16%,14%); }
+    .modal.a-dark .modal-close { background: hsl(33,30%,90%); color: hsl(20,16%,14%); }
+    .modal.a-dark .tab-bar { border-bottom: 1px solid hsl(22,8%,22%); }
+    .modal.a-dark .tab { color: hsl(26,10%,49%); }
+    .modal.a-dark .tab.active { color: hsl(33,40%,65%); }
+    .modal.a-dark .modal-caption { border-top: 1px solid hsl(22,8%,22%); }
+    .modal.a-dark .caption-note { color: hsl(33,30%,92%); }
+    .modal.a-dark .comment-stub { border-top: 1px solid hsl(22,8%,22%); }
+    .modal.a-dark .comment-avatar { background: hsl(22,8%,22%); color: hsl(26,10%,49%); }
+    .modal.a-dark .comment-input { background: hsl(22,8%,22%); color: hsl(26,10%,49%); }
+
+    .top-a-dark {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: hsl(20, 16%, 11%);
+      display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 36px 40px 28px;
+      overflow: hidden;
+    }
+    .top-a-dark .big-quote {
+      position: absolute; top: -12px; left: 20px;
+      font-size: 160px; font-family: 'Lora', serif;
+      color: rgba(200,168,130,.12); line-height: 1;
+      user-select: none; pointer-events: none;
+    }
+    .top-a-dark .note-label {
+      position: absolute; top: 16px; right: 16px;
+      font-size: 9px; font-style: italic;
+      color: hsl(26,10%,49%); opacity: .5;
+    }
+    .top-a-dark .note-milestone {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 3px; margin-bottom: 14px;
+      background: hsl(33,40%,65%,.88);
+      border: 1px solid hsl(33,40%,65%,.5);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.92);
+      position: relative; z-index: 1;
+    }
+    .top-a-dark .note-text {
+      font-family: 'Lora', Georgia, serif;
+      font-style: italic; font-size: 19px;
+      line-height: 1.7; color: hsl(33,30%,90%);
+      position: relative; z-index: 1;
+    }
+    .top-a-dark .note-date {
+      position: absolute; bottom: 14px; right: 18px;
+      font-size: 9.5px; color: hsl(26,10%,49%); opacity: .5;
+    }
+
+    /* ═══════════════════════════════════════
+       OPTION D — Amber Wash + Inner Card
+       Light & Dark variants
+    ═══════════════════════════════════════ */
+
+    /* D Light */
+    .modal.d-light { background: #fff; }
+    .modal.d-light .modal-close { background: hsl(20,16%,14%); color: #fff; }
+    .modal.d-light .tab-bar { border-bottom: 1px solid hsl(30,14%,88%); }
+    .modal.d-light .tab { color: hsl(26,10%,49%); }
+    .modal.d-light .tab.active { color: hsl(33,40%,65%); }
+    .modal.d-light .modal-caption { border-top: 1px solid hsl(30,14%,88%); }
+    .modal.d-light .caption-note { color: hsl(20,16%,14%); }
+    .modal.d-light .comment-stub { border-top: 1px solid hsl(30,14%,88%); }
+    .modal.d-light .comment-avatar { background: hsl(33,14%,88%); color: hsl(26,10%,49%); }
+    .modal.d-light .comment-input { background: hsl(33,14%,88%); color: hsl(26,10%,49%); }
+
+    .top-d-light {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: hsl(35, 42%, 88%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px;
+      overflow: hidden;
+    }
+    .top-d-light::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        -52deg,
+        transparent,
+        transparent 18px,
+        rgba(200,168,130,.22) 18px,
+        rgba(200,168,130,.22) 19px
+      );
+      pointer-events: none;
+    }
+    .d-inner-light {
+      position: relative;
+      background: #fff;
+      width: 100%; max-width: 380px;
+      padding: 22px 24px 18px;
+      box-shadow: 0 8px 32px rgba(44,36,32,.2), 0 2px 6px rgba(44,36,32,.1);
+      transform: rotate(-0.6deg);
+    }
+    .d-inner-light .inner-eyebrow {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .d-inner-light .inner-label {
+      font-size: 9px; font-style: italic;
+      color: hsl(26,10%,49%); opacity: .6; flex-shrink: 0;
+    }
+    .d-inner-light .inner-line {
+      flex: 1; height: 1px; background: hsl(30,14%,88%);
+    }
+    .d-inner-light .inner-milestone {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 3px; margin-bottom: 10px;
+      background: hsl(33,40%,65%,.88);
+      border: 1px solid hsl(33,40%,65%,.5);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.92);
+    }
+    .d-inner-light .inner-text {
+      font-family: 'Lora', Georgia, serif;
+      font-style: italic; font-size: 14.5px;
+      line-height: 1.72; color: hsl(20,16%,14%);
+    }
+    .d-inner-light .inner-date {
+      font-size: 9.5px; color: hsl(26,10%,49%);
+      opacity: .55; margin-top: 11px;
+    }
+
+    /* D Dark */
+    .modal.d-dark { background: hsl(20,16%,14%); }
+    .modal.d-dark .modal-close { background: hsl(33,30%,90%); color: hsl(20,16%,14%); }
+    .modal.d-dark .tab-bar { border-bottom: 1px solid hsl(22,8%,22%); }
+    .modal.d-dark .tab { color: hsl(26,10%,49%); }
+    .modal.d-dark .tab.active { color: hsl(33,40%,65%); }
+    .modal.d-dark .modal-caption { border-top: 1px solid hsl(22,8%,22%); }
+    .modal.d-dark .caption-note { color: hsl(33,30%,92%); }
+    .modal.d-dark .comment-stub { border-top: 1px solid hsl(22,8%,22%); }
+    .modal.d-dark .comment-avatar { background: hsl(22,8%,22%); color: hsl(26,10%,49%); }
+    .modal.d-dark .comment-input { background: hsl(22,8%,22%); color: hsl(26,10%,49%); }
+
+    .top-d-dark {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: hsl(25, 16%, 8%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px;
+      overflow: hidden;
+    }
+    .top-d-dark::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        -52deg,
+        transparent,
+        transparent 18px,
+        rgba(200,168,130,.06) 18px,
+        rgba(200,168,130,.06) 19px
+      );
+      pointer-events: none;
+    }
+    /* Subtle ambient amber glow bottom-right */
+    .top-d-dark::after {
+      content: '';
+      position: absolute;
+      bottom: -30px; right: -30px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200,168,130,.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .d-inner-dark {
+      position: relative;
+      background: hsl(20, 14%, 17%);
+      width: 100%; max-width: 380px;
+      padding: 22px 24px 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
+      border: 1px solid hsl(22,8%,24%);
+      transform: rotate(-0.6deg);
+    }
+    .d-inner-dark .inner-eyebrow {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .d-inner-dark .inner-label {
+      font-size: 9px; font-style: italic;
+      color: hsl(26,10%,49%); opacity: .6; flex-shrink: 0;
+    }
+    .d-inner-dark .inner-line {
+      flex: 1; height: 1px; background: hsl(22,8%,26%);
+    }
+    .d-inner-dark .inner-milestone {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 3px; margin-bottom: 10px;
+      background: hsl(33,40%,65%,.88);
+      border: 1px solid hsl(33,40%,65%,.5);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.92);
+    }
+    .d-inner-dark .inner-text {
+      font-family: 'Lora', Georgia, serif;
+      font-style: italic; font-size: 14.5px;
+      line-height: 1.72; color: hsl(33,30%,88%);
+    }
+    .d-inner-dark .inner-date {
+      font-size: 9.5px; color: hsl(26,10%,49%);
+      opacity: .5; margin-top: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <p class="eyebrow">Our Story · Design</p>
+    <h1>Quick Note Modal — A &amp; D, Light + Dark</h1>
+    <p>Both options in both color modes. Caption + comments section is identical across all four.</p>
+  </div>
+
+  <!-- Column headers -->
+  <div class="col-headers">
+    <div>
+      <span class="mode-badge">
+        <span class="mode-dot" style="background:#f4f1ee; border: 1px solid #ccc;"></span>
+        Light mode
+      </span>
+    </div>
+    <div>
+      <span class="mode-badge">
+        <span class="mode-dot" style="background:#2c2420;"></span>
+        Dark mode
+      </span>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- ── Row 1: Option A ──────────────────────────────── -->
+
+    <!-- A Light -->
+    <div class="cell">
+      <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:4px;">
+        <span class="row-label">A — Editorial Quote</span>
+        <span class="mode-badge"><span class="mode-dot" style="background:#f4f1ee; border:1px solid #ccc;"></span> Light</span>
+      </div>
+      <div class="modal a-light" style="margin-top:12px;">
+        <div class="modal-pin"></div>
+        <div class="modal-close">×</div>
+        <div class="top-a-light">
+          <span class="big-quote">&ldquo;</span>
+          <span class="note-label">Quick note</span>
+          <div class="note-milestone">✦ OOH YEAH</div>
+          <p class="note-text">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+          <span class="note-date">Apr 22, 2026</span>
+        </div>
+        <div class="modal-caption">
+          <div class="tab-bar">
+            <div class="tab active">Caption</div>
+            <div class="tab">Comments 2</div>
+          </div>
+          <div class="caption-body">
+            <p class="caption-milestone">✦ OOH YEAH</p>
+            <p class="caption-note">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+            <p class="caption-meta">Apr 22 · Sarah</p>
+            <span class="caption-pill">👶 Liam · 1y 2m</span>
+          </div>
+          <div class="comment-stub">
+            <div class="comment-avatar">S</div>
+            <div class="comment-input">Add a comment…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A Dark -->
+    <div class="cell">
+      <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:4px;">
+        <span class="row-label">A — Editorial Quote</span>
+        <span class="mode-badge"><span class="mode-dot" style="background:#2c2420;"></span> Dark</span>
+      </div>
+      <div class="modal a-dark" style="margin-top:12px;">
+        <div class="modal-pin"></div>
+        <div class="modal-close">×</div>
+        <div class="top-a-dark">
+          <span class="big-quote">&ldquo;</span>
+          <span class="note-label">Quick note</span>
+          <div class="note-milestone">✦ OOH YEAH</div>
+          <p class="note-text">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+          <span class="note-date">Apr 22, 2026</span>
+        </div>
+        <div class="modal-caption">
+          <div class="tab-bar">
+            <div class="tab active">Caption</div>
+            <div class="tab">Comments 2</div>
+          </div>
+          <div class="caption-body">
+            <p class="caption-milestone">✦ OOH YEAH</p>
+            <p class="caption-note">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+            <p class="caption-meta">Apr 22 · Sarah</p>
+            <span class="caption-pill">👶 Liam · 1y 2m</span>
+          </div>
+          <div class="comment-stub">
+            <div class="comment-avatar">S</div>
+            <div class="comment-input">Add a comment…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Row 2: Option D ──────────────────────────────── -->
+
+    <!-- D Light -->
+    <div class="cell">
+      <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:4px;">
+        <span class="row-label">D — Amber Wash + Inner Card</span>
+        <span class="mode-badge"><span class="mode-dot" style="background:#f4f1ee; border:1px solid #ccc;"></span> Light</span>
+      </div>
+      <div class="modal d-light" style="margin-top:12px;">
+        <div class="modal-pin"></div>
+        <div class="modal-close">×</div>
+        <div class="top-d-light">
+          <div class="d-inner-light">
+            <div class="inner-eyebrow">
+              <span class="inner-label">Quick note</span>
+              <div class="inner-line"></div>
+            </div>
+            <div class="inner-milestone">✦ OOH YEAH</div>
+            <p class="inner-text">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+            <p class="inner-date">Apr 22, 2026 · Sarah</p>
+          </div>
+        </div>
+        <div class="modal-caption">
+          <div class="tab-bar">
+            <div class="tab active">Caption</div>
+            <div class="tab">Comments 2</div>
+          </div>
+          <div class="caption-body">
+            <p class="caption-milestone">✦ OOH YEAH</p>
+            <p class="caption-note">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+            <p class="caption-meta">Apr 22 · Sarah</p>
+            <span class="caption-pill">👶 Liam · 1y 2m</span>
+          </div>
+          <div class="comment-stub">
+            <div class="comment-avatar">S</div>
+            <div class="comment-input">Add a comment…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D Dark -->
+    <div class="cell">
+      <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:4px;">
+        <span class="row-label">D — Amber Wash + Inner Card</span>
+        <span class="mode-badge"><span class="mode-dot" style="background:#2c2420;"></span> Dark</span>
+      </div>
+      <div class="modal d-dark" style="margin-top:12px;">
+        <div class="modal-pin"></div>
+        <div class="modal-close">×</div>
+        <div class="top-d-dark">
+          <div class="d-inner-dark">
+            <div class="inner-eyebrow">
+              <span class="inner-label">Quick note</span>
+              <div class="inner-line"></div>
+            </div>
+            <div class="inner-milestone">✦ OOH YEAH</div>
+            <p class="inner-text">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+            <p class="inner-date">Apr 22, 2026 · Sarah</p>
+          </div>
+        </div>
+        <div class="modal-caption">
+          <div class="tab-bar">
+            <div class="tab active">Caption</div>
+            <div class="tab">Comments 2</div>
+          </div>
+          <div class="caption-body">
+            <p class="caption-milestone">✦ OOH YEAH</p>
+            <p class="caption-note">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+            <p class="caption-meta">Apr 22 · Sarah</p>
+            <span class="caption-pill">👶 Liam · 1y 2m</span>
+          </div>
+          <div class="comment-stub">
+            <div class="comment-avatar">S</div>
+            <div class="comment-input">Add a comment…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
