@@ -634,6 +634,11 @@ const quickNoteOpen = ref(false);
 // Using a Set inside a ref; we replace the ref value to trigger reactivity.
 const recentlyAddedIds = ref<Set<string>>(new Set());
 
+// Tracks optimistic IDs pending server confirmation so we can roll back
+// if silentRefresh doesn't find them (e.g. the memory is past page 1, or
+// a race condition occurred). Once confirmed, they move to recentlyAddedIds.
+const pendingOptimisticIds = ref<Set<string>>(new Set());
+
 function markNew(id: string, duration = 2200) {
   recentlyAddedIds.value = new Set([...recentlyAddedIds.value, id]);
   setTimeout(() => {
@@ -641,8 +646,24 @@ function markNew(id: string, duration = 2200) {
   }, duration);
 }
 
+function addOptimistic(memory: Memory) {
+  pendingOptimisticIds.value = new Set([...pendingOptimisticIds.value, memory.id]);
+  memoriesFlat.value = [memory, ...memoriesFlat.value].sort((a, b) =>
+    b.memory_date.localeCompare(a.memory_date),
+  );
+  markNew(memory.id);
+}
+
+function rollbackOptimistic(id: string) {
+  pendingOptimisticIds.value = new Set([...pendingOptimisticIds.value].filter((x) => x !== id));
+  // Fade-remove: let the card play a brief exit before splice
+  recentlyAddedIds.value = new Set([...recentlyAddedIds.value].filter((x) => x !== id));
+  memoriesFlat.value = memoriesFlat.value.filter((m) => m.id !== id);
+}
+
 // Fetch the first page of the timeline and merge new/updated memories into
 // the existing flat list — no clearing, so existing cards stay in place.
+// Also confirms or rolls back any pending optimistic entries.
 async function silentRefresh() {
   if (!circleId.value) return;
   try {
@@ -653,24 +674,52 @@ async function silentRefresh() {
       members: typeof members.value;
     }>("/api/timeline", { query: { circleId: circleId.value } });
 
+    const serverIds = new Set(data.memories.map((m) => m.id));
     const existingIds = new Set(memoriesFlat.value.map((m) => m.id));
     const brandNew = data.memories.filter((m) => !existingIds.has(m.id));
 
-    if (brandNew.length || data.memories.length) {
-      // Replace optimistic / update existing entries, prepend genuinely new ones
-      const merged = [
-        ...brandNew,
-        ...memoriesFlat.value.map(
-          (m) => data.memories.find((d) => d.id === m.id) ?? m,
-        ),
-      ].sort((a, b) => b.memory_date.localeCompare(a.memory_date));
-      memoriesFlat.value = merged;
+    // Confirm or roll back pending optimistic entries.
+    // An optimistic entry is confirmed if the server returned it.
+    // If it's not in the first page, it might just be past the page cap —
+    // only roll back if the memory_date falls within the returned range.
+    if (pendingOptimisticIds.value.size > 0) {
+      const oldestServerDate = data.memories.at(-1)?.memory_date ?? null;
+      for (const id of pendingOptimisticIds.value) {
+        if (serverIds.has(id)) {
+          // Confirmed — remove from pending
+          pendingOptimisticIds.value = new Set([...pendingOptimisticIds.value].filter((x) => x !== id));
+        } else if (oldestServerDate) {
+          const optimistic = memoriesFlat.value.find((m) => m.id === id);
+          // Only roll back if the memory's date is within the server's returned range
+          // (meaning the server should have returned it but didn't — genuine failure)
+          if (optimistic && optimistic.memory_date >= oldestServerDate) {
+            rollbackOptimistic(id);
+          }
+          // If the memory_date is older than the server page, leave it — it's just paginated out
+        }
+      }
     }
+
+    // Merge: prepend genuinely new server entries, update existing ones
+    const merged = [
+      ...brandNew,
+      ...memoriesFlat.value.map((m) => data.memories.find((d) => d.id === m.id) ?? m),
+    ].sort((a, b) => b.memory_date.localeCompare(a.memory_date));
+    memoriesFlat.value = merged;
+
+    // Animate memories that appeared from the server (photo uploads)
+    brandNew.forEach((m) => markNew(m.id));
 
     // Update cursor only if this is still the first page
     if (!nextCursor.value) nextCursor.value = data.nextCursor;
   } catch {
-    // Non-critical — timeline keeps its current (possibly optimistic) state
+    // Network failed — roll back any pending optimistic entries to avoid ghost cards.
+    // The server already confirmed the save (emit('saved') only fires on 200),
+    // so this is an extremely rare case. We remove them silently rather than
+    // leaving unconfirmed cards that can't be opened or interacted with.
+    for (const id of pendingOptimisticIds.value) {
+      rollbackOptimistic(id);
+    }
   }
 }
 
@@ -741,11 +790,9 @@ function onQuickNoteSaved(data: SavedNoteData) {
     },
   };
 
-  // Prepend optimistically — sorted list keeps it at the top if it's today's date.
-  memoriesFlat.value = [optimistic, ...memoriesFlat.value].sort((a, b) =>
-    b.memory_date.localeCompare(a.memory_date),
-  );
-  markNew(data.memoryId);
+  // Optimistically insert and mark for entrance animation.
+  // Tracked in pendingOptimisticIds so silentRefresh can confirm or roll back.
+  addOptimistic(optimistic);
 
   // Background: silently reconcile with server truth after a short delay.
   setTimeout(silentRefresh, 1500);
