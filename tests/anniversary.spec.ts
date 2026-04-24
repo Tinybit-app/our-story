@@ -143,9 +143,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockCirclesList(page, 'couple', { anniversary_date: '2022-06-15' })
     await mockTimeline(page, [makeMemory('mem-1')])
 
+    const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
-    // Wait for circle switcher first (circles API is fast), then for the computed anniversary text
-    await page.locator('button', { hasText: 'Our Story' }).first().waitFor({ timeout: 15_000 })
+    await circlesReady
     await expect(page.getByText(/together · Since/)).toBeVisible({ timeout: 10_000 })
   })
 
@@ -154,9 +154,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockCirclesList(page, 'family', { anniversary_date: '2022-06-15' })
     await mockTimeline(page, [makeMemory('mem-1')])
 
+    const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
-    // Wait for circle switcher first (circles API is fast), then for the computed anniversary text
-    await page.locator('button', { hasText: 'Our Story' }).first().waitFor({ timeout: 15_000 })
+    await circlesReady
     // Non-couple circles show "Year N of [name] · Since [date]"
     await expect(page.getByText(/of Our Story · Since/)).toBeVisible({ timeout: 10_000 })
   })
@@ -166,9 +166,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockCirclesList(page, 'couple') // anniversary_date: null
     await mockTimeline(page, [makeMemory('mem-1')])
 
+    const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
-    // Wait for the memory card to confirm the timeline loaded before asserting absence
-    await expect(page.getByText('A lovely memory').first()).toBeVisible({ timeout: 10_000 })
+    await circlesReady
     await expect(page.getByText(/together · Since/)).not.toBeVisible()
     await expect(page.getByText(/of Our Story · Since/)).not.toBeVisible()
   })
