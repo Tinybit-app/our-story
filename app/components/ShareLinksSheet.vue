@@ -23,7 +23,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between py-4">
           <h2 class="text-base font-bold text-foreground">{{ t('viewerLink.shareButton') }}</h2>
-          <button @click="$emit('close')" class="p-1 text-muted-foreground hover:text-foreground transition-colors">
+          <button @click="$emit('close')" :aria-label="t('viewerLink.close')" class="p-1 text-muted-foreground hover:text-foreground transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
@@ -34,6 +34,9 @@
         <div v-if="loading" class="py-12 text-center">
           <p class="text-sm text-muted-foreground">{{ t('viewerLink.loading') }}</p>
         </div>
+
+        <!-- Error -->
+        <div v-else-if="error" class="text-sm text-destructive p-4">{{ error }}</div>
 
         <!-- Empty state -->
         <div v-else-if="links.length === 0" class="text-center py-10">
@@ -100,7 +103,8 @@
               <div class="flex gap-2">
                 <button
                   @click="doRevoke(link.id)"
-                  class="h-8 px-3 rounded-[10px] bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+                  :disabled="revoking"
+                  class="h-8 px-3 rounded-[10px] bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {{ t('viewerLink.revoke') }}
                 </button>
@@ -138,6 +142,7 @@
               <!-- Revoke trigger -->
               <button
                 @click="revokingId = link.id"
+                :aria-label="t('viewerLink.revokeLabel')"
                 class="h-8 w-8 flex items-center justify-center rounded-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -188,20 +193,25 @@ const emit = defineEmits<{
 
 const links = ref<ViewerLink[]>([])
 const loading = ref(true)
+const error = ref<string | null>(null)
 const revokingId = ref<string | null>(null)
+const revoking = ref(false)
 const copiedId = ref<string | null>(null)
 
 async function fetchLinks() {
   loading.value = true
+  error.value = null
   try {
-    const data = await $fetch<ViewerLink[]>(`/api/circles/${props.circleId}/viewer-links`)
-    links.value = data
+    links.value = await $fetch<ViewerLink[]>(`/api/circles/${props.circleId}/viewer-links`)
+  } catch {
+    error.value = t('viewerLink.loadError')
   } finally {
     loading.value = false
   }
 }
 
 onMounted(fetchLinks)
+watch(() => props.circleId, fetchLinks)
 
 defineExpose({ refresh: fetchLinks })
 
@@ -243,17 +253,35 @@ function formatExpiry(isoStr: string): string {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(isoStr))
 }
 
+let copyTimer: ReturnType<typeof setTimeout> | null = null
+
 async function copyLink(link: ViewerLink) {
   const url = `${window.location.origin}/view?token=${link.token}`
-  await navigator.clipboard.writeText(url)
-  copiedId.value = link.id
-  setTimeout(() => { copiedId.value = null }, 2000)
+  try {
+    await navigator.clipboard.writeText(url)
+    if (copyTimer) clearTimeout(copyTimer)
+    copiedId.value = link.id
+    copyTimer = setTimeout(() => { copiedId.value = null }, 2000)
+  } catch {
+    // Clipboard permission denied — silently ignore, button just won't show feedback
+  }
 }
 
+onUnmounted(() => { if (copyTimer) clearTimeout(copyTimer) })
+
 async function doRevoke(linkId: string) {
-  await $fetch(`/api/circles/${props.circleId}/viewer-links/${linkId}`, { method: 'DELETE' })
-  revokingId.value = null
-  await fetchLinks()
+  if (revoking.value) return
+  revoking.value = true
+  try {
+    await $fetch(`/api/circles/${props.circleId}/viewer-links/${linkId}`, { method: 'DELETE' })
+    revokingId.value = null
+    await fetchLinks()
+  } catch {
+    // Error is already logged server-side; just close the confirmation
+    revokingId.value = null
+  } finally {
+    revoking.value = false
+  }
 }
 </script>
 

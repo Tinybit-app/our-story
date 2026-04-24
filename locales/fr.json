@@ -618,6 +618,9 @@
     "viewerExpiredCta": "Envoyer un rappel",
     "viewerInvalidTitle": "Ce lien est invalide",
     "viewerInvalidBody": "Le lien est peut-être incorrect ou a été révoqué.",
-    "viewerSignIn": "Se connecter plutôt →"
+    "viewerSignIn": "Se connecter plutôt →",
+    "loadError": "Impossible de charger les liens de partage.",
+    "revokeLabel": "Révoquer le lien",
+    "close": "Fermer"
   }
 }

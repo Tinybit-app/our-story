@@ -465,6 +465,9 @@
     "viewerExpiredCta": "发送提醒",
     "viewerInvalidTitle": "此链接无效",
     "viewerInvalidBody": "链接可能有误或已被撤销。",
-    "viewerSignIn": "改为登录 →"
+    "viewerSignIn": "改为登录 →",
+    "loadError": "无法加载查看链接。",
+    "revokeLabel": "撤销链接",
+    "close": "关闭"
   }
 }

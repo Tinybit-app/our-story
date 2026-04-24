@@ -618,6 +618,9 @@
     "viewerExpiredCta": "Send a reminder",
     "viewerInvalidTitle": "This link is invalid",
     "viewerInvalidBody": "The link may be incorrect or has been revoked.",
-    "viewerSignIn": "Sign in instead →"
+    "viewerSignIn": "Sign in instead →",
+    "loadError": "Could not load viewer links.",
+    "revokeLabel": "Revoke link",
+    "close": "Close"
   }
 }
