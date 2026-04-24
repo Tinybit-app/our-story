@@ -342,6 +342,28 @@
     "start": "开始你的故事",
     "skip": "跳过"
   },
+  "circleSettings": {
+    "circleName": "圈子名称",
+    "circleNamePlaceholder": "圈子名称",
+    "circleType": "圈子类型",
+    "circleTypeDesc": "影响里程碑建议、空状态文案和通知语言。您可以随时更改。",
+    "customTypeLabel": "其他",
+    "customTypeDesc": "通用里程碑",
+    "children": "孩子",
+    "childrenDesc": "添加每个孩子的姓名和出生日期。记忆卡片将显示拍摄时的年龄。",
+    "childNamePlaceholder": "姓名",
+    "addChild": "+ 添加孩子",
+    "childrenMax": "已达到最多 10 名孩子的上限。",
+    "anniversary": "周年纪念日",
+    "anniversaryDesc": "设置周年纪念日，在时间线上显示。",
+    "clearAnniversary": "清除周年纪念日",
+    "errorSaveCircleName": "保存圈子名称失败，请重试。",
+    "errorSaveCircleType": "保存失败，请重试。",
+    "errorUpdateChild": "更新孩子信息失败，请重试。",
+    "errorAddChild": "添加孩子失败，请重试。",
+    "errorRemoveChild": "移除孩子失败，请重试。",
+    "errorSaveAnniversary": "保存周年纪念日失败，请重试。"
+  },
   "circleTypeConfig": {
     "parents": {
       "emptyTitle": "每个里程碑都值得被记录",

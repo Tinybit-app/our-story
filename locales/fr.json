@@ -495,6 +495,28 @@
     "start": "Commencez votre histoire",
     "skip": "Ignorer"
   },
+  "circleSettings": {
+    "circleName": "Nom du cercle",
+    "circleNamePlaceholder": "Nom du cercle",
+    "circleType": "Type de cercle",
+    "circleTypeDesc": "Contrôle les suggestions de jalons, le texte de l'état vide et la langue des notifications. Vous pouvez le modifier à tout moment.",
+    "customTypeLabel": "Autre",
+    "customTypeDesc": "Jalons génériques",
+    "children": "Enfants",
+    "childrenDesc": "Ajoutez le prénom et la date de naissance de chaque enfant. Les cartes de souvenirs afficheront leur âge au moment de la photo.",
+    "childNamePlaceholder": "Prénom",
+    "addChild": "+ Ajouter un enfant",
+    "childrenMax": "Maximum de 10 enfants atteint.",
+    "anniversary": "Anniversaire",
+    "anniversaryDesc": "Définissez une date d'anniversaire à afficher sur votre chronologie.",
+    "clearAnniversary": "Effacer la date d'anniversaire",
+    "errorSaveCircleName": "Échec de la sauvegarde du nom du cercle. Veuillez réessayer.",
+    "errorSaveCircleType": "Échec de la sauvegarde. Veuillez réessayer.",
+    "errorUpdateChild": "Échec de la mise à jour de l'enfant. Veuillez réessayer.",
+    "errorAddChild": "Échec de l'ajout de l'enfant. Veuillez réessayer.",
+    "errorRemoveChild": "Échec de la suppression de l'enfant. Veuillez réessayer.",
+    "errorSaveAnniversary": "Échec de la sauvegarde de la date d'anniversaire. Veuillez réessayer."
+  },
   "circleTypeConfig": {
     "parents": {
       "emptyTitle": "Chaque jalon mérite d'être mémorisé",

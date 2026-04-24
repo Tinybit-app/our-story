@@ -52,14 +52,14 @@
           <!-- Circle name — owner only -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-              Circle name
+              {{ t('circleSettings.circleName') }}
             </h2>
             <div class="flex gap-2">
               <input
                 v-model="circleNameInput"
                 type="text"
                 maxlength="100"
-                placeholder="Circle name"
+                :placeholder="t('circleSettings.circleNamePlaceholder')"
                 class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
                 @keyup.enter="saveCircleName"
               />
@@ -68,7 +68,7 @@
                 class="flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
                 @click="saveCircleName"
               >
-                {{ savingCircleName ? '…' : 'Save' }}
+                {{ savingCircleName ? '…' : t('modal.save') }}
               </button>
             </div>
             <p v-if="circleNameError" class="text-xs text-destructive mt-2">{{ circleNameError }}</p>
@@ -79,10 +79,10 @@
           <!-- Circle type picker — owner only -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-              Circle type
+              {{ t('circleSettings.circleType') }}
             </h2>
             <p class="text-xs text-muted-foreground mb-4">
-              Controls milestone suggestions, empty-state copy, and notification language. You can change this at any time.
+              {{ t('circleSettings.circleTypeDesc') }}
             </p>
 
             <div class="grid grid-cols-2 gap-2">
@@ -106,7 +106,7 @@
                 class="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
                 @click="saveCircleType"
               >
-                {{ savingCircleType ? '…' : 'Save' }}
+                {{ savingCircleType ? '…' : t('modal.save') }}
               </button>
             </div>
             <p v-if="circleTypeError" class="text-xs text-destructive mt-2">{{ circleTypeError }}</p>
@@ -117,10 +117,10 @@
           <!-- Children (baby age stamps) — owner only -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-              Children
+              {{ t('circleSettings.children') }}
             </h2>
             <p class="text-xs text-muted-foreground mb-4">
-              Add each child's name and date of birth. Memory cards will show their age at the time of the photo.
+              {{ t('circleSettings.childrenDesc') }}
             </p>
 
             <!-- Existing children list -->
@@ -167,7 +167,7 @@
                     <input
                       v-model="editChildName"
                       type="text"
-                      placeholder="Name"
+                      :placeholder="t('circleSettings.childNamePlaceholder')"
                       maxlength="100"
                       class="flex-1 min-w-0 bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
                       @keydown.enter="saveEditChild(child.id)"
@@ -189,13 +189,13 @@
                       class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
                       @click="saveEditChild(child.id)"
                     >
-                      {{ savingChildId === child.id ? '…' : 'Save' }}
+                      {{ savingChildId === child.id ? '…' : t('modal.save') }}
                     </button>
                     <button
                       class="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors"
                       @click="cancelEditChild"
                     >
-                      Cancel
+                      {{ t('modal.cancel') }}
                     </button>
                   </div>
                 </div>
@@ -208,7 +208,7 @@
                 <input
                   v-model="newChildName"
                   type="text"
-                  placeholder="Name"
+                  :placeholder="t('circleSettings.childNamePlaceholder')"
                   maxlength="100"
                   class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
                 />
@@ -225,10 +225,10 @@
                 class="self-start px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
                 @click="addChild"
               >
-                {{ addingChild ? '…' : '+ Add child' }}
+                {{ addingChild ? '…' : t('circleSettings.addChild') }}
               </button>
             </div>
-            <p v-else class="text-xs text-muted-foreground">Maximum of 10 children reached.</p>
+            <p v-else class="text-xs text-muted-foreground">{{ t('circleSettings.childrenMax') }}</p>
 
             <p v-if="childrenError" class="text-xs text-destructive mt-2">{{ childrenError }}</p>
           </div>
@@ -238,10 +238,10 @@
           <!-- Anniversary date — all circle types, owner only -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-              Anniversary
+              {{ t('circleSettings.anniversary') }}
             </h2>
             <p class="text-xs text-muted-foreground mb-4">
-              Set an anniversary date to display on your timeline.
+              {{ t('circleSettings.anniversaryDesc') }}
             </p>
             <div class="flex gap-2 items-start">
               <input
@@ -256,13 +256,13 @@
                 class="flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
                 @click="saveAnniversary"
               >
-                {{ savingAnniversary ? '…' : 'Save' }}
+                {{ savingAnniversary ? '…' : t('modal.save') }}
               </button>
               <button
                 v-if="circle.anniversary_date"
                 :disabled="savingAnniversary"
                 class="flex-shrink-0 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-border transition-colors disabled:opacity-40"
-                title="Clear anniversary date"
+                :title="t('circleSettings.clearAnniversary')"
                 @click="clearAnniversary"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -431,7 +431,7 @@ const circleTypeOptions = computed(() => [
   { value: 'caregiving', label: t('circleType.caregiving.label'), description: t('circleType.caregiving.description') },
   { value: 'travel',     label: t('circleType.travel.label'),     description: t('circleType.travel.description') },
   { value: 'solo',       label: t('circleType.solo.label'),       description: t('circleType.solo.description') },
-  { value: 'custom',     label: 'Other',                          description: 'Generic milestones' },
+  { value: 'custom',     label: t('circleSettings.customTypeLabel'), description: t('circleSettings.customTypeDesc') },
 ])
 
 // ── Circle name ────────────────────────────────────────────
@@ -458,7 +458,7 @@ async function saveCircleName() {
     })
     await refreshNuxtData()
   } catch (err: any) {
-    circleNameError.value = err?.data?.message ?? 'Failed to save circle name. Please try again.'
+    circleNameError.value = err?.data?.message ?? t('circleSettings.errorSaveCircleName')
   } finally {
     savingCircleName.value = false
   }
@@ -487,7 +487,7 @@ async function saveCircleType() {
     })
     await refreshNuxtData()
   } catch (err: any) {
-    circleTypeError.value = err?.data?.message ?? 'Failed to save. Please try again.'
+    circleTypeError.value = err?.data?.message ?? t('circleSettings.errorSaveCircleType')
   } finally {
     savingCircleType.value = false
   }
@@ -557,7 +557,7 @@ async function saveEditChild(childId: string) {
     await refreshChildren()
     cancelEditChild()
   } catch (err: any) {
-    childrenError.value = err?.data?.message ?? 'Failed to update child. Please try again.'
+    childrenError.value = err?.data?.message ?? t('circleSettings.errorUpdateChild')
   } finally {
     savingChildId.value = null
   }
@@ -580,7 +580,7 @@ async function addChild() {
     newChildDob.value = ''
     await refreshChildren()
   } catch (err: any) {
-    childrenError.value = err?.data?.message ?? 'Failed to add child. Please try again.'
+    childrenError.value = err?.data?.message ?? t('circleSettings.errorAddChild')
   } finally {
     addingChild.value = false
   }
@@ -594,7 +594,7 @@ async function removeChild(childId: string) {
     await $fetch(`/api/circles/${circleId.value}/children/${childId}`, { method: 'DELETE' })
     await refreshChildren()
   } catch (err: any) {
-    childrenError.value = err?.data?.message ?? 'Failed to remove child. Please try again.'
+    childrenError.value = err?.data?.message ?? t('circleSettings.errorRemoveChild')
   } finally {
     removingChildId.value = null
   }
@@ -623,7 +623,7 @@ async function saveAnniversary() {
     })
     await refreshNuxtData()
   } catch (err: any) {
-    anniversaryError.value = err?.data?.message ?? 'Failed to save anniversary date. Please try again.'
+    anniversaryError.value = err?.data?.message ?? t('circleSettings.errorSaveAnniversary')
   } finally {
     savingAnniversary.value = false
   }
