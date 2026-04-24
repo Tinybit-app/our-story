@@ -84,8 +84,9 @@ async function goToTimeline(page: any) {
 
 test.describe('Language switching (8.5.4 + 8.5.5)', () => {
   test.beforeEach(async ({ page }) => {
-    // Clear persisted locale so each test starts from English
-    await page.context().clearCookies()
+    // Clear only the i18n locale cookie so each test starts from English
+    // (clearing all cookies would also remove the Supabase auth cookie and cause a redirect to /login)
+    await page.context().clearCookies({ name: 'i18n_locale' })
   })
 
   test('1. language picker is visible in the timeline header', async ({ page }) => {
