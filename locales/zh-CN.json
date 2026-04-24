@@ -107,7 +107,9 @@
     "viewOlderComments": "查看 {n} 条更早的评论",
     "editNote": "编辑备注",
     "editComment": "编辑评论",
-    "whoIsIn": "这条记忆中有谁？"
+    "whoIsIn": "这条记忆中有谁？",
+    "saveToDevice": "保存到设备",
+    "sharePhoto": "分享照片"
   },
   "upload": {
     "addMemory": "添加记忆",

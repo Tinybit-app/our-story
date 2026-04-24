@@ -158,7 +158,8 @@ test.describe('Circle type picker (4.10.5)', () => {
     await goToSettings(page)
     // Select a different type
     await page.getByRole('button', { name: /Family/i }).click()
-    const saveBtn = page.locator('button', { hasText: 'Save' }).first()
+    // .nth(1) because index 0 is the circle-name Save, index 1 is the circle-type Save
+    const saveBtn = page.locator('button', { hasText: 'Save' }).nth(1)
     await expect(saveBtn).toBeEnabled()
   })
 
@@ -185,7 +186,8 @@ test.describe('Circle type picker (4.10.5)', () => {
 
     await goToSettings(page)
     await page.getByRole('button', { name: /Friend group/i }).click()
-    await page.locator('button', { hasText: 'Save' }).first().click()
+    // .nth(1) because index 0 is the circle-name Save, index 1 is the circle-type Save
+    await page.locator('button', { hasText: 'Save' }).nth(1).click()
 
     await page.waitForTimeout(500)
     expect(patchBody).toMatchObject({ circleType: 'friends' })

@@ -127,7 +127,7 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
     await page.goto('/timeline/2024/06')
     // Header should show the month label
-    await expect(page.getByText(/june 2024/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({ timeout: 10_000 })
     // Empty state
     await expect(page.getByText(/no memories/i)).toBeVisible({ timeout: 5_000 })
   })
@@ -185,7 +185,7 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await mockTimelineEmpty(page)
 
     await page.goto('/timeline/2024/06')
-    await expect(page.getByText(/june 2024/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({ timeout: 10_000 })
 
     // The back link uses NuxtLink to /timeline
     await page.getByRole('link', { name: /back/i }).click()

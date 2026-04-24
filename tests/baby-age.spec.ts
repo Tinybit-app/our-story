@@ -77,6 +77,7 @@ function mockCircles(page: any) {
           circle_type: 'parents',
           memberCount: 2,
           role: 'owner',
+          anniversary_date: null,
         }],
       }),
     })
@@ -124,8 +125,8 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
 
     await page.goto('/timeline')
-    // Wait for the circles mock to load (confirms page is fully hydrated)
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    // Wait for the memory card to confirm both circles + timeline mocks loaded
+    await expect(page.getByText('A cute moment').first()).toBeVisible({ timeout: 15_000 })
     // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks", labeled with the child's name
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('3 months, 2 weeks')).toBeVisible({ timeout: 10_000 })
@@ -157,7 +158,7 @@ test.describe('Baby age stamp (4.10.1)', () => {
     )
 
     await page.goto('/circle-settings')
-    await expect(page.getByPlaceholder('Name')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByPlaceholder('Name', { exact: true })).toBeVisible({ timeout: 10_000 })
     await expect(page.getByRole('button', { name: /add child/i })).toBeVisible()
   })
 
@@ -188,7 +189,7 @@ test.describe('Baby age stamp (4.10.1)', () => {
     })
 
     await page.goto('/circle-settings')
-    await page.getByPlaceholder('Name').fill('Emma')
+    await page.getByPlaceholder('Name', { exact: true }).fill('Emma')
     await page.getByLabel('Date of birth').fill('2024-01-01')
     await page.getByRole('button', { name: /add child/i }).click()
 

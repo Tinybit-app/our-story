@@ -107,7 +107,9 @@
     "viewOlderComments": "View {n} older comment | View {n} older comments",
     "editNote": "Edit note",
     "editComment": "Edit comment",
-    "whoIsIn": "Who's in this memory?"
+    "whoIsIn": "Who's in this memory?",
+    "saveToDevice": "Save to device",
+    "sharePhoto": "Share photo"
   },
   "upload": {
     "addMemory": "Add a memory",

@@ -40,6 +40,37 @@
           <path d="M21 15l-5-5L5 21" />
         </svg>
       </div>
+
+      <!-- Download / share action buttons (photo or video only) -->
+      <div v-if="firstMedia?.url" class="absolute top-2 right-2 flex gap-1.5 z-10">
+        <!-- Share with watermark (images only) -->
+        <button
+          v-if="firstMedia.media_type !== 'video'"
+          class="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+          :title="t('modal.sharePhoto')"
+          aria-label="Share photo"
+          @click.stop="shareMedia"
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+        <!-- Save to device -->
+        <button
+          class="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors disabled:opacity-50"
+          :title="t('modal.saveToDevice')"
+          aria-label="Save to device"
+          :disabled="downloading"
+          @click.stop="downloadMedia"
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Caption section: tab bar + independent scroll panels -->
@@ -545,6 +576,76 @@ function openShareCard() {
     .map(mc => { const age = computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date); return age ? { name: mc.childprofile.name, age } : null })
     .filter(Boolean) as Array<{ name: string; age: string }>
   shareCardData.value = { photoUrl: firstPhoto.thumbnailUrl ?? firstPhoto.url, milestoneLabel: props.memory.milestone_label, memoryDate: props.memory.memory_date, childAges: ages, onDemand: true }
+}
+
+// ── Download / share ───────────────────────────────────────
+const downloading = ref(false)
+
+async function downloadMedia() {
+  const media = firstMedia.value
+  if (!media?.url) return
+  downloading.value = true
+  try {
+    const res = await fetch(media.url)
+    const blob = await res.blob()
+    const ext = media.media_type === 'video' ? 'mp4' : (blob.type.split('/')[1] || 'jpg')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `our-story-${props.memory.memory_date}.${ext}`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  } catch (err) {
+    console.error('[MemoryModal] download failed:', err)
+  } finally {
+    downloading.value = false
+  }
+}
+
+async function shareMedia() {
+  const media = firstMedia.value
+  if (!media?.url || media.media_type === 'video') return
+  try {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('cors'))
+      img.src = media.url!
+    })
+    const canvas = document.createElement('canvas')
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(img, 0, 0)
+    // Watermark: small "Our Story" in bottom-right corner
+    const margin = Math.round(canvas.width * 0.025)
+    const fontSize = Math.max(20, Math.round(canvas.width * 0.03))
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'bottom'
+    ctx.shadowColor = 'rgba(0,0,0,0.55)'
+    ctx.shadowBlur = 10
+    ctx.fillStyle = 'rgba(255,255,255,0.88)'
+    ctx.fillText('Our Story', canvas.width - margin, canvas.height - margin)
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+    if (!blob) return
+    const filename = `our-story-${props.memory.memory_date}.jpg`
+    const file = new File([blob], filename, { type: 'image/jpeg' })
+    if (typeof navigator !== 'undefined' && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file] })
+    } else {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+    }
+  } catch (err) {
+    // User dismissed the share sheet (AbortError) — do nothing
+    if (err instanceof DOMException && err.name === 'AbortError') return
+    // CORS blocked the canvas draw — fall back to plain download
+    await downloadMedia()
+  }
 }
 
 // ── Reactions ──────────────────────────────────────────────

@@ -40,22 +40,24 @@ export default defineEventHandler(async (event) => {
   // Fetch recent memories (circle-visibility only, newest first, max 50)
   const { data: memories } = await supabase
     .from("memory")
-    .select("id, memory_date, note, memorymedia(storage_path)")
+    .select("id, memory_date, note, memorymedia(storage_path, media_type)")
     .eq("circle_id", circleId)
     .eq("visibility", "circle")
     .order("memory_date", { ascending: false })
     .limit(50)
 
-  // Generate signed URLs for media
+  // Generate signed URLs for media — images use transformation for bandwidth efficiency
   const memoriesWithUrls = await Promise.all(
     (memories ?? []).map(async (m: any) => {
       const media = m.memorymedia?.[0]
       if (!media?.storage_path) return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: null, mediaType: null }
-      const ext = media.storage_path.split('.').pop()?.toLowerCase() ?? ''
-      const mediaType: 'video' | 'image' = ['mp4', 'mov', 'webm', 'qt'].includes(ext) ? 'video' : 'image'
+      const isVideo = media.media_type === "video"
+      const mediaType: 'video' | 'image' = isVideo ? 'video' : 'image'
       const { data } = await supabase.storage
         .from("memories-private")
-        .createSignedUrl(media.storage_path, 60 * 60)
+        .createSignedUrl(media.storage_path, 3600, isVideo ? undefined : {
+          transform: { width: 800, format: "webp" as "origin", quality: 85 },
+        })
       return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: data?.signedUrl ?? null, mediaType }
     })
   )

@@ -147,8 +147,18 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **`QuickNoteModal`** (`app/components/QuickNoteModal.vue`) — dedicated detail modal for note-only memories; no tabs; editorial quote top area (warm accent-tinted bg, 130px Georgia `"` mark, italic 17px note text, "Quick note" label top-right, date bottom-right, milestone stamp); slim info row (date · author, edit pencil for owner, child pills, tagged members, reactions with tooltips + emoji picker); edit mode (milestone + note inputs, people picker, save/cancel — no internal scrollbar); full comments section (input + thread with inline editing); same open/close spring animation as `MemoryModal` (flies from card origin rect)
   - Routing: `onOpenMemory` checks `!memory.memorymedia.length && memory.note` → opens `QuickNoteModal`; photo/video memories continue to open `MemoryModal` — wired in both `timeline/index.vue` and `timeline/[year]/[month].vue`
   - Tests: 11 E2E tests (`tests/quick-note.spec.ts` — 7 creation flow + 4 QuickNoteModal), 12 unit validation tests, RLS tests 19-20 (member can insert, non-member blocked)
-- [ ] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
-- [ ] 7.5 Media download & share (save to device, shareable card with watermark)
+- [x] 7.4 Image quality: verify originals stored untouched, thumbnails served via Supabase Image Transformations
+  - Upload Edge Function stores the raw file buffer without any processing — originals preserved at full quality
+  - Main timeline API (`GET /api/timeline`) generates `thumbnailUrl` (800px WebP, 85% quality) alongside `url` (full-res, 1h expiry) for all image media via `createSignedUrl` transform option
+  - Viewer timeline API (`GET /api/viewer/timeline`) updated: selects `media_type` from DB (replaces fragile extension parsing); images use 800px WebP transform; videos keep full-res URL
+  - PolaroidCard + MemoryCard use `thumbnailUrl` for display; MemoryModal uses `url` (full-res) for the lightbox view
+- [x] 7.5 Media download & share (save to device, shareable card with watermark)
+  - **Save to device**: download icon button overlaid on the photo/video area in MemoryModal; `fetch()` → Blob → `<a download>` click; works for both photos and videos; button disabled while in-flight
+  - **Share with watermark** (images only): draws photo on an offscreen canvas, adds "Our Story" text watermark (bottom-right, bold, semi-transparent white with drop shadow); uses Web Share API with files on mobile, download fallback on desktop; gracefully falls back to plain download if CORS blocks the canvas draw or share is cancelled
+  - Share button hidden for video memories (canvas cannot watermark video in the browser)
+  - No server changes — purely client-side, no new API routes
+  - i18n: `modal.saveToDevice` and `modal.sharePhoto` added to `locales/en.json` and `locales/zh-CN.json`
+  - Tests: 4 E2E tests (`tests/media-download.spec.ts`) verifying button presence per media type
 
 ### Milestone 8: Comments & Reactions
 - [ ] 8.1 Comments (post, read, delete own)

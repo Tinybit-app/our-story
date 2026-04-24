@@ -86,7 +86,7 @@ test.describe('Quick note (7.3)', () => {
     await mockTimeline(page)
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
 
     await expect(page.getByText('Add a memory')).toBeVisible({ timeout: 5_000 })
   })
@@ -97,10 +97,10 @@ test.describe('Quick note (7.3)', () => {
     await mockTimeline(page)
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
 
-    await expect(page.getByText('Photo or video')).toBeVisible()
-    await expect(page.getByText('Quick note')).toBeVisible()
+    await expect(page.getByRole('button', { name: /photo or video/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /quick note/i })).toBeVisible()
   })
 
   test('choosing "Photo or video" closes the choice sheet', async ({ page }) => {
@@ -109,10 +109,10 @@ test.describe('Quick note (7.3)', () => {
     await mockTimeline(page)
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
     await expect(page.getByText('Add a memory')).toBeVisible()
 
-    await page.getByText('Photo or video').click()
+    await page.getByRole('button', { name: /photo or video/i }).click()
 
     // Choice sheet should close
     await expect(page.getByText('Add a memory')).not.toBeVisible({ timeout: 3_000 })
@@ -124,10 +124,10 @@ test.describe('Quick note (7.3)', () => {
     await mockTimeline(page)
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
     await page.getByText('Quick note').click()
 
-    await expect(page.getByText('Quick note', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: 'Quick note' })).toBeVisible({ timeout: 5_000 })
     // Textarea should be present and focused
     await expect(page.locator('textarea')).toBeVisible()
   })
@@ -138,7 +138,7 @@ test.describe('Quick note (7.3)', () => {
     await mockTimeline(page)
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
     await page.getByText('Quick note').click()
 
     await expect(page.getByRole('button', { name: /save note/i })).toBeDisabled({ timeout: 5_000 })
@@ -160,7 +160,7 @@ test.describe('Quick note (7.3)', () => {
     })
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
     await page.getByText('Quick note').click()
 
     await page.locator('textarea').fill('First word today: "dada"')
@@ -188,7 +188,7 @@ test.describe('Quick note (7.3)', () => {
     )
 
     await goToTimeline(page)
-    await page.getByRole('button', { name: /add a memory/i }).click()
+    await page.getByRole('button', { name: /add memory/i }).click()
     await page.getByText('Quick note').click()
     await page.locator('textarea').fill('A moment worth keeping')
     await page.getByRole('button', { name: /save note/i }).click()
