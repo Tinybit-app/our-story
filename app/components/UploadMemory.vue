@@ -627,7 +627,7 @@ const props = defineProps<{
   children?: ChildProfile[];
   members?: CircleMember[];
 }>();
-const typeConfig = computed(() => useCircleTypeConfig(props.circleType));
+const typeConfig = computed(() => useCircleTypeConfig(props.circleType, t));
 
 const isOpen = computed(() => items.value.length > 0);
 defineExpose({ open: () => fileInput.value?.click(), isOpen });

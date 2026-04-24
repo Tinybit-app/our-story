@@ -124,7 +124,7 @@ const props = defineProps<{
   circleType?: string | null
 }>()
 
-const typeConfig = computed(() => useCircleTypeConfig(props.circleType))
+const typeConfig = computed(() => useCircleTypeConfig(props.circleType, t))
 
 import type { Memory } from '~/composables/useTimeline'
 

@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(40);
+SELECT plan(43);
 
 -- ============================================================
 -- FIXTURES
@@ -672,6 +672,41 @@ SELECT is(
    WHERE user_id = '00000000-0000-0000-0000-000000000002' AND emoji = '❤️'),
   1,
   'user_a cannot delete user_b reaction — row unchanged'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 41: user can UPDATE their own locale
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$UPDATE public.User SET locale = 'fr' WHERE id = '00000000-0000-0000-0000-000000000001'$$,
+  'user can update their own locale'
+);
+
+RESET ROLE;
+SELECT is(
+  (SELECT locale FROM public.User WHERE id = '00000000-0000-0000-0000-000000000001'),
+  'fr',
+  'locale persisted as fr after owner update'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 42: user cannot UPDATE another user's locale
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+UPDATE public.User SET locale = 'zh-CN' WHERE id = '00000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT locale FROM public.User WHERE id = '00000000-0000-0000-0000-000000000001'),
+  'fr',
+  'user_b cannot update user_a locale — row unchanged'
 );
 SET LOCAL ROLE authenticated;
 

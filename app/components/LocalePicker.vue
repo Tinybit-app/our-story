@@ -3,6 +3,7 @@
 
     <!-- Trigger -->
     <button
+      data-testid="locale-picker"
       @click="open = !open"
       class="flex items-center gap-1 h-7 px-2.5 rounded-full border border-border bg-card text-[11px] font-semibold text-foreground hover:bg-secondary transition-colors"
       :class="{ 'bg-secondary': open }"
@@ -62,7 +63,7 @@ const root = ref<HTMLElement | null>(null)
 // Short label from nuxt.config shortLabel field, fallback to uppercased language tag
 const currentShortLabel = computed(() => {
   const loc = locales.value.find(l => l.code === locale.value)
-  return (loc as any)?.shortLabel ?? locale.value.split('-')[0].toUpperCase()
+  return (loc as any)?.shortLabel ?? locale.value.split('-')[0]!.toUpperCase()
 })
 
 // Close on outside click

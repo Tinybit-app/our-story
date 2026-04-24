@@ -342,6 +342,48 @@
     "start": "开始你的故事",
     "skip": "跳过"
   },
+  "circleTypeConfig": {
+    "parents": {
+      "emptyTitle": "每个里程碑都值得被记录",
+      "emptyDesc": "上传第一张照片或视频，开始记录宝宝的成长故事。",
+      "milestonePlaceholder": "例：第一次微笑、第一个生日…（可选）"
+    },
+    "couple": {
+      "emptyTitle": "你们的故事从这里开始",
+      "emptyDesc": "上传第一条共同回忆，开始构建你们的时间线。",
+      "milestonePlaceholder": "例：第一次约会、周年纪念…（可选）"
+    },
+    "family": {
+      "emptyTitle": "家庭时刻永恒留存",
+      "emptyDesc": "上传第一张照片或视频，开始记录家庭故事。",
+      "milestonePlaceholder": "例：家庭旅行、毕业典礼…（可选）"
+    },
+    "friends": {
+      "emptyTitle": "一起留住每次冒险",
+      "emptyDesc": "上传第一张照片或视频，开始记录你们的共同回忆。",
+      "milestonePlaceholder": "例：巴塞罗那之旅、跨年夜…（可选）"
+    },
+    "caregiving": {
+      "emptyTitle": "每个瞬间都很重要",
+      "emptyDesc": "上传第一张照片或视频，开始记录这段旅程。",
+      "milestonePlaceholder": "例：就医记录、康复里程碑…（可选）"
+    },
+    "travel": {
+      "emptyTitle": "旅程从这里开始",
+      "emptyDesc": "上传旅途中的第一张照片或视频，开始你的旅行故事。",
+      "milestonePlaceholder": "例：抵达东京、登顶…（可选）"
+    },
+    "solo": {
+      "emptyTitle": "你的故事，你的方式",
+      "emptyDesc": "上传第一张照片或视频，开始构建你的个人时间线。",
+      "milestonePlaceholder": "例：新工作、个人成就…（可选）"
+    },
+    "default": {
+      "emptyTitle": "你的故事从这里开始",
+      "emptyDesc": "上传第一张照片或视频，开始记录你们的共同时间线。",
+      "milestonePlaceholder": "例：第一步、婚礼…（可选）"
+    }
+  },
   "milestone": {
     "shareLabel": "里程碑",
     "shareTitle": "分享这个里程碑",

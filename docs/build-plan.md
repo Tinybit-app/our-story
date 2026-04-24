@@ -190,7 +190,12 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 8.5.2 Extract all UI strings to `locales/en.json` — replace every hardcoded string with `t('key')`
 - [x] 8.5.3 Translate `locales/zh-CN.json` (Simplified Chinese)
 - [x] 8.5.5 Language toggle in header + avatar dropdown (persisted to `User.locale` in DB)
-- [ ] 8.5.4 Translate `locales/fr.json` (French — Canadian bilingual requirement)
+- [x] 8.5.4 Translate `locales/fr.json` (French — Canadian bilingual requirement)
+  - Migration 023: expands `user_locale_check` to `('en', 'zh-CN', 'fr')`
+  - `locales/fr.json` — full Canadian French translation of all 21 key groups
+  - `nuxt.config.ts` updated: `{ code: 'fr', name: 'Français', shortLabel: 'FR', file: 'fr.json' }`
+  - `LocalePicker.vue`: added `data-testid="locale-picker"` for E2E targeting
+  - Tests: 8 E2E tests (`tests/language.spec.ts`) covering picker visibility, FR/zh-CN/EN switching, label update, and PATCH /api/profile call; RLS tests 41-43 verify user can update own locale (lives_ok + is), cannot update another user's locale (total 43)
 - Note: use `Intl.DateTimeFormat` for all dates from day one — never hardcode `MM/DD/YYYY`
 - Note: see design spec §Localization for full setup code and priority language rationale
 

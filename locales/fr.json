@@ -1,0 +1,554 @@
+{
+  "login": {
+    "tagline": "Chaque moment qui compte, au même endroit.",
+    "subtitle": "Pour vous, votre famille, vos amis.",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithEmail": "Continuer avec courriel",
+    "sending": "Envoi en cours…",
+    "checkInbox": "Vérifiez votre boîte de réception",
+    "sentLink": "Nous avons envoyé un lien de connexion à {email}",
+    "tryDifferent": "Essayer une autre méthode",
+    "noPassword": "Nous vous enverrons un lien de connexion — aucun mot de passe requis.",
+    "or": "ou"
+  },
+  "onboarding": {
+    "whoIsThis": "Pour qui est cette histoire?",
+    "personalise": "Nous personnaliserons votre expérience selon votre groupe.",
+    "continue": "Continuer",
+    "back": "Retour",
+    "nameCircle": "Nommez votre cercle",
+    "nameCircleSub": "C'est ce que verront vos membres.",
+    "creating": "Création en cours…",
+    "whatsYourName": "Quel est votre prénom?",
+    "nameSub": "Pour que votre cercle sache qui vous êtes.",
+    "firstName": "Prénom",
+    "lastName": "Nom de famille (facultatif)",
+    "saving": "Sauvegarde en cours…",
+    "inviteFirst": "Invitez votre premier membre",
+    "inviteSub": "Ils recevront un courriel avec un lien pour rejoindre votre histoire.",
+    "inviteSent": "Invitation envoyée",
+    "inviteSentLink": "Un lien a été envoyé à {email}",
+    "sendInvite": "Envoyer l'invitation",
+    "skipForNow": "Passer pour l'instant",
+    "circlePlaceholderParents": "La famille Johnson",
+    "circlePlaceholderCouple": "Sarah et Michel",
+    "circlePlaceholderFriends": "L'équipe de Barcelone",
+    "circlePlaceholderSolo": "Mon histoire",
+    "circlePlaceholderFamily": "Les Tremblay",
+    "circlePlaceholderTravel": "Asie du Sud-Est 2025",
+    "circlePlaceholderCaregiving": "Le cercle Wilson",
+    "circlePlaceholderDefault": "Notre cercle",
+    "language": "Langue"
+  },
+  "circleType": {
+    "parents":    { "label": "Nouveaux parents",  "description": "Jalons et croissance de bébé" },
+    "couple":     { "label": "Couple",             "description": "Jalons de la relation" },
+    "family":     { "label": "Famille",            "description": "Souvenirs de famille" },
+    "friends":    { "label": "Groupe d'amis",      "description": "Voyages, retrouvailles, moments" },
+    "caregiving": { "label": "Soins",              "description": "Santé et événements de vie" },
+    "travel":     { "label": "Groupe de voyage",   "description": "Aventures ensemble" },
+    "solo":       { "label": "Juste moi",          "description": "Chronologie personnelle" }
+  },
+  "nav": {
+    "addMemory": "Ajouter un souvenir",
+    "members": "{n} membre | {n} membres",
+    "profileSettings": "Paramètres du profil",
+    "inviteMember": "Inviter un membre",
+    "lightMode": "Mode clair",
+    "darkMode": "Mode sombre",
+    "logOut": "Se déconnecter",
+    "jumpTo": "Aller à",
+    "inviteSomeone": "Inviter quelqu'un",
+    "inviteDesc": "Ils recevront un courriel avec un lien pour rejoindre {circle}.",
+    "cancel": "Annuler",
+    "sending": "Envoi en cours…",
+    "sendInvite": "Envoyer l'invitation",
+    "yourCircles": "Vos cercles",
+    "createNewCircle": "Créer un nouveau cercle",
+    "inviteSentTo": "Invitation envoyée à {email}.",
+    "inviteAlreadySent": "Une invitation a déjà été envoyée à ce courriel.",
+    "inviteMaxPending": "Vous avez 10 invitations en attente. Attendez que certaines soient acceptées.",
+    "inviteFailed": "Échec de l'envoi de l'invitation. Veuillez réessayer.",
+    "circleSettings": "Paramètres du cercle"
+  },
+  "timeline": {
+    "emptyTitle": "Votre histoire commence ici",
+    "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à construire votre chronologie partagée.",
+    "loading": "Chargement des souvenirs…",
+    "memories": "{n} souvenir | {n} souvenirs",
+    "months": "{n} mois",
+    "more": "plus",
+    "open": "Ouvrir",
+    "noMemoriesFor": "Aucun souvenir trouvé pour {month}."
+  },
+  "card": {
+    "noNote": "Aucune note",
+    "photoAlt": "Souvenir",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "daysAgo": "il y a {n} jours"
+  },
+  "modal": {
+    "tabCaption": "Légende",
+    "tabComments": "Commentaires",
+    "date": "Date",
+    "milestone": "Jalon",
+    "note": "Note",
+    "milestonePlaceholder": "ex. Premiers pas",
+    "notePlaceholder": "Ajouter une note…",
+    "cancel": "Annuler",
+    "saving": "Sauvegarde en cours…",
+    "save": "Enregistrer",
+    "noNote": "Aucune note ajoutée",
+    "noNoteOwner": "Aucune note ajoutée — cliquez sur l'icône de modification pour en ajouter une",
+    "addComment": "Ajouter un commentaire…",
+    "post": "Publier",
+    "noComments": "Aucun commentaire pour l'instant",
+    "viewOlderComments": "Voir {n} commentaire plus ancien | Voir {n} commentaires plus anciens",
+    "editNote": "Modifier la note",
+    "editComment": "Modifier le commentaire",
+    "deleteComment": "Supprimer le commentaire",
+    "edited": "modifié",
+    "confirmDelete": "Supprimer ce commentaire?",
+    "delete": "Supprimer",
+    "whoIsIn": "Qui est dans ce souvenir?",
+    "saveToDevice": "Enregistrer sur l'appareil",
+    "sharePhoto": "Partager la photo"
+  },
+  "upload": {
+    "addMemory": "Ajouter un souvenir",
+    "addMemories": "Ajouter {n} souvenirs",
+    "addMore": "+ Ajouter plus",
+    "applyToAll": "Appliquer à tous",
+    "note": "Note",
+    "milestone": "Jalon",
+    "whenWas": "Quand était-ce?",
+    "whoIsIn": "Qui est dans ce souvenir?",
+    "tagPeople": "Identifier des personnes (s'applique à tous)",
+    "cancel": "Annuler",
+    "upload": "Téléverser",
+    "uploadN": "Téléverser {n}",
+    "uploading": "Téléversement {done}/{total}…",
+    "allUploaded": "Tout téléversé ✓",
+    "notePlaceholder": "Ajouter une note… (facultatif)",
+    "milestonePlaceholder": "ex. Premiers pas, Jour du mariage… (facultatif)",
+    "noteShort": "Note… (facultatif)",
+    "milestoneShort": "✦ Jalon… (facultatif)",
+    "errorVideoSize": "Les vidéos doivent faire moins de 500 Mo.",
+    "errorPhotoSize": "Les photos doivent faire moins de 50 Mo.",
+    "errorSession": "Session expirée — veuillez vous reconnecter.",
+    "errorStorageFull": "Espace de stockage plein",
+    "errorVideoTooLarge": "Vidéo trop volumineuse",
+    "errorPhotoTooLarge": "Photo trop volumineuse",
+    "errorFailed": "Échec du téléversement"
+  },
+  "common": {
+    "back": "Retour",
+    "justNow": "à l'instant",
+    "daysAgo": "il y a {n}j",
+    "hoursAgo": "il y a {n}h",
+    "minsAgo": "il y a {n}m",
+    "inDays": "dans {n}j",
+    "inHours": "dans {n}h",
+    "inMins": "dans {n}m",
+    "you": "Vous",
+    "someone": "Quelqu'un",
+    "unknown": "Inconnu",
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "noCircle": {
+    "title": "Vous n'êtes dans aucun cercle",
+    "desc": "Vous avez peut-être été retiré, ou votre invitation n'est pas encore arrivée.",
+    "createCircle": "Créer un nouveau cercle",
+    "waitingTitle": "En attente d'une invitation?",
+    "waitingDesc": "Demandez au propriétaire du cercle de vous envoyer un lien d'invitation. Vous recevrez un courriel avec un lien pour rejoindre.",
+    "pendingDeletionTitle": "Vous avez récemment supprimé un cercle?",
+    "pendingDeletionDesc": "Vous avez 30 jours pour le restaurer avant sa suppression définitive.",
+    "pendingDeletionAction": "Restaurer depuis les paramètres du compte"
+  },
+  "confirm": {
+    "signingIn": "Connexion en cours…",
+    "tryAgain": "Réessayer",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "invite": {
+    "joining": "Rejoindre votre cercle…",
+    "expired": "Cette invitation a expiré",
+    "error": "Une erreur s'est produite",
+    "expiredDesc": "Demandez au propriétaire du cercle d'envoyer une nouvelle invitation.",
+    "errorDesc": "Veuillez réessayer le lien ou demander une nouvelle invitation.",
+    "goToSignIn": "Aller à la connexion",
+    "circleDeleted": "Ce cercle a été supprimé",
+    "circleDeletedDesc": "Le propriétaire a supprimé ce cercle. Votre invitation n'est plus valide."
+  },
+  "members": {
+    "title": "Membres",
+    "invite": "Inviter",
+    "count": "{n} Membre | {n} Membres",
+    "you": "(vous)",
+    "roleOwner": "Propriétaire",
+    "roleAdmin": "Administrateur",
+    "roleMember": "Membre",
+    "pendingInvites": "Invitations en attente",
+    "resend": "Renvoyer",
+    "removeConfirm": "Retirer?",
+    "yes": "Oui",
+    "no": "Non",
+    "invited": "Invité {time}",
+    "expires": "expire {time}",
+    "removeError": "Échec de la suppression du membre.",
+    "removing": "Suppression en cours…",
+    "removeTitle": "Retirer {name}",
+    "removeContentQuestion": "Que doit-il arriver à leurs photos dans ce cercle?",
+    "removeKeepLabel": "Conserver leurs souvenirs dans le cercle",
+    "removeKeepDesc": "Les photos restent dans la chronologie. Vous pouvez supprimer des photos individuelles plus tard.",
+    "removeDeleteLabel": "Supprimer leurs souvenirs du cercle",
+    "removeDeleteDesc": "Leurs photos et vidéos sont définitivement supprimées de ce cercle. Cette action est irréversible.",
+    "removeNotification": "Ils recevront un courriel les informant.",
+    "cancelInviteError": "Échec de l'annulation de l'invitation.",
+    "resendInviteError": "Échec du renvoi de l'invitation.",
+    "removeAction": "Retirer le membre",
+    "makeAdmin": "Nommer administrateur",
+    "removeAdmin": "Retirer les droits d'administrateur",
+    "transferOwnership": "Transférer la propriété",
+    "transferOwnershipTitle": "Transférer la propriété à {name}?",
+    "transferOwnershipDesc": "Ils deviendront le nouveau propriétaire. Vous deviendrez administrateur.",
+    "confirm": "Confirmer",
+    "roleChangeError": "Échec de la mise à jour du rôle. Veuillez réessayer.",
+    "dangerZone": "Zone de danger",
+    "deleteCircle": "Supprimer le cercle",
+    "deleteCircleTitle": "Supprimer ce cercle",
+    "deleteCircleDesc": "Supprimer définitivement ce cercle et tous ses souvenirs après 30 jours.",
+    "deleteCircleWarningTitle": "Êtes-vous sûr de vouloir supprimer ce cercle?",
+    "deleteCircleWarning": "Cela supprimera définitivement {memories} souvenirs et retirera tous les {members} membres. Les membres seront notifiés et auront 30 jours pour exporter leurs photos avant qu'elles disparaissent pour toujours.",
+    "deleteCircleContinue": "Continuer",
+    "deleteCircleConfirmTitle": "Tapez le nom du cercle pour confirmer",
+    "deleteCircleConfirmDesc": "Tapez \"{name}\" pour supprimer définitivement ce cercle.",
+    "deleteCircleConfirm": "Supprimer le cercle",
+    "deleteCircleNameMismatch": "Le nom du cercle ne correspond pas. Veuillez le saisir exactement.",
+    "deleteCircleError": "Échec de la suppression du cercle. Veuillez réessayer.",
+    "deleteCircleRestoreHint": "Vous avez changé d'avis? Vous avez 30 jours pour le restaurer depuis les paramètres du compte."
+  },
+  "member": {
+    "joined": "Rejoint le {date}",
+    "memories": "{n} souvenir | {n} souvenirs"
+  },
+  "landing": {
+    "nav": {
+      "signIn": "Se connecter",
+      "startFree": "Commencer gratuitement",
+      "goToTimeline": "Aller à la chronologie"
+    },
+    "hero": {
+      "headline": "Un espace privé où votre cercle construit une histoire partagée.",
+      "subhead": "Pour les moments qui appartiennent à plus d'une personne.",
+      "cta": "Créez votre cercle — gratuitement"
+    },
+    "screenshot": {
+      "label": "Capture d'écran de la chronologie à venir"
+    },
+    "howItWorks": {
+      "title": "Pas du stockage — du récit",
+      "step1Title": "Invitez votre cercle",
+      "step1Desc": "Envoyez un lien d'invitation privé aux personnes que vous voulez. Pas de profils publics, pas d'étrangers.",
+      "step2Title": "Ajoutez du sens, pas seulement des médias",
+      "step2Desc": "Les notes, les jalons et les réactions transforment les photos en souvenirs avec du contexte. Stocke le sens — pas seulement les images.",
+      "step3Title": "Votre histoire continue de grandir",
+      "step3Desc": "En ce jour fait ressurgir un souvenir d'il y a un an. Chaque membre peut réagir, commenter et ajouter ses propres moments."
+    },
+    "whoUsesIt": {
+      "title": "Qui l'utilise",
+      "startCircle": "Créer un cercle {type}"
+    },
+    "circleTypes": {
+      "parents": {
+        "tagline": "Documentez chaque première fois — ensemble.",
+        "bullets": ["Indicateur d'âge de bébé sur chaque souvenir", "Catégories de jalons de développement", "Résumé hebdomadaire pour les grands-parents", "Courbe de croissance et suivi des vaccins"]
+      },
+      "couple": {
+        "tagline": "Votre relation, depuis le tout début.",
+        "bullets": ["Date de début et rappel d'anniversaire", "Souvenir épinglé \"Comment on s'est rencontrés\"", "Stats du couple — souvenirs, pays, mois documentés", "Chronologie privée juste pour vous deux"]
+      },
+      "family": {
+        "tagline": "Un seul endroit pour toute la famille.",
+        "bullets": ["Étiquettes de personnes — grand-maman, papa, les enfants", "\"Ce jour l'an passé\" dans le résumé hebdomadaire", "Regroupement d'événements — Noël, vacances d'été", "Accès multigénérationnel sur invitation seulement"]
+      },
+      "friends": {
+        "tagline": "Vos voyages et moments, tous au même endroit.",
+        "bullets": ["Conteneurs de voyages et d'événements", "Étiquettes \"Qui était là\"", "Classement des réactions — photo la plus aimée", "Jalons du nombre de souvenirs à célébrer ensemble"]
+      },
+      "caregiving": {
+        "tagline": "Un journal structuré avec les moments émotionnels.",
+        "bullets": ["Journal quotidien d'humeur et d'énergie", "Types d'événements de santé — Visite médicale, Bonne journée, Traitement", "Notes de l'équipe soignante visibles seulement aux administrateurs", "Export en PDF pour les rendez-vous médicaux"]
+      },
+      "travel": {
+        "tagline": "Chaque étape de votre voyage, mémorisée.",
+        "bullets": ["Étiquette de localisation avec remplissage automatique EXIF", "Itinéraire de voyage avec destinations et dates", "Vue carte montrant où les souvenirs ont été pris", "Statistiques du voyage — pays, jours, km parcourus"]
+      },
+      "solo": {
+        "tagline": "Votre histoire personnelle, magnifiquement conservée.",
+        "bullets": ["Invitations à la réflexion à chaque téléversement", "Étiquettes d'humeur et d'émotion", "Bilan de l'année généré automatiquement", "Suivi de série — documentez chaque jour"]
+      }
+    },
+    "features": {
+      "title": "Plus qu'un album photo"
+    },
+    "privacy": {
+      "title": "Vos photos ne quittent jamais votre cercle.",
+      "items": ["Aucune publicité", "Aucun algorithme", "Aucun entraînement d'IA sur vos souvenirs"],
+      "sub": "Sur invitation seulement. Privé par conception."
+    },
+    "vision": {
+      "quote": "Votre histoire ne semble peut-être pas grand-chose maintenant — mais en regardant en arrière dans 20 ans, vous chérirez chaque souvenir que vous avez sauvegardé ici.",
+      "body": "Le premier gâteau d'anniversaire tout gâché d'un bambin. Un dimanche matin tranquille. Une note manuscrite de quelqu'un qui n'est plus là."
+    },
+    "pricingSummary": {
+      "text": "Gratuit pour commencer. Chaque nouveau cercle obtient un essai Pro de 14 jours — sans carte de crédit.",
+      "link": "Voir les tarifs"
+    },
+    "footer": {
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "pricing": "Tarifs"
+    }
+  },
+  "pricing": {
+    "nav": {
+      "backToHome": "Retour à l'accueil",
+      "startFree": "Commencer gratuitement"
+    },
+    "headline": "Tarification simple et honnête.",
+    "subhead": "Commencez gratuitement. Passez à un niveau supérieur quand votre histoire grandit.",
+    "tiers": {
+      "free": {
+        "name": "Gratuit",
+        "price": "0 $",
+        "priceSub": "Toujours gratuit",
+        "storage": "5 Go",
+        "circles": "1 cercle",
+        "members": "Jusqu'à 10 membres",
+        "cta": "Commencer gratuitement"
+      },
+      "plus": {
+        "name": "Plus",
+        "price": "4,99 $",
+        "priceSub": "par mois",
+        "storage": "50 Go",
+        "circles": "Cercles illimités",
+        "members": "Jusqu'à 20 membres",
+        "cta": "Passer à Plus"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "9,99 $",
+        "priceSub": "par mois",
+        "storage": "500 Go",
+        "circles": "Illimité + fonctionnalités Pro",
+        "members": "Membres illimités",
+        "cta": "Rejoindre la liste d'attente",
+        "badge": "Bientôt disponible"
+      }
+    },
+    "features": {
+      "basicTimeline": "Chronologie de base",
+      "albums": "Albums †",
+      "milestones": "Jalons",
+      "comments": "Commentaires",
+      "reactions": "Réactions",
+      "search": "Recherche",
+      "onThisDay": "En ce jour",
+      "notificationPrefs": "Préférences de notification",
+      "offlineUpload": "Téléversement hors ligne",
+      "timeCapsule": "Capsule temporelle",
+      "yearInReview": "Bilan de l'année",
+      "voiceReactions": "Réactions vocales",
+      "collaborativeMemory": "Souvenir collaboratif",
+      "albumsFootnote": "† À venir en Phase 2 — déjà inclus dans votre forfait Gratuit, aucune mise à niveau nécessaire."
+    },
+    "faq": {
+      "title": "Questions",
+      "q1": "Puis-je annuler à tout moment?",
+      "a1": "Oui. Sans engagement, annulez en un tap depuis les paramètres.",
+      "q2": "Qu'arrive-t-il à mes photos si j'annule?",
+      "a2": "Elles restent. Pour toujours. Passer au forfait Gratuit restreint les nouveaux téléversements si vous dépassez 5 Go, mais ne cache ni ne supprime jamais les souvenirs existants.",
+      "q3": "Mes données sont-elles privées?",
+      "a3": "Oui. Sur invitation seulement. Aucune publicité. Aucun entraînement d'IA. Aucune vente de données. Vos photos sont stockées de façon privée et ne quittent jamais nos serveurs.",
+      "q4": "Les grands-parents doivent-ils payer?",
+      "a4": "Non. Rejoindre un cercle est toujours gratuit. Seuls les propriétaires de cercle paient.",
+      "q5": "Qu'est-ce qui compte dans la limite de 5 Go?",
+      "a5": "Les photos et vidéos que vous téléversez. Les souvenirs partagés par d'autres membres ne comptent pas dans votre quota.",
+      "q6": "Puis-je essayer Pro avant de payer?",
+      "a6": "Oui — chaque nouveau cercle obtient un essai Pro gratuit de 14 jours lorsque vous téléversez votre premier souvenir. Aucune carte de crédit requise."
+    },
+    "footer": {
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "home": "Accueil"
+    }
+  },
+  "settings": {
+    "account": {
+      "title": "Paramètres du compte",
+      "pendingDeletionTitle": "Suppression du compte planifiée",
+      "pendingDeletionDesc": "Votre compte est planifié pour une suppression permanente le {date}. Toutes vos données seront supprimées. Vous pouvez annuler avant cette date.",
+      "cancelDeletion": "Annuler la suppression",
+      "canceling": "Annulation en cours…",
+      "exportTitle": "Exportez vos données",
+      "exportDesc": "Téléchargez un fichier zip de photos, vidéos et notes d'un cercle. Vous recevrez un lien de téléchargement par courriel dans quelques minutes.",
+      "exportSelectCircle": "Sélectionner un cercle",
+      "exportButton": "Demander l'exportation",
+      "exporting": "Demande en cours…",
+      "exportQueued": "Exportation démarrée — vérifiez votre courriel pour le lien de téléchargement.",
+      "exportInProgress": "Une exportation pour ce cercle est déjà en cours.",
+      "deleteTitle": "Supprimer le compte",
+      "deleteDesc": "Votre compte sera désactivé immédiatement. Après 30 jours, toutes vos photos, vidéos et souvenirs dans chaque cercle seront définitivement supprimés. Vous recevrez un courriel de confirmation avec un lien pour annuler.",
+      "deleteStep1Title": "Maintenant",
+      "deleteStep1Desc": "Votre compte est désactivé. Vous êtes déconnecté partout. Vous avez 30 jours pour changer d'avis.",
+      "deleteStep2Title": "Le {date} — permanent",
+      "deleteStep2Desc": "Tout est disparu pour toujours et ne peut être récupéré :",
+      "deleteItem1": "Photos et vidéos que vous avez téléversées",
+      "deleteItem2": "Votre profil et compte",
+      "deleteItem3": "Tous les cercles dont vous étiez le seul membre",
+      "deleteCircleQuestion": "Vos photos dans les cercles partagés",
+      "deleteCircleKeepLabel": "Les conserver dans le cercle",
+      "deleteCircleKeepDesc": "Vos photos restent dans la chronologie. Votre nom s'estompe discrètement.",
+      "deleteCircleRemoveLabel": "Les supprimer de tous les cercles",
+      "deleteCircleRemoveDesc": "Vos photos et vidéos sont définitivement supprimées de tous les cercles le jour 30.",
+      "ownerWarning": "Vous possédez un ou plusieurs cercles. Transférez la propriété ou supprimez vos cercles avant de supprimer votre compte.",
+      "deleteEmailNote": "Vous recevrez un courriel de confirmation avec un lien pour annuler avant cette date.",
+      "deleteButton": "Supprimer mon compte",
+      "deleting": "Traitement en cours…",
+      "deleteConfirmTitle": "Supprimer votre compte?",
+      "deleteConfirmDesc": "Votre compte sera désactivé immédiatement. Vous avez 30 jours pour vous reconnecter et annuler.",
+      "deleteConfirmAction": "Oui, supprimer mon compte",
+      "deleteConfirmCancel": "Annuler",
+      "needsTransferWarning": "Les cercles suivants ont des membres mais pas d'administrateur. Veuillez promouvoir quelqu'un en administrateur avant de supprimer votre compte :",
+      "needsTransferHint": "Allez sur la page des membres de chaque cercle et promouvez un membre en administrateur.",
+      "deletedCirclesTitle": "Suppressions de cercles en attente",
+      "deletedCirclesDesc": "Ces cercles sont planifiés pour une suppression permanente. Vous pouvez les restaurer avant la date limite.",
+      "purgesOn": "Suppression permanente le {date}",
+      "restoreCircle": "Restaurer",
+      "restoring": "Restauration en cours…",
+      "restoreSuccess": "{name} a été restauré.",
+      "restoreError": "Échec de la restauration du cercle. Veuillez réessayer."
+    }
+  },
+  "quickNote": {
+    "title": "Note rapide",
+    "notePlaceholder": "Que s'est-il passé? (ex. Premier mot aujourd'hui : « papa »)",
+    "milestonePlaceholder": "✦ Jalon… (facultatif)",
+    "whenWas": "Quand était-ce?",
+    "whoIsIn": "Qui est dans ce souvenir?",
+    "save": "Enregistrer la note",
+    "saving": "Sauvegarde en cours…",
+    "saved": "Note enregistrée",
+    "errorEmpty": "La note ne peut pas être vide.",
+    "errorFailed": "Échec de l'enregistrement de la note. Veuillez réessayer."
+  },
+  "addMemory": {
+    "title": "Ajouter un souvenir",
+    "photoVideo": "Photo ou vidéo",
+    "photoVideoDesc": "Téléverser depuis votre pellicule",
+    "quickNote": "Note rapide",
+    "quickNoteDesc": "Capturer un moment en mots"
+  },
+  "valueProp": {
+    "screen1": {
+      "circleTypeTag": "Famille",
+      "chatLabel": "Clavardage familial",
+      "chatName1": "Maman",
+      "chatMsg1": "« Quelqu'un a vu la photo d'aujourd'hui? »",
+      "chatName2": "Papa",
+      "chatMsg2": "« Laquelle? Il y a 200 messages… »",
+      "chatName3": "Vous",
+      "chatMsg3": "Défilement… défilement…",
+      "heading1": "Les photos s'enterrent.",
+      "heading2": "Les moments se perdent.",
+      "heading3": "Ils méritaient mieux.",
+      "body": "Notre Histoire conserve les souvenirs qui comptent — magnifiquement, et pour toujours."
+    },
+    "screen2": {
+      "circleTypeTag": "Amis · Voyage",
+      "date1": "14 jul. 2024",
+      "milestone1": "Voyage à Santorin",
+      "reactions1": "5 amis ont réagi · Jalon",
+      "date2": "1 jan. 2024",
+      "milestone2": "10 ans d'amitié",
+      "milestoneLabel": "Jalon",
+      "heading1": "L'histoire de votre cercle,",
+      "heading2": "magnifiquement conservée.",
+      "body": "Notes, jalons et réactions — peu importe votre cercle."
+    },
+    "screen3": {
+      "circleTypeTag": "Couple",
+      "date1": "15 juin 2019",
+      "entry1": "Premier rendez-vous",
+      "entryTag1": "✦ Là où tout a commencé",
+      "date2": "4 sept. 2021",
+      "entry2": "Elle a dit oui",
+      "entryTag2": "✦ Fiançailles",
+      "heading1": "Fonctionne pour",
+      "heading2": "chaque cercle.",
+      "body": "Familles, couples, amis, groupes de voyage — un seul endroit pour votre histoire partagée."
+    },
+    "next": "Suivant",
+    "start": "Commencez votre histoire",
+    "skip": "Ignorer"
+  },
+  "circleTypeConfig": {
+    "parents": {
+      "emptyTitle": "Chaque jalon mérite d'être mémorisé",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à documenter l'histoire de votre petit.",
+      "milestonePlaceholder": "ex. Premiers pas, Premier anniversaire… (facultatif)"
+    },
+    "couple": {
+      "emptyTitle": "Votre histoire commune commence ici",
+      "emptyDesc": "Ajoutez votre premier souvenir ensemble pour commencer à construire votre chronologie.",
+      "milestonePlaceholder": "ex. Premier rendez-vous, Notre anniversaire… (facultatif)"
+    },
+    "family": {
+      "emptyTitle": "Les moments de famille restent pour toujours",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à construire votre histoire de famille.",
+      "milestonePlaceholder": "ex. Vacances en famille, Remise des diplômes… (facultatif)"
+    },
+    "friends": {
+      "emptyTitle": "Capturez chaque aventure ensemble",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à construire vos souvenirs partagés.",
+      "milestonePlaceholder": "ex. Voyage à Barcelone, Jour de l'An… (facultatif)"
+    },
+    "caregiving": {
+      "emptyTitle": "Chaque moment compte",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à documenter votre parcours.",
+      "milestonePlaceholder": "ex. Visite médicale, Jalon de rétablissement… (facultatif)"
+    },
+    "travel": {
+      "emptyTitle": "L'aventure commence ici",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo du voyage pour commencer votre histoire de voyage.",
+      "milestonePlaceholder": "ex. Arrivée à Tokyo, Sommet atteint… (facultatif)"
+    },
+    "solo": {
+      "emptyTitle": "Votre histoire, à votre façon",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à construire votre chronologie personnelle.",
+      "milestonePlaceholder": "ex. Nouvel emploi, Réalisation personnelle… (facultatif)"
+    },
+    "default": {
+      "emptyTitle": "Votre histoire commence ici",
+      "emptyDesc": "Ajoutez votre première photo ou vidéo pour commencer à construire votre chronologie partagée.",
+      "milestonePlaceholder": "ex. Premiers pas, Jour du mariage… (facultatif)"
+    }
+  },
+  "milestone": {
+    "shareLabel": "Jalon",
+    "shareTitle": "Partagez ce jalon",
+    "shareSubtitle": "Téléchargez une carte magnifiquement conçue à partager sur Instagram Stories ou WhatsApp.",
+    "formatStories": "Stories (9:16)",
+    "formatSquare": "Carré (1:1)",
+    "saveInstagram": "Enregistrer pour Instagram Stories",
+    "saveWhatsapp": "Enregistrer pour WhatsApp",
+    "copyImage": "Copier l'image",
+    "copied": "Copié!",
+    "downloadImage": "Télécharger l'image",
+    "skip": "Ignorer pour l'instant",
+    "corsError": "Impossible de charger la photo — essayez de la télécharger d'abord."
+  }
+}

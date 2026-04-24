@@ -495,6 +495,48 @@
     "start": "Start your story",
     "skip": "Skip"
   },
+  "circleTypeConfig": {
+    "parents": {
+      "emptyTitle": "Every milestone deserves a memory",
+      "emptyDesc": "Add your first photo or video to start documenting your little one's story.",
+      "milestonePlaceholder": "e.g. First steps, First birthday… (optional)"
+    },
+    "couple": {
+      "emptyTitle": "Your shared story starts here",
+      "emptyDesc": "Add your first memory together to start building your timeline.",
+      "milestonePlaceholder": "e.g. First date, Our anniversary… (optional)"
+    },
+    "family": {
+      "emptyTitle": "Family moments last forever",
+      "emptyDesc": "Add your first photo or video to start building your family story.",
+      "milestonePlaceholder": "e.g. Family holiday, Graduation… (optional)"
+    },
+    "friends": {
+      "emptyTitle": "Capture every adventure together",
+      "emptyDesc": "Add your first photo or video to start building your shared memories.",
+      "milestonePlaceholder": "e.g. Barcelona trip, New Year's… (optional)"
+    },
+    "caregiving": {
+      "emptyTitle": "Every moment matters",
+      "emptyDesc": "Add your first photo or video to start documenting your journey.",
+      "milestonePlaceholder": "e.g. Doctor visit, Recovery milestone… (optional)"
+    },
+    "travel": {
+      "emptyTitle": "The adventure starts here",
+      "emptyDesc": "Add your first photo or video from the trip to start your travel story.",
+      "milestonePlaceholder": "e.g. Arrived in Tokyo, Summit reached… (optional)"
+    },
+    "solo": {
+      "emptyTitle": "Your story, your way",
+      "emptyDesc": "Add your first photo or video to start building your personal timeline.",
+      "milestonePlaceholder": "e.g. New job, Personal achievement… (optional)"
+    },
+    "default": {
+      "emptyTitle": "Your story starts here",
+      "emptyDesc": "Add your first photo or video to start building your shared timeline.",
+      "milestonePlaceholder": "e.g. First steps, Wedding day… (optional)"
+    }
+  },
   "milestone": {
     "shareLabel": "Milestone",
     "shareTitle": "Share this milestone",
