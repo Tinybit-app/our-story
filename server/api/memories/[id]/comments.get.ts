@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: comments, error } = await supabase
     .from("memorycomment")
-    .select("id, body, created_at, user_id, user!user_id(first_name, last_name, avatar_url)")
+    .select("id, body, created_at, updated_at, user_id, user!user_id(first_name, last_name, avatar_url)")
     .eq("memory_id", memoryId)
     .order("created_at", { ascending: true })
 

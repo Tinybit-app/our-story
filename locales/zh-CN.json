@@ -107,6 +107,10 @@
     "viewOlderComments": "查看 {n} 条更早的评论",
     "editNote": "编辑备注",
     "editComment": "编辑评论",
+    "deleteComment": "删除评论",
+    "edited": "已编辑",
+    "confirmDelete": "删除这条评论？",
+    "delete": "删除",
     "whoIsIn": "这条记忆中有谁？",
     "saveToDevice": "保存到设备",
     "sharePhoto": "分享照片"

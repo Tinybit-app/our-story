@@ -125,8 +125,8 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
 
     await page.goto('/timeline')
-    // Wait for the memory card to confirm both circles + timeline mocks loaded
-    await expect(page.getByText('A cute moment').first()).toBeVisible({ timeout: 15_000 })
+    // Wait for the circle switcher (confirms circles API loaded — fast, appears before timeline)
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
     // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks", labeled with the child's name
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('3 months, 2 weeks')).toBeVisible({ timeout: 10_000 })

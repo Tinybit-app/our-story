@@ -161,7 +161,20 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Tests: 4 E2E tests (`tests/media-download.spec.ts`) verifying button presence per media type
 
 ### Milestone 8: Comments & Reactions
-- [ ] 8.1 Comments (post, read, delete own)
+- [x] 8.1 Comments (post, read, delete own)
+  - DB schema: `MemoryComment(id, memory_id, user_id, body, created_at)` with RLS — members can read/post, users can delete own (migration 001/002)
+  - `GET /api/memories/[id]/comments` — verifies circle membership, returns comments with user profile
+  - `POST /api/memories/[id]/comments` — verifies circle membership, inserts comment, returns updated list
+  - `PATCH /api/memories/[id]/comments/[commentId]` — verifies ownership, updates body
+  - `DELETE /api/memories/[id]/comments/[commentId]` — verifies ownership, deletes comment
+  - `MemoryModal` comments tab: load on open, post (textarea + Enter or Post button), edit own (pencil icon on hover), delete own (trash icon on hover); "View N older" pagination (show last 5, expand on click)
+  - `QuickNoteModal` comment section: same functionality at the bottom of the modal
+  - Delete button rendered via `v-if` (absent from DOM for others' comments), appears alongside edit pencil on hover as a pair of icon buttons
+  - i18n: `modal.deleteComment` added to `locales/en.json` and `locales/zh-CN.json`
+  - **"Edited" indicator**: `updated_at TIMESTAMPTZ` column added to `MemoryComment` (migration 022, nullable — NULL = never edited); PATCH API sets it on every edit; GET/POST APIs return it; UI shows `· edited` label next to timestamp when non-null
+  - **UPDATE RLS**: migration 022 adds `users can update own comments` policy (previously missing — PATCH worked via service role bypass but RLS was incomplete)
+  - **Delete confirmation**: trash icon now triggers an inline confirmation row ("Delete this comment? Delete | Cancel") rather than deleting immediately; Cancel dismisses it, Delete calls the API
+  - Tests: 7 E2E tests (`tests/comments.spec.ts`) covering load, post, delete confirmation flow, ownership-conditional button checks, QuickNoteModal parity
 - [ ] 8.2 Emoji reactions (toggle on/off)
 
 ### Milestone 8.5: Localization (i18n — English + Chinese)

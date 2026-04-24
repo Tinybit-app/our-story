@@ -144,7 +144,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockTimeline(page, [makeMemory('mem-1')])
 
     await page.goto('/timeline')
-    await expect(page.getByText(/together · Since/)).toBeVisible({ timeout: 15_000 })
+    // Wait for circle switcher first (circles API is fast), then for the computed anniversary text
+    await page.locator('button', { hasText: 'Our Story' }).first().waitFor({ timeout: 15_000 })
+    await expect(page.getByText(/together · Since/)).toBeVisible({ timeout: 10_000 })
   })
 
   test('anniversary display appears on timeline for a non-couple circle (Year N of [name])', async ({ page }) => {
@@ -153,8 +155,10 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockTimeline(page, [makeMemory('mem-1')])
 
     await page.goto('/timeline')
+    // Wait for circle switcher first (circles API is fast), then for the computed anniversary text
+    await page.locator('button', { hasText: 'Our Story' }).first().waitFor({ timeout: 15_000 })
     // Non-couple circles show "Year N of [name] · Since [date]"
-    await expect(page.getByText(/of Our Story · Since/)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/of Our Story · Since/)).toBeVisible({ timeout: 10_000 })
   })
 
   test('anniversary display is absent when no anniversary_date is set', async ({ page }) => {

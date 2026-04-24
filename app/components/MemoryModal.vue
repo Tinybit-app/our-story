@@ -366,19 +366,51 @@
                       <span class="text-[11px] font-semibold text-foreground mr-1.5">{{ commentDisplayName(c.user) }}</span>
                       <span class="text-[13px] text-foreground leading-snug">{{ c.body }}</span>
                     </div>
-                    <button
+                    <div
                       v-if="c.user_id === props.currentUserId"
-                      class="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-accent hover:border-accent/40 transition-all opacity-0 group-hover/comment:opacity-100 shadow-sm"
-                      :title="t('modal.editComment')"
-                      @click.stop="startEditingComment(c)"
+                      class="absolute -top-1.5 -right-1.5 flex gap-0.5 opacity-0 group-hover/comment:opacity-100 transition-all"
                     >
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
+                      <button
+                        class="w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors shadow-sm"
+                        :title="t('modal.editComment')"
+                        @click.stop="startEditingComment(c)"
+                      >
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        class="w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-sm"
+                        :title="t('modal.deleteComment')"
+                        @click.stop="requestDeleteComment(c.id)"
+                      >
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <p class="text-[10px] text-muted-foreground mt-0.5 ml-3">{{ timeAgo(c.created_at) }}</p>
+                  <!-- Timestamp + edited label -->
+                  <p class="text-[10px] text-muted-foreground mt-0.5 ml-3">
+                    {{ timeAgo(c.created_at) }}
+                    <span v-if="c.updated_at" class="ml-1 opacity-60">· {{ t('modal.edited') }}</span>
+                  </p>
+                  <!-- Inline delete confirmation -->
+                  <div v-if="confirmDeleteId === c.id" class="flex items-center gap-2 mt-1 ml-3">
+                    <span class="text-[11px] text-muted-foreground">{{ t('modal.confirmDelete') }}</span>
+                    <button
+                      class="text-[11px] font-semibold text-destructive hover:opacity-80 transition-opacity"
+                      @click="deleteComment(c.id)"
+                    >{{ t('modal.delete') }}</button>
+                    <button
+                      class="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                      @click="cancelDeleteComment"
+                    >{{ t('modal.cancel') }}</button>
+                  </div>
                 </template>
                 <template v-else>
                   <div class="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
@@ -693,7 +725,7 @@ async function toggleReaction(emoji: string) {
 }
 
 // ── Comments ───────────────────────────────────────────────
-type Comment = { id: string; body: string; created_at: string; user_id: string; user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null }
+type Comment = { id: string; body: string; created_at: string; updated_at: string | null; user_id: string; user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null }
 const comments = ref<Comment[]>([])
 const commentDraft = ref('')
 const allCommentsVisible = ref(false)
@@ -745,11 +777,12 @@ function commentInitials(user: Comment['user']): string {
   return ((user?.first_name?.[0] ?? '') + (user?.last_name?.[0] ?? '')).toUpperCase() || '?'
 }
 
-// ── Comment editing ────────────────────────────────────────
+// ── Comment editing & delete confirmation ──────────────────
 const editingCommentId = ref<string | null>(null)
 const commentEditDraft = ref('')
 const savingComment = ref(false)
 const commentEditEl = ref<HTMLTextAreaElement>()
+const confirmDeleteId = ref<string | null>(null)
 
 function startEditingComment(c: Comment) {
   editingCommentId.value = c.id
@@ -769,13 +802,32 @@ async function saveCommentEdit(commentId: string) {
   try {
     await $fetch(`/api/memories/${props.memory.id}/comments/${commentId}`, { method: 'PATCH', body: { body } })
     const idx = comments.value.findIndex(c => c.id === commentId)
-    if (idx !== -1) comments.value[idx] = { ...comments.value[idx]!, body }
+    if (idx !== -1) comments.value[idx] = { ...comments.value[idx]!, body, updated_at: new Date().toISOString() }
     editingCommentId.value = null
     commentEditDraft.value = ''
   } catch (err) {
     console.error('[MemoryModal] failed to update comment:', err)
   } finally {
     savingComment.value = false
+  }
+}
+
+function requestDeleteComment(commentId: string) {
+  confirmDeleteId.value = commentId
+}
+
+function cancelDeleteComment() {
+  confirmDeleteId.value = null
+}
+
+async function deleteComment(commentId: string) {
+  try {
+    await $fetch(`/api/memories/${props.memory.id}/comments/${commentId}`, { method: 'DELETE' })
+    comments.value = comments.value.filter(c => c.id !== commentId)
+  } catch (err) {
+    console.error('[MemoryModal] failed to delete comment:', err)
+  } finally {
+    confirmDeleteId.value = null
   }
 }
 
