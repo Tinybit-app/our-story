@@ -50,6 +50,7 @@ export default defineEventHandler(async (event) => {
       memoryCount,
       dateRange,
       token,
+      createdAt: link.created_at,
     }
   })
 })

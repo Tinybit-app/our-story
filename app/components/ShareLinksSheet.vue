@@ -32,7 +32,7 @@
 
         <!-- Loading -->
         <div v-if="loading" class="py-12 text-center">
-          <p class="text-sm text-muted-foreground">Loading…</p>
+          <p class="text-sm text-muted-foreground">{{ t('viewerLink.loading') }}</p>
         </div>
 
         <!-- Empty state -->
@@ -78,13 +78,43 @@
               {{ linkSubline(link) }}
             </p>
 
-            <!-- Expiry -->
+            <!-- Expiry row -->
+            <div class="mb-3">
+              <span v-if="link.isExpired" class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-destructive/10 text-destructive">
+                {{ t('viewerLink.expired') }}
+              </span>
+              <p v-else class="text-xs text-muted-foreground">
+                {{ t('viewerLink.expires', { date: formatExpiry(link.expiresAt) }) }}
+              </p>
+            </div>
+
+            <!-- Created date -->
             <p class="text-xs text-muted-foreground mb-3">
-              {{ link.isExpired ? t('viewerLink.expired') : t('viewerLink.expires', { date: formatExpiry(link.expiresAt) }) }}
+              {{ formatDate(link.createdAt) }}
             </p>
 
-            <!-- Actions -->
-            <div class="flex items-center gap-2">
+            <!-- Inline revoke confirmation -->
+            <div v-if="revokingId === link.id" class="mt-2 p-3 bg-muted rounded-md">
+              <p class="text-sm font-medium mb-1">{{ t('viewerLink.revokeConfirm') }}</p>
+              <p class="text-xs text-muted-foreground mb-3">{{ t('viewerLink.revokeConfirmBody') }}</p>
+              <div class="flex gap-2">
+                <button
+                  @click="doRevoke(link.id)"
+                  class="h-8 px-3 rounded-[10px] bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+                >
+                  {{ t('viewerLink.revoke') }}
+                </button>
+                <button
+                  @click="revokingId = null"
+                  class="h-8 px-3 rounded-[10px] bg-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
+                >
+                  {{ t('viewerLink.cancel') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Actions (when not confirming revoke) -->
+            <div v-else class="flex items-center gap-2">
               <!-- Copy or Renew -->
               <button
                 v-if="!link.isExpired"
@@ -95,7 +125,7 @@
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
-                <span>{{ copiedId === link.id ? t('viewerLink.copied') : 'Copy link' }}</span>
+                <span>{{ copiedId === link.id ? t('viewerLink.copied') : t('viewerLink.copyLink') }}</span>
               </button>
               <button
                 v-else
@@ -105,27 +135,10 @@
                 {{ t('viewerLink.renew') }}
               </button>
 
-              <!-- Revoke: inline confirm -->
-              <template v-if="revokingId === link.id">
-                <p class="flex-1 text-xs text-muted-foreground text-center leading-tight">{{ t('viewerLink.revokeConfirmBody') }}</p>
-                <button
-                  @click="confirmRevoke(link.id)"
-                  class="h-8 px-3 rounded-[10px] bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
-                >
-                  {{ t('viewerLink.revoke') }}
-                </button>
-                <button
-                  @click="revokingId = null"
-                  class="h-8 px-3 rounded-[10px] bg-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
-                >
-                  Cancel
-                </button>
-              </template>
+              <!-- Revoke trigger -->
               <button
-                v-else
                 @click="revokingId = link.id"
                 class="h-8 w-8 flex items-center justify-center rounded-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                :title="t('viewerLink.revokeConfirm')"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                   <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -159,23 +172,38 @@ interface ViewerLink {
   memoryCount: number | null
   dateRange: { from: string; to: string } | null
   token: string
+  createdAt: string
 }
 
 const props = defineProps<{
   open: boolean
-  links: ViewerLink[]
-  loading: boolean
+  circleId: string
 }>()
 
 const emit = defineEmits<{
   close: []
   create: []
-  revoke: [linkId: string]
   renew: [link: ViewerLink]
 }>()
 
+const links = ref<ViewerLink[]>([])
+const loading = ref(true)
 const revokingId = ref<string | null>(null)
 const copiedId = ref<string | null>(null)
+
+async function fetchLinks() {
+  loading.value = true
+  try {
+    const data = await $fetch<ViewerLink[]>(`/api/circles/${props.circleId}/viewer-links`)
+    links.value = data
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchLinks)
+
+defineExpose({ refresh: fetchLinks })
 
 function modeBadge(link: ViewerLink): string {
   if (link.mode === 'full') return t('viewerLink.modeFull')
@@ -188,23 +216,27 @@ function linkSubline(link: ViewerLink): string | null {
     if (link.dateRange) {
       return t('viewerLink.selectionBanner', {
         count: link.memoryCount,
-        from: formatDate(link.dateRange.from),
-        to: formatDate(link.dateRange.to),
+        from: formatMonthYear(link.dateRange.from),
+        to: formatMonthYear(link.dateRange.to),
       })
     }
     return t('viewerLink.selectedCount', { count: link.memoryCount })
   }
   if (link.mode === 'date_range' && link.dateRange) {
     return t('viewerLink.dateRangeBanner', {
-      from: formatDate(link.dateRange.from),
-      to: formatDate(link.dateRange.to),
+      from: formatMonthYear(link.dateRange.from),
+      to: formatMonthYear(link.dateRange.to),
     })
   }
   return null
 }
 
-function formatDate(dateStr: string): string {
+function formatMonthYear(dateStr: string): string {
   return new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(dateStr))
+}
+
+function formatDate(dateStr: string): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(dateStr))
 }
 
 function formatExpiry(isoStr: string): string {
@@ -218,9 +250,10 @@ async function copyLink(link: ViewerLink) {
   setTimeout(() => { copiedId.value = null }, 2000)
 }
 
-function confirmRevoke(linkId: string) {
+async function doRevoke(linkId: string) {
+  await $fetch(`/api/circles/${props.circleId}/viewer-links/${linkId}`, { method: 'DELETE' })
   revokingId.value = null
-  emit('revoke', linkId)
+  await fetchLinks()
 }
 </script>
 
