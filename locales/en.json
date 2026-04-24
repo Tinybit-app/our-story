@@ -621,6 +621,9 @@
     "viewerSignIn": "Sign in instead →",
     "loadError": "Could not load viewer links.",
     "revokeLabel": "Revoke link",
-    "close": "Close"
+    "close": "Close",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "createErrorGeneric": "Something went wrong. Please try again."
   }
 }

@@ -468,6 +468,9 @@
     "viewerSignIn": "改为登录 →",
     "loadError": "无法加载查看链接。",
     "revokeLabel": "撤销链接",
-    "close": "关闭"
+    "close": "关闭",
+    "dateFrom": "从",
+    "dateTo": "到",
+    "createErrorGeneric": "出错了，请重试。"
   }
 }

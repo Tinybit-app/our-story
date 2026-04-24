@@ -621,6 +621,9 @@
     "viewerSignIn": "Se connecter plutôt →",
     "loadError": "Impossible de charger les liens de partage.",
     "revokeLabel": "Révoquer le lien",
-    "close": "Fermer"
+    "close": "Fermer",
+    "dateFrom": "Du",
+    "dateTo": "Au",
+    "createErrorGeneric": "Une erreur s'est produite. Veuillez réessayer."
   }
 }

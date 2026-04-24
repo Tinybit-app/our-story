@@ -23,6 +23,7 @@
       <div class="flex items-center justify-between px-5 py-4 flex-shrink-0">
         <h2 class="text-base font-bold text-foreground">{{ t('viewerLink.createLink') }}</h2>
         <button
+          type="button"
           @click="$emit('close')"
           :aria-label="t('viewerLink.close')"
           class="p-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -41,6 +42,7 @@
           <button
             v-for="mode in modes"
             :key="mode.value"
+            type="button"
             @click="selectedMode = mode.value"
             class="flex-1 h-8 rounded-[10px] text-xs font-semibold transition-all"
             :class="selectedMode === mode.value
@@ -58,6 +60,7 @@
             <button
               v-for="year in availableYears"
               :key="year"
+              type="button"
               @click="selectYear(year)"
               class="h-7 px-3 rounded-full text-xs font-semibold transition-all border"
               :class="isYearSelected(year)
@@ -71,7 +74,7 @@
           <!-- Custom date inputs -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-muted-foreground mb-1.5">From</label>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('viewerLink.dateFrom') }}</label>
               <input
                 v-model="dateFrom"
                 type="date"
@@ -79,7 +82,7 @@
               />
             </div>
             <div>
-              <label class="block text-xs font-medium text-muted-foreground mb-1.5">To</label>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('viewerLink.dateTo') }}</label>
               <input
                 v-model="dateTo"
                 type="date"
@@ -109,7 +112,9 @@
               <button
                 v-for="memory in allMemories"
                 :key="memory.id"
+                type="button"
                 @click="toggleMemory(memory.id)"
+                :aria-label="memory.memory_date"
                 class="relative aspect-square rounded-[10px] overflow-hidden bg-secondary border-2 transition-all"
                 :class="selectedMemoryIds.has(memory.id)
                   ? 'border-primary'
@@ -169,7 +174,9 @@
 
       <!-- Fixed bottom: Create button -->
       <div class="flex-shrink-0 px-5 pb-8 pt-2 border-t border-border">
+        <p v-if="createError" class="text-xs text-destructive mb-2">{{ createError }}</p>
         <button
+          type="button"
           @click="handleCreate"
           :disabled="!isValid || creating"
           class="w-full bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
@@ -207,6 +214,7 @@ const dateTo = ref('')
 const selectedMemoryIds = ref(new Set<string>())
 const label = ref('')
 const creating = ref(false)
+const createError = ref<string | null>(null)
 const memoriesLoading = ref(false)
 const allMemories = ref<MemoryItem[]>([])
 
@@ -268,6 +276,7 @@ async function loadMemories() {
 async function handleCreate() {
   if (!isValid.value || creating.value) return
   creating.value = true
+  createError.value = null
   try {
     await $fetch(`/api/circles/${props.circleId}/viewer-links`, {
       method: 'POST',
@@ -287,8 +296,10 @@ async function handleCreate() {
     dateTo.value = ''
     selectedMemoryIds.value = new Set()
     label.value = ''
+    createError.value = null
+    allMemories.value = []
   } catch {
-    // Silent — errors logged server-side
+    createError.value = t('viewerLink.createErrorGeneric')
   } finally {
     creating.value = false
   }
