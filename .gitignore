@@ -28,3 +28,4 @@ logs
 test-results/
 playwright-report/
 tests/.auth/
+.worktrees/
