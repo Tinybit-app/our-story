@@ -91,6 +91,7 @@
   "modal": {
     "tabCaption": "Caption",
     "tabComments": "Comments",
+    "date": "Date",
     "milestone": "Milestone",
     "note": "Note",
     "milestonePlaceholder": "e.g. First steps",

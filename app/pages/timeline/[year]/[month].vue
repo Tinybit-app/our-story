@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-background">
 
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
+    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
         <NuxtLink
           to="/timeline"
@@ -40,7 +40,7 @@
         <p class="text-xs text-muted-foreground mb-6">
           {{ t('timeline.memories', memories.length) }}
         </p>
-        <div class="flex flex-wrap gap-5">
+        <div class="flex flex-wrap gap-5 items-start">
           <template v-for="(memory, i) in memories" :key="memory.id">
             <QuickNoteCard
               v-if="!memory.memorymedia.length && memory.note"
@@ -53,6 +53,7 @@
               v-else
               :memory="memory"
               :index="i"
+              :wide="isWideMemory(memory.id)"
               @open="onOpenMemory"
               @reaction-update="onReactionUpdate"
             />
@@ -61,22 +62,15 @@
       </div>
 
     </main>
-    <!-- Quick note modal -->
-    <QuickNoteModal
-      :memory="selectedQuickNote"
-      :origin-rect="selectedRect"
-      :tilt="selectedTilt"
-      @close="selectedQuickNote = null"
-      @update="onMemoryUpdate"
-    />
-
-    <!-- Photo/video memory modal -->
-    <MemoryModal
+    <!-- Unified memory modal (handles photo, video, and quick note) -->
+    <MemoryShell
       :memories="memories"
-      :start-index="selectedMemoryIndex"
+      :start-index="selectedIndex"
       :origin-rect="selectedRect"
       :tilt="selectedTilt"
-      @close="selectedMemoryIndex = null"
+      :children="children"
+      :members="members"
+      @close="selectedIndex = null"
       @update="onMemoryUpdate"
     />
   </div>
@@ -99,27 +93,32 @@ const monthLabel = computed(() =>
   new Date(year, month - 1).toLocaleDateString(locale.value, { month: 'long', year: 'numeric' })
 )
 
+function isWideMemory(id: string): boolean {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return (h % 10) < 3
+}
+
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
 const circleId = computed<string | null>(() => circlesData.value?.circles?.[0]?.id ?? null)
 
+interface ChildProfile { id: string; name: string; date_of_birth: string }
+interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
+
 const memories = ref<Memory[]>([])
+const children = ref<ChildProfile[]>([])
+const members = ref<CircleMember[]>([])
 const loading = ref(false)
 
 // ── Modals ─────────────────────────────────────────────────
-const selectedQuickNote = ref<Memory | null>(null)
-const selectedMemoryIndex = ref<number | null>(null)
+const selectedIndex = ref<number | null>(null)
 const selectedRect = ref<DOMRect | null>(null)
 const selectedTilt = ref(0)
 
-function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; rect: DOMRect }) {
+function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; rect: DOMRect | null }) {
   selectedRect.value = rect
   selectedTilt.value = tilt
-  if (!memory.memorymedia.length && memory.note) {
-    selectedQuickNote.value = null
-    nextTick(() => { selectedQuickNote.value = memory })
-  } else {
-    selectedMemoryIndex.value = memories.value.findIndex((m) => m.id === memory.id)
-  }
+  selectedIndex.value = memories.value.findIndex((m) => m.id === memory.id)
 }
 
 function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
@@ -137,10 +136,12 @@ onMounted(async () => {
   loading.value = true
   try {
     const yearMonth = `${year}-${String(month).padStart(2, '0')}`
-    const data = await $fetch<{ memories: Memory[]; nextCursor: null }>('/api/timeline', {
+    const data = await $fetch<{ memories: Memory[]; nextCursor: null; children: ChildProfile[]; members: CircleMember[] }>('/api/timeline', {
       query: { circleId: circleId.value, yearMonth },
     })
     memories.value = data.memories
+    children.value = data.children ?? []
+    members.value = data.members ?? []
   } catch (err) {
     console.error('[month-page] fetch error:', err)
   } finally {

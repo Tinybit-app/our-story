@@ -257,7 +257,6 @@
         :loading="loading"
         :has-next-page="!!nextCursor"
         :circle-type="circle?.circle_type ?? null"
-        :recently-added-ids="recentlyAddedIds"
         @load-more="fetchTimeline(nextCursor ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
@@ -438,7 +437,7 @@
       :members="members"
       :children="children"
       @close="quickNoteOpen = false"
-      @saved="onQuickNoteSaved($event)"
+      @saved="onQuickNoteSaved"
     />
 
     <!-- Circle switcher -->
@@ -500,26 +499,15 @@
       </div>
     </Transition>
 
-    <!-- Quick note detail modal -->
-    <QuickNoteModal
-      :memory="selectedQuickNote"
-      :origin-rect="selectedRect"
-      :tilt="selectedTilt"
-      :children="children"
-      :members="members"
-      @close="selectedQuickNote = null"
-      @update="onMemoryUpdate"
-    />
-
-    <!-- Memory detail modal (photo/video memories) -->
-    <MemoryModal
+    <!-- Unified memory modal (handles photo, video, and quick note) -->
+    <MemoryShell
       :memories="memoriesFlat"
-      :start-index="selectedMemoryIndex"
+      :start-index="selectedIndex"
       :origin-rect="selectedRect"
       :tilt="selectedTilt"
       :children="children"
       :members="members"
-      @close="selectedMemoryIndex = null"
+      @close="selectedIndex = null"
       @update="onMemoryUpdate"
     />
   </div>
@@ -537,8 +525,7 @@ function monthAbbr(month: number): string {
 }
 
 // ── Memory modal ───────────────────────────────────────────
-const selectedMemoryIndex = ref<number | null>(null);
-const selectedQuickNote = ref<Memory | null>(null);
+const selectedIndex = ref<number | null>(null);
 const selectedRect = ref<DOMRect | null>(null);
 const selectedTilt = ref(0);
 
@@ -549,18 +536,11 @@ function onOpenMemory({
 }: {
   memory: Memory;
   tilt: number;
-  rect: DOMRect;
+  rect: DOMRect | null;
 }) {
   selectedRect.value = rect;
   selectedTilt.value = tilt;
-  if (!memory.memorymedia.length && memory.note) {
-    selectedQuickNote.value = null;
-    nextTick(() => { selectedQuickNote.value = memory; });
-  } else {
-    selectedMemoryIndex.value = memoriesFlat.value.findIndex(
-      (m) => m.id === memory.id,
-    );
-  }
+  selectedIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id);
 }
 
 function onMemoryUpdate(patch: Pick<Memory, "id"> & Partial<Memory>) {
@@ -630,99 +610,6 @@ const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>();
 const addMemorySheetOpen = ref(false);
 const quickNoteOpen = ref(false);
 
-// Recently-added IDs drive the entrance animation in TimelinePolaroid.
-// Using a Set inside a ref; we replace the ref value to trigger reactivity.
-const recentlyAddedIds = ref<Set<string>>(new Set());
-
-// Tracks optimistic IDs pending server confirmation so we can roll back
-// if silentRefresh doesn't find them (e.g. the memory is past page 1, or
-// a race condition occurred). Once confirmed, they move to recentlyAddedIds.
-const pendingOptimisticIds = ref<Set<string>>(new Set());
-
-function markNew(id: string, duration = 2200) {
-  recentlyAddedIds.value = new Set([...recentlyAddedIds.value, id]);
-  setTimeout(() => {
-    recentlyAddedIds.value = new Set([...recentlyAddedIds.value].filter((x) => x !== id));
-  }, duration);
-}
-
-function addOptimistic(memory: Memory) {
-  pendingOptimisticIds.value = new Set([...pendingOptimisticIds.value, memory.id]);
-  memoriesFlat.value = [memory, ...memoriesFlat.value].sort((a, b) =>
-    b.memory_date.localeCompare(a.memory_date),
-  );
-  markNew(memory.id);
-}
-
-function rollbackOptimistic(id: string) {
-  pendingOptimisticIds.value = new Set([...pendingOptimisticIds.value].filter((x) => x !== id));
-  // Fade-remove: let the card play a brief exit before splice
-  recentlyAddedIds.value = new Set([...recentlyAddedIds.value].filter((x) => x !== id));
-  memoriesFlat.value = memoriesFlat.value.filter((m) => m.id !== id);
-}
-
-// Fetch the first page of the timeline and merge new/updated memories into
-// the existing flat list — no clearing, so existing cards stay in place.
-// Also confirms or rolls back any pending optimistic entries.
-async function silentRefresh() {
-  if (!circleId.value) return;
-  try {
-    const data = await $fetch<{
-      memories: Memory[];
-      nextCursor: string | null;
-      children: typeof children.value;
-      members: typeof members.value;
-    }>("/api/timeline", { query: { circleId: circleId.value } });
-
-    const serverIds = new Set(data.memories.map((m) => m.id));
-    const existingIds = new Set(memoriesFlat.value.map((m) => m.id));
-    const brandNew = data.memories.filter((m) => !existingIds.has(m.id));
-
-    // Confirm or roll back pending optimistic entries.
-    // An optimistic entry is confirmed if the server returned it.
-    // If it's not in the first page, it might just be past the page cap —
-    // only roll back if the memory_date falls within the returned range.
-    if (pendingOptimisticIds.value.size > 0) {
-      const oldestServerDate = data.memories.at(-1)?.memory_date ?? null;
-      for (const id of pendingOptimisticIds.value) {
-        if (serverIds.has(id)) {
-          // Confirmed — remove from pending
-          pendingOptimisticIds.value = new Set([...pendingOptimisticIds.value].filter((x) => x !== id));
-        } else if (oldestServerDate) {
-          const optimistic = memoriesFlat.value.find((m) => m.id === id);
-          // Only roll back if the memory's date is within the server's returned range
-          // (meaning the server should have returned it but didn't — genuine failure)
-          if (optimistic && optimistic.memory_date >= oldestServerDate) {
-            rollbackOptimistic(id);
-          }
-          // If the memory_date is older than the server page, leave it — it's just paginated out
-        }
-      }
-    }
-
-    // Merge: prepend genuinely new server entries, update existing ones
-    const merged = [
-      ...brandNew,
-      ...memoriesFlat.value.map((m) => data.memories.find((d) => d.id === m.id) ?? m),
-    ].sort((a, b) => b.memory_date.localeCompare(a.memory_date));
-    memoriesFlat.value = merged;
-
-    // Animate memories that appeared from the server (photo uploads)
-    brandNew.forEach((m) => markNew(m.id));
-
-    // Update cursor only if this is still the first page
-    if (!nextCursor.value) nextCursor.value = data.nextCursor;
-  } catch {
-    // Network failed — roll back any pending optimistic entries to avoid ghost cards.
-    // The server already confirmed the save (emit('saved') only fires on 200),
-    // so this is an extremely rare case. We remove them silently rather than
-    // leaving unconfirmed cards that can't be opened or interacted with.
-    for (const id of pendingOptimisticIds.value) {
-      rollbackOptimistic(id);
-    }
-  }
-}
-
 function onChoosePhoto() {
   addMemorySheetOpen.value = false;
   nextTick(() => uploadRef.value?.open());
@@ -733,69 +620,9 @@ function onChooseQuickNote() {
   quickNoteOpen.value = true;
 }
 
-interface SavedNoteData {
-  memoryId: string;
-  note: string;
-  memoryDate: string;
-  milestoneLabel: string | null;
-  childIds: string[];
-  memberIds: string[];
-}
-
-function onQuickNoteSaved(data: SavedNoteData) {
+function onQuickNoteSaved() {
   quickNoteOpen.value = false;
-
-  // Build an optimistic Memory from the form data + already-fetched profile/member lists.
-  const optimistic: Memory = {
-    id: data.memoryId,
-    owner_user_id: authUser.value?.id ?? null,
-    former_owner_name: null,
-    former_owner_user_id: null,
-    visibility: "circle",
-    note: data.note,
-    memory_date: data.memoryDate,
-    milestone_label: data.milestoneLabel,
-    created_at: new Date().toISOString(),
-    memorymedia: [],
-    memoryreaction: [],
-    memorycomment: [],
-    memory_children: data.childIds
-      .map((id) => {
-        const c = children.value.find((ch) => ch.id === id);
-        return c
-          ? { child_id: id, childprofile: { id: c.id, name: c.name, date_of_birth: c.date_of_birth } }
-          : null;
-      })
-      .filter(Boolean) as Memory["memory_children"],
-    memory_members: data.memberIds
-      .map((userId) => {
-        const m = members.value.find((mm) => mm.userId === userId);
-        return m
-          ? {
-              user_id: userId,
-              user: {
-                id: userId,
-                first_name: m.firstName,
-                last_name: m.lastName,
-                avatar_url: m.avatarUrl,
-              },
-            }
-          : null;
-      })
-      .filter(Boolean) as Memory["memory_members"],
-    user: {
-      first_name: profile.value?.firstName ?? null,
-      last_name: profile.value?.lastName ?? null,
-      avatar_url: profile.value?.avatarUrl ?? null,
-    },
-  };
-
-  // Optimistically insert and mark for entrance animation.
-  // Tracked in pendingOptimisticIds so silentRefresh can confirm or roll back.
-  addOptimistic(optimistic);
-
-  // Background: silently reconcile with server truth after a short delay.
-  setTimeout(silentRefresh, 1500);
+  fetchTimeline();
 }
 onClickOutside(menuRef, () => {
   menuOpen.value = false;
@@ -885,9 +712,7 @@ async function fetchTimeline(cursor?: string) {
 }
 
 function onUploaded() {
-  // Give the server a moment to finish writing the record and generating signed URLs,
-  // then merge new memories in without clearing the existing list.
-  setTimeout(silentRefresh, 800);
+  fetchTimeline();
 }
 
 onMounted(() => fetchTimeline());

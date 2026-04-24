@@ -4,6 +4,7 @@ import { z } from "zod"
 const bodySchema = z.object({
   note: z.string().max(500).nullable().optional(),
   milestone_label: z.string().max(40).nullable().optional(),
+  memory_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -33,7 +34,7 @@ export default defineEventHandler(async (event) => {
     .from("memory")
     .update(updates)
     .eq("id", memoryId)
-    .select("id, note, milestone_label")
+    .select("id, note, milestone_label, memory_date")
     .maybeSingle()
 
   if (error) {

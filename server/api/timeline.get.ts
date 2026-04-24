@@ -89,6 +89,7 @@ export default defineEventHandler(async (event) => {
     .eq("circle_id", circleId)
     .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
     .order("memory_date", { ascending: false })
+    .order("created_at", { ascending: false })
     .order("id", { ascending: false })
 
   if (authorId) {
@@ -116,9 +117,13 @@ export default defineEventHandler(async (event) => {
   query = query.limit(20)
 
   if (cursor) {
-    const [cursorDate, cursorId] = cursor.split(",")
+    const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(",")
     query = (query as any).or(
-      `memory_date.lt.${cursorDate},and(memory_date.eq.${cursorDate},id.lt.${cursorId})`
+      [
+        `memory_date.lt.${cursorDate}`,
+        `and(memory_date.eq.${cursorDate},created_at.lt.${cursorCreatedAt})`,
+        `and(memory_date.eq.${cursorDate},created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
+      ].join(",")
     )
   }
 
@@ -131,7 +136,7 @@ export default defineEventHandler(async (event) => {
 
   const memoriesWithUrls = await attachSignedUrls(supabase, memories ?? [])
   const last = memoriesWithUrls[memoriesWithUrls.length - 1]
-  const nextCursor = last ? `${last.memory_date},${last.id}` : null
+  const nextCursor = last ? `${last.memory_date},${last.created_at},${last.id}` : null
 
   return { memories: memoriesWithUrls, nextCursor, children, members }
 })

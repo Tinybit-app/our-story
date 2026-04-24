@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-background">
 
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
+    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
         <button
           class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1 flex-shrink-0"
@@ -57,12 +57,12 @@
 
   </div>
 
-  <MemoryModal
+  <MemoryShell
     :memories="memoriesFlat"
-    :start-index="selectedMemoryIndex"
+    :start-index="selectedIndex"
     :origin-rect="selectedRect"
     :tilt="selectedTilt"
-    @close="selectedMemoryIndex = null"
+    @close="selectedIndex = null"
     @update="onMemoryUpdate"
   />
 </template>
@@ -71,12 +71,12 @@
 import type { Memory } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
 
-const selectedMemoryIndex = ref<number | null>(null)
+const selectedIndex = ref<number | null>(null)
 const selectedRect = ref<DOMRect | null>(null)
 const selectedTilt = ref(0)
 
 function onOpenMemory({ memory, tilt, rect }: { memory: Memory; tilt: number; rect: DOMRect }) {
-  selectedMemoryIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
+  selectedIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
   selectedRect.value = rect
   selectedTilt.value = tilt
 }

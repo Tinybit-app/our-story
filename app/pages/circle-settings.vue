@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-background">
 
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
+    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-[1280px] mx-auto px-5 h-14 flex items-center gap-3">
         <button
           class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1"
@@ -128,22 +128,77 @@
               <div
                 v-for="child in children"
                 :key="child.id"
-                class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-border bg-secondary/40"
+                class="rounded-xl border border-border bg-secondary/40 overflow-hidden"
               >
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-foreground truncate">{{ child.name }}</p>
-                  <p class="text-xs text-muted-foreground">{{ formatDob(child.date_of_birth) }}</p>
+                <!-- View row -->
+                <div v-if="editingChildId !== child.id" class="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-foreground truncate">{{ child.name }}</p>
+                    <p class="text-xs text-muted-foreground">{{ formatDob(child.date_of_birth) }}</p>
+                  </div>
+                  <div class="flex items-center gap-1 flex-shrink-0">
+                    <!-- Edit -->
+                    <button
+                      class="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                      @click="startEditChild(child)"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <!-- Remove -->
+                    <button
+                      class="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      :disabled="removingChildId === child.id"
+                      @click="removeChild(child.id)"
+                    >
+                      <svg v-if="removingChildId !== child.id" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                      </svg>
+                      <div v-else class="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                  :disabled="removingChildId === child.id"
-                  @click="removeChild(child.id)"
-                >
-                  <svg v-if="removingChildId !== child.id" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                  </svg>
-                  <div v-else class="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                </button>
+
+                <!-- Edit row -->
+                <div v-else class="px-4 py-3 flex flex-col gap-2">
+                  <div class="flex gap-2">
+                    <input
+                      v-model="editChildName"
+                      type="text"
+                      placeholder="Name"
+                      maxlength="100"
+                      class="flex-1 min-w-0 bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                      @keydown.enter="saveEditChild(child.id)"
+                      @keydown.escape="cancelEditChild"
+                    />
+                    <input
+                      v-model="editChildDob"
+                      type="date"
+                      aria-label="Date of birth"
+                      class="flex-1 min-w-0 bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      :style="{ colorScheme: isDark ? 'dark' : 'light' }"
+                      @keydown.enter="saveEditChild(child.id)"
+                      @keydown.escape="cancelEditChild"
+                    />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      :disabled="savingChildId === child.id || !editChildName.trim() || !editChildDob"
+                      class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      @click="saveEditChild(child.id)"
+                    >
+                      {{ savingChildId === child.id ? '…' : 'Save' }}
+                    </button>
+                    <button
+                      class="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      @click="cancelEditChild"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -472,6 +527,41 @@ const newChildDob = ref('')
 const addingChild = ref(false)
 const removingChildId = ref<string | null>(null)
 const childrenError = ref('')
+
+const editingChildId = ref<string | null>(null)
+const editChildName = ref('')
+const editChildDob = ref('')
+const savingChildId = ref<string | null>(null)
+
+function startEditChild(child: ChildProfile) {
+  editingChildId.value = child.id
+  editChildName.value = child.name
+  editChildDob.value = child.date_of_birth
+}
+
+function cancelEditChild() {
+  editingChildId.value = null
+  editChildName.value = ''
+  editChildDob.value = ''
+}
+
+async function saveEditChild(childId: string) {
+  if (!circleId.value || !editChildName.value.trim() || !editChildDob.value) return
+  savingChildId.value = childId
+  childrenError.value = ''
+  try {
+    await $fetch(`/api/circles/${circleId.value}/children/${childId}`, {
+      method: 'PATCH',
+      body: { name: editChildName.value.trim(), dateOfBirth: editChildDob.value },
+    })
+    await refreshChildren()
+    cancelEditChild()
+  } catch (err: any) {
+    childrenError.value = err?.data?.message ?? 'Failed to update child. Please try again.'
+  } finally {
+    savingChildId.value = null
+  }
+}
 
 function formatDob(dob: string) {
   return new Date(dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })

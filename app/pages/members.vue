@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-background">
 
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border">
+    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
       <div class="max-w-[1280px] mx-auto px-5 h-14 flex items-center gap-3">
         <button
           class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1"

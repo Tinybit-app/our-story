@@ -91,6 +91,7 @@
   "modal": {
     "tabCaption": "标题",
     "tabComments": "评论",
+    "date": "日期",
     "milestone": "里程碑",
     "note": "备注",
     "milestonePlaceholder": "例：第一步",

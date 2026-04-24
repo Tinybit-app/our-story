@@ -149,22 +149,7 @@
             color: hsl(var(--accent));
           "
         >
-          <svg
-            width="8"
-            height="8"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            style="opacity: 0.8; flex-shrink: 0"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2" />
-            <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
-            <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
-          </svg>
+          <span style="font-size:8px;flex-shrink:0;line-height:1">👶</span>
           <span>{{ child.name }}</span>
           <span style="opacity: 0.5">·</span>
           <span style="opacity: 0.85">{{ child.age }}</span>
