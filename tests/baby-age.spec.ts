@@ -124,9 +124,10 @@ test.describe('Baby age stamp (4.10.1)', () => {
     // Tag CHILD on this specific memory — age stamp derives from memory_children
     await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
 
+    // Register waitForResponse BEFORE goto so it captures the circles fetch on page init
+    const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
-    // Wait for the circle switcher (confirms circles API loaded — fast, appears before timeline)
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await circlesReady
     // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks", labeled with the child's name
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('3 months, 2 weeks')).toBeVisible({ timeout: 10_000 })
@@ -138,9 +139,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
     // Memory has no tagged children even though the circle has a child profile
     await mockTimeline(page, [makeMemory('mem-1')], [CHILD])
 
+    const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
-    // Wait for the header circle name — confirms timeline loaded
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await circlesReady
     // No age stamp should be present (memory_children is empty)
     await expect(page.getByText(/months|weeks|days old|year/i)).not.toBeVisible()
   })
@@ -205,8 +206,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
     // so UploadMemory has the list of children to render in the picker
     await mockTimeline(page, [makeMemory('mem-1')], [CHILD])
 
+    const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await circlesReady
 
     // Trigger the file input to open the upload form with a mock file
     const fileInput = page.locator('input[type="file"]').first()
