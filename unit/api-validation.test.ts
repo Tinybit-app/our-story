@@ -1751,3 +1751,172 @@ describe("POST /api/memories/quick-note — input validation", () => {
   })
 })
 
+// ============================================================
+// PATCH /api/memories/[id] — edit memory note / milestone / date
+// Route: server/api/memories/[id].patch.ts
+// All fields are optional but at least one must be meaningful.
+// Ownership is verified at the application layer (service role bypasses RLS).
+// ============================================================
+const memoryPatchSchema = z.object({
+  note: z.string().max(500).nullable().optional(),
+  milestone_label: z.string().max(40).nullable().optional(),
+  memory_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+})
+
+describe("PATCH /api/memories/[id] — input validation", () => {
+  const VALID_DATE = "2024-06-15"
+
+  it("accepts a valid note update", () => {
+    expect(memoryPatchSchema.safeParse({ note: "Updated note" }).success).toBe(true)
+  })
+
+  it("accepts null note (clearing the note)", () => {
+    expect(memoryPatchSchema.safeParse({ note: null }).success).toBe(true)
+  })
+
+  it("accepts a valid milestone_label update", () => {
+    expect(memoryPatchSchema.safeParse({ milestone_label: "First steps" }).success).toBe(true)
+  })
+
+  it("accepts null milestone_label (clearing the milestone)", () => {
+    expect(memoryPatchSchema.safeParse({ milestone_label: null }).success).toBe(true)
+  })
+
+  it("accepts a valid memory_date update", () => {
+    expect(memoryPatchSchema.safeParse({ memory_date: VALID_DATE }).success).toBe(true)
+  })
+
+  it("accepts all three fields together", () => {
+    expect(memoryPatchSchema.safeParse({
+      note: "Note",
+      milestone_label: "Birthday",
+      memory_date: VALID_DATE,
+    }).success).toBe(true)
+  })
+
+  it("accepts empty body (schema doesn't enforce at-least-one; route handles it)", () => {
+    // The route applies any fields present — if none provided, update is a no-op.
+    // Schema itself is permissive; route logic is what enforces meaningful updates.
+    expect(memoryPatchSchema.safeParse({}).success).toBe(true)
+  })
+
+  it("rejects note longer than 500 characters", () => {
+    expect(memoryPatchSchema.safeParse({ note: "a".repeat(501) }).success).toBe(false)
+  })
+
+  it("rejects milestone_label longer than 40 characters", () => {
+    expect(memoryPatchSchema.safeParse({ milestone_label: "a".repeat(41) }).success).toBe(false)
+  })
+
+  it("rejects memory_date with wrong format (DD-MM-YYYY)", () => {
+    expect(memoryPatchSchema.safeParse({ memory_date: "15-06-2024" }).success).toBe(false)
+  })
+
+  it("rejects memory_date with wrong format (MM/DD/YYYY)", () => {
+    expect(memoryPatchSchema.safeParse({ memory_date: "06/15/2024" }).success).toBe(false)
+  })
+})
+
+describe("PATCH /api/memories/[id] — ownership check", () => {
+  // The route fetches the memory and compares owner_user_id to auth.sub.
+  // Service role is used to bypass RLS; the route implements its own gate.
+  type OwnerCheck = { owner_user_id: string | null; requesterId: string }
+
+  function isOwner(check: OwnerCheck): boolean {
+    return check.owner_user_id === check.requesterId
+  }
+
+  it("allows the uploader to edit their own memory", () => {
+    expect(isOwner({ owner_user_id: "user-a", requesterId: "user-a" })).toBe(true)
+  })
+
+  it("blocks a different circle member from editing", () => {
+    expect(isOwner({ owner_user_id: "user-a", requesterId: "user-b" })).toBe(false)
+  })
+
+  it("blocks editing a detached memory (owner_user_id is null)", () => {
+    expect(isOwner({ owner_user_id: null, requesterId: "user-a" })).toBe(false)
+  })
+})
+
+// ============================================================
+// PATCH /api/circles/[id]/children/[childId] — edit child profile
+// Route: server/api/circles/[id]/children/[childId].patch.ts
+// At least one of name or dateOfBirth must be provided.
+// Access: owner-only (verified against circlemember role).
+// ============================================================
+const childPatchSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+}).refine(d => d.name !== undefined || d.dateOfBirth !== undefined, {
+  message: "At least one field must be provided.",
+})
+
+describe("PATCH /api/circles/[id]/children/[childId] — input validation", () => {
+  it("accepts a name-only update", () => {
+    expect(childPatchSchema.safeParse({ name: "Emma" }).success).toBe(true)
+  })
+
+  it("accepts a dateOfBirth-only update", () => {
+    expect(childPatchSchema.safeParse({ dateOfBirth: "2024-01-15" }).success).toBe(true)
+  })
+
+  it("accepts both name and dateOfBirth together", () => {
+    expect(childPatchSchema.safeParse({ name: "Emma", dateOfBirth: "2024-01-15" }).success).toBe(true)
+  })
+
+  it("rejects empty body (at least one field required)", () => {
+    expect(childPatchSchema.safeParse({}).success).toBe(false)
+  })
+
+  it("rejects empty name string", () => {
+    expect(childPatchSchema.safeParse({ name: "" }).success).toBe(false)
+  })
+
+  it("rejects name longer than 100 characters", () => {
+    expect(childPatchSchema.safeParse({ name: "a".repeat(101) }).success).toBe(false)
+  })
+
+  it("rejects dateOfBirth with wrong format (MM/DD/YYYY)", () => {
+    expect(childPatchSchema.safeParse({ dateOfBirth: "01/15/2024" }).success).toBe(false)
+  })
+
+  it("rejects dateOfBirth with wrong format (DD-MM-YYYY)", () => {
+    expect(childPatchSchema.safeParse({ dateOfBirth: "15-01-2024" }).success).toBe(false)
+  })
+
+  it("accepts name at exact max length (100 chars)", () => {
+    expect(childPatchSchema.safeParse({ name: "a".repeat(100) }).success).toBe(true)
+  })
+})
+
+describe("PATCH /api/circles/[id]/children/[childId] — access control", () => {
+  // The route fetches the circlemember role for the requesting user.
+  // Only 'owner' is allowed; admin and member are blocked.
+  type Role = "owner" | "admin" | "member" | "caregiver"
+
+  function canUpdateChildProfile(role: Role | null): boolean {
+    return role === "owner"
+  }
+
+  it("allows the circle owner to update a child profile", () => {
+    expect(canUpdateChildProfile("owner")).toBe(true)
+  })
+
+  it("blocks admin from updating a child profile", () => {
+    expect(canUpdateChildProfile("admin")).toBe(false)
+  })
+
+  it("blocks member from updating a child profile", () => {
+    expect(canUpdateChildProfile("member")).toBe(false)
+  })
+
+  it("blocks caregiver from updating a child profile", () => {
+    expect(canUpdateChildProfile("caregiver")).toBe(false)
+  })
+
+  it("blocks a user with no membership in the circle", () => {
+    expect(canUpdateChildProfile(null)).toBe(false)
+  })
+})
+

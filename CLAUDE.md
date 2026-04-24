@@ -18,9 +18,9 @@ The build plan and design spec are the source of truth. Do not deviate from them
 
 **After every implementation task:**
 
-Always test the implementation and verify the workflow with the user. This is very important.
-
-Update doc/build-plan.md and doc/design-spec.md with any change in the implementation so that the docs are in sync with the implementation. This is very important
+1. Always test the implementation and verify the workflow with the user. This is very important.
+2. Update test coverages, e2e tests, RLS tests.
+3. Update doc/build-plan.md and doc/design-spec.md with any change in the implementation so that the docs are in sync with the implementation. This is very important
 
 ## Stack
 

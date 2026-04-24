@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(33);
+SELECT plan(37);
 
 -- ============================================================
 -- FIXTURES
@@ -46,6 +46,11 @@ VALUES ('00000000-0000-0000-0000-000000000004', 'caregiver@test.com', '', now(),
 
 INSERT INTO public.CircleMember (user_id, circle_id, role)
 VALUES ('00000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'caregiver');
+
+-- user_outsider: has no circle memberships anywhere — used for non-member tests
+-- (user_c gets added to Circle A during test 12, so can't be used for non-member assertions)
+INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+VALUES ('00000000-0000-0000-0000-000000000005', 'outsider@test.com', '', now(), now(), now());
 
 -- ============================================================
 -- HELPERS
@@ -280,21 +285,18 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- TEST 20: non-member (user_c) cannot insert a Memory into Circle A
+-- TEST 20: non-member (user_outsider) cannot insert a Memory into Circle A
+-- user_outsider has no CircleMember row for any circle.
+-- (user_c was added to Circle A in TEST 12, so it cannot serve as the non-member.)
 -- ============================================================
--- user_c has no CircleMember row for Circle A
-RESET ROLE;
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-VALUES ('00000000-0000-0000-0000-000000000003', 'user_c@test.com', '', now(), now(), now())
-ON CONFLICT DO NOTHING;
 SET LOCAL ROLE authenticated;
-SELECT set_auth('00000000-0000-0000-0000-000000000003');
+SELECT set_auth('00000000-0000-0000-0000-000000000005');
 
 SELECT throws_ok(
   $$INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility, note, memory_date)
     VALUES (
       '30000000-0000-0000-0000-000000000002',
-      '00000000-0000-0000-0000-000000000003',
+      '00000000-0000-0000-0000-000000000005',
       '10000000-0000-0000-0000-000000000001',
       'circle',
       'Sneaky note',
@@ -551,6 +553,75 @@ SELECT is(
    WHERE id = '10000000-0000-0000-0000-000000000001'),
   'couple',
   'admin (non-owner) cannot update circle_type — row unchanged'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 34: owner (user_a) can UPDATE a ChildProfile in their circle
+-- PATCH /api/circles/[id]/children/[childId] uses service role, but we
+-- verify the underlying RLS UPDATE policy also permits the owner directly.
+-- ============================================================
+RESET ROLE;
+UPDATE public.Circle SET deleted_at = NULL WHERE id = '10000000-0000-0000-0000-000000000001';
+SET LOCAL ROLE authenticated;
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+
+SELECT lives_ok(
+  $$UPDATE public.ChildProfile SET name = 'Emma Updated'
+    WHERE id = '50000000-0000-0000-0000-000000000001'$$,
+  'owner can update ChildProfile name in their circle'
+);
+
+-- ============================================================
+-- TEST 35: admin (user_b) cannot UPDATE a ChildProfile
+-- ChildProfile UPDATE policy is owner-only (same as INSERT).
+-- The UPDATE silently no-ops — verify the name was not changed.
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+UPDATE public.ChildProfile
+  SET name = 'Hacked Name'
+  WHERE id = '50000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT name FROM public.ChildProfile WHERE id = '50000000-0000-0000-0000-000000000001'),
+  'Emma Updated',
+  'admin (non-owner) cannot update ChildProfile — row unchanged'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 36: memory owner (user_a) can UPDATE their own memory note
+-- The PATCH /api/memories/[id] route uses service role, but the underlying
+-- RLS UPDATE policy (owner_user_id = auth.uid()) must also allow this.
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$UPDATE public.Memory SET note = 'Updated note text'
+    WHERE id = '20000000-0000-0000-0000-000000000001'$$,
+  'memory owner can update their own memory note'
+);
+
+-- ============================================================
+-- TEST 37: non-owner (user_b) cannot UPDATE another user's memory
+-- The UPDATE silently no-ops — verify the note was not changed.
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+UPDATE public.Memory
+  SET note = 'Hacked note'
+  WHERE id = '20000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT note FROM public.Memory WHERE id = '20000000-0000-0000-0000-000000000001'),
+  'Updated note text',
+  'non-owner cannot update another user''s memory note — row unchanged'
 );
 SET LOCAL ROLE authenticated;
 
