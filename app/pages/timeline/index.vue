@@ -880,10 +880,13 @@ function openShareSheet() {
 }
 
 async function renewViewerLink(link: { id: string }) {
-  // Delete the old link, then open the create sheet for a replacement
   if (!circleId.value) return
-  await $fetch(`/api/circles/${circleId.value}/viewer-links/${link.id}`, { method: 'DELETE' })
-  createSheetOpen.value = true
+  try {
+    await $fetch(`/api/circles/${circleId.value}/viewer-links/${link.id}`, { method: 'DELETE' })
+    createSheetOpen.value = true
+  } catch {
+    // Error logged server-side; silently ignore on client — user can try again from the sheet
+  }
 }
 
 function onLinkCreated() {
