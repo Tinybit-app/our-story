@@ -524,6 +524,56 @@ export type Database = {
           },
         ]
       }
+      viewer_link: {
+        Row: {
+          id: string
+          circle_id: string
+          nonce: string
+          mode: string
+          memory_ids: string[] | null
+          date_from: string | null
+          date_to: string | null
+          label: string
+          expires_at: string
+          notified_expiry_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          circle_id: string
+          nonce?: string
+          mode: string
+          memory_ids?: string[] | null
+          date_from?: string | null
+          date_to?: string | null
+          label: string
+          expires_at: string
+          notified_expiry_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          circle_id?: string
+          nonce?: string
+          mode?: string
+          memory_ids?: string[] | null
+          date_from?: string | null
+          date_to?: string | null
+          label?: string
+          expires_at?: string
+          notified_expiry_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_link_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circle"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user: {
         Row: {
           avatar_url: string | null
