@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(37);
+SELECT plan(40);
 
 -- ============================================================
 -- FIXTURES
@@ -622,6 +622,56 @@ SELECT is(
   (SELECT note FROM public.Memory WHERE id = '20000000-0000-0000-0000-000000000001'),
   'Updated note text',
   'non-owner cannot update another user''s memory note — row unchanged'
+);
+SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 38: circle member (user_b) can INSERT a reaction on a circle-visible memory
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$INSERT INTO public.MemoryReaction (memory_id, user_id, emoji, type)
+    VALUES ('20000000-0000-0000-0000-000000000002',
+            '00000000-0000-0000-0000-000000000002',
+            '❤️', 'emoji')$$,
+  'circle member can add a reaction to a circle-visible memory'
+);
+
+-- ============================================================
+-- TEST 39: non-member (user_outsider) cannot INSERT a reaction
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000005');
+SET LOCAL ROLE authenticated;
+
+SELECT throws_ok(
+  $$INSERT INTO public.MemoryReaction (memory_id, user_id, emoji, type)
+    VALUES ('20000000-0000-0000-0000-000000000002',
+            '00000000-0000-0000-0000-000000000005',
+            '😍', 'emoji')$$,
+  NULL,
+  NULL,
+  'non-member cannot add a reaction'
+);
+
+-- ============================================================
+-- TEST 40: user can DELETE their own reaction; cannot delete others'
+-- ============================================================
+-- user_a tries to delete user_b's reaction (inserted in test 38) — should silently no-op
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+DELETE FROM public.MemoryReaction
+  WHERE user_id = '00000000-0000-0000-0000-000000000002'
+    AND emoji = '❤️';
+
+RESET ROLE;
+SELECT is(
+  (SELECT count(*)::int FROM public.MemoryReaction
+   WHERE user_id = '00000000-0000-0000-0000-000000000002' AND emoji = '❤️'),
+  1,
+  'user_a cannot delete user_b reaction — row unchanged'
 );
 SET LOCAL ROLE authenticated;
 

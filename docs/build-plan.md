@@ -175,7 +175,15 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **UPDATE RLS**: migration 022 adds `users can update own comments` policy (previously missing — PATCH worked via service role bypass but RLS was incomplete)
   - **Delete confirmation**: trash icon now triggers an inline confirmation row ("Delete this comment? Delete | Cancel") rather than deleting immediately; Cancel dismisses it, Delete calls the API
   - Tests: 7 E2E tests (`tests/comments.spec.ts`) covering load, post, delete confirmation flow, ownership-conditional button checks, QuickNoteModal parity
-- [ ] 8.2 Emoji reactions (toggle on/off)
+- [x] 8.2 Emoji reactions (toggle on/off)
+  - `POST /api/memories/:id/reactions` — toggle semantics: delete if own reaction already exists for that emoji, insert if not; returns fresh reactions for the memory
+  - RLS: circle members can read and insert reactions; users can only delete their own; non-members blocked (policies in migration 002)
+  - `PolaroidCard`: reaction overlay (`v-if="isHovered"`) at bottom of photo — chips per emoji group (count + mine highlight) + `+` picker button (12 preset emojis); optimistic toggle with server reconciliation
+  - `QuickNoteCard`: always-visible footer reaction chips + `+` picker trigger; same toggle logic
+  - `MemoryModal`: inline reactions row with chips (tooltip shows reactors' names) + `+` picker; toggles via same API
+  - `QuickNoteModal`: identical reactions row at bottom of info area
+  - Tests: 7 E2E tests (`tests/reactions.spec.ts`) covering chip render on hover, picker open, POST called on pick, toggle-off (own reaction), MemoryModal and QuickNoteModal parity
+  - RLS tests 38–40 (total 40): member can insert, non-member blocked, user cannot delete another's reaction
 
 ### Milestone 8.5: Localization (i18n — English + Chinese)
 - [x] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-CN` locales (lazy-loaded JSON files)
