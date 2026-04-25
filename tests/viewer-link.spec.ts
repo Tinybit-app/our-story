@@ -106,36 +106,21 @@ test.describe('Viewer link management — owner dashboard', () => {
 
   // ── 1. Share button visibility ─────────────────────────────────────────────
 
-  test('owner sees Share button; member does not', async ({ page }) => {
-    // Owner case
+  test('owner sees Share button', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page, 'owner')
     await mockTimeline(page)
-    // Also mock viewer-links for this circle in case the page pre-fetches them
     await page.goto('/timeline')
     await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
     // Share button appears when circle.role === 'owner'
     await expect(page.getByRole('button', { name: /share/i })).toBeVisible({ timeout: 5_000 })
+  })
 
-    // Member case — override circles mock with member role and reload
-    await page.route('**/api/circles**', (route: any) => {
-      if (route.request().method() !== 'GET') return route.continue()
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          circles: [{
-            id: CIRCLE_ID,
-            name: 'Smith Family',
-            circle_type: 'family',
-            memberCount: 2,
-            role: 'member',
-            anniversary_date: null,
-          }],
-        }),
-      })
-    })
-    await page.reload()
+  test('member does not see Share button', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page, 'member')
+    await mockTimeline(page)
+    await page.goto('/timeline')
     await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
     await expect(page.getByRole('button', { name: /share/i })).not.toBeVisible()
   })
@@ -188,11 +173,36 @@ test.describe('Viewer link management — owner dashboard', () => {
 
     // CreateLinkSheet opens — verify its heading is visible
     await expect(page.getByRole('heading', { name: 'Create a link' })).toBeVisible({ timeout: 5_000 })
-    // Click the submit button (last "Create a link" button — the one inside CreateLinkSheet)
-    await page.locator('button:has-text("Create a link")').last().click()
 
-    await page.waitForTimeout(500)
+    // Click the submit button and wait for the POST response
+    const [_postResponse] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('viewer-links') && r.request().method() === 'POST'),
+      page.locator('button:has-text("Create a link")').last().click(),
+    ])
     expect(postBody).toMatchObject({ mode: 'full' })
+
+    // Navigate to the viewer URL and verify it loads
+    await page.route('**/api/viewer/timeline**', (route) => {
+      route.fulfill({
+        status: 200,
+        json: {
+          circleName: 'Test Circle',
+          ownerFirstName: 'Alice',
+          linkLabel: 'Full timeline',
+          mode: 'full',
+          selectionDateRange: null,
+          memories: [
+            { id: 'mem-1', memory_date: '2024-01-15', note: 'Hello', signedUrl: null, mediaType: null }
+          ],
+        },
+      })
+    })
+    await page.goto(`/view?token=${createdToken}`)
+
+    // The viewer page shows a splash screen first — dismiss it
+    await page.getByRole('button', { name: /see the memories/i }).click()
+    // Verify at least one memory card is shown
+    await expect(page.locator('article').first()).toBeVisible()
   })
 
   // ── 5. Revoke link → DELETE called for correct link ID ─────────────────────
@@ -246,9 +256,10 @@ test.describe('Viewer link management — owner dashboard', () => {
 
     // Confirm inline revoke dialog
     await expect(page.getByText(/revoke this link/i)).toBeVisible({ timeout: 3_000 })
-    await page.getByRole('button', { name: /^revoke$/i }).click()
-
-    await page.waitForTimeout(500)
+    const [_deleteResponse] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('viewer-links') && r.request().method() === 'DELETE'),
+      page.getByRole('button', { name: /^revoke$/i }).click(),
+    ])
     expect(deleteCalledForId).toBe(LINK_ID_FULL)
   })
 
