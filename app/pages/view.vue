@@ -4,7 +4,7 @@
     <!-- Missing token: redirect handled in onMounted -->
     <template v-if="!token">
       <div class="min-h-screen flex items-center justify-center px-6">
-        <p class="text-sm text-muted-foreground">Redirecting…</p>
+        <p class="text-sm text-muted-foreground">{{ t('viewerLink.redirecting') }}</p>
       </div>
     </template>
 
@@ -22,6 +22,7 @@
             <h1 class="text-xl font-bold text-foreground mb-2">{{ t('viewerLink.viewerExpiredTitle') }}</h1>
             <p class="text-sm text-muted-foreground mb-8">{{ t('viewerLink.viewerExpiredBody') }}</p>
             <button
+              type="button"
               @click="sendReminder"
               class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
             >
@@ -62,6 +63,7 @@
           </h1>
           <p class="text-white/70 text-sm mb-10">{{ t('viewerLink.viewerSplashSubtitle') }}</p>
           <button
+            type="button"
             @click="dismissSplash"
             class="w-full bg-white text-stone-900 rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
           >
@@ -108,7 +110,7 @@
             <article
               v-for="(memory, index) in timeline.memories"
               :key="memory.id"
-              :ref="(el) => observeMemory(el as Element | null, index)"
+              :ref="(el) => observeMemory(el, index)"
               class="rounded-2xl border border-border bg-card overflow-hidden"
             >
               <video
@@ -135,6 +137,7 @@
                 <!-- Reaction button -->
                 <div class="mt-3 flex items-center gap-2">
                   <button
+                    type="button"
                     @click="reactToMemory(memory.id)"
                     :disabled="reactedIds.has(memory.id)"
                     class="flex items-center gap-1.5 transition-all active:scale-95"
@@ -215,6 +218,7 @@
             @keydown.enter="confirmReaction"
           />
           <button
+            type="button"
             @click="confirmReaction"
             :disabled="!guestName.trim()"
             class="w-full bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
@@ -293,8 +297,8 @@ const modeBanner = computed(() => {
 // ── IntersectionObserver for referral trigger ──────────────────────────────────
 let observer: IntersectionObserver | null = null
 
-function observeMemory(el: Element | null, index: number) {
-  if (!el || index < 2) return  // only observe 3rd memory (index 2)
+function observeMemory(el: Element | ComponentPublicInstance | null, index: number) {
+  if (!(el instanceof Element) || index < 2) return  // only observe 3rd memory (index 2)
   if (observer) return
   observer = new IntersectionObserver(
     (entries) => {
@@ -318,6 +322,11 @@ async function shareApp() {
     await navigator.clipboard.writeText(shareData.url).catch(() => {})
   }
 }
+
+onUnmounted(() => {
+  observer?.disconnect()
+  observer = null
+})
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -367,9 +376,7 @@ function formatDate(dateStr: string): string {
 }
 
 function sendReminder() {
-  const text = encodeURIComponent(
-    "Hey! The link you shared has expired — could you send me a new one? 😊"
-  )
+  const text = encodeURIComponent(t('viewerLink.reminderSmsBody'))
   window.open(`sms:?body=${text}`, "_blank")
 }
 

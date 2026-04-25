@@ -624,6 +624,8 @@
     "close": "Close",
     "dateFrom": "From",
     "dateTo": "To",
-    "createErrorGeneric": "Something went wrong. Please try again."
+    "createErrorGeneric": "Something went wrong. Please try again.",
+    "redirecting": "Redirecting…",
+    "reminderSmsBody": "Hey! The link you shared has expired — could you send me a new one? 😊"
   }
 }

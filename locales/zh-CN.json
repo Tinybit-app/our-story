@@ -471,6 +471,8 @@
     "close": "关闭",
     "dateFrom": "从",
     "dateTo": "到",
-    "createErrorGeneric": "出错了，请重试。"
+    "createErrorGeneric": "出错了，请重试。",
+    "redirecting": "重定向中…",
+    "reminderSmsBody": "嘿！你分享的链接已过期——能重新发一个给我吗？😊"
   }
 }

@@ -624,6 +624,8 @@
     "close": "Fermer",
     "dateFrom": "Du",
     "dateTo": "Au",
-    "createErrorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+    "createErrorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "redirecting": "Redirection en cours…",
+    "reminderSmsBody": "Hey ! Le lien que tu as partagé a expiré — tu peux m'en envoyer un nouveau ? 😊"
   }
 }
