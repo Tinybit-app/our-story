@@ -104,83 +104,113 @@
 
         <!-- Memory picker grid -->
         <div v-if="selectedMode === 'selection'" class="mb-5">
-          <!-- Loading state -->
-          <div v-if="memoriesLoading" class="py-8 text-center">
-            <p class="text-sm text-muted-foreground">{{ t('viewerLink.loading') }}</p>
+
+          <!-- Year tabs -->
+          <div v-if="availableYears.length > 1" class="flex gap-1.5 mb-3 overflow-x-auto pb-0.5 -mx-5 px-5 scrollbar-none">
+            <button
+              v-for="year in availableYears"
+              :key="year"
+              type="button"
+              @click="setFilterYear(year)"
+              class="flex-shrink-0 h-6 px-3 rounded-full text-[11px] font-semibold transition-all"
+              :class="selectedFilterYear === year
+                ? 'bg-foreground text-background'
+                : 'bg-secondary text-muted-foreground hover:text-foreground'"
+            >{{ year }}</button>
           </div>
 
-          <template v-else>
-            <!-- Selection count badge -->
-            <div v-if="selectedMemoryIds.size > 0" class="mb-3">
-              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                {{ t('viewerLink.selectedCount', { count: selectedMemoryIds.size }) }}
-              </span>
-            </div>
+          <!-- Month pills -->
+          <div v-if="memoryMonths.length > 1" class="flex gap-1.5 mb-3 overflow-x-auto pb-0.5 -mx-5 px-5 scrollbar-none">
+            <button
+              type="button"
+              @click="selectedFilterMonth = null"
+              class="flex-shrink-0 h-6 px-2.5 rounded-full text-[11px] font-medium transition-all"
+              :class="!selectedFilterMonth
+                ? 'bg-foreground text-background'
+                : 'bg-secondary text-muted-foreground hover:text-foreground'"
+            >All</button>
+            <button
+              v-for="month in memoryMonths"
+              :key="month"
+              type="button"
+              @click="selectedFilterMonth = month"
+              class="flex-shrink-0 h-6 px-2.5 rounded-full text-[11px] font-medium transition-all"
+              :class="selectedFilterMonth === month
+                ? 'bg-foreground text-background'
+                : 'bg-secondary text-muted-foreground hover:text-foreground'"
+            >{{ monthName(month) }}</button>
+          </div>
 
-            <!-- 3-column grid -->
-            <div class="grid grid-cols-3 gap-1.5">
-              <button
-                v-for="memory in allMemories"
-                :key="memory.id"
-                type="button"
-                @click="toggleMemory(memory.id)"
-                :aria-label="memory.memory_date"
-                class="relative aspect-square rounded-[10px] overflow-hidden bg-secondary border-2 transition-all"
-                :class="selectedMemoryIds.has(memory.id)
-                  ? 'border-primary'
-                  : 'border-transparent'"
-                :aria-pressed="selectedMemoryIds.has(memory.id)"
+          <!-- Selection count + loading -->
+          <div class="flex items-center justify-between mb-2 min-h-[24px]">
+            <span v-if="selectedMemoryIds.size > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary">
+              {{ t('viewerLink.selectedCount', { count: selectedMemoryIds.size }) }}
+            </span>
+            <span v-else />
+            <div v-if="memoriesLoading" class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <div class="w-3 h-3 border-[1.5px] border-muted-foreground border-t-transparent rounded-full animate-spin" />
+              {{ t('viewerLink.loading') }}
+            </div>
+          </div>
+
+          <!-- 5-column compact grid -->
+          <div class="grid grid-cols-5 gap-1">
+            <button
+              v-for="memory in filteredMemories"
+              :key="memory.id"
+              type="button"
+              @click="toggleMemory(memory.id)"
+              :aria-label="memory.memory_date"
+              :aria-pressed="selectedMemoryIds.has(memory.id)"
+              class="relative aspect-square rounded-[6px] overflow-hidden bg-secondary transition-all"
+              :class="selectedMemoryIds.has(memory.id) ? 'ring-2 ring-primary ring-offset-1 ring-offset-card' : ''"
+            >
+              <!-- Photo -->
+              <img
+                v-if="memory.signedUrl && memory.mediaType === 'image'"
+                :src="memory.signedUrl"
+                :alt="memory.memory_date"
+                class="w-full h-full object-cover"
+              />
+              <!-- Video -->
+              <div
+                v-else-if="memory.mediaType === 'video'"
+                class="w-full h-full flex items-center justify-center bg-foreground/10 text-foreground"
               >
-                <!-- Photo -->
-                <img
-                  v-if="memory.signedUrl && memory.mediaType === 'image'"
-                  :src="memory.signedUrl"
-                  :alt="memory.memory_date"
-                  class="w-full h-full object-cover"
-                />
-                <!-- Video -->
-                <div
-                  v-else-if="memory.mediaType === 'video'"
-                  class="w-full h-full flex flex-col items-center justify-center gap-1 bg-foreground/10 text-foreground"
-                >
-                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                  <span class="text-[9px] font-semibold uppercase tracking-wide opacity-60">Video</span>
-                </div>
-                <!-- Quick note -->
-                <div
-                  v-else-if="memory.note"
-                  class="w-full h-full flex items-center justify-center p-2 bg-accent/10"
-                >
-                  <p class="text-[9px] leading-tight text-foreground text-center line-clamp-4 italic">{{ memory.note }}</p>
-                </div>
-                <!-- Fallback -->
-                <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/>
-                  </svg>
-                </div>
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+              <!-- Quick note -->
+              <div
+                v-else-if="memory.note"
+                class="w-full h-full flex items-center justify-center p-1.5 bg-accent/10"
+              >
+                <p class="text-[8px] leading-tight text-foreground text-center line-clamp-3 italic">{{ memory.note }}</p>
+              </div>
+              <!-- Fallback -->
+              <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground/40">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5z"/>
+                </svg>
+              </div>
 
-                <!-- Selected checkmark overlay -->
-                <div
-                  v-if="selectedMemoryIds.has(memory.id)"
-                  class="absolute inset-0 bg-primary/20 flex items-center justify-center"
-                >
-                  <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                    <svg class="w-3.5 h-3.5 text-primary-foreground" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                      <path d="M5 13l4 4L19 7"/>
-                    </svg>
-                  </div>
-                </div>
-              </button>
-            </div>
+              <!-- Selected tick -->
+              <div
+                v-if="selectedMemoryIds.has(memory.id)"
+                class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center"
+              >
+                <svg class="w-2.5 h-2.5 text-primary-foreground" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+            </button>
+          </div>
 
-            <!-- Empty state for no memories -->
-            <div v-if="allMemories.length === 0" class="py-8 text-center">
-              <p class="text-sm text-muted-foreground">{{ t('viewerLink.emptyState') }}</p>
-            </div>
-          </template>
+          <!-- Empty state -->
+          <div v-if="!memoriesLoading && filteredMemories.length === 0" class="py-8 text-center">
+            <p class="text-sm text-muted-foreground">{{ t('viewerLink.emptyState') }}</p>
+          </div>
         </div>
 
         <!-- Label field -->
@@ -211,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 interface MemoryItem {
   id: string
@@ -242,23 +272,43 @@ const memoriesLoading = ref(false)
 const allMemories = ref<MemoryItem[]>([])
 const availableYears = ref<number[]>([])
 const yearsLoading = ref(false)
+const selectedFilterYear = ref<number | null>(null)
+const selectedFilterMonth = ref<number | null>(null)
 
 // today as YYYY-MM-DD in local time — caps the upper bound at "not future"
 const today = new Date().toLocaleDateString('en-CA')
 
-// Jan 1 of the earliest year with memories, or undefined while loading
 const dateMin = computed(() => {
   const earliest = availableYears.value[availableYears.value.length - 1]
   return earliest ? `${earliest}-01-01` : undefined
 })
 
-// Dec 31 of the latest year with memories, capped at today
 const dateMax = computed(() => {
   const latest = availableYears.value[0]
   if (!latest) return today
   const yearEnd = `${latest}-12-31`
   return yearEnd < today ? yearEnd : today
 })
+
+// Distinct months present in the currently-loaded year's memories
+const memoryMonths = computed(() => {
+  const months = new Set<number>()
+  allMemories.value.forEach((m) => months.add(new Date(m.memory_date).getUTCMonth() + 1))
+  return [...months].sort((a, b) => a - b)
+})
+
+// Memories filtered by the active month pill (year filter is server-side)
+const filteredMemories = computed(() =>
+  selectedFilterMonth.value === null
+    ? allMemories.value
+    : allMemories.value.filter(
+        (m) => new Date(m.memory_date).getUTCMonth() + 1 === selectedFilterMonth.value
+      )
+)
+
+function monthName(month: number): string {
+  return new Date(2000, month - 1).toLocaleString(locale.value, { month: 'short' })
+}
 
 const modes = computed(() => [
   { value: 'full' as const, label: t('viewerLink.modeFull') },
@@ -288,53 +338,14 @@ async function loadYears() {
   }
 }
 
-function selectYear(year: number) {
-  dateFrom.value = `${year}-01-01`
-  // Cap to dateMax so selecting the current year never sets a future end date
-  const yearEnd = `${year}-12-31`
-  dateTo.value = yearEnd > dateMax.value ? dateMax.value : yearEnd
-}
-
-function isYearSelected(year: number): boolean {
-  return dateFrom.value === `${year}-01-01` && dateTo.value === `${year}-12-31`
-}
-
-function toggleMemory(id: string) {
-  const s = new Set(selectedMemoryIds.value)
-  if (s.has(id)) s.delete(id)
-  else s.add(id)
-  selectedMemoryIds.value = s
-}
-
-watch(() => props.open, async (val) => {
-  if (!val) {
-    // Reset after close so the sheet is fresh next time (state persists
-    // through the closing animation so it doesn't flash blank mid-transition)
-    selectedMode.value = 'full'
-    dateFrom.value = ''
-    dateTo.value = ''
-    selectedMemoryIds.value = new Set()
-    label.value = ''
-    createError.value = null
-    allMemories.value = []
-    availableYears.value = []
-    yearsLoading.value = false
-    return
-  }
-  if (selectedMode.value === 'selection') await loadMemories()
-  if (selectedMode.value === 'date_range') await loadYears()
-})
-
-watch(selectedMode, async (val) => {
-  if (val === 'selection' && allMemories.value.length === 0) await loadMemories()
-  if (val === 'date_range') await loadYears()
-})
-
 async function loadMemories() {
   memoriesLoading.value = true
   try {
     const data = await $fetch<{ memories: any[] }>(`/api/timeline`, {
-      query: { circleId: props.circleId },
+      query: {
+        circleId: props.circleId,
+        ...(selectedFilterYear.value ? { year: selectedFilterYear.value } : {}),
+      },
     })
     allMemories.value = (data.memories ?? []).map((m) => {
       const media = m.memorymedia?.[0] ?? null
@@ -352,6 +363,62 @@ async function loadMemories() {
     memoriesLoading.value = false
   }
 }
+
+function selectYear(year: number) {
+  dateFrom.value = `${year}-01-01`
+  const yearEnd = `${year}-12-31`
+  dateTo.value = yearEnd > dateMax.value ? dateMax.value : yearEnd
+}
+
+function isYearSelected(year: number): boolean {
+  return dateFrom.value === `${year}-01-01` && dateTo.value === `${year}-12-31`
+}
+
+async function setFilterYear(year: number) {
+  if (selectedFilterYear.value === year) return
+  selectedFilterYear.value = year
+  selectedFilterMonth.value = null
+  await loadMemories()
+}
+
+function toggleMemory(id: string) {
+  const s = new Set(selectedMemoryIds.value)
+  if (s.has(id)) s.delete(id)
+  else s.add(id)
+  selectedMemoryIds.value = s
+}
+
+watch(() => props.open, async (val) => {
+  if (!val) {
+    selectedMode.value = 'full'
+    dateFrom.value = ''
+    dateTo.value = ''
+    selectedMemoryIds.value = new Set()
+    label.value = ''
+    createError.value = null
+    allMemories.value = []
+    availableYears.value = []
+    yearsLoading.value = false
+    selectedFilterYear.value = null
+    selectedFilterMonth.value = null
+    return
+  }
+  await loadYears()
+  if (selectedMode.value === 'selection') {
+    selectedFilterYear.value = availableYears.value[0] ?? null
+    await loadMemories()
+  }
+})
+
+watch(selectedMode, async (val) => {
+  if (val === 'selection') {
+    if (availableYears.value.length === 0) await loadYears()
+    if (selectedFilterYear.value === null) {
+      selectedFilterYear.value = availableYears.value[0] ?? null
+    }
+    if (allMemories.value.length === 0) await loadMemories()
+  }
+})
 
 async function handleCreate() {
   if (!isValid.value || creating.value) return
@@ -387,4 +454,6 @@ async function handleCreate() {
 }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
 </style>
