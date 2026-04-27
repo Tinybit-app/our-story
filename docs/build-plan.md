@@ -122,6 +122,9 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 ### Milestone 6: Timeline
 - [x] 6.1 Signed URL API (cursor-based, memory_date ordering)
 - [x] 6.2 Timeline UI — Polaroid Wall (monthly sections, year badge, jump modal, month overflow page)
+  - Month overflow page (`/timeline/[year]/[month]`) now paginated: 24 memories per page, cursor-based, infinite scroll via IntersectionObserver sentinel; previously fetched up to 100 at once
+  - API: `yearMonth` branch extended to accept `cursor` param and return `nextCursor`; uses PAGE_SIZE+1 probe to detect last page
+  - 7 E2E tests (`tests/month-overflow.spec.ts`)
 
 ### Milestone 7: Memory Features
 - [x] 7.1 ~~Share to circle (visibility toggle)~~ — **cut.** All uploads are `circle`-visible; no private memory concept within a circle. Users who want a personal-only timeline create a `solo` circle. The `private` visibility value remains in the DB enum and RLS for schema continuity but the UI never exposes it.
