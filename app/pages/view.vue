@@ -249,7 +249,7 @@
 <script setup lang="ts">
 definePageMeta({ auth: false })
 
-const { t } = useI18n()
+const { t, setLocale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const token = computed(() => route.query.token as string | undefined)
@@ -262,6 +262,7 @@ const showSplash = ref(false)
 interface ViewerTimeline {
   circleName: string
   ownerFirstName: string | null
+  ownerLocale: string | null
   linkLabel: string
   mode: 'full' | 'selection'
   selectionDateRange: { from: string; to: string } | null
@@ -377,6 +378,11 @@ async function loadTimeline() {
       query: { token: token.value },
     })
     timeline.value = data
+
+    // Set locale to match the circle owner's language preference
+    if (data.ownerLocale) {
+      await setLocale(data.ownerLocale as any)
+    }
 
     // Show splash unless already seen this session
     const seenThisSession = typeof sessionStorage !== "undefined"

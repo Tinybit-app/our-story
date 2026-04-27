@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: owner, error: ownerError } = await supabase
     .from("user")
-    .select("first_name")
+    .select("first_name, locale")
     .eq("id", circle.created_by)
     .maybeSingle()
 
@@ -105,6 +105,7 @@ export default defineEventHandler(async (event) => {
   return {
     circleName: circle.name,
     ownerFirstName: owner?.first_name ?? null,
+    ownerLocale: owner?.locale ?? null,
     linkLabel: viewerLink.label,
     mode,
     selectionDateRange,
