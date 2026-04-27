@@ -626,6 +626,17 @@ function toggleYearCollapsed(year: number) {
   collapsedYears.value = s;
 }
 
+function autoCollapseMonths(group: YearGroup) {
+  const months = getMonthGroups(group);
+  if (months.length <= 1) return;
+  // Collapse all except the most recent month (first in descending order)
+  const s = new Set(collapsedMonths.value);
+  for (let i = 1; i < months.length; i++) {
+    s.add(`${group.year}-${months[i]!.month}`);
+  }
+  collapsedMonths.value = s;
+}
+
 function toggleMonthCollapsed(year: number, month: number) {
   const key = `${year}-${month}`;
   const s = new Set(collapsedMonths.value);
@@ -680,6 +691,8 @@ async function loadYearMemories(year: number) {
     });
     group.memories = (data.memories ?? []).map(mapMemory);
     group.loaded = true;
+    // Auto-collapse all months except the most recent one
+    autoCollapseMonths(group);
   } catch {
     group.memories = [];
     group.loaded = true;
