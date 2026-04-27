@@ -86,12 +86,15 @@
                 <span v-if="timeline.linkLabel && timeline.mode !== 'full'" class="font-normal text-muted-foreground"> · {{ timeline.linkLabel }}</span>
               </p>
             </div>
-            <NuxtLink
-              to="/login"
-              class="flex-shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
-            >
-              {{ t('viewerLink.viewerJoinCta').replace(' →', '') }}
-            </NuxtLink>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <LocalePicker guest />
+              <NuxtLink
+                to="/login"
+                class="text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
+              >
+                {{ t('viewerLink.viewerJoinCta').replace(' →', '') }}
+              </NuxtLink>
+            </div>
           </div>
         </header>
 
@@ -379,9 +382,11 @@ async function loadTimeline() {
     })
     timeline.value = data
 
-    // Set locale to match the circle owner's language preference
-    if (data.ownerLocale) {
-      await setLocale(data.ownerLocale as any)
+    // Guest's own choice (cookie) takes priority; fall back to owner's locale
+    const guestLocaleCookie = useCookie("i18n_locale")
+    const targetLocale = guestLocaleCookie.value || data.ownerLocale
+    if (targetLocale) {
+      await setLocale(targetLocale as any)
     }
 
     // Show splash unless already seen this session

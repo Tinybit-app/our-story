@@ -55,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{ guest?: boolean }>()
 const { locale, locales, setLocale } = useI18n()
 
 const open = ref(false)
@@ -79,6 +80,12 @@ onUnmounted(() => document.removeEventListener('click', onOutsideClick, true))
 async function pick(code: string) {
   open.value = false
   await setLocale(code as any)
-  $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(() => {})
+  if (props.guest) {
+    // Guest viewers: persist locale in cookie (no account to PATCH)
+    const cookie = useCookie("i18n_locale", { maxAge: 365 * 24 * 60 * 60 })
+    cookie.value = code
+  } else {
+    $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(() => {})
+  }
 }
 </script>
