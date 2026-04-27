@@ -78,6 +78,8 @@
               <input
                 v-model="dateFrom"
                 type="date"
+                :min="dateMin"
+                :max="dateMax"
                 class="w-full h-9 px-3 rounded-[10px] bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -86,6 +88,8 @@
               <input
                 v-model="dateTo"
                 type="date"
+                :min="dateMin"
+                :max="dateMax"
                 class="w-full h-9 px-3 rounded-[10px] bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -218,6 +222,17 @@ const createError = ref<string | null>(null)
 const memoriesLoading = ref(false)
 const allMemories = ref<MemoryItem[]>([])
 const availableYears = ref<number[]>([])
+const minDate = ref<string | null>(null)
+const maxDate = ref<string | null>(null)
+
+// Today's date as YYYY-MM-DD — used to cap the upper bound at "not future"
+const today = new Date().toLocaleDateString('en-CA')
+
+const dateMin = computed(() => minDate.value ?? undefined)
+const dateMax = computed(() => {
+  if (!maxDate.value) return today
+  return maxDate.value > today ? today : maxDate.value
+})
 
 const modes = computed(() => [
   { value: 'full' as const, label: t('viewerLink.modeFull') },
@@ -234,10 +249,12 @@ const isValid = computed(() => {
 async function loadYears() {
   if (availableYears.value.length > 0) return
   try {
-    const data = await $fetch<{ years: number[] }>('/api/timeline/years', {
+    const data = await $fetch<{ years: number[]; minDate: string | null; maxDate: string | null }>('/api/timeline/years', {
       query: { circleId: props.circleId },
     })
     availableYears.value = data.years
+    minDate.value = data.minDate
+    maxDate.value = data.maxDate
   } catch {
     availableYears.value = []
   }
@@ -271,6 +288,8 @@ watch(() => props.open, async (val) => {
     createError.value = null
     allMemories.value = []
     availableYears.value = []
+    minDate.value = null
+    maxDate.value = null
     return
   }
   if (selectedMode.value === 'selection') await loadMemories()
