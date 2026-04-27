@@ -180,18 +180,22 @@
               </div>
             </article>
 
-            <!-- Referral CTA — shown after 3+ memories scrolled -->
+            <!-- Referral nudge — shown after scrolling past 3 memories -->
             <Transition name="fade">
               <div
                 v-if="showReferral"
-                class="rounded-2xl border border-border bg-secondary/50 px-5 py-6 text-center"
+                class="flex items-center gap-3 rounded-2xl border border-accent/20 bg-accent/5 px-4 py-3.5"
               >
-                <p class="text-sm font-semibold text-foreground mb-1">{{ t('viewerLink.referralHeadline') }}</p>
-                <button type="button" @click="shareApp" class="text-sm text-accent hover:underline">
-                  {{ t('viewerLink.referralBody') }}
-                </button>
-                <button type="button" @click="referralDismissed = true" class="block mx-auto mt-2 text-xs text-muted-foreground hover:text-foreground">
-                  {{ t('viewerLink.cancel') }}
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-foreground leading-snug">{{ t('viewerLink.referralHeadline') }}</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">{{ t('viewerLink.referralBody') }}</p>
+                </div>
+                <button
+                  type="button"
+                  @click="shareApp"
+                  class="flex-shrink-0 bg-accent text-accent-foreground rounded-full px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity active:scale-95"
+                >
+                  {{ t('viewerLink.referralCta') }}
                 </button>
               </div>
             </Transition>
