@@ -200,8 +200,18 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - Note: see design spec §Localization for full setup code and priority language rationale
 
 ### Milestone 9: Viewer-Role Access
-- [ ] 9.1 Generate view-only JWT link (UI in app — "Share link" button on timeline/settings)
-  - When built, offer two modes: "full timeline" (default) and "share a selection" (owner picks specific memories)
+- [x] 9.1 Generate view-only JWT link (UI in app — "Share link" button on timeline header, owner-only)
+  - `viewer_link` table: nonce-based revocation, three modes (`full`, `date_range`, `selection`), 30-day expiry, `notified_expiry_at` for future cron
+  - JWT payload extended: `viewer_link_id` + `nonce`; viewer API verifies both on every request (row deleted = instant revocation)
+  - API: `GET/POST/DELETE /api/circles/[id]/viewer-links` (owner-only); `DELETE` revokes link immediately
+  - `ShareLinksSheet.vue` — bottom sheet: link list with copy/revoke/renew, expired badge, inline revoke confirm
+  - `CreateLinkSheet.vue` — mode picker, year quick-select chips, date range inputs, 3-column memory grid
+  - `view.vue` updated: mode banner, empty state, referral CTA after 3+ memories scrolled, all strings i18n'd
+  - i18n: 40+ `viewerLink.*` keys in en/zh-CN/fr
+  - RLS: owner-only SELECT/INSERT/DELETE; member, admin, cross-circle all blocked (53 pgTAP tests)
+  - 9 E2E tests (`tests/viewer-link.spec.ts`); 372 unit tests
+  - Deferred: 3-day expiry email cron (requires `notified_expiry_at` column — already in migration); guest reaction globe indicator (needs tooltip redesign)
+  - See spec: `docs/superpowers/specs/2026-04-24-viewer-link-design.md`
 - [x] 9.2 View-only page `/view?token=<jwt>` (no auth required) — implemented in §4.5
   - Shows circle-visible memories, newest first, max 50, ordered by memory_date
   - Photos and videos supported (mediaType detected server-side from file extension)

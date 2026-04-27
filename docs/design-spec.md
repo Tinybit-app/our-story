@@ -1868,23 +1868,44 @@ CircleInvite
 For anyone who wants to view without creating an account. This is a **role**, not an age group. A tech-savvy grandparent who wants to upload should be invited as a full **member** instead — they get the same app as everyone else. The view-only path is for people who will never make an account, regardless of age.
 
 ```
-Owner generates view-only link
-  → Create signed JWT: { circle_id, role: "viewer", exp: 30 days }
+Owner generates view-only link (ShareLinksSheet → CreateLinkSheet)
+  → POST /api/circles/[id]/viewer-links
+  → Creates viewer_link row: { id, circle_id, nonce, mode, label, expires_at, ... }
+  → Signs JWT: { circle_id, viewer_link_id, nonce, role: "viewer", exp: 30 days }
   → Link: our-story.tinybit.app/view?token=<jwt>
 
 Viewer opens link
-  → Server verifies JWT signature (no Supabase account needed)
+  → Server verifies JWT signature + looks up viewer_link row by id
+  → If row missing or nonce mismatch → 401 "revoked" (instant revocation: delete the row)
+  → If expires_at past → 401 "expired"
+  → Applies mode filter: full (no filter), date_range (WHERE memory_date BETWEEN), selection (WHERE id = ANY(memory_ids))
   → Read-only API routes: fetch circle timeline (circle-visible only, newest 50, ordered by memory_date)
   → Supports photos and videos; mediaType detected server-side from file extension
   → Cannot upload or comment
   → Can react (one-tap heart — see email reactions below)
+  → Mode banner shown for date_range and selection modes
+  → Empty state when filtered memory list is empty
+  → Referral CTA after viewer scrolls past 3 memories (Web Share API + clipboard fallback)
   → Bottom CTA: "Join to add your own memories →"
 ```
 
-- No DB record needed for viewer — stateless JWT
-- Rotate viewer link on demand (owner can revoke and regenerate)
-- Timeline scope: all circle-visible memories, newest first, max 50. No month filter.
-- **Curated links (owner selects specific memories):** deferred to Milestone 9.1. When the link-generation UI is built, offer two modes — "full timeline" (default) and "share a selection" (owner picks memories). Not worth implementing before 9.1 since there is no UI to drive selection.
+**viewer_link table** (`supabase/migrations/024_viewer_link.sql`):
+- `id UUID PK`, `circle_id UUID FK`, `nonce UUID UNIQUE`, `mode TEXT CHECK IN ('full','date_range','selection')`
+- `memory_ids UUID[]` (selection mode), `date_from/date_to DATE` (date_range mode)
+- `label TEXT` (owner-editable; auto-generated default), `expires_at TIMESTAMPTZ` (default: +30 days)
+- `notified_expiry_at TIMESTAMPTZ` (for future 3-day expiry email cron)
+- RLS: owner-only SELECT/INSERT/DELETE; member, admin, cross-circle all blocked
+
+**Three selection modes (Milestone 9.1):**
+- `full` — entire circle timeline (default)
+- `date_range` — memories between `date_from` and `date_to`
+- `selection` — hand-picked memory IDs stored in `memory_ids`
+
+**Revocation:** Owner deletes the `viewer_link` row. JWT becomes invalid on next API call (nonce no longer matches). Instant — no JWT expiry needed for revocation.
+
+**Multiple links per circle:** Owner can maintain separate links (e.g. "Grandma's link" for full timeline, "Christmas 2024" for a date range). Each independently revocable.
+
+**Owner UI:** "Share" button in timeline header (owner-only). Opens `ShareLinksSheet` (list + revoke) → `CreateLinkSheet` (mode picker, date range, memory grid, label field). All strings i18n'd (en/zh-CN/fr, 40+ `viewerLink.*` keys).
 
 **Expired link UX:**
 A grandparent who bookmarks the view-only link and opens it 31 days later must not see a generic error. On JWT expiry, show:
