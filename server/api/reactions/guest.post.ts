@@ -61,12 +61,27 @@ export default defineEventHandler(async (event) => {
 
   if (!memory) throw createError({ statusCode: 404, message: "Memory not found." })
 
+  const resolvedName = guestName ?? "Viewer"
+
+  // Dedup: skip if this guest already reacted with the same emoji on this memory
+  const { data: existing } = await (supabase.from("memoryreaction") as any)
+    .select("id")
+    .eq("memory_id", memoryId)
+    .is("user_id", null)
+    .eq("emoji", emoji)
+    .eq("guest_name", resolvedName)
+    .maybeSingle()
+
+  if (existing) {
+    return { ok: true }
+  }
+
   const { error } = await (supabase.from("memoryreaction") as any)
     .insert({
       memory_id: memoryId,
       user_id: null,
       emoji,
-      guest_name: guestName ?? "Viewer",
+      guest_name: resolvedName,
     })
 
   if (error) {
