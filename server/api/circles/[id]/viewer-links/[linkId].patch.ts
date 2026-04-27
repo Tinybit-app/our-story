@@ -2,8 +2,10 @@ import { serverSupabaseUser, serverSupabaseClient } from "#supabase/server"
 import { z } from "zod"
 
 const bodySchema = z.object({
-  memoryIds: z.array(z.uuid()).min(1),
-  label: z.string().max(100).optional(),
+  memoryIds: z.array(z.uuid()).min(1).optional(),
+  label: z.string().min(1).max(100).optional(),
+}).refine(data => data.memoryIds || data.label, {
+  message: "At least one field (memoryIds or label) must be provided",
 })
 
 export default defineEventHandler(async (event) => {
@@ -44,17 +46,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: "Viewer link not found." })
   }
 
-  if (existing.mode !== "selection") {
-    throw createError({ statusCode: 400, message: "Only selection links can be edited." })
+  if (memoryIds && existing.mode !== "selection") {
+    throw createError({ statusCode: 400, message: "Only selection links can update memories." })
   }
 
-  // Update memory_ids and optionally label
-  const patch: Record<string, unknown> = { memory_ids: memoryIds }
-  if (label !== undefined) patch.label = label
+  // Build update payload
+  const patch: Record<string, string | string[]> = {}
+  if (memoryIds) patch.memory_ids = memoryIds
+  if (label) patch.label = label
 
   const { error } = await supabase
     .from("viewer_link")
-    .update(patch)
+    .update(patch as any)
     .eq("id", linkId)
     .eq("circle_id", circleId)
 

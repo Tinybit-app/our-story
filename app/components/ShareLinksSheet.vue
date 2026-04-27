@@ -63,9 +63,35 @@
             :key="link.id"
             class="border border-border rounded-[16px] p-4"
           >
-            <!-- Label + mode badge -->
+            <!-- Label (editable) + mode badge -->
             <div class="flex items-start justify-between gap-2 mb-2">
-              <p class="text-sm font-semibold text-foreground leading-snug">{{ link.label }}</p>
+              <div v-if="editingLabelId === link.id" class="flex-1 flex items-center gap-1.5">
+                <input
+                  v-model="editingLabelValue"
+                  type="text"
+                  class="flex-1 h-7 px-2 rounded-lg bg-secondary border border-border text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  @keydown.enter="saveLabel(link)"
+                  @keydown.escape="editingLabelId = null"
+                  ref="labelInputRef"
+                />
+                <button type="button" @click="saveLabel(link)" :disabled="!editingLabelValue.trim() || savingLabel"
+                  class="h-7 px-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40">
+                  {{ savingLabel ? '…' : '✓' }}
+                </button>
+                <button type="button" @click="editingLabelId = null"
+                  class="h-7 px-2 rounded-lg bg-secondary text-muted-foreground text-xs font-semibold">✕</button>
+              </div>
+              <button
+                v-else
+                type="button"
+                @click="startEditLabel(link)"
+                class="text-sm font-semibold text-foreground leading-snug text-left hover:text-primary transition-colors group flex items-center gap-1"
+              >
+                {{ link.label }}
+                <svg class="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
               <span
                 class="flex-shrink-0 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full"
                 :class="link.isExpired
@@ -245,6 +271,10 @@ const error = ref<string | null>(null)
 const revokingId = ref<string | null>(null)
 const revoking = ref(false)
 const copiedId = ref<string | null>(null)
+const editingLabelId = ref<string | null>(null)
+const editingLabelValue = ref('')
+const savingLabel = ref(false)
+const labelInputRef = ref<HTMLInputElement | null>(null)
 
 async function fetchLinks() {
   loading.value = true
@@ -260,6 +290,33 @@ async function fetchLinks() {
 
 onMounted(fetchLinks)
 watch(() => props.circleId, fetchLinks)
+
+function startEditLabel(link: ViewerLink) {
+  editingLabelId.value = link.id
+  editingLabelValue.value = link.label
+  nextTick(() => labelInputRef.value?.focus())
+}
+
+async function saveLabel(link: ViewerLink) {
+  const trimmed = editingLabelValue.value.trim()
+  if (!trimmed || trimmed === link.label) {
+    editingLabelId.value = null
+    return
+  }
+  savingLabel.value = true
+  try {
+    await $fetch(`/api/circles/${props.circleId}/viewer-links/${link.id}`, {
+      method: 'PATCH',
+      body: { label: trimmed },
+    })
+    link.label = trimmed
+    editingLabelId.value = null
+  } catch {
+    // Silently fail — user can retry
+  } finally {
+    savingLabel.value = false
+  }
+}
 
 defineExpose({ refresh: fetchLinks })
 
