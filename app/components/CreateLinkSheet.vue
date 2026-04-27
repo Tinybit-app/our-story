@@ -321,7 +321,7 @@ async function loadMemories() {
   memoriesLoading.value = true
   try {
     const data = await $fetch<{ memories: MemoryItem[] }>(`/api/timeline`, {
-      query: { circle: props.circleId },
+      query: { circleId: props.circleId },
     })
     allMemories.value = data.memories ?? []
   } catch {
