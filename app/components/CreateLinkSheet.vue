@@ -320,10 +320,18 @@ watch(selectedMode, async (val) => {
 async function loadMemories() {
   memoriesLoading.value = true
   try {
-    const data = await $fetch<{ memories: MemoryItem[] }>(`/api/timeline`, {
+    const data = await $fetch<{ memories: any[] }>(`/api/timeline`, {
       query: { circleId: props.circleId },
     })
-    allMemories.value = data.memories ?? []
+    allMemories.value = (data.memories ?? []).map((m) => {
+      const media = m.memorymedia?.[0] ?? null
+      return {
+        id: m.id,
+        memory_date: m.memory_date,
+        signedUrl: media?.thumbnailUrl ?? media?.url ?? null,
+        mediaType: media ? (media.media_type === 'video' ? 'video' : 'image') : null,
+      } satisfies MemoryItem
+    })
   } catch {
     allMemories.value = []
   } finally {
