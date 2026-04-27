@@ -1,7 +1,8 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
 
-const YEAR_LIMIT = 156 // 13 months × 12 memories/month (safety cap)
+const YEAR_LIMIT_DEFAULT = 156 // 12 per month × 13 months (main timeline cap)
+const YEAR_LIMIT_MAX = 1000    // hard ceiling for picker use-cases
 
 const querySchema = z.object({
   circleId: z.uuid(),
@@ -9,6 +10,7 @@ const querySchema = z.object({
   authorId: z.uuid().optional(),
   yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
   year: z.coerce.number().int().min(2000).max(2100).optional(),
+  limit: z.coerce.number().int().min(1).max(YEAR_LIMIT_MAX).optional(),
 })
 
 const MEMORY_SELECT = `
@@ -29,7 +31,8 @@ export default defineEventHandler(async (event) => {
 
   const result = querySchema.safeParse(getQuery(event))
   if (!result.success) throw createError({ statusCode: 400, message: "circleId is required" })
-  const { circleId, cursor, authorId, yearMonth, year } = result.data
+  const { circleId, cursor, authorId, yearMonth, year, limit } = result.data
+  const yearLimit = limit ?? YEAR_LIMIT_DEFAULT
 
   // Verify the requesting user belongs to this circle
   const { data: membership } = await supabase
@@ -171,7 +174,7 @@ export default defineEventHandler(async (event) => {
   const to = new Date(Date.UTC(targetYear + 1, 0, 1)).toISOString()
 
   const [{ data: memories, error }, prevYear] = await Promise.all([
-    baseQuery().gte("memory_date", from).lt("memory_date", to).limit(YEAR_LIMIT),
+    baseQuery().gte("memory_date", from).lt("memory_date", to).limit(yearLimit),
     getPrevYear(supabase, circleId, user.sub, targetYear),
   ])
 

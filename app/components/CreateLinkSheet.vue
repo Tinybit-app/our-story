@@ -687,7 +687,7 @@ async function loadYearMemories(year: number) {
   group.loading = true;
   try {
     const data = await $fetch<{ memories: any[] }>("/api/timeline", {
-      query: { circleId: props.circleId, year },
+      query: { circleId: props.circleId, year, limit: 1000 },
     });
     group.memories = (data.memories ?? []).map(mapMemory);
     group.loaded = true;
