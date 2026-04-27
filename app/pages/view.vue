@@ -84,19 +84,6 @@
               <p class="text-sm font-semibold text-foreground truncate">
                 {{ timeline.circleName }}
                 <span v-if="timeline.linkLabel && timeline.mode !== 'full'" class="font-normal text-muted-foreground"> · {{ timeline.linkLabel }}</span>
-                <span v-if="guestName" class="font-normal text-muted-foreground"> · </span>
-                <button
-                  v-if="guestName"
-                  type="button"
-                  @click="editGuestName"
-                  class="inline-flex items-center gap-0.5 font-normal text-muted-foreground hover:text-foreground transition-colors"
-                  :title="t('viewerLink.viewerChangeNameTooltip')"
-                >
-                  {{ guestName }}
-                  <svg class="w-2.5 h-2.5 inline opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
-                </button>
               </p>
             </div>
             <NuxtLink
@@ -109,8 +96,22 @@
         </header>
 
         <main class="px-4 py-6">
-          <!-- Mode banner -->
-          <p v-if="modeBanner" class="text-xs text-muted-foreground mt-1 mb-4">{{ modeBanner }}</p>
+          <!-- Mode banner + guest name -->
+          <div v-if="modeBanner || guestName" class="flex items-center justify-between mt-1 mb-4">
+            <p v-if="modeBanner" class="text-xs text-muted-foreground">{{ modeBanner }}</p>
+            <button
+              v-if="guestName"
+              type="button"
+              @click="editGuestName"
+              class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto"
+              :title="t('viewerLink.viewerChangeNameTooltip')"
+            >
+              <span class="truncate max-w-[120px]">{{ guestName }}</span>
+              <svg class="w-2.5 h-2.5 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </button>
+          </div>
 
           <!-- Empty state -->
           <div v-if="timeline.memories.length === 0" class="text-center py-20">
