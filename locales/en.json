@@ -617,6 +617,8 @@
     "viewerNamePromptSubtitle": "So the family knows it's you ❤️",
     "viewerNamePromptPlaceholder": "e.g. Grandma Sue",
     "viewerNamePromptCta": "Send reaction",
+    "viewerSaveName": "Save name",
+    "viewerChangeNameTooltip": "Change your name",
     "viewerReactSent": "Sent",
     "viewerReact": "React",
     "viewerReactionConfirm": "✓ Reaction sent!",

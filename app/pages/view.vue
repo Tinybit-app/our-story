@@ -159,6 +159,19 @@
                       {{ t('viewerLink.viewerReactionConfirm') }}
                     </span>
                   </Transition>
+                  <!-- Editable guest name badge -->
+                  <button
+                    v-if="guestName"
+                    type="button"
+                    @click="editGuestName"
+                    class="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    :title="t('viewerLink.viewerChangeNameTooltip')"
+                  >
+                    <span class="truncate max-w-[100px]">{{ guestName }}</span>
+                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </article>
@@ -223,7 +236,7 @@
             :disabled="!guestName.trim()"
             class="w-full bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
-            {{ t('viewerLink.viewerNamePromptCta') }}
+            {{ pendingReactionMemoryId ? t('viewerLink.viewerNamePromptCta') : t('viewerLink.viewerSaveName') }}
           </button>
         </div>
       </div>
@@ -377,6 +390,11 @@ function sendReminder() {
 }
 
 // ── Reactions ──────────────────────────────────────────────────────────────────
+function editGuestName() {
+  showNamePrompt.value = true
+  pendingReactionMemoryId.value = null
+}
+
 async function reactToMemory(memoryId: string) {
   const savedName = useCookie("viewer_guest_name")
   if (!savedName.value) {
@@ -389,12 +407,15 @@ async function reactToMemory(memoryId: string) {
 }
 
 async function confirmReaction() {
-  if (!guestName.value.trim() || !pendingReactionMemoryId.value) return
+  if (!guestName.value.trim()) return
   const savedName = useCookie("viewer_guest_name", { maxAge: 365 * 24 * 60 * 60 })
   savedName.value = guestName.value.trim()
   showNamePrompt.value = false
-  await submitReaction(pendingReactionMemoryId.value, guestName.value.trim())
-  pendingReactionMemoryId.value = null
+  // If opened from a reaction tap, submit it; if editing name only, just save
+  if (pendingReactionMemoryId.value) {
+    await submitReaction(pendingReactionMemoryId.value, guestName.value.trim())
+    pendingReactionMemoryId.value = null
+  }
 }
 
 async function submitReaction(memoryId: string, name: string) {

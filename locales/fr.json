@@ -617,6 +617,8 @@
     "viewerNamePromptSubtitle": "Pour que la famille sache que c'est vous ❤️",
     "viewerNamePromptPlaceholder": "ex. Grand-maman Suzanne",
     "viewerNamePromptCta": "Envoyer la réaction",
+    "viewerSaveName": "Enregistrer le nom",
+    "viewerChangeNameTooltip": "Modifier votre nom",
     "viewerReactSent": "Envoyé",
     "viewerReact": "Réagir",
     "viewerReactionConfirm": "✓ Réaction envoyée !",

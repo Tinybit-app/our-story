@@ -464,6 +464,8 @@
     "viewerNamePromptSubtitle": "让家人知道是你 ❤️",
     "viewerNamePromptPlaceholder": "例如：奶奶",
     "viewerNamePromptCta": "发送回应",
+    "viewerSaveName": "保存名字",
+    "viewerChangeNameTooltip": "修改你的名字",
     "viewerReactSent": "已发送",
     "viewerReact": "回应",
     "viewerReactionConfirm": "✓ 回应已发送！",
