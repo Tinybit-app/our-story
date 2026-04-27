@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: memories } = await memoryQuery
 
-  // Generate signed URLs
+  // Generate signed URLs (full + thumbnail, matching main timeline approach)
   const memoriesWithUrls = await Promise.all(
     (memories ?? []).map(async (m: any) => {
       const media = m.memorymedia?.[0]
@@ -86,12 +86,22 @@ export default defineEventHandler(async (event) => {
       }
       const isVideo = media.media_type === "video"
       const mediaType: "video" | "image" = isVideo ? "video" : "image"
-      const { data } = await supabase.storage
-        .from("memories-private")
-        .createSignedUrl(media.storage_path, 3600, isVideo ? undefined : {
-          transform: { width: 800, format: "webp" as "origin", quality: 85 },
-        })
-      return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: data?.signedUrl ?? null, mediaType }
+
+      const [fullResult, thumbResult] = await Promise.allSettled([
+        supabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600),
+        isVideo
+          ? Promise.resolve({ data: null })
+          : supabase.storage.from("memories-private").createSignedUrl(media.storage_path, 86400, {
+              transform: { width: 800, format: "webp" as "origin", quality: 85 },
+            }),
+      ])
+
+      const fullUrl = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
+      const signedUrl = isVideo
+        ? fullUrl
+        : (thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? fullUrl) : fullUrl)
+
+      return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl, mediaType }
     })
   )
 
