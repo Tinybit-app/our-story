@@ -1934,3 +1934,45 @@ describe("PATCH /api/circles/[id]/children/[childId] — access control", () => 
   })
 })
 
+// ============================================================
+// GET /api/timeline — year param validation
+// ============================================================
+const timelineQuerySchemaV3 = z.object({
+  circleId: z.string().uuid(),
+  cursor: z.string().optional(),
+  authorId: z.string().uuid().optional(),
+  yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+  year: z.coerce.number().int().min(2000).max(2100).optional(),
+})
+
+describe('GET /api/timeline — year param validation', () => {
+  const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000'
+
+  it('accepts a valid year', () => {
+    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 2024 })
+    expect(r.success).toBe(true)
+  })
+
+  it('coerces year string to number', () => {
+    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: '2024' })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.year).toBe(2024)
+  })
+
+  it('rejects year below 2000', () => {
+    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 1999 })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects year above 2100', () => {
+    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 2101 })
+    expect(r.success).toBe(false)
+  })
+
+  it('accepts request without year (auto-detects latest)', () => {
+    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.year).toBeUndefined()
+  })
+})
+
