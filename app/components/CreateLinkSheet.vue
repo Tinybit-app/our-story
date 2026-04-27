@@ -187,11 +187,11 @@
                   <div
                     v-for="mg in getMonthGroups(group)"
                     :key="mg.month"
-                    class="mt-3 mb-2"
+                    class="mt-4 mb-2"
                   >
                     <!-- Month header (clickable to collapse) -->
                     <div
-                      class="flex items-center justify-between mb-1.5 px-1.5 -mx-1.5 py-1 rounded-lg cursor-pointer select-none hover:bg-secondary/60 transition-colors"
+                      class="flex items-center justify-between mb-2 px-2 -mx-2 py-1.5 rounded-lg cursor-pointer select-none bg-secondary/40 hover:bg-secondary/70 transition-colors border border-border/15"
                       @click="toggleMonthCollapsed(group.year, mg.month)"
                     >
                       <div class="flex items-center gap-1.5">
@@ -223,7 +223,7 @@
                           />
                         </button>
                         <span
-                          class="text-[11px] font-semibold text-foreground/60"
+                          class="text-xs font-semibold text-foreground/70"
                           >{{ monthName(mg.month) }}</span
                         >
                         <span
@@ -233,7 +233,7 @@
                       </div>
                       <!-- Month collapse chevron -->
                       <svg
-                        class="w-3.5 h-3.5 text-muted-foreground/50 transition-transform duration-200"
+                        class="w-3.5 h-3.5 text-muted-foreground transition-transform duration-200"
                         :class="
                           collapsedMonths.has(`${group.year}-${mg.month}`)
                             ? '-rotate-90'
