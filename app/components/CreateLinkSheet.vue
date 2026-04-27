@@ -228,7 +228,11 @@
                         >
                         <span
                           class="text-[10px] text-muted-foreground tabular-nums"
-                          >{{ t('viewerLink.memoriesCount', { count: mg.memories.length }) }}</span
+                          >{{
+                            t("viewerLink.memoriesCount", {
+                              count: mg.memories.length,
+                            })
+                          }}</span
                         >
                       </div>
                       <!-- Month collapse chevron -->
@@ -402,12 +406,26 @@
                   v-if="group.loaded && group.truncated"
                   class="mx-5 mt-3 mb-2 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40"
                 >
-                  <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  <svg
+                    class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <div class="flex-1">
-                    <p class="text-[11px] leading-snug text-amber-800 dark:text-amber-200">
-                      {{ t('viewerLink.truncatedWarning', { count: group.memories.length }) }}
+                    <p
+                      class="text-[11px] leading-snug text-amber-800 dark:text-amber-200"
+                    >
+                      {{
+                        t("viewerLink.truncatedWarning", {
+                          count: group.memories.length,
+                        })
+                      }}
                     </p>
                     <button
                       type="button"
@@ -415,7 +433,11 @@
                       @click="loadYearComplete(group.year)"
                       class="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100 transition-colors disabled:opacity-50"
                     >
-                      {{ group.loading ? t('viewerLink.loading') : t('viewerLink.loadAll') }}
+                      {{
+                        group.loading
+                          ? t("viewerLink.loading")
+                          : t("viewerLink.loadAll")
+                      }}
                     </button>
                   </div>
                 </div>
@@ -672,11 +694,14 @@ function toggleMonthCollapsed(year: number, month: number) {
 // --- API ---
 function mapMemory(m: any): MemoryItem {
   const media = m.memorymedia?.[0] ?? null;
+  const isVideo = media?.media_type === "video";
   return {
     id: m.id,
     memory_date: m.memory_date,
     signedUrl: media?.url ?? null,
-    thumbnailUrl: media?.thumbnailUrl ?? null,
+    // Server sets thumbnailUrl = videoUrl for videos (not a real image),
+    // so null it out so the template falls through to <video preload="metadata">
+    thumbnailUrl: isVideo ? null : (media?.thumbnailUrl ?? null),
     mediaType: media
       ? media.media_type === "video"
         ? "video"
@@ -747,8 +772,10 @@ async function loadMonthComplete(
       yearMonth: ym,
     };
     if (cursor) query.cursor = cursor;
-    const res: { memories: any[]; nextCursor: string | null } =
-      await $fetch("/api/timeline", { query });
+    const res: { memories: any[]; nextCursor: string | null } = await $fetch(
+      "/api/timeline",
+      { query },
+    );
     all.push(...(res.memories ?? []).map(mapMemory));
     cursor = res.nextCursor ?? null;
     hasMore = cursor !== null;
