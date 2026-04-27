@@ -131,21 +131,33 @@
                   : 'border-transparent'"
                 :aria-pressed="selectedMemoryIds.has(memory.id)"
               >
-                <!-- Thumbnail -->
+                <!-- Photo -->
                 <img
                   v-if="memory.signedUrl && memory.mediaType === 'image'"
                   :src="memory.signedUrl"
                   :alt="memory.memory_date"
                   class="w-full h-full object-cover"
                 />
+                <!-- Video -->
                 <div
-                  v-else
-                  class="w-full h-full flex items-center justify-center text-muted-foreground"
+                  v-else-if="memory.mediaType === 'video'"
+                  class="w-full h-full flex flex-col items-center justify-center gap-1 bg-foreground/10 text-foreground"
                 >
-                  <svg v-if="memory.mediaType === 'video'" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 13.5 5.25h-9A2.25 2.25 0 0 0 2.25 7.5v9A2.25 2.25 0 0 0 4.5 18.75z"/>
+                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
                   </svg>
-                  <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <span class="text-[9px] font-semibold uppercase tracking-wide opacity-60">Video</span>
+                </div>
+                <!-- Quick note -->
+                <div
+                  v-else-if="memory.note"
+                  class="w-full h-full flex items-center justify-center p-2 bg-accent/10"
+                >
+                  <p class="text-[9px] leading-tight text-foreground text-center line-clamp-4 italic">{{ memory.note }}</p>
+                </div>
+                <!-- Fallback -->
+                <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0z"/>
                   </svg>
                 </div>
@@ -206,6 +218,7 @@ interface MemoryItem {
   memory_date: string
   signedUrl: string | null
   mediaType: 'image' | 'video' | null
+  note: string | null
 }
 
 const props = defineProps<{
@@ -330,6 +343,7 @@ async function loadMemories() {
         memory_date: m.memory_date,
         signedUrl: media?.thumbnailUrl ?? media?.url ?? null,
         mediaType: media ? (media.media_type === 'video' ? 'video' : 'image') : null,
+        note: m.note ?? null,
       } satisfies MemoryItem
     })
   } catch {
