@@ -78,17 +78,30 @@
       <div class="max-w-[1280px] mx-auto">
         <!-- Minimal header -->
         <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border px-4 py-3">
-          <div class="flex items-center justify-between">
-            <div>
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
               <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase leading-none mb-0.5">Our Story</p>
-              <p class="text-sm font-semibold text-foreground">
+              <p class="text-sm font-semibold text-foreground truncate">
                 {{ timeline.circleName }}
                 <span v-if="timeline.linkLabel && timeline.mode !== 'full'" class="font-normal text-muted-foreground"> · {{ timeline.linkLabel }}</span>
+                <span v-if="guestName" class="font-normal text-muted-foreground"> · </span>
+                <button
+                  v-if="guestName"
+                  type="button"
+                  @click="editGuestName"
+                  class="inline-flex items-center gap-0.5 font-normal text-muted-foreground hover:text-foreground transition-colors"
+                  :title="t('viewerLink.viewerChangeNameTooltip')"
+                >
+                  {{ guestName }}
+                  <svg class="w-2.5 h-2.5 inline opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
               </p>
             </div>
             <NuxtLink
               to="/login"
-              class="text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
+              class="flex-shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
             >
               {{ t('viewerLink.viewerJoinCta').replace(' →', '') }}
             </NuxtLink>
@@ -159,19 +172,6 @@
                       {{ t('viewerLink.viewerReactionConfirm') }}
                     </span>
                   </Transition>
-                  <!-- Editable guest name badge -->
-                  <button
-                    v-if="guestName"
-                    type="button"
-                    @click="editGuestName"
-                    class="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-                    :title="t('viewerLink.viewerChangeNameTooltip')"
-                  >
-                    <span class="truncate max-w-[100px]">{{ guestName }}</span>
-                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                  </button>
                 </div>
               </div>
             </article>
@@ -280,8 +280,27 @@ const errorType = ref<"expired" | "invalid" | null>(null)
 const showNamePrompt = ref(false)
 const guestName = ref("")
 const pendingReactionMemoryId = ref<string | null>(null)
-const reactedIds = ref(new Set<string>())
 const justReactedId = ref<string | null>(null)
+
+// Persist reacted memory IDs in localStorage so reactions survive page refresh
+const REACTED_STORAGE_KEY = "viewer_reacted_ids"
+const reactedIds = ref(loadReactedIds())
+
+function loadReactedIds(): Set<string> {
+  if (import.meta.server) return new Set()
+  try {
+    const stored = localStorage.getItem(REACTED_STORAGE_KEY)
+    return stored ? new Set(JSON.parse(stored)) : new Set()
+  } catch {
+    return new Set()
+  }
+}
+
+function saveReactedIds() {
+  try {
+    localStorage.setItem(REACTED_STORAGE_KEY, JSON.stringify([...reactedIds.value]))
+  } catch { /* quota exceeded — best effort */ }
+}
 
 // ── Referral ───────────────────────────────────────────────────────────────────
 const memoriesSeenCount = ref(0)
@@ -425,6 +444,7 @@ async function submitReaction(memoryId: string, name: string) {
       body: { viewerToken: token.value, memoryId, emoji: "❤️", guestName: name },
     })
     reactedIds.value = new Set([...reactedIds.value, memoryId])
+    saveReactedIds()
     justReactedId.value = memoryId
     setTimeout(() => { justReactedId.value = null }, 2000)
   } catch {
