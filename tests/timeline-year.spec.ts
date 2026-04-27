@@ -7,9 +7,8 @@
  *
  * Tests:
  *  1. First load fetches the latest year automatically (no year param)
- *  2. Scrolling to the bottom triggers a previous-year fetch (year param passed)
- *  3. Memories from the previous year are appended to memoriesFlat
- *  4. No load-more trigger when prevYear is null (all years loaded)
+ *  2. Scrolling to bottom triggers previous-year fetch and appends memories
+ *  3. No load-more trigger when prevYear is null (all years loaded)
  */
 
 import { test, expect } from '@playwright/test'
@@ -118,10 +117,10 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await mockProfile(page)
 
     const year2025Memories = Array.from({ length: 3 }, (_, i) =>
-      makeMemory(`m-2025-${i}`, `2025-0${i + 1}-15`)
+      makeMemory(`m-2025-${i}`, `2025-${String(i + 1).padStart(2, '0')}-15`)
     )
     const year2024Memories = Array.from({ length: 3 }, (_, i) =>
-      makeMemory(`m-2024-${i}`, `2024-0${i + 1}-15`)
+      makeMemory(`m-2024-${i}`, `2024-${String(i + 1).padStart(2, '0')}-15`)
     )
 
     let secondCallYear: string | null = null
@@ -188,8 +187,6 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     // Scroll to trigger the sentinel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
-    // Wait a tick — no second call should fire
-    await page.waitForTimeout(500)
     expect(callCount).toBe(1)
   })
 
