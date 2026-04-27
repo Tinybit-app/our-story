@@ -335,6 +335,20 @@ describe('GET /api/timeline — yearMonth param validation', () => {
 })
 
 // ============================================================
+// GET /api/timeline — cursor + yearMonth combined
+// ============================================================
+describe('GET /api/timeline — cursor + yearMonth combined', () => {
+  it('accepts cursor alongside yearMonth', () => {
+    const r = timelineQuerySchemaV2.safeParse({
+      circleId: '123e4567-e89b-12d3-a456-426614174000',
+      yearMonth: '2025-03',
+      cursor: '2025-03-15T00:00:00.000Z,2025-03-15T10:00:00.000Z,abc12345-0000-0000-0000-000000000001',
+    })
+    expect(r.success).toBe(true)
+  })
+})
+
+// ============================================================
 // POST /api/account/delete — Step 3.6 owner deletion resolution
 // Mirrors the auto-promote / needs-transfer logic in the route.
 // ============================================================

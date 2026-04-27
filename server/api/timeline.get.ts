@@ -97,20 +97,39 @@ export default defineEventHandler(async (event) => {
   }
 
   if (yearMonth) {
-    // Filter to a specific calendar month — used by the month overflow page
+    // Filter to a specific calendar month — used by the month overflow page.
+    // Uses the same cursor format as the main timeline for consistent pagination.
+    const PAGE_SIZE = 24
     const parts = yearMonth.split('-')
-    const year = Number(parts[0])
-    const month = Number(parts[1])
-    const from = new Date(Date.UTC(year, month - 1, 1)).toISOString()
-    const to = new Date(Date.UTC(year, month, 1)).toISOString()
-    query = query.gte("memory_date", from).lt("memory_date", to).limit(100)
+    const yearNum = Number(parts[0])
+    const monthNum = Number(parts[1])
+    const from = new Date(Date.UTC(yearNum, monthNum - 1, 1)).toISOString()
+    const to = new Date(Date.UTC(yearNum, monthNum, 1)).toISOString()
+    query = query.gte("memory_date", from).lt("memory_date", to).limit(PAGE_SIZE + 1)
+
+    if (cursor) {
+      const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(",")
+      query = (query as any).or(
+        [
+          `memory_date.lt.${cursorDate}`,
+          `and(memory_date.eq.${cursorDate},created_at.lt.${cursorCreatedAt})`,
+          `and(memory_date.eq.${cursorDate},created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
+        ].join(",")
+      )
+    }
 
     const { data: memories, error } = await query
     if (error) {
       console.error("[timeline] month query failed:", error.message)
       throw createError({ statusCode: 500, message: "Failed to load timeline." })
     }
-    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null, children, members }
+
+    const withUrls = await attachSignedUrls(supabase, memories ?? [])
+    const hasMore = withUrls.length > PAGE_SIZE
+    const page = withUrls.slice(0, PAGE_SIZE)
+    const last = page[page.length - 1]
+    const nextCursor = hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
+    return { memories: page, nextCursor, children, members }
   }
 
   // Cursor-based pagination for the main timeline
