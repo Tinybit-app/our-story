@@ -36,6 +36,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return navigateTo("/settings/account")
     }
 
+    // Already onboarded users should not be able to re-enter onboarding
+    if (to.path.startsWith("/onboarding") && state.hasMembership) {
+      return navigateTo("/timeline")
+    }
+
     if (needsMembership) {
       if (to.path === "/no-circle") {
         // Already on the right page but bounce away if state has changed
