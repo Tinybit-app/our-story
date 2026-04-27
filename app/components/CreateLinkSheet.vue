@@ -101,7 +101,18 @@
       <div class="scroll-styled flex-1 overflow-y-auto overscroll-contain pb-4">
         <!-- FULL mode -->
         <div v-if="selectedMode === 'full'" class="px-5 py-4">
-          <p class="text-sm text-muted-foreground leading-relaxed">
+          <template v-if="!yearsLoading && yearGroups.length === 0">
+            <div class="py-8 text-center">
+              <div class="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5z"/>
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-foreground mb-1">{{ t('viewerLink.noMemoriesTitle') }}</p>
+              <p class="text-xs text-muted-foreground">{{ t('viewerLink.noMemoriesBody') }}</p>
+            </div>
+          </template>
+          <p v-else class="text-sm text-muted-foreground leading-relaxed">
             {{ t("viewerLink.fullModeDescription") }}
           </p>
         </div>
@@ -547,8 +558,10 @@ const isAnyYearLoading = computed(() =>
   yearGroups.value.some((g) => g.loading),
 );
 
+const hasMemories = computed(() => yearGroups.value.length > 0);
+
 const isValid = computed(() => {
-  if (selectedMode.value === "full") return true;
+  if (selectedMode.value === "full") return hasMemories.value;
   return selectedMemoryIds.value.size > 0;
 });
 
