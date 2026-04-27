@@ -193,9 +193,13 @@
                 <button
                   type="button"
                   @click="shareApp"
-                  class="flex-shrink-0 bg-accent text-accent-foreground rounded-full px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity active:scale-95"
+                  :disabled="referralCopied"
+                  class="flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all active:scale-95"
+                  :class="referralCopied
+                    ? 'bg-green-500 text-white'
+                    : 'bg-accent text-accent-foreground hover:opacity-90'"
                 >
-                  {{ t('viewerLink.referralCta') }}
+                  {{ referralCopied ? t('viewerLink.copied') : t('viewerLink.referralCta') }}
                 </button>
               </div>
             </Transition>
@@ -314,6 +318,7 @@ function saveReactedIds() {
 // ── Referral ───────────────────────────────────────────────────────────────────
 const memoriesSeenCount = ref(0)
 const referralDismissed = ref(false)
+const referralCopied = ref(false)
 const showReferral = computed(() => memoriesSeenCount.value >= 3 && !referralDismissed.value)
 
 // ── Mode banner ────────────────────────────────────────────────────────────────
@@ -361,7 +366,8 @@ async function shareApp() {
     }
   } else {
     await navigator.clipboard.writeText(shareData.url).catch(() => {})
-    referralDismissed.value = true // clipboard copy is always "successful"
+    referralCopied.value = true
+    setTimeout(() => { referralDismissed.value = true }, 1500)
   }
 }
 
