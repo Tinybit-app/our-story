@@ -82,7 +82,7 @@ test.describe('Value proposition screens', () => {
 
   // ── Existing member creating a second circle ────────────────────────────────
 
-  test('existing member navigating to /onboarding skips value-prop entirely', async ({ page }) => {
+  test('existing member navigating to /onboarding is redirected to /timeline', async ({ page }) => {
     await page.route('**/api/auth/membership**', route =>
       route.fulfill({
         status: 200,
@@ -90,11 +90,9 @@ test.describe('Value proposition screens', () => {
         body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
       })
     )
-    // value_prop_seen is NOT set — but membership means it should be skipped anyway
     await page.goto('/onboarding')
-    await page.waitForTimeout(500)
-    await expect(page).not.toHaveURL(/\/value-prop/)
-    await expect(page).toHaveURL(/\/onboarding$/)
+    await page.waitForURL(/\/timeline/, { timeout: 5_000 })
+    await expect(page).toHaveURL(/\/timeline/)
   })
 
   // ── Shown once ──────────────────────────────────────────────────────────────
