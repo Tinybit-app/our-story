@@ -122,9 +122,11 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 ### Milestone 6: Timeline
 - [x] 6.1 Signed URL API (cursor-based, memory_date ordering)
 - [x] 6.2 Timeline UI — Polaroid Wall (monthly sections, year badge, jump modal, month overflow page)
-  - Month overflow page (`/timeline/[year]/[month]`) now paginated: 24 memories per page, cursor-based, infinite scroll via IntersectionObserver sentinel; previously fetched up to 100 at once
-  - API: `yearMonth` branch extended to accept `cursor` param and return `nextCursor`; uses PAGE_SIZE+1 probe to detect last page
-  - 7 E2E tests (`tests/month-overflow.spec.ts`)
+  - Month overflow page (`/timeline/[year]/[month]`) paginated: 24 memories per page, cursor-based, explicit "Load more" button (replaced IntersectionObserver sentinel); previously fetched up to 100 at once
+  - API: `yearMonth` branch accepts `cursor` param and returns `nextCursor`; uses PAGE_SIZE+1 probe to detect last page
+  - Main timeline (`/timeline`) loads one calendar year at a time: API auto-detects the latest year on first load (no `year` param), returns `prevYear: number | null` for subsequent "Load older year" calls; `YEAR_LIMIT = 156` safety cap (12 months × 13 memories/month). `getLatestYear` and `getPrevYear` are single LIMIT-1 queries on the indexed `memory_date` column; both run in parallel with `Promise.all`. `timeline/index.vue` uses `prevYear` ref instead of `nextCursor`.
+  - Timeline refresh (after quick-note or upload): resets `memoriesFlat` + `prevYear` then calls `fetchTimeline()` directly
+  - 7 E2E tests (`tests/month-overflow.spec.ts`), 3 E2E tests (`tests/timeline-year.spec.ts`)
 
 ### Milestone 7: Memory Features
 - [x] 7.1 ~~Share to circle (visibility toggle)~~ — **cut.** All uploads are `circle`-visible; no private memory concept within a circle. Users who want a personal-only timeline create a `solo` circle. The `private` visibility value remains in the DB enum and RLS for schema continuity but the UI never exposes it.
@@ -145,7 +147,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `POST /api/memories/quick-note` — creates Memory row with no MemoryMedia; validates membership; optionally tags children/members
   - `todayIso()` helper uses local timezone (not UTC) so date matches user's wall clock
   - i18n: `quickNote.*`, `addMemory.*` keys in `locales/en.json` and `locales/zh-CN.json`
-  - Timeline refresh: resets `memoriesFlat` + `nextCursor` then calls `fetchTimeline()` directly (not `refreshNuxtData()` which is a no-op for manually fetched data)
+  - Timeline refresh: resets `memoriesFlat` + `prevYear` then calls `fetchTimeline()` directly (not `refreshNuxtData()` which is a no-op for manually fetched data)
   - **`QuickNoteCard`** (`app/components/QuickNoteCard.vue`) — postcard-style card, 210px wide, tilts with same physics as PolaroidCard; red pin, italic "Quick note" label + hairline divider (distinct from milestone stamp), milestone stamp if present, note text (12.5px, line-clamp-5), divider, footer row 1 (date · author + emoji picker button), footer row 2 (reaction chips), child age pills, tagged member avatars
   - **`QuickNoteModal`** (`app/components/QuickNoteModal.vue`) — dedicated detail modal for note-only memories; no tabs; editorial quote top area (warm accent-tinted bg, 130px Georgia `"` mark, italic 17px note text, "Quick note" label top-right, date bottom-right, milestone stamp); slim info row (date · author, edit pencil for owner, child pills, tagged members, reactions with tooltips + emoji picker); edit mode (milestone + note inputs, people picker, save/cancel — no internal scrollbar); full comments section (input + thread with inline editing); same open/close spring animation as `MemoryModal` (flies from card origin rect)
   - Routing: `onOpenMemory` checks `!memory.memorymedia.length && memory.note` → opens `QuickNoteModal`; photo/video memories continue to open `MemoryModal` — wired in both `timeline/index.vue` and `timeline/[year]/[month].vue`

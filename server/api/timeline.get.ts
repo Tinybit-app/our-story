@@ -170,17 +170,16 @@ export default defineEventHandler(async (event) => {
   const from = new Date(Date.UTC(targetYear, 0, 1)).toISOString()
   const to = new Date(Date.UTC(targetYear + 1, 0, 1)).toISOString()
 
-  const { data: memories, error } = await baseQuery()
-    .gte("memory_date", from)
-    .lt("memory_date", to)
-    .limit(YEAR_LIMIT)
+  const [{ data: memories, error }, prevYear] = await Promise.all([
+    baseQuery().gte("memory_date", from).lt("memory_date", to).limit(YEAR_LIMIT),
+    getPrevYear(supabase, circleId, user.sub, targetYear),
+  ])
 
   if (error) {
     console.error("[timeline] year query failed:", error.message)
     throw createError({ statusCode: 500, message: "Failed to load timeline." })
   }
 
-  const prevYear = await getPrevYear(supabase, circleId, user.sub, targetYear)
   const withUrls = await attachSignedUrls(supabase, memories ?? [])
   return { memories: withUrls, prevYear, children, members }
 })

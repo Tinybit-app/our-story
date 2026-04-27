@@ -2084,7 +2084,7 @@ The timeline is the core experience. If it loads slowly, the app feels broken re
 ### How to hit these
 
 **Timeline load:**
-- Cursor-based pagination — load 20 items, not all
+- Year-at-a-time loading on the main timeline — auto-detect latest year on first load, expose `prevYear` for "Load older year"; cursor-based pagination for month overflow page (24/page)
 - Serve thumbnails (300px WebP) on timeline, full-res only on open
 - `vue-virtual-scroller` — only render DOM nodes in viewport
 - Supabase Storage + Cloudflare CDN — images served from edge globally
@@ -2574,51 +2574,56 @@ const memoriesWithUrls = await Promise.all(
 ### Problem
 A circle with 3 years of daily uploads could have 1,000+ memories. Loading all at once = slow initial load, high DB cost, bad UX.
 
-### Solution: Cursor-based pagination + virtual scroll
+### Solution: Year-at-a-time loading (main timeline) + cursor-based (month overflow)
 
-**Why cursor-based, not offset:**
-Offset pagination (`LIMIT 20 OFFSET 100`) breaks when new items are inserted — items shift, causing duplicates or skipped rows. Cursor pagination is stable.
+**Main timeline (`GET /api/timeline` without `yearMonth`):**
+Returns all memories for one calendar year. On first load the API auto-detects the latest year that has memories (single LIMIT-1 query on indexed `memory_date`). The response includes `prevYear: number | null` — if non-null, a "Load older year" trigger fetches that year and appends to the list.
 
-### DB query
-```sql
--- Fetch next page after cursor
--- NOTE: order by memory_date (not created_at) — memory_date drives timeline position
--- so old photos uploaded today appear at their correct historical position
-SELECT * FROM Memory
-WHERE circle_id = $1
-  AND (memory_date, id) < ($cursor_memory_date, $cursor_id)
-ORDER BY memory_date DESC, id DESC
-LIMIT 20;
-```
-
-### API response
 ```ts
+// Main timeline API response
 {
-  memories: Memory[],
-  next_cursor: {
-    memory_date: "2024-03-15T10:00:00Z",  // matches the sort key — NOT created_at
-    id: "uuid-of-last-item"
-  } | null  // null = no more pages
+  memories: Memory[],   // all memories for the target year (up to YEAR_LIMIT = 156)
+  prevYear: number | null,  // year to fetch next, or null if no older memories
+  children: ChildProfile[],
+  members: CircleMember[],
 }
 ```
 
-> **Note:** The cursor key is `memory_date`, not `created_at`. The DB query binds `$cursor_memory_date` from this field. Using `created_at` here would silently produce wrong results — the query sorts by `memory_date` and the cursor must encode that same value.
+**Month overflow page (`GET /api/timeline?yearMonth=YYYY-MM`):**
+Cursor-based, 24 memories per page. Uses a composite cursor `memory_date,created_at,id` and PAGE_SIZE+1 probe to detect last page.
 
-### Frontend: virtual scroll
-Use `vue-virtual-scroller` to render only visible items — prevents DOM bloat with large timelines.
+**Why year-at-a-time, not cursor-based, for the main timeline:**
+The Polaroid Wall groups memories by month inside yearly sections. Cursor-based loading with an arbitrary page size (e.g. 20) would split months across page boundaries, requiring complex state to merge partial month groups on the client. Loading a full year at once keeps all grouping logic trivial and eliminates mid-month "Load more" interruptions.
 
-```ts
-// Only ~10 items rendered in DOM at a time regardless of list size
-import { RecycleScroller } from "vue-virtual-scroller"
+**Why cursor-based for month overflow:**
+A single month could have hundreds of memories (e.g. a trip with daily uploads). Loading them all at once would be slow and wasteful. 24/page with an explicit "Load more" button is the right trade-off.
+
+### DB queries
+```sql
+-- Auto-detect latest year (single indexed scan)
+SELECT memory_date FROM memory
+WHERE circle_id = $1 AND (visibility = 'circle' OR (visibility = 'private' AND owner_user_id = $2))
+ORDER BY memory_date DESC LIMIT 1;
+
+-- Fetch all memories for a year (YEAR_LIMIT = 156 safety cap)
+-- NOTE: order by memory_date (not created_at) — memory_date drives timeline position
+SELECT ... FROM memory
+WHERE circle_id = $1
+  AND memory_date >= '2025-01-01' AND memory_date < '2026-01-01'
+ORDER BY memory_date DESC, created_at DESC, id DESC
+LIMIT 156;
+
+-- Find previous year (single indexed scan, runs in parallel with above)
+SELECT memory_date FROM memory
+WHERE circle_id = $1 AND memory_date < '2025-01-01'
+  AND (visibility = 'circle' OR (visibility = 'private' AND owner_user_id = $2))
+ORDER BY memory_date DESC LIMIT 1;
 ```
 
-### Prefetching
-```
-User scrolls to 80% of current page
-  → Fetch next page in background
-  → Append to list seamlessly
-  → No loading spinner needed
-```
+### Frontend: year sections
+Memories are grouped by month client-side (`useTimeline` composable). Loading one year at a time keeps all grouping logic in the frontend — no cursor state leaks into the UI layer.
+
+### Index required
 
 ### Index required
 ```sql
