@@ -591,6 +591,7 @@
     "clearAll": "Clear",
     "memoriesInRange": "{count} in range",
     "memoriesCount": "{count} memories",
+    "truncatedWarning": "This year has more than {count} memories. Only the first {count} are shown — some may be missing from the selection.",
     "tapToSelect": "Tap to select",
     "fullModeDescription": "Share your complete timeline. All current and future memories will be visible to anyone with this link.",
     "selectedCount": "{count} selected",

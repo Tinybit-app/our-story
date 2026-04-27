@@ -438,6 +438,7 @@
     "clearAll": "清除",
     "memoriesInRange": "范围内 {count} 条",
     "memoriesCount": "{count} 条记忆",
+    "truncatedWarning": "该年份有超过 {count} 条记忆，仅显示前 {count} 条，部分记忆可能未包含在选择中。",
     "tapToSelect": "点击选择",
     "fullModeDescription": "分享你的完整时间线。持有此链接的任何人都可以看到所有当前和未来的记忆。",
     "selectedCount": "已选 {count} 个",

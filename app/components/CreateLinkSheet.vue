@@ -397,6 +397,19 @@
                   </div>
                 </div>
 
+                <!-- Truncation warning -->
+                <div
+                  v-if="group.loaded && group.truncated"
+                  class="mx-5 mt-3 mb-2 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40"
+                >
+                  <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <p class="text-[11px] leading-snug text-amber-800 dark:text-amber-200">
+                    {{ t('viewerLink.truncatedWarning', { count: group.memories.length }) }}
+                  </p>
+                </div>
+
                 <!-- Year loading skeleton -->
                 <div
                   v-else-if="group.loading"
@@ -459,6 +472,7 @@ interface YearGroup {
   memories: MemoryItem[];
   loading: boolean;
   loaded: boolean;
+  truncated: boolean;
 }
 
 interface MonthGroup {
@@ -673,6 +687,7 @@ async function loadYears() {
       memories: [],
       loading: false,
       loaded: false,
+      truncated: false,
     }));
   } catch {
     yearGroups.value = [];
@@ -686,10 +701,12 @@ async function loadYearMemories(year: number) {
   if (!group || group.loaded || group.loading) return;
   group.loading = true;
   try {
-    const data = await $fetch<{ memories: any[] }>("/api/timeline", {
-      query: { circleId: props.circleId, year, limit: 1000 },
-    });
+    const data = await $fetch<{ memories: any[]; truncated?: boolean }>(
+      "/api/timeline",
+      { query: { circleId: props.circleId, year, limit: 1000 } },
+    );
     group.memories = (data.memories ?? []).map(mapMemory);
+    group.truncated = data.truncated === true;
     group.loaded = true;
     // Auto-collapse all months except the most recent one
     autoCollapseMonths(group);
