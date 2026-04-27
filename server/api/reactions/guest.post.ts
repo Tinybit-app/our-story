@@ -1,6 +1,31 @@
 import { serverSupabaseServiceRole } from "#supabase/server"
 import { z } from "zod"
 
+// --- Rate limiting: max 20 reactions per viewer link per 60s window ---
+const RATE_LIMIT = 20
+const RATE_WINDOW_MS = 60_000
+const rateBuckets = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(viewerLinkId: string): boolean {
+  const now = Date.now()
+  const bucket = rateBuckets.get(viewerLinkId)
+  if (!bucket || now >= bucket.resetAt) {
+    rateBuckets.set(viewerLinkId, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return true
+  }
+  if (bucket.count >= RATE_LIMIT) return false
+  bucket.count++
+  return true
+}
+
+// Clean up stale buckets every 5 minutes to prevent memory leaks
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, bucket] of rateBuckets) {
+    if (now >= bucket.resetAt) rateBuckets.delete(key)
+  }
+}, 5 * 60_000).unref?.()
+
 const VALID_EMOJIS = ["❤️", "😂", "😮", "😢", "👏"] as const
 
 const schema = z.object({
@@ -32,6 +57,10 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, message: "expired" })
     }
     throw createError({ statusCode: 401, message: "Invalid viewer token." })
+  }
+
+  if (!checkRateLimit(viewerLinkId)) {
+    throw createError({ statusCode: 429, message: "Too many reactions. Please try again later." })
   }
 
   const supabase = serverSupabaseServiceRole(event)
