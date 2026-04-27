@@ -76,14 +76,9 @@
         {{ t('login.noPassword') }}
       </p>
 
-      <!-- Language toggle -->
+      <!-- Language picker -->
       <div class="mt-8 flex justify-center">
-        <button
-          class="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-          @click="toggleLocale"
-        >
-          {{ locale === 'en' ? '中文' : 'English' }}
-        </button>
+        <LocalePicker />
       </div>
 
     </div>
@@ -92,11 +87,7 @@
 
 <script setup lang="ts">
 definePageMeta({ auth: false })
-const { t, locale, setLocale } = useI18n()
-
-function toggleLocale() {
-  setLocale(locale.value === 'en' ? 'zh-CN' : 'en')
-}
+const { t } = useI18n()
 
 const user = useSupabaseUser()
 const router = useRouter()
