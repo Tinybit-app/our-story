@@ -4,7 +4,7 @@ import { z } from "zod"
 const schema = z.object({
   firstName: z.string().min(1).max(100).transform((s) => s.trim()).optional(),
   lastName: z.string().max(100).transform((s) => s.trim()).optional(),
-  locale: z.enum(["en", "zh-CN"]).optional(),
+  locale: z.enum(["en", "zh-CN", "fr"]).optional(),
 })
 
 export default defineEventHandler(async (event) => {
