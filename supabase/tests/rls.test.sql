@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(43);
+SELECT plan(53);
 
 -- ============================================================
 -- FIXTURES
@@ -51,6 +51,17 @@ VALUES ('00000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-0000000
 -- (user_c gets added to Circle A during test 12, so can't be used for non-member assertions)
 INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 VALUES ('00000000-0000-0000-0000-000000000005', 'outsider@test.com', '', now(), now(), now());
+
+-- viewer_link for circle A (owner = user_a)
+INSERT INTO public.viewer_link (id, circle_id, nonce, mode, label, expires_at)
+VALUES (
+  '30000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001',
+  'ffffffff-ffff-4fff-8fff-ffffffffffff',
+  'full',
+  'Full timeline',
+  now() + interval '30 days'
+);
 
 -- ============================================================
 -- HELPERS
@@ -709,6 +720,123 @@ SELECT is(
   'user_b cannot update user_a locale — row unchanged'
 );
 SET LOCAL ROLE authenticated;
+
+-- ============================================================
+-- TEST 44: owner can SELECT viewer_links for their circle
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  1,
+  'owner can select viewer_links for their circle'
+);
+
+-- ============================================================
+-- TEST 45: owner can INSERT a viewer_link for their circle
+-- ============================================================
+SELECT lives_ok(
+  $$INSERT INTO public.viewer_link (circle_id, mode, label, expires_at)
+    VALUES ('10000000-0000-0000-0000-000000000001', 'full', 'Test link', now() + interval '30 days')$$,
+  'owner can insert viewer_link for their circle'
+);
+
+-- ============================================================
+-- TEST 46: owner can DELETE a viewer_link from their circle
+-- ============================================================
+SELECT lives_ok(
+  $$DELETE FROM public.viewer_link WHERE id = '30000000-0000-0000-0000-000000000001'$$,
+  'owner can delete viewer_link from their circle'
+);
+
+-- ============================================================
+-- TEST 47: member cannot SELECT viewer_links
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  0,
+  'member cannot select viewer_links'
+);
+
+-- ============================================================
+-- TEST 48: member cannot INSERT a viewer_link
+-- ============================================================
+SELECT throws_ok(
+  $$INSERT INTO public.viewer_link (circle_id, mode, label, expires_at)
+    VALUES ('10000000-0000-0000-0000-000000000001', 'full', 'Hack link', now() + interval '30 days')$$,
+  'new row violates row-level security policy for table "viewer_link"',
+  'member cannot insert viewer_link'
+);
+
+-- ============================================================
+-- TEST 49: outsider cannot SELECT viewer_links
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000005');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  0,
+  'outsider cannot select viewer_links'
+);
+
+-- ============================================================
+-- TEST 50: owner of circle A cannot SELECT viewer_links for circle B
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000001');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000002'),
+  0,
+  'owner of circle A cannot select viewer_links for circle B'
+);
+
+-- ============================================================
+-- TEST 51: owner of circle B sees 0 viewer_links (none created for circle B)
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000003');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000002'),
+  0,
+  'owner of circle B sees 0 viewer_links (none created for circle B)'
+);
+
+-- ============================================================
+-- TEST 52: admin cannot SELECT viewer_links
+-- user_b was promoted to admin in TEST 12 — admin is NOT owner,
+-- so the owner-only SELECT policy must block them.
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  0,
+  'admin cannot select viewer_links'
+);
+
+-- ============================================================
+-- TEST 53: admin cannot INSERT a viewer_link
+-- ============================================================
+SELECT throws_ok(
+  $$INSERT INTO public.viewer_link (circle_id, mode, label, expires_at)
+    VALUES ('10000000-0000-0000-0000-000000000001', 'full', 'Admin link', now() + interval '30 days')$$,
+  'new row violates row-level security policy for table "viewer_link"',
+  'admin cannot insert viewer_link'
+);
 
 SELECT * FROM finish();
 ROLLBACK;

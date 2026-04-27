@@ -1,18 +1,20 @@
 /**
- * Stateless viewer JWT utilities (build plan §4.5)
- *
- * Produces and verifies signed JWTs for read-only circle access.
- * No Supabase account is required — the token is the credential.
+ * Stateless viewer JWT utilities (build plan §9.1)
  *
  * Format: base64url(header).base64url(payload).base64url(HMAC-SHA256 signature)
  *
- * Payload: { circle_id, role: "viewer", exp: unix timestamp }
+ * Payload: { circle_id, viewer_link_id, nonce, role: "viewer", exp: unix timestamp }
+ *
+ * viewer_link_id + nonce are checked against the viewer_link table on every
+ * API call — deleting the row or changing the nonce instantly revokes the link.
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto"
 
 export interface ViewerPayload {
   circle_id: string
+  viewer_link_id: string
+  nonce: string
   role: "viewer"
   exp: number
 }
@@ -32,12 +34,16 @@ function sign(data: string, secret: string): string {
 export function signViewerToken(
   circleId: string,
   secret: string,
-  expirySeconds = DEFAULT_EXPIRY_SECONDS
+  expirySeconds = DEFAULT_EXPIRY_SECONDS,
+  viewerLinkId: string,
+  nonce: string,
 ): string {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }))
   const payload = b64url(
     JSON.stringify({
       circle_id: circleId,
+      viewer_link_id: viewerLinkId,
+      nonce,
       role: "viewer",
       exp: Math.floor(Date.now() / 1000) + expirySeconds,
     } satisfies ViewerPayload)
@@ -52,7 +58,6 @@ export function verifyViewerToken(token: string, secret: string): ViewerPayload 
 
   const [header, payloadB64, sig] = parts
 
-  // Verify signature
   const expectedSig = sign(`${header}.${payloadB64}`, secret)
   const expectedBuf = Buffer.from(expectedSig, "utf8")
   const actualBuf = Buffer.from(sig, "utf8")
@@ -63,12 +68,10 @@ export function verifyViewerToken(token: string, secret: string): ViewerPayload 
     throw new Error("Invalid token signature")
   }
 
-  // Decode payload
   const payload = JSON.parse(
     Buffer.from(payloadB64, "base64url").toString("utf8")
   ) as ViewerPayload
 
-  // Check expiry
   if (payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error("Token expired")
   }

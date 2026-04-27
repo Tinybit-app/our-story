@@ -19,9 +19,13 @@ export default defineEventHandler(async (event) => {
   if (!secret) throw createError({ statusCode: 500, message: "Server misconfiguration." })
 
   let circleId: string
+  let viewerLinkId: string
+  let nonce: string
   try {
     const payload = verifyViewerToken(viewerToken, secret)
     circleId = payload.circle_id
+    viewerLinkId = payload.viewer_link_id
+    nonce = payload.nonce
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : ""
     if (msg.toLowerCase().includes("expired")) {
@@ -31,6 +35,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabase = serverSupabaseServiceRole(event)
+
+  // Revocation check — same as viewer/timeline.get.ts
+  const { data: viewerLink } = await supabase
+    .from("viewer_link")
+    .select("nonce, expires_at")
+    .eq("id", viewerLinkId)
+    .maybeSingle()
+
+  if (!viewerLink || viewerLink.nonce !== nonce) {
+    throw createError({ statusCode: 401, message: "revoked" })
+  }
+  if (new Date(viewerLink.expires_at).getTime() < Date.now()) {
+    throw createError({ statusCode: 401, message: "expired" })
+  }
 
   // Verify the memory belongs to this circle
   const { data: memory } = await supabase
@@ -43,8 +61,6 @@ export default defineEventHandler(async (event) => {
 
   if (!memory) throw createError({ statusCode: 404, message: "Memory not found." })
 
-  // Cast to any because generated DB types predate the 013_guest_reactions migration
-  // (user_id nullable, guest_name column). Types will be correct after next `supabase gen`.
   const { error } = await (supabase.from("memoryreaction") as any)
     .insert({
       memory_id: memoryId,

@@ -110,6 +110,20 @@
           <span>{{ t('nav.addMemory') }}</span>
         </button>
 
+        <!-- Share link (owner only) -->
+        <button
+          v-if="circle?.role === 'owner'"
+          type="button"
+          class="flex-shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+          @click="openShareSheet"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span>{{ t('viewerLink.shareButton') }}</span>
+        </button>
+
         <!-- Language toggle -->
         <LocalePicker class="flex-shrink-0" />
 
@@ -510,6 +524,22 @@
       @close="selectedIndex = null"
       @update="onMemoryUpdate"
     />
+
+    <!-- Viewer link management sheets (owner-only) -->
+    <ShareLinksSheet
+      ref="shareLinksSheetRef"
+      :open="shareSheetOpen"
+      :circle-id="circleId ?? ''"
+      @close="shareSheetOpen = false"
+      @create="createSheetOpen = true"
+      @renew="renewViewerLink"
+    />
+    <CreateLinkSheet
+      :open="createSheetOpen"
+      :circle-id="circleId ?? ''"
+      @close="createSheetOpen = false"
+      @created="onLinkCreated"
+    />
   </div>
 </template>
 
@@ -837,5 +867,29 @@ async function sendInvite() {
   } finally {
     inviteSending.value = false;
   }
+}
+
+// ── Viewer links (owner-only) ──────────────────────────────────────────────────
+const shareSheetOpen = ref(false)
+const createSheetOpen = ref(false)
+const shareLinksSheetRef = ref<{ refresh: () => void } | null>(null)
+
+function openShareSheet() {
+  shareSheetOpen.value = true
+}
+
+async function renewViewerLink(link: { id: string }) {
+  if (!circleId.value) return
+  try {
+    await $fetch(`/api/circles/${circleId.value}/viewer-links/${link.id}`, { method: 'DELETE' })
+    createSheetOpen.value = true
+  } catch {
+    // Error logged server-side; silently ignore on client — user can try again from the sheet
+  }
+}
+
+function onLinkCreated() {
+  // Refresh the sheet list after a new link is created
+  shareLinksSheetRef.value?.refresh()
 }
 </script>

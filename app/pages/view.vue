@@ -4,7 +4,7 @@
     <!-- Missing token: redirect handled in onMounted -->
     <template v-if="!token">
       <div class="min-h-screen flex items-center justify-center px-6">
-        <p class="text-sm text-muted-foreground">Redirecting…</p>
+        <p class="text-sm text-muted-foreground">{{ t('viewerLink.redirecting') }}</p>
       </div>
     </template>
 
@@ -19,24 +19,25 @@
             </svg>
           </div>
           <template v-if="errorType === 'expired'">
-            <h1 class="text-xl font-bold text-foreground mb-2">This link has expired</h1>
-            <p class="text-sm text-muted-foreground mb-8">Ask the circle owner for a new link.</p>
+            <h1 class="text-xl font-bold text-foreground mb-2">{{ t('viewerLink.viewerExpiredTitle') }}</h1>
+            <p class="text-sm text-muted-foreground mb-8">{{ t('viewerLink.viewerExpiredBody') }}</p>
             <button
+              type="button"
               @click="sendReminder"
               class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
             >
-              Send a reminder
+              {{ t('viewerLink.viewerExpiredCta') }}
             </button>
           </template>
           <template v-else>
-            <h1 class="text-xl font-bold text-foreground mb-2">This link is invalid</h1>
-            <p class="text-sm text-muted-foreground mb-8">The link may be incorrect or has been revoked.</p>
+            <h1 class="text-xl font-bold text-foreground mb-2">{{ t('viewerLink.viewerInvalidTitle') }}</h1>
+            <p class="text-sm text-muted-foreground mb-8">{{ t('viewerLink.viewerInvalidBody') }}</p>
           </template>
           <NuxtLink
             to="/login"
             class="block mt-4 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
           >
-            Sign in instead →
+            {{ t('viewerLink.viewerSignIn') }}
           </NuxtLink>
         </div>
       </div>
@@ -58,14 +59,15 @@
         <div class="relative z-10 w-full max-w-sm text-center">
           <p class="text-white/70 text-xs font-bold tracking-widest uppercase mb-6">Our Story</p>
           <h1 class="text-2xl font-bold text-white leading-snug mb-3">
-            {{ timeline.ownerFirstName || 'Someone' }} created this<br>so you'd never miss a moment.
+            {{ timeline.ownerFirstName || t('common.someone') }} {{ t('viewerLink.viewerSplashTitle') }}
           </h1>
-          <p class="text-white/70 text-sm mb-10">No account needed — just scroll.</p>
+          <p class="text-white/70 text-sm mb-10">{{ t('viewerLink.viewerSplashSubtitle') }}</p>
           <button
+            type="button"
             @click="dismissSplash"
             class="w-full bg-white text-stone-900 rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
           >
-            See the memories →
+            {{ t('viewerLink.viewerSplashCta') }}
           </button>
         </div>
       </div>
@@ -79,28 +81,36 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase leading-none mb-0.5">Our Story</p>
-              <p class="text-sm font-semibold text-foreground">{{ timeline.circleName }}</p>
+              <p class="text-sm font-semibold text-foreground">
+                {{ timeline.circleName }}
+                <span v-if="timeline.linkLabel && timeline.mode !== 'full'" class="font-normal text-muted-foreground"> · {{ timeline.linkLabel }}</span>
+              </p>
             </div>
             <NuxtLink
               to="/login"
               class="text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
             >
-              Join →
+              {{ t('viewerLink.viewerJoinCta').replace(' →', '') }}
             </NuxtLink>
           </div>
         </header>
 
         <main class="px-4 py-6">
+          <!-- Mode banner -->
+          <p v-if="modeBanner" class="text-xs text-muted-foreground mt-1 mb-4">{{ modeBanner }}</p>
+
           <!-- Empty state -->
           <div v-if="timeline.memories.length === 0" class="text-center py-20">
-            <p class="text-sm text-muted-foreground">No memories shared yet.</p>
+            <p class="text-sm font-semibold text-foreground mb-1">{{ t('viewerLink.emptyState') }}</p>
+            <p class="text-xs text-muted-foreground">{{ t('viewerLink.emptyStateBody') }}</p>
           </div>
 
           <!-- Memory list (large text for viewer accessibility) -->
           <div v-else class="flex flex-col gap-6">
             <article
-              v-for="memory in timeline.memories"
+              v-for="(memory, index) in timeline.memories"
               :key="memory.id"
+              :ref="(el) => observeMemory(el, index)"
               class="rounded-2xl border border-border bg-card overflow-hidden"
             >
               <video
@@ -114,7 +124,7 @@
               <img
                 v-else-if="memory.signedUrl"
                 :src="memory.signedUrl"
-                :alt="memory.note ?? 'Memory'"
+                :alt="memory.note ?? t('card.photoAlt')"
                 class="w-full aspect-[4/3] object-cover"
               />
               <div class="px-4 py-4">
@@ -127,30 +137,47 @@
                 <!-- Reaction button -->
                 <div class="mt-3 flex items-center gap-2">
                   <button
+                    type="button"
                     @click="reactToMemory(memory.id)"
                     :disabled="reactedIds.has(memory.id)"
                     class="flex items-center gap-1.5 transition-all active:scale-95"
                     :class="reactedIds.has(memory.id)
                       ? 'text-rose-500 cursor-default'
                       : 'text-muted-foreground hover:text-rose-500 hover:scale-110'"
-                    :aria-label="reactedIds.has(memory.id) ? 'You reacted' : 'React with heart'"
+                    :aria-label="reactedIds.has(memory.id) ? t('viewerLink.viewerReactSent') : t('viewerLink.viewerReact')"
                   >
                     <svg class="w-5 h-5 transition-all" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                       :fill="reactedIds.has(memory.id) ? 'currentColor' : 'none'">
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                     </svg>
                     <span class="text-xs font-medium">
-                      {{ reactedIds.has(memory.id) ? 'Sent' : 'React' }}
+                      {{ reactedIds.has(memory.id) ? t('viewerLink.viewerReactSent') : t('viewerLink.viewerReact') }}
                     </span>
                   </button>
                   <Transition name="fade">
                     <span v-if="justReactedId === memory.id" class="text-xs text-rose-500 font-medium">
-                      ✓ Reaction sent!
+                      {{ t('viewerLink.viewerReactionConfirm') }}
                     </span>
                   </Transition>
                 </div>
               </div>
             </article>
+
+            <!-- Referral CTA — shown after 3+ memories scrolled -->
+            <Transition name="fade">
+              <div
+                v-if="showReferral"
+                class="rounded-2xl border border-border bg-secondary/50 px-5 py-6 text-center"
+              >
+                <p class="text-sm font-semibold text-foreground mb-1">{{ t('viewerLink.referralHeadline') }}</p>
+                <button type="button" @click="shareApp" class="text-sm text-accent hover:underline">
+                  {{ t('viewerLink.referralBody') }}
+                </button>
+                <button type="button" @click="referralDismissed = true" class="block mx-auto mt-2 text-xs text-muted-foreground hover:text-foreground">
+                  {{ t('viewerLink.cancel') }}
+                </button>
+              </div>
+            </Transition>
           </div>
 
           <!-- Join CTA -->
@@ -159,7 +186,7 @@
               to="/login"
               class="inline-block bg-primary text-primary-foreground rounded-[12px] px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
             >
-              Join to add your own memories →
+              {{ t('viewerLink.viewerJoinCta') }}
             </NuxtLink>
           </div>
         </main>
@@ -169,7 +196,7 @@
     <!-- Loading -->
     <template v-else>
       <div class="min-h-screen flex items-center justify-center">
-        <p class="text-sm text-muted-foreground">Loading…</p>
+        <p class="text-sm text-muted-foreground">{{ t('viewerLink.loading') }}</p>
       </div>
     </template>
 
@@ -181,21 +208,22 @@
       >
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showNamePrompt = false" />
         <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] p-6 shadow-2xl">
-          <h2 class="text-base font-bold text-foreground mb-1">What's your name?</h2>
-          <p class="text-sm text-muted-foreground mb-5">So the family knows it's you ❤️</p>
+          <h2 class="text-base font-bold text-foreground mb-1">{{ t('viewerLink.viewerNamePromptTitle') }}</h2>
+          <p class="text-sm text-muted-foreground mb-5">{{ t('viewerLink.viewerNamePromptSubtitle') }}</p>
           <input
             v-model="guestName"
             type="text"
-            placeholder="e.g. Grandma Sue"
+            :placeholder="t('viewerLink.viewerNamePromptPlaceholder')"
             class="w-full border border-border rounded-xl px-4 py-3 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-4"
             @keydown.enter="confirmReaction"
           />
           <button
+            type="button"
             @click="confirmReaction"
             :disabled="!guestName.trim()"
             class="w-full bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
-            Send reaction
+            {{ t('viewerLink.viewerNamePromptCta') }}
           </button>
         </div>
       </div>
@@ -207,6 +235,7 @@
 <script setup lang="ts">
 definePageMeta({ auth: false })
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const token = computed(() => route.query.token as string | undefined)
@@ -219,7 +248,16 @@ const showSplash = ref(false)
 interface ViewerTimeline {
   circleName: string
   ownerFirstName: string | null
-  memories: Array<{ id: string; memory_date: string; note: string | null; signedUrl: string | null; mediaType: 'image' | 'video' | null }>
+  linkLabel: string
+  mode: 'full' | 'date_range' | 'selection'
+  selectionDateRange: { from: string; to: string } | null
+  memories: Array<{
+    id: string
+    memory_date: string
+    note: string | null
+    signedUrl: string | null
+    mediaType: 'image' | 'video' | null
+  }>
 }
 
 const timeline = ref<ViewerTimeline | null>(null)
@@ -231,6 +269,64 @@ const guestName = ref("")
 const pendingReactionMemoryId = ref<string | null>(null)
 const reactedIds = ref(new Set<string>())
 const justReactedId = ref<string | null>(null)
+
+// ── Referral ───────────────────────────────────────────────────────────────────
+const memoriesSeenCount = ref(0)
+const referralDismissed = ref(false)
+const showReferral = computed(() => memoriesSeenCount.value >= 3 && !referralDismissed.value)
+
+// ── Mode banner ────────────────────────────────────────────────────────────────
+const modeBanner = computed(() => {
+  if (!timeline.value) return null
+  const { mode, selectionDateRange, memories } = timeline.value
+  if (mode === 'date_range' && selectionDateRange) {
+    const fmt = (d: string) => new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
+    return t('viewerLink.dateRangeBanner', { from: fmt(selectionDateRange.from), to: fmt(selectionDateRange.to) })
+  }
+  if (mode === 'selection' && selectionDateRange) {
+    const fmt = (d: string) => new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
+    return t('viewerLink.selectionBanner', {
+      count: memories.length,
+      from: fmt(selectionDateRange.from),
+      to: fmt(selectionDateRange.to),
+    })
+  }
+  return null
+})
+
+// ── IntersectionObserver for referral trigger ──────────────────────────────────
+let observer: IntersectionObserver | null = null
+
+function observeMemory(el: Element | ComponentPublicInstance | null, index: number) {
+  if (!(el instanceof Element) || index < 2) return  // only observe 3rd memory (index 2)
+  if (observer) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        memoriesSeenCount.value = Math.max(memoriesSeenCount.value, 3)
+        observer?.disconnect()
+        observer = null
+      }
+    },
+    { threshold: 0.5 }
+  )
+  observer.observe(el)
+}
+
+async function shareApp() {
+  referralDismissed.value = true
+  const shareData = { title: 'Our Story', url: 'https://ourstory.tinybit.app' }
+  if (navigator.share) {
+    await navigator.share(shareData).catch(() => {})
+  } else {
+    await navigator.clipboard.writeText(shareData.url).catch(() => {})
+  }
+}
+
+onUnmounted(() => {
+  observer?.disconnect()
+  observer = null
+})
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -280,9 +376,7 @@ function formatDate(dateStr: string): string {
 }
 
 function sendReminder() {
-  const text = encodeURIComponent(
-    "Hey! The link you shared has expired — could you send me a new one? 😊"
-  )
+  const text = encodeURIComponent(t('viewerLink.reminderSmsBody'))
   window.open(`sms:?body=${text}`, "_blank")
 }
 
