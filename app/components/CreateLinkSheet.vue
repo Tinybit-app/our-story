@@ -217,6 +217,7 @@ const creating = ref(false)
 const createError = ref<string | null>(null)
 const memoriesLoading = ref(false)
 const allMemories = ref<MemoryItem[]>([])
+const availableYears = ref<number[]>([])
 
 const modes = computed(() => [
   { value: 'full' as const, label: t('viewerLink.modeFull') },
@@ -230,10 +231,17 @@ const isValid = computed(() => {
   return true
 })
 
-const availableYears = computed(() => {
-  const current = new Date().getFullYear()
-  return Array.from({ length: 5 }, (_, i) => current - i)
-})
+async function loadYears() {
+  if (availableYears.value.length > 0) return
+  try {
+    const data = await $fetch<{ years: number[] }>('/api/timeline/years', {
+      query: { circleId: props.circleId },
+    })
+    availableYears.value = data.years
+  } catch {
+    availableYears.value = []
+  }
+}
 
 function selectYear(year: number) {
   dateFrom.value = `${year}-01-01`
@@ -252,11 +260,14 @@ function toggleMemory(id: string) {
 }
 
 watch(() => props.open, async (val) => {
-  if (val && selectedMode.value === 'selection') await loadMemories()
+  if (!val) return
+  if (selectedMode.value === 'selection') await loadMemories()
+  if (selectedMode.value === 'date_range') await loadYears()
 })
 
 watch(selectedMode, async (val) => {
   if (val === 'selection' && allMemories.value.length === 0) await loadMemories()
+  if (val === 'date_range') await loadYears()
 })
 
 async function loadMemories() {
@@ -298,6 +309,7 @@ async function handleCreate() {
     label.value = ''
     createError.value = null
     allMemories.value = []
+    availableYears.value = []
   } catch {
     createError.value = t('viewerLink.createErrorGeneric')
   } finally {
