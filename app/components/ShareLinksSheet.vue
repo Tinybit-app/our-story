@@ -170,12 +170,11 @@ const { t } = useI18n()
 
 interface ViewerLink {
   id: string
-  mode: 'full' | 'date_range' | 'selection'
+  mode: 'full' | 'selection'
   label: string
   expiresAt: string
   isExpired: boolean
   memoryCount: number | null
-  dateRange: { from: string; to: string } | null
   token: string
   createdAt: string
 }
@@ -217,32 +216,14 @@ defineExpose({ refresh: fetchLinks })
 
 function modeBadge(link: ViewerLink): string {
   if (link.mode === 'full') return t('viewerLink.modeFull')
-  if (link.mode === 'date_range') return t('viewerLink.modeDateRange')
   return t('viewerLink.modeSelection')
 }
 
 function linkSubline(link: ViewerLink): string | null {
   if (link.mode === 'selection' && link.memoryCount !== null) {
-    if (link.dateRange) {
-      return t('viewerLink.selectionBanner', {
-        count: link.memoryCount,
-        from: formatMonthYear(link.dateRange.from),
-        to: formatMonthYear(link.dateRange.to),
-      })
-    }
     return t('viewerLink.selectedCount', { count: link.memoryCount })
   }
-  if (link.mode === 'date_range' && link.dateRange) {
-    return t('viewerLink.dateRangeBanner', {
-      from: formatMonthYear(link.dateRange.from),
-      to: formatMonthYear(link.dateRange.to),
-    })
-  }
   return null
-}
-
-function formatMonthYear(dateStr: string): string {
-  return new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(dateStr))
 }
 
 function formatDate(dateStr: string): string {

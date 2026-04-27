@@ -4,12 +4,11 @@
  * Tests:
  *  1. Owner sees Share button; member does not
  *  2. Create full-timeline link → /view loads the splash
- *  3. Create date_range link → viewer sees date range banner
- *  4. Create selection link → viewer sees only selected memories
- *  5. Revoke link → DELETE called for correct link id + viewer gets invalid error
- *  6. Referral CTA appears after scrolling 3+ memories
- *  7. Empty state when date range has no memories
- *  8. Expired link badge shown in sheet; Renew opens create sheet
+ *  3. Create selection link → viewer sees only selected memories
+ *  4. Revoke link → DELETE called for correct link id + viewer gets invalid error
+ *  5. Referral CTA appears after scrolling 3+ memories
+ *  6. Empty state when selection link has no memories
+ *  7. Expired link badge shown in sheet; Renew opens create sheet
  *
  * Auth strategy:
  *  - Owner dashboard tests (Share sheet on /timeline): use `test.use({ storageState })`
@@ -27,7 +26,6 @@ import { signViewerToken } from '../server/utils/viewerJwt'
 
 const CIRCLE_ID = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa'
 const LINK_ID_FULL = 'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb'
-const LINK_ID_DATE = 'cccccccc-3333-4333-8333-cccccccccccc'
 const LINK_ID_SEL  = 'dddddddd-4444-4444-8444-dddddddddddd'
 const MEMORY_ID_1  = 'eeeeeeee-5555-4555-8555-eeeeeeeeeeee'
 const MEMORY_ID_2  = 'ffffffff-6666-4666-8666-ffffffffffff'
@@ -316,47 +314,7 @@ test.describe('Viewer link management — public viewer page', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   test.use({ storageState: { cookies: [], origins: [] } } as any)
 
-  // ── 3. Date range link → viewer sees date range banner ────────────────────
-
-  test('create date_range link → viewer sees date range banner', async ({ page }) => {
-    const token = makeViewerToken(LINK_ID_DATE)
-    const dateFrom = '2024-01-01'
-    const dateTo = '2024-12-31'
-
-    await page.route('**/api/viewer/timeline**', route =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          circleName: 'Smith Family',
-          ownerFirstName: 'Dao',
-          linkLabel: 'Jan 2024 – Dec 2024',
-          mode: 'date_range',
-          selectionDateRange: { from: dateFrom, to: dateTo },
-          memories: [
-            {
-              id: MEMORY_ID_1,
-              memory_date: '2024-06-15',
-              note: 'Summer memory',
-              signedUrl: null,
-              mediaType: null,
-            },
-          ],
-        }),
-      })
-    )
-
-    await page.goto(`/view?token=${token}`)
-
-    // Dismiss splash to reach the timeline
-    await expect(page.getByRole('button', { name: /see the memories/i })).toBeVisible({ timeout: 10_000 })
-    await page.getByRole('button', { name: /see the memories/i }).click()
-
-    // Date range banner should be visible on the timeline
-    await expect(page.getByText(/memories from/i)).toBeVisible({ timeout: 5_000 })
-  })
-
-  // ── 4. Selection link → viewer sees only selected memories ────────────────
+  // ── 3. Selection link → viewer sees only selected memories ────────────────
 
   test('create selection link → viewer sees only selected memories', async ({ page }) => {
     const token = makeViewerToken(LINK_ID_SEL)
@@ -466,10 +424,10 @@ test.describe('Viewer link management — public viewer page', () => {
     await expect(page.getByText(/share this app with them/i)).toBeVisible()
   })
 
-  // ── 7. Empty state when date range has no memories ────────────────────────
+  // ── 7. Empty state when selection link has no memories ────────────────────
 
-  test('empty state when date range has no memories', async ({ page }) => {
-    const token = makeViewerToken(LINK_ID_DATE)
+  test('empty state when selection link has no memories', async ({ page }) => {
+    const token = makeViewerToken(LINK_ID_SEL)
 
     await page.route('**/api/viewer/timeline**', route =>
       route.fulfill({
@@ -478,9 +436,9 @@ test.describe('Viewer link management — public viewer page', () => {
         body: JSON.stringify({
           circleName: 'Smith Family',
           ownerFirstName: 'Dao',
-          linkLabel: 'Jan 2099 – Dec 2099',
-          mode: 'date_range',
-          selectionDateRange: { from: '2099-01-01', to: '2099-12-31' },
+          linkLabel: '0 memories',
+          mode: 'selection',
+          selectionDateRange: null,
           memories: [],
         }),
       })

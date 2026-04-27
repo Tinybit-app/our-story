@@ -249,7 +249,7 @@ interface ViewerTimeline {
   circleName: string
   ownerFirstName: string | null
   linkLabel: string
-  mode: 'full' | 'date_range' | 'selection'
+  mode: 'full' | 'selection'
   selectionDateRange: { from: string; to: string } | null
   memories: Array<{
     id: string
@@ -279,10 +279,6 @@ const showReferral = computed(() => memoriesSeenCount.value >= 3 && !referralDis
 const modeBanner = computed(() => {
   if (!timeline.value) return null
   const { mode, selectionDateRange, memories } = timeline.value
-  if (mode === 'date_range' && selectionDateRange) {
-    const fmt = (d: string) => new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
-    return t('viewerLink.dateRangeBanner', { from: fmt(selectionDateRange.from), to: fmt(selectionDateRange.to) })
-  }
   if (mode === 'selection' && selectionDateRange) {
     const fmt = (d: string) => new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
     return t('viewerLink.selectionBanner', {

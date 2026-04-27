@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Build memory query based on mode
-  const mode = viewerLink.mode as "full" | "date_range" | "selection"
+  const mode = viewerLink.mode as "full" | "selection"
 
   let memoryQuery = supabase
     .from("memory")
@@ -71,11 +71,7 @@ export default defineEventHandler(async (event) => {
     .order("memory_date", { ascending: false })
     .limit(50)
 
-  if (mode === "date_range" && viewerLink.date_from && viewerLink.date_to) {
-    memoryQuery = memoryQuery
-      .gte("memory_date", viewerLink.date_from)
-      .lte("memory_date", viewerLink.date_to)
-  } else if (mode === "selection" && viewerLink.memory_ids?.length) {
+  if (mode === "selection" && viewerLink.memory_ids?.length) {
     memoryQuery = memoryQuery.in("id", viewerLink.memory_ids)
   }
 
@@ -104,8 +100,6 @@ export default defineEventHandler(async (event) => {
   if (mode === "selection" && memoriesWithUrls.length > 0) {
     const dates = memoriesWithUrls.map((m) => m.memory_date).sort()
     selectionDateRange = { from: dates[0], to: dates[dates.length - 1] }
-  } else if (mode === "date_range" && viewerLink.date_from && viewerLink.date_to) {
-    selectionDateRange = { from: viewerLink.date_from, to: viewerLink.date_to }
   }
 
   return {
