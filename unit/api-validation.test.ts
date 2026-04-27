@@ -1649,12 +1649,12 @@ describe("PATCH /api/circles/[id] — access control", () => {
 // Route: server/api/memories/quick-note.post.ts
 // ============================================================
 const quickNoteSchema = z.object({
-  circleId: z.string().uuid(),
+  circleId: z.uuid(),
   note: z.string().min(1).max(500),
   memoryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   milestoneLabel: z.string().max(40).nullable().optional(),
-  childIds: z.array(z.string().uuid()).max(10).optional(),
-  memberIds: z.array(z.string().uuid()).max(50).optional(),
+  childIds: z.array(z.uuid()).max(10).optional(),
+  memberIds: z.array(z.uuid()).max(50).optional(),
 })
 
 describe("POST /api/memories/quick-note — input validation", () => {
@@ -1938,9 +1938,9 @@ describe("PATCH /api/circles/[id]/children/[childId] — access control", () => 
 // GET /api/timeline — year param validation
 // ============================================================
 const timelineQuerySchemaV3 = z.object({
-  circleId: z.string().uuid(),
+  circleId: z.uuid(),
   cursor: z.string().optional(),
-  authorId: z.string().uuid().optional(),
+  authorId: z.uuid().optional(),
   yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
   year: z.coerce.number().int().min(2000).max(2100).optional(),
 })

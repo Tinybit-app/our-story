@@ -2,7 +2,7 @@ import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
 
 const querySchema = z.object({
-  circleId: z.string().uuid(),
+  circleId: z.uuid(),
 })
 
 export default defineEventHandler(async (event) => {

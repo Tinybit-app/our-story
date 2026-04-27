@@ -7,7 +7,7 @@ const THIRTY_DAYS_S = 30 * 24 * 60 * 60
 const bodySchema = z.object({
   mode: z.enum(["full", "date_range", "selection"]),
   label: z.string().max(100).optional(),
-  memoryIds: z.array(z.string().uuid()).optional(),
+  memoryIds: z.array(z.uuid()).optional(),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 }).superRefine((data, ctx) => {

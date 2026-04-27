@@ -2,7 +2,7 @@ import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
 
 const bodySchema = z.object({
-  childIds: z.array(z.string().uuid()).max(10),
+  childIds: z.array(z.uuid()).max(10),
 })
 
 export default defineEventHandler(async (event) => {

@@ -2,12 +2,12 @@ import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
 
 const bodySchema = z.object({
-  circleId: z.string().uuid(),
+  circleId: z.uuid(),
   note: z.string().min(1).max(500),
   memoryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   milestoneLabel: z.string().max(40).nullable().optional(),
-  childIds: z.array(z.string().uuid()).max(10).optional(),
-  memberIds: z.array(z.string().uuid()).max(50).optional(),
+  childIds: z.array(z.uuid()).max(10).optional(),
+  memberIds: z.array(z.uuid()).max(50).optional(),
 })
 
 export default defineEventHandler(async (event) => {

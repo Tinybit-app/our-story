@@ -4,9 +4,9 @@ import { z } from "zod"
 const YEAR_LIMIT = 156 // 13 months × 12 memories/month (safety cap)
 
 const querySchema = z.object({
-  circleId: z.string().uuid(),
+  circleId: z.uuid(),
   cursor: z.string().optional(),
-  authorId: z.string().uuid().optional(),
+  authorId: z.uuid().optional(),
   yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
   year: z.coerce.number().int().min(2000).max(2100).optional(),
 })
