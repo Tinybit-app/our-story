@@ -79,7 +79,8 @@
     "months": "{n} month | {n} months",
     "more": "more",
     "open": "Open",
-    "noMemoriesFor": "No memories found for {month}."
+    "noMemoriesFor": "No memories found for {month}.",
+    "loadMore": "Load more"
   },
   "card": {
     "noNote": "No note",

@@ -60,10 +60,16 @@
           </template>
         </div>
 
-        <!-- Infinite scroll sentinel + load-more spinner -->
-        <div ref="loadMoreEl" class="h-8 mt-4" />
-        <div v-if="loadingMore" class="flex justify-center py-4">
-          <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+        <!-- Load more button -->
+        <div v-if="nextCursor" class="flex justify-center mt-8">
+          <button
+            :disabled="loadingMore"
+            class="flex items-center gap-2 h-9 px-5 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            @click="fetchPage(nextCursor!)"
+          >
+            <div v-if="loadingMore" class="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            {{ t('timeline.loadMore') }}
+          </button>
         </div>
       </div>
 
@@ -83,7 +89,6 @@
 </template>
 
 <script setup lang="ts">
-import { useIntersectionObserver } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
 
@@ -166,16 +171,6 @@ async function fetchPage(cursor?: string) {
     if (isFirst) loading.value = false; else loadingMore.value = false
   }
 }
-
-// ── Infinite scroll ────────────────────────────────────────
-const loadMoreEl = ref<HTMLElement>()
-const { stop: stopLoadMore } = useIntersectionObserver(loadMoreEl, ([entry]) => {
-  if (entry?.isIntersecting && nextCursor.value && !loadingMore.value) {
-    fetchPage(nextCursor.value)
-  }
-})
-
-onUnmounted(() => stopLoadMore())
 
 onMounted(() => fetchPage())
 </script>

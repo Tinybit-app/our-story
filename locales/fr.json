@@ -79,7 +79,8 @@
     "months": "{n} mois",
     "more": "plus",
     "open": "Ouvrir",
-    "noMemoriesFor": "Aucun souvenir trouvé pour {month}."
+    "noMemoriesFor": "Aucun souvenir trouvé pour {month}.",
+    "loadMore": "Charger plus"
   },
   "card": {
     "noNote": "Aucune note",

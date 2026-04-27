@@ -197,7 +197,7 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
   // ── Load-more pagination ─────────────────────────────────────────────────────
 
-  test('scrolling to bottom loads the next page and appends memories', async ({ page }) => {
+  test('clicking "Load more" button loads the next page and appends memories', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
 
@@ -232,8 +232,8 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
       former_owner_name: null,
       former_owner_user_id: null,
       memorymedia: [],
-      memoryreaction: [],
       memorycomment: [],
+      memoryreaction: [],
       memory_children: [],
       memory_members: [],
       user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
@@ -252,7 +252,7 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
           body: JSON.stringify({ memories: page2Memories, nextCursor: null, children: [], members: [] }),
         })
       }
-      // First page
+      // First page — returns a cursor so the Load more button appears
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -262,18 +262,25 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
     await page.goto('/timeline/2024/06')
 
-    // Wait for first page to render — count label should show 24
+    // Wait for first page to render — count label shows 24
     await expect(page.getByText(/24 memories/i)).toBeVisible({ timeout: 10_000 })
 
-    // Scroll the IntersectionObserver sentinel into view
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    // "Load more" button should be visible (nextCursor is set)
+    const loadMoreBtn = page.getByRole('button', { name: /load more/i })
+    await expect(loadMoreBtn).toBeVisible({ timeout: 5_000 })
 
-    // Wait for the second API call to fire and memories to be appended
+    // Click it
+    await loadMoreBtn.click()
+
+    // Wait for second-page memories to append
     await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, { timeout: 10_000 })
 
-    // Verify second-page memories were appended (second-page note visible)
+    // Verify second-page memories were appended
     expect(page2Fetched).toBe(true)
     await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
+
+    // "Load more" button gone — nextCursor is now null
+    await expect(loadMoreBtn).not.toBeVisible({ timeout: 3_000 })
   })
 
 })

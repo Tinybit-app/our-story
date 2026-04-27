@@ -79,7 +79,8 @@
     "months": "{n} 个月",
     "more": "更多",
     "open": "打开",
-    "noMemoriesFor": "{month} 暂无记忆。"
+    "noMemoriesFor": "{month} 暂无记忆。",
+    "loadMore": "加载更多"
   },
   "card": {
     "noNote": "暂无备注",
