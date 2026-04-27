@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
 
-  // Latest memory — gives us the newest year and maxDate
+  // Latest memory — starting point for the year walk
   const firstRow = await supabase
     .from("memory")
     .select("memory_date")
@@ -37,11 +37,9 @@ export default defineEventHandler(async (event) => {
     .limit(1)
     .maybeSingle()
 
-  if (!firstRow.data) return { years: [], minDate: null, maxDate: null }
+  if (!firstRow.data) return { years: [] }
 
   const years: number[] = []
-  const maxDate = firstRow.data.memory_date.slice(0, 10) // YYYY-MM-DD
-  let minDate = maxDate
   let currentYear = new Date(firstRow.data.memory_date).getUTCFullYear()
 
   // Walk backwards year by year using LIMIT-1 index scans — O(distinct years)
@@ -59,10 +57,8 @@ export default defineEventHandler(async (event) => {
       .maybeSingle()
 
     if (!prev.data) break
-    // The oldest memory found in this iteration is our running minDate
-    minDate = prev.data.memory_date.slice(0, 10)
     currentYear = new Date(prev.data.memory_date).getUTCFullYear()
   }
 
-  return { years, minDate, maxDate }
+  return { years }
 })

@@ -229,16 +229,22 @@ const memoriesLoading = ref(false)
 const allMemories = ref<MemoryItem[]>([])
 const availableYears = ref<number[]>([])
 const yearsLoading = ref(false)
-const minDate = ref<string | null>(null)
-const maxDate = ref<string | null>(null)
 
-// Today's date as YYYY-MM-DD — used to cap the upper bound at "not future"
+// today as YYYY-MM-DD in local time — caps the upper bound at "not future"
 const today = new Date().toLocaleDateString('en-CA')
 
-const dateMin = computed(() => minDate.value ?? undefined)
+// Jan 1 of the earliest year with memories, or undefined while loading
+const dateMin = computed(() => {
+  const earliest = availableYears.value[availableYears.value.length - 1]
+  return earliest ? `${earliest}-01-01` : undefined
+})
+
+// Dec 31 of the latest year with memories, capped at today
 const dateMax = computed(() => {
-  if (!maxDate.value) return today
-  return maxDate.value > today ? today : maxDate.value
+  const latest = availableYears.value[0]
+  if (!latest) return today
+  const yearEnd = `${latest}-12-31`
+  return yearEnd < today ? yearEnd : today
 })
 
 const modes = computed(() => [
@@ -257,12 +263,10 @@ async function loadYears() {
   if (availableYears.value.length > 0) return
   yearsLoading.value = true
   try {
-    const data = await $fetch<{ years: number[]; minDate: string | null; maxDate: string | null }>('/api/timeline/years', {
+    const data = await $fetch<{ years: number[] }>('/api/timeline/years', {
       query: { circleId: props.circleId },
     })
     availableYears.value = data.years
-    minDate.value = data.minDate
-    maxDate.value = data.maxDate
   } catch {
     availableYears.value = []
   } finally {
@@ -299,8 +303,6 @@ watch(() => props.open, async (val) => {
     allMemories.value = []
     availableYears.value = []
     yearsLoading.value = false
-    minDate.value = null
-    maxDate.value = null
     return
   }
   if (selectedMode.value === 'selection') await loadMemories()
