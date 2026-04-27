@@ -22,8 +22,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // result so this adds no extra requests on subsequent navigations.
   if (session) {
     // Routes that don't require an active circle membership
-    const noMembershipRoutes = ["/onboarding", "/settings/account", "/invite", "/", "/pricing", "/privacy", "/terms"]
-    const needsMembership = !noMembershipRoutes.some((r) => to.path.startsWith(r))
+    const noMembershipPrefixes = ["/onboarding", "/settings/account", "/invite"]
+    const noMembershipExact = ["/", "/pricing", "/privacy", "/terms"]
+    const needsMembership = !noMembershipPrefixes.some((r) => to.path.startsWith(r)) && !noMembershipExact.includes(to.path)
 
     // Always load state for authenticated users so we can gate deleted accounts
     // regardless of which route they're navigating to.
