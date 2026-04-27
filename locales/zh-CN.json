@@ -450,6 +450,8 @@
     "selectionBanner": "已选 {count} 条记忆 · {from} – {to}",
     "emptyState": "暂无记忆可展示。",
     "emptyStateBody": "创建者可能尚未添加任何内容。",
+    "noMemoriesTitle": "还没有记忆",
+    "noMemoriesBody": "先添加一些记忆到时间线，再回来创建分享链接。",
     "guestSuffix": "（访客）",
     "referralHeadline": "喜欢这些回忆吗？",
     "referralBody": "为你的家人或朋友创建一个属于你们的圈子。",

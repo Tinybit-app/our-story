@@ -603,6 +603,8 @@
     "selectionBanner": "{count} souvenir(s) sélectionné(s) · {from} – {to}",
     "emptyState": "Aucun souvenir à afficher ici.",
     "emptyStateBody": "Le propriétaire n'en a peut-être pas encore ajouté.",
+    "noMemoriesTitle": "Aucun souvenir pour le moment",
+    "noMemoriesBody": "Ajoutez des souvenirs à votre chronologie, puis revenez créer un lien.",
     "guestSuffix": "(visiteur)",
     "referralHeadline": "Ces souvenirs vous plaisent ?",
     "referralBody": "Créez votre propre cercle pour votre famille ou vos amis.",

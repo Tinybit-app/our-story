@@ -603,6 +603,8 @@
     "selectionBanner": "{count} selected memories · {from} – {to}",
     "emptyState": "No memories to show here.",
     "emptyStateBody": "The owner may not have added any yet.",
+    "noMemoriesTitle": "No memories yet",
+    "noMemoriesBody": "Add some memories to your timeline first, then come back to create a link.",
     "guestSuffix": "(viewer)",
     "referralHeadline": "Enjoying these memories?",
     "referralBody": "Create your own circle for your family or friends.",
