@@ -56,19 +56,25 @@
         <!-- Date range section -->
         <div v-if="selectedMode === 'date_range'" class="mb-5">
           <!-- Year quick-select chips -->
-          <div class="flex gap-2 flex-wrap mb-4">
-            <button
-              v-for="year in availableYears"
-              :key="year"
-              type="button"
-              @click="selectYear(year)"
-              class="h-7 px-3 rounded-full text-xs font-semibold transition-all border"
-              :class="isYearSelected(year)
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-secondary text-muted-foreground border-transparent hover:border-border hover:text-foreground'"
-            >
-              {{ year }}
-            </button>
+          <div class="flex gap-2 flex-wrap mb-4 min-h-[28px] items-center">
+            <div v-if="yearsLoading" class="flex items-center gap-2 text-xs text-muted-foreground">
+              <div class="w-3.5 h-3.5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+              {{ t('viewerLink.loading') }}
+            </div>
+            <template v-else>
+              <button
+                v-for="year in availableYears"
+                :key="year"
+                type="button"
+                @click="selectYear(year)"
+                class="h-7 px-3 rounded-full text-xs font-semibold transition-all border"
+                :class="isYearSelected(year)
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-secondary text-muted-foreground border-transparent hover:border-border hover:text-foreground'"
+              >
+                {{ year }}
+              </button>
+            </template>
           </div>
 
           <!-- Custom date inputs -->
@@ -222,6 +228,7 @@ const createError = ref<string | null>(null)
 const memoriesLoading = ref(false)
 const allMemories = ref<MemoryItem[]>([])
 const availableYears = ref<number[]>([])
+const yearsLoading = ref(false)
 const minDate = ref<string | null>(null)
 const maxDate = ref<string | null>(null)
 
@@ -248,6 +255,7 @@ const isValid = computed(() => {
 
 async function loadYears() {
   if (availableYears.value.length > 0) return
+  yearsLoading.value = true
   try {
     const data = await $fetch<{ years: number[]; minDate: string | null; maxDate: string | null }>('/api/timeline/years', {
       query: { circleId: props.circleId },
@@ -257,6 +265,8 @@ async function loadYears() {
     maxDate.value = data.maxDate
   } catch {
     availableYears.value = []
+  } finally {
+    yearsLoading.value = false
   }
 }
 
@@ -288,6 +298,7 @@ watch(() => props.open, async (val) => {
     createError.value = null
     allMemories.value = []
     availableYears.value = []
+    yearsLoading.value = false
     minDate.value = null
     maxDate.value = null
     return
