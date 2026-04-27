@@ -351,12 +351,17 @@ function observeMemory(el: Element | ComponentPublicInstance | null, index: numb
 }
 
 async function shareApp() {
-  referralDismissed.value = true
   const shareData = { title: 'Our Story', url: 'https://ourstory.tinybit.app' }
   if (navigator.share) {
-    await navigator.share(shareData).catch(() => {})
+    try {
+      await navigator.share(shareData)
+      referralDismissed.value = true // only dismiss on successful share
+    } catch {
+      // User cancelled the share sheet — keep CTA visible
+    }
   } else {
     await navigator.clipboard.writeText(shareData.url).catch(() => {})
+    referralDismissed.value = true // clipboard copy is always "successful"
   }
 }
 
