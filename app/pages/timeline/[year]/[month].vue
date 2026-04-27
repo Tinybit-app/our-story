@@ -35,7 +35,7 @@
         <p class="text-sm text-muted-foreground">{{ t('timeline.noMemoriesFor', { month: monthLabel }) }}</p>
       </div>
 
-      <!-- Polaroid grid (uncapped) -->
+      <!-- Polaroid grid -->
       <div v-else>
         <p class="text-xs text-muted-foreground mb-6">
           {{ t('timeline.memories', memories.length) }}
@@ -59,6 +59,12 @@
             />
           </template>
         </div>
+
+        <!-- Infinite scroll sentinel + load-more spinner -->
+        <div ref="loadMoreEl" class="h-8 mt-4" />
+        <div v-if="loadingMore" class="flex justify-center py-4">
+          <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
 
     </main>
@@ -77,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { useIntersectionObserver } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
 
@@ -109,6 +116,8 @@ const memories = ref<Memory[]>([])
 const children = ref<ChildProfile[]>([])
 const members = ref<CircleMember[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const nextCursor = ref<string | null>(null)
 
 // ── Modals ─────────────────────────────────────────────────
 const selectedIndex = ref<number | null>(null)
@@ -131,21 +140,42 @@ function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions
   if (i !== -1) memories.value[i] = { ...memories.value[i], memoryreaction: reactions } as Memory
 }
 
-onMounted(async () => {
+async function fetchPage(cursor?: string) {
   if (!circleId.value) return
-  loading.value = true
+  const isFirst = !cursor
+  if (isFirst) loading.value = true; else loadingMore.value = true
   try {
     const yearMonth = `${year}-${String(month).padStart(2, '0')}`
-    const data = await $fetch<{ memories: Memory[]; nextCursor: null; children: ChildProfile[]; members: CircleMember[] }>('/api/timeline', {
-      query: { circleId: circleId.value, yearMonth },
-    })
-    memories.value = data.memories
-    children.value = data.children ?? []
-    members.value = data.members ?? []
+    const query: Record<string, string> = { circleId: circleId.value, yearMonth }
+    if (cursor) query.cursor = cursor
+    const data = await $fetch<{ memories: Memory[]; nextCursor: string | null; children: ChildProfile[]; members: CircleMember[] }>(
+      '/api/timeline',
+      { query }
+    )
+    if (isFirst) {
+      memories.value = data.memories
+      children.value = data.children ?? []
+      members.value = data.members ?? []
+    } else {
+      memories.value = [...memories.value, ...data.memories]
+    }
+    nextCursor.value = data.nextCursor
   } catch (err) {
     console.error('[month-page] fetch error:', err)
   } finally {
-    loading.value = false
+    if (isFirst) loading.value = false; else loadingMore.value = false
+  }
+}
+
+// ── Infinite scroll ────────────────────────────────────────
+const loadMoreEl = ref<HTMLElement>()
+const { stop: stopLoadMore } = useIntersectionObserver(loadMoreEl, ([entry]) => {
+  if (entry?.isIntersecting && nextCursor.value && !loadingMore.value) {
+    fetchPage(nextCursor.value)
   }
 })
+
+onUnmounted(() => stopLoadMore())
+
+onMounted(() => fetchPage())
 </script>
