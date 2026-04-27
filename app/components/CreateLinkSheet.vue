@@ -54,7 +54,7 @@
       </div>
 
       <!-- Scrollable body -->
-      <div class="flex-1 overflow-y-auto pb-4">
+      <div class="scroll-styled flex-1 overflow-y-auto overscroll-contain pb-4">
 
         <!-- FULL mode -->
         <div v-if="selectedMode === 'full'" class="px-5 py-4">
@@ -427,6 +427,12 @@ async function loadYearMemories(year: number) {
 async function loadAllMemories() {
   await Promise.all(yearGroups.value.map(g => loadYearMemories(g.year)))
 }
+
+// --- Body scroll lock ---
+watch(() => props.open, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
+onUnmounted(() => { document.body.style.overflow = '' })
 
 // --- Watchers ---
 watch(() => props.open, async (val) => {
