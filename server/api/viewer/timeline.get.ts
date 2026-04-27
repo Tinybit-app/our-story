@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   // Verify the viewer_link row exists and nonce matches (revocation check)
   const { data: viewerLink } = await supabase
     .from("viewer_link")
-    .select("id, nonce, mode, memory_ids, date_from, date_to, label, expires_at")
+    .select("id, nonce, mode, memory_ids, label, expires_at")
     .eq("id", viewerLinkId)
     .maybeSingle()
 
