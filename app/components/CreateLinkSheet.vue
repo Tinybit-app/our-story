@@ -260,7 +260,19 @@ function toggleMemory(id: string) {
 }
 
 watch(() => props.open, async (val) => {
-  if (!val) return
+  if (!val) {
+    // Reset after close so the sheet is fresh next time (state persists
+    // through the closing animation so it doesn't flash blank mid-transition)
+    selectedMode.value = 'full'
+    dateFrom.value = ''
+    dateTo.value = ''
+    selectedMemoryIds.value = new Set()
+    label.value = ''
+    createError.value = null
+    allMemories.value = []
+    availableYears.value = []
+    return
+  }
   if (selectedMode.value === 'selection') await loadMemories()
   if (selectedMode.value === 'date_range') await loadYears()
 })
@@ -301,15 +313,6 @@ async function handleCreate() {
     })
     emit('created')
     emit('close')
-    // Reset state
-    selectedMode.value = 'full'
-    dateFrom.value = ''
-    dateTo.value = ''
-    selectedMemoryIds.value = new Set()
-    label.value = ''
-    createError.value = null
-    allMemories.value = []
-    availableYears.value = []
   } catch {
     createError.value = t('viewerLink.createErrorGeneric')
   } finally {
