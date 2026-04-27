@@ -45,36 +45,42 @@ export default defineEventHandler(async (event) => {
       const isExpired = new Date(link.expires_at).getTime() < Date.now()
       const memoryCount = link.mode === "selection" ? (link.memory_ids?.length ?? 0) : null
 
-      // Fetch preview thumbnails for selection links (first N memories)
-      let previewUrls: string[] = []
+      // Fetch previews for selection links (first N memories)
+      let previews: { type: "image" | "video" | "note"; url: string | null; note: string | null }[] = []
       if (link.mode === "selection" && link.memory_ids?.length) {
         const previewIds = link.memory_ids.slice(0, PREVIEW_LIMIT)
         const { data: memories } = await serviceSupabase
           .from("memory")
-          .select("id, memorymedia(storage_path, media_type)")
+          .select("id, note, memorymedia(storage_path, media_type)")
           .in("id", previewIds)
           .limit(PREVIEW_LIMIT)
 
         if (memories?.length) {
-          const urls = await Promise.all(
+          previews = await Promise.all(
             memories.map(async (m: any) => {
               const media = m.memorymedia?.[0]
-              if (!media?.storage_path) return null
-              // Use allSettled: try thumbnail transform first, fall back to full URL
+              if (!media?.storage_path) {
+                // Quick note (no media)
+                return { type: "note" as const, url: null, note: m.note ?? null }
+              }
+              const isVideo = media.media_type === "video"
               const [fullResult, thumbResult] = await Promise.allSettled([
                 serviceSupabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600),
-                media.media_type !== "video"
-                  ? serviceSupabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600, {
+                isVideo
+                  ? Promise.resolve({ data: null })
+                  : serviceSupabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600, {
                       transform: { width: 100, format: "webp" as "origin", quality: 60 },
-                    })
-                  : Promise.resolve({ data: null }),
+                    }),
               ])
               const fullUrl = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
               const thumbUrl = thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? null) : null
-              return thumbUrl ?? fullUrl
+              return {
+                type: isVideo ? "video" as const : "image" as const,
+                url: thumbUrl ?? fullUrl,
+                note: null,
+              }
             })
           )
-          previewUrls = urls.filter((u): u is string => u !== null)
         }
       }
 
@@ -86,7 +92,7 @@ export default defineEventHandler(async (event) => {
         isExpired,
         memoryCount,
         memoryIds: link.mode === "selection" ? link.memory_ids : null,
-        previewUrls,
+        previews,
         token,
         createdAt: link.created_at,
       }

@@ -81,20 +81,37 @@
               {{ linkSubline(link) }}
             </p>
 
-            <!-- Preview thumbnail strip -->
-            <div v-if="link.previewUrls.length > 0" class="flex gap-1 mb-3">
+            <!-- Preview strip -->
+            <div v-if="link.previews.length > 0" class="flex gap-1 mb-3">
               <div
-                v-for="(url, i) in link.previewUrls"
+                v-for="(preview, i) in link.previews"
                 :key="i"
-                class="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0"
+                class="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0 relative"
               >
-                <img :src="url" alt="" class="w-full h-full object-cover" loading="lazy" />
+                <!-- Image -->
+                <img v-if="preview.type === 'image' && preview.url" :src="preview.url" alt="" class="w-full h-full object-cover" loading="lazy" />
+                <!-- Video -->
+                <template v-else-if="preview.type === 'video'">
+                  <div class="w-full h-full bg-muted flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                </template>
+                <!-- Quick note -->
+                <template v-else-if="preview.type === 'note'">
+                  <div class="w-full h-full bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </div>
+                </template>
               </div>
               <div
-                v-if="link.memoryCount && link.memoryCount > link.previewUrls.length"
+                v-if="link.memoryCount && link.memoryCount > link.previews.length"
                 class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0"
               >
-                <span class="text-[10px] font-semibold text-muted-foreground">+{{ link.memoryCount - link.previewUrls.length }}</span>
+                <span class="text-[10px] font-semibold text-muted-foreground">+{{ link.memoryCount - link.previews.length }}</span>
               </div>
             </div>
 
@@ -205,7 +222,7 @@ interface ViewerLink {
   isExpired: boolean
   memoryCount: number | null
   memoryIds: string[] | null
-  previewUrls: string[]
+  previews: { type: 'image' | 'video' | 'note'; url: string | null; note: string | null }[]
   token: string
   createdAt: string
 }
