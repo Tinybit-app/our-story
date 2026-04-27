@@ -252,7 +252,7 @@
 <script setup lang="ts">
 definePageMeta({ auth: false })
 
-const { t, setLocale } = useI18n()
+const { t, locale, setLocale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const token = computed(() => route.query.token as string | undefined)
@@ -317,7 +317,7 @@ const modeBanner = computed(() => {
   if (!timeline.value) return null
   const { mode, selectionDateRange, memories } = timeline.value
   if (mode === 'selection' && selectionDateRange) {
-    const fmt = (d: string) => new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
+    const fmt = (d: string) => new Intl.DateTimeFormat(locale.value, { month: 'short', year: 'numeric' }).format(new Date(d))
     return t('viewerLink.selectionBanner', {
       count: memories.length,
       from: fmt(selectionDateRange.from),
@@ -411,7 +411,7 @@ function dismissSplash() {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  return new Date(dateStr).toLocaleDateString(locale.value, {
     year: "numeric",
     month: "long",
     day: "numeric",
