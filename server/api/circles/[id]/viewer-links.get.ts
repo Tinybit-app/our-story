@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     .from("circlemember")
     .select("role")
     .eq("circle_id", circleId)
-    .eq("user_id", user.id)
+    .eq("user_id", user.sub)
     .maybeSingle()
 
   if (membership?.role !== "owner") {
