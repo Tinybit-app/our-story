@@ -255,9 +255,9 @@
         ref="timelinePolaroidRef"
         :month-groups="monthGroups"
         :loading="loading"
-        :has-next-page="!!nextCursor"
+        :has-next-page="!!prevYear"
         :circle-type="circle?.circle_type ?? null"
-        @load-more="fetchTimeline(nextCursor ?? undefined)"
+        @load-more="fetchTimeline(prevYear ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
         @reaction-update="onReactionUpdate"
@@ -678,29 +678,28 @@ interface ChildProfile { id: string; name: string; date_of_birth: string }
 interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
 
 const memoriesFlat = ref<Memory[]>([]);
-const nextCursor = ref<string | null>(null);
+const prevYear = ref<number | null>(null);
 const children = ref<ChildProfile[]>([]);
 const members = ref<CircleMember[]>([]);
 const loading = ref(false);
 
-
-async function fetchTimeline(cursor?: string) {
+async function fetchTimeline(year?: number) {
   if (loading.value || !circleId.value) return;
   loading.value = true;
   try {
     const data = await $fetch<{
       memories: Memory[];
-      nextCursor: string | null;
+      prevYear: number | null;
       children: ChildProfile[];
       members: CircleMember[];
     }>("/api/timeline", {
-      query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
+      query: { circleId: circleId.value, ...(year ? { year } : {}) },
     });
-    memoriesFlat.value = cursor
+    memoriesFlat.value = year
       ? [...memoriesFlat.value, ...data.memories]
       : data.memories;
-    nextCursor.value = data.nextCursor;
-    if (!cursor) {
+    prevYear.value = data.prevYear;
+    if (!year) {
       children.value = data.children ?? [];
       members.value = data.members ?? [];
     }
@@ -775,7 +774,7 @@ function roleLabel(role: string): string {
 function switchCircle(id: string) {
   circleSwitcherOpen.value = false;
   memoriesFlat.value = [];
-  nextCursor.value = null;
+  prevYear.value = null;
   // Only put ?circle= in the URL when it's not the default first circle,
   // so single-circle users see a clean /timeline URL.
   const isDefault = allCircles.value[0]?.id === id;
@@ -791,7 +790,7 @@ function startNewCircle() {
 watch(circleId, (newId, oldId) => {
   if (newId && newId !== oldId) {
     memoriesFlat.value = [];
-    nextCursor.value = null;
+    prevYear.value = null;
     currentYear.value = null;
     fetchTimeline();
   }
