@@ -76,10 +76,27 @@
               </span>
             </div>
 
-            <!-- Date range / count subline -->
+            <!-- Count subline -->
             <p v-if="linkSubline(link)" class="text-xs text-muted-foreground mb-2">
               {{ linkSubline(link) }}
             </p>
+
+            <!-- Preview thumbnail strip -->
+            <div v-if="link.previewUrls.length > 0" class="flex gap-1 mb-3">
+              <div
+                v-for="(url, i) in link.previewUrls"
+                :key="i"
+                class="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0"
+              >
+                <img :src="url" alt="" class="w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div
+                v-if="link.memoryCount && link.memoryCount > link.previewUrls.length"
+                class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0"
+              >
+                <span class="text-[10px] font-semibold text-muted-foreground">+{{ link.memoryCount - link.previewUrls.length }}</span>
+              </div>
+            </div>
 
             <!-- Expiry row -->
             <div class="mb-3">
@@ -139,6 +156,18 @@
                 {{ t('viewerLink.renew') }}
               </button>
 
+              <!-- Edit (selection links only) -->
+              <button
+                v-if="link.mode === 'selection' && !link.isExpired"
+                @click="$emit('edit', link)"
+                :aria-label="t('viewerLink.editLabel')"
+                class="h-8 w-8 flex items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+
               <!-- Revoke trigger -->
               <button
                 @click="revokingId = link.id"
@@ -175,6 +204,8 @@ interface ViewerLink {
   expiresAt: string
   isExpired: boolean
   memoryCount: number | null
+  memoryIds: string[] | null
+  previewUrls: string[]
   token: string
   createdAt: string
 }
@@ -188,6 +219,7 @@ const emit = defineEmits<{
   close: []
   create: []
   renew: [link: ViewerLink]
+  edit: [link: ViewerLink]
 }>()
 
 const links = ref<ViewerLink[]>([])

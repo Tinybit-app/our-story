@@ -20,7 +20,7 @@
       <!-- Header -->
       <div class="flex items-center justify-between px-5 py-3 flex-shrink-0">
         <h2 class="text-base font-bold text-foreground">
-          {{ t("viewerLink.createLink") }}
+          {{ isEditMode ? t("viewerLink.editLink") : t("viewerLink.createLink") }}
         </h2>
         <button
           type="button"
@@ -40,8 +40,9 @@
         </button>
       </div>
 
-      <!-- Mode tabs: Full | Custom -->
+      <!-- Mode tabs: Full | Custom (hidden in edit mode — always custom) -->
       <div
+        v-if="!isEditMode"
         class="flex gap-1 mx-5 mb-3 p-1 bg-secondary rounded-[12px] flex-shrink-0"
       >
         <button
@@ -502,7 +503,7 @@
           :disabled="!isValid || creating"
           class="w-full bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {{ creating ? t("viewerLink.loading") : t("viewerLink.createLink") }}
+          {{ creating ? t("viewerLink.loading") : isEditMode ? t("viewerLink.saveChanges") : t("viewerLink.createLink") }}
         </button>
       </div>
     </div>
@@ -534,8 +535,20 @@ interface MonthGroup {
   memories: MemoryItem[];
 }
 
-const props = defineProps<{ open: boolean; circleId: string }>();
+export interface EditLinkData {
+  id: string;
+  memoryIds: string[];
+  label: string;
+}
+
+const props = defineProps<{
+  open: boolean;
+  circleId: string;
+  editLink?: EditLinkData | null;
+}>();
 const emit = defineEmits<{ close: []; created: [] }>();
+
+const isEditMode = computed(() => !!props.editLink);
 
 // --- State ---
 const selectedMode = ref<"full" | "custom">("full");
@@ -854,6 +867,12 @@ watch(
       collapsedMonths.value = new Set();
       return;
     }
+    // Edit mode: pre-populate and go straight to custom picker
+    if (props.editLink) {
+      selectedMode.value = "custom";
+      selectedMemoryIds.value = new Set(props.editLink.memoryIds);
+      label.value = props.editLink.label;
+    }
     await loadYears();
     if (selectedMode.value === "custom") await loadAllMemories();
   },
@@ -871,17 +890,32 @@ async function handleCreate() {
   creating.value = true;
   createError.value = null;
   try {
-    await $fetch(`/api/circles/${props.circleId}/viewer-links`, {
-      method: "POST",
-      body: {
-        mode: selectedMode.value === "full" ? "full" : "selection",
-        label: label.value || undefined,
-        memoryIds:
-          selectedMode.value === "custom"
-            ? [...selectedMemoryIds.value]
-            : undefined,
-      },
-    });
+    if (isEditMode.value && props.editLink) {
+      // PATCH existing link
+      await $fetch(
+        `/api/circles/${props.circleId}/viewer-links/${props.editLink.id}`,
+        {
+          method: "PATCH",
+          body: {
+            memoryIds: [...selectedMemoryIds.value],
+            label: label.value || undefined,
+          },
+        },
+      );
+    } else {
+      // POST new link
+      await $fetch(`/api/circles/${props.circleId}/viewer-links`, {
+        method: "POST",
+        body: {
+          mode: selectedMode.value === "full" ? "full" : "selection",
+          label: label.value || undefined,
+          memoryIds:
+            selectedMode.value === "custom"
+              ? [...selectedMemoryIds.value]
+              : undefined,
+        },
+      });
+    }
     emit("created");
     emit("close");
   } catch {

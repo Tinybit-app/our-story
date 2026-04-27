@@ -1,4 +1,6 @@
-import { serverSupabaseUser, serverSupabaseClient } from "#supabase/server"
+import { serverSupabaseUser, serverSupabaseClient, serverSupabaseServiceRole } from "#supabase/server"
+
+const PREVIEW_LIMIT = 5
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -33,20 +35,57 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: "Failed to load viewer links." })
   }
 
-  return (links ?? []).map((link) => {
-    const token = signViewerToken(circleId, secret, undefined, link.id, link.nonce)
-    const isExpired = new Date(link.expires_at).getTime() < Date.now()
-    const memoryCount = link.mode === "selection" ? (link.memory_ids?.length ?? 0) : null
+  // Service role client for signed URL generation (needs storage access)
+  const serviceSupabase = serverSupabaseServiceRole(event)
 
-    return {
-      id: link.id,
-      mode: link.mode as "full" | "selection",
-      label: link.label,
-      expiresAt: link.expires_at,
-      isExpired,
-      memoryCount,
-      token,
-      createdAt: link.created_at,
-    }
-  })
+  // Build preview thumbnails for selection links
+  const results = await Promise.all(
+    (links ?? []).map(async (link) => {
+      const token = signViewerToken(circleId, secret, undefined, link.id, link.nonce)
+      const isExpired = new Date(link.expires_at).getTime() < Date.now()
+      const memoryCount = link.mode === "selection" ? (link.memory_ids?.length ?? 0) : null
+
+      // Fetch preview thumbnails for selection links (first N memories)
+      let previewUrls: string[] = []
+      if (link.mode === "selection" && link.memory_ids?.length) {
+        const previewIds = link.memory_ids.slice(0, PREVIEW_LIMIT)
+        const { data: memories } = await serviceSupabase
+          .from("memory")
+          .select("id, memorymedia(storage_path, media_type)")
+          .in("id", previewIds)
+          .limit(PREVIEW_LIMIT)
+
+        if (memories?.length) {
+          const urls = await Promise.all(
+            memories.map(async (m: any) => {
+              const media = m.memorymedia?.[0]
+              if (!media?.storage_path) return null
+              const { data } = await serviceSupabase.storage
+                .from("memories-private")
+                .createSignedUrl(media.storage_path, 3600, media.media_type !== "video" ? {
+                  transform: { width: 100, format: "webp" as "origin", quality: 60 },
+                } : undefined)
+              return data?.signedUrl ?? null
+            })
+          )
+          previewUrls = urls.filter((u): u is string => u !== null)
+        }
+      }
+
+      return {
+        id: link.id,
+        mode: link.mode as "full" | "selection",
+        label: link.label,
+        expiresAt: link.expires_at,
+        isExpired,
+        memoryCount,
+        memoryIds: link.mode === "selection" ? link.memory_ids : null,
+        previewUrls,
+        token,
+        createdAt: link.created_at,
+      }
+    })
+  )
+
+  return results
 })

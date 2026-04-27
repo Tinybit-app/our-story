@@ -531,13 +531,15 @@
       :open="shareSheetOpen"
       :circle-id="circleId ?? ''"
       @close="shareSheetOpen = false"
-      @create="createSheetOpen = true"
+      @create="createSheetOpen = true; editingLink = null"
       @renew="renewViewerLink"
+      @edit="(link) => { editingLink = { id: link.id, memoryIds: link.memoryIds ?? [], label: link.label }; createSheetOpen = true }"
     />
     <CreateLinkSheet
       :open="createSheetOpen"
       :circle-id="circleId ?? ''"
-      @close="createSheetOpen = false"
+      :edit-link="editingLink"
+      @close="createSheetOpen = false; editingLink = null"
       @created="onLinkCreated"
     />
   </div>
@@ -872,6 +874,7 @@ async function sendInvite() {
 // ── Viewer links (owner-only) ──────────────────────────────────────────────────
 const shareSheetOpen = ref(false)
 const createSheetOpen = ref(false)
+const editingLink = ref<{ id: string; memoryIds: string[]; label: string } | null>(null)
 const shareLinksSheetRef = ref<{ refresh: () => void } | null>(null)
 
 function openShareSheet() {
