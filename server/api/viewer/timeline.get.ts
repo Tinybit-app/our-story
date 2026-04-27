@@ -69,6 +69,8 @@ export default defineEventHandler(async (event) => {
     .eq("circle_id", circleId)
     .eq("visibility", "circle")
     .order("memory_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(50)
 
   if (mode === "selection" && viewerLink.memory_ids?.length) {
