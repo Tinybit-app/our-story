@@ -60,12 +60,18 @@ export default defineEventHandler(async (event) => {
             memories.map(async (m: any) => {
               const media = m.memorymedia?.[0]
               if (!media?.storage_path) return null
-              const { data } = await serviceSupabase.storage
-                .from("memories-private")
-                .createSignedUrl(media.storage_path, 3600, media.media_type !== "video" ? {
-                  transform: { width: 100, format: "webp" as "origin", quality: 60 },
-                } : undefined)
-              return data?.signedUrl ?? null
+              // Use allSettled: try thumbnail transform first, fall back to full URL
+              const [fullResult, thumbResult] = await Promise.allSettled([
+                serviceSupabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600),
+                media.media_type !== "video"
+                  ? serviceSupabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600, {
+                      transform: { width: 100, format: "webp" as "origin", quality: 60 },
+                    })
+                  : Promise.resolve({ data: null }),
+              ])
+              const fullUrl = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
+              const thumbUrl = thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? null) : null
+              return thumbUrl ?? fullUrl
             })
           )
           previewUrls = urls.filter((u): u is string => u !== null)
