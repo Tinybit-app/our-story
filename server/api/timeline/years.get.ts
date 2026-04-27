@@ -25,22 +25,42 @@ export default defineEventHandler(async (event) => {
 
   if (!membership) throw createError({ statusCode: 403 })
 
-  // Single indexed scan — memory_date is ordered descending so years come out newest-first
-  const { data, error } = await supabase
+  // Walk backwards through distinct years using LIMIT 1 index scans —
+  // same pattern as getLatestYear/getPrevYear in timeline.get.ts.
+  // Each iteration is a single index seek, so cost is O(distinct years)
+  // rather than O(total memories).
+  const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
+
+  const firstRow = await supabase
     .from("memory")
     .select("memory_date")
     .eq("circle_id", circleId)
-    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
+    .or(visibilityFilter)
     .order("memory_date", { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (error) {
-    console.error("[timeline/years] query failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to load years." })
+  if (!firstRow.data) return { years: [] }
+
+  const years: number[] = []
+  let currentYear = new Date(firstRow.data.memory_date).getUTCFullYear()
+
+  while (currentYear >= 2000) {
+    years.push(currentYear)
+    const before = new Date(Date.UTC(currentYear, 0, 1)).toISOString()
+    const prev = await supabase
+      .from("memory")
+      .select("memory_date")
+      .eq("circle_id", circleId)
+      .or(visibilityFilter)
+      .lt("memory_date", before)
+      .order("memory_date", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (!prev.data) break
+    currentYear = new Date(prev.data.memory_date).getUTCFullYear()
   }
-
-  const years = [...new Set(
-    (data ?? []).map((m) => new Date(m.memory_date).getUTCFullYear())
-  )]
 
   return { years }
 })
