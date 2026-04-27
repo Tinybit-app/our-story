@@ -257,7 +257,7 @@
         :loading="loading"
         :has-next-page="!!prevYear"
         :circle-type="circle?.circle_type ?? null"
-        @load-more="fetchTimeline(prevYear!)"
+        @load-more="fetchTimeline(prevYear ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"
         @reaction-update="onReactionUpdate"
