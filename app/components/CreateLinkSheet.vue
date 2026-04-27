@@ -85,7 +85,7 @@
                 v-model="dateFrom"
                 type="date"
                 :min="dateMin"
-                :max="dateMax"
+                :max="dateTo || dateMax"
                 class="w-full h-9 px-3 rounded-[10px] bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -94,7 +94,7 @@
               <input
                 v-model="dateTo"
                 type="date"
-                :min="dateMin"
+                :min="dateFrom || dateMin"
                 :max="dateMax"
                 class="w-full h-9 px-3 rounded-[10px] bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
@@ -254,7 +254,8 @@ const modes = computed(() => [
 ])
 
 const isValid = computed(() => {
-  if (selectedMode.value === 'date_range') return !!(dateFrom.value && dateTo.value)
+  if (selectedMode.value === 'date_range')
+    return !!(dateFrom.value && dateTo.value && dateFrom.value <= dateTo.value)
   if (selectedMode.value === 'selection') return selectedMemoryIds.value.size > 0
   return true
 })
@@ -276,7 +277,9 @@ async function loadYears() {
 
 function selectYear(year: number) {
   dateFrom.value = `${year}-01-01`
-  dateTo.value = `${year}-12-31`
+  // Cap to dateMax so selecting the current year never sets a future end date
+  const yearEnd = `${year}-12-31`
+  dateTo.value = yearEnd > dateMax.value ? dateMax.value : yearEnd
 }
 
 function isYearSelected(year: number): boolean {
