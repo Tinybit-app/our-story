@@ -592,6 +592,7 @@
     "memoriesInRange": "{count} dans la plage",
     "memoriesCount": "{count} souvenirs",
     "truncatedWarning": "Cette année contient plus de {count} souvenirs. Seuls les {count} premiers sont affichés — certains peuvent manquer dans la sélection.",
+    "loadAll": "Charger tous les souvenirs",
     "tapToSelect": "Appuyer pour sélectionner",
     "fullModeDescription": "Partagez toute votre chronologie. Tous les souvenirs actuels et futurs seront visibles par quiconque possède ce lien.",
     "selectedCount": "{count} sélectionné(s)",

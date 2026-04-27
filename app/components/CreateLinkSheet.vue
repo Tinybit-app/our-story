@@ -397,7 +397,7 @@
                   </div>
                 </div>
 
-                <!-- Truncation warning -->
+                <!-- Truncation warning with load-all button -->
                 <div
                   v-if="group.loaded && group.truncated"
                   class="mx-5 mt-3 mb-2 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40"
@@ -405,9 +405,19 @@
                   <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  <p class="text-[11px] leading-snug text-amber-800 dark:text-amber-200">
-                    {{ t('viewerLink.truncatedWarning', { count: group.memories.length }) }}
-                  </p>
+                  <div class="flex-1">
+                    <p class="text-[11px] leading-snug text-amber-800 dark:text-amber-200">
+                      {{ t('viewerLink.truncatedWarning', { count: group.memories.length }) }}
+                    </p>
+                    <button
+                      type="button"
+                      :disabled="group.loading"
+                      @click="loadYearComplete(group.year)"
+                      class="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100 transition-colors disabled:opacity-50"
+                    >
+                      {{ group.loading ? t('viewerLink.loading') : t('viewerLink.loadAll') }}
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Year loading skeleton -->
@@ -720,6 +730,51 @@ async function loadYearMemories(year: number) {
 
 async function loadAllMemories() {
   await Promise.all(yearGroups.value.map((g) => loadYearMemories(g.year)));
+}
+
+// Load a single month completely using cursor-based pagination (no limit)
+async function loadMonthComplete(
+  year: number,
+  month: number,
+): Promise<MemoryItem[]> {
+  const ym = `${year}-${String(month).padStart(2, "0")}`;
+  const all: MemoryItem[] = [];
+  let cursor: string | null = null;
+  let hasMore = true;
+  while (hasMore) {
+    const query: Record<string, string> = {
+      circleId: props.circleId,
+      yearMonth: ym,
+    };
+    if (cursor) query.cursor = cursor;
+    const res: { memories: any[]; nextCursor: string | null } =
+      await $fetch("/api/timeline", { query });
+    all.push(...(res.memories ?? []).map(mapMemory));
+    cursor = res.nextCursor ?? null;
+    hasMore = cursor !== null;
+  }
+  return all;
+}
+
+// Re-fetch a truncated year month-by-month to get ALL memories
+async function loadYearComplete(year: number) {
+  const group = yearGroups.value.find((g) => g.year === year);
+  if (!group) return;
+  group.loading = true;
+  try {
+    // Load all 12 months in parallel; empty months return [] immediately
+    const results = await Promise.all(
+      Array.from({ length: 12 }, (_, i) => loadMonthComplete(year, i + 1)),
+    );
+    group.memories = results.flat();
+    group.truncated = false;
+    group.loaded = true;
+    autoCollapseMonths(group);
+  } catch {
+    // Keep existing data on failure
+  } finally {
+    group.loading = false;
+  }
 }
 
 // --- Body scroll lock ---
