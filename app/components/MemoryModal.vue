@@ -153,8 +153,10 @@
             >
               <span style="font-size:10px;flex-shrink:0;line-height:1">👶</span>
               <span>{{ child.name }}</span>
-              <span style="opacity:0.45">·</span>
-              <span style="opacity:0.85">{{ child.age }}</span>
+              <template v-if="child.age">
+                <span style="opacity:0.45">·</span>
+                <span style="opacity:0.85">{{ child.age }}</span>
+              </template>
             </span>
           </div>
           <div v-if="memory.memory_members?.length" class="flex items-center gap-2 flex-wrap mt-2">
@@ -265,8 +267,10 @@
             >
               <span style="font-size:10px;flex-shrink:0;line-height:1">👶</span>
               <span>{{ child.name }}</span>
-              <span style="opacity:0.45">·</span>
-              <span style="opacity:0.85">{{ child.age }}</span>
+              <template v-if="child.age">
+                <span style="opacity:0.45">·</span>
+                <span style="opacity:0.85">{{ child.age }}</span>
+              </template>
             </span>
           </div>
           <div class="mb-3" />
@@ -504,7 +508,6 @@ const formattedDate = computed(() =>
 const childAges = computed(() =>
   (props.memory.memory_children ?? [])
     .map(mc => ({ name: mc.childprofile.name, age: computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date) }))
-    .filter(c => c.age !== null) as Array<{ name: string; age: string }>
 )
 
 const isFormerMember = computed(() => props.memory.owner_user_id === null)

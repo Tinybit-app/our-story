@@ -260,8 +260,10 @@
         >
           <span style="font-size:8px;flex-shrink:0;line-height:1">👶</span>
           <span>{{ child.name }}</span>
-          <span style="opacity:0.5">·</span>
-          <span style="opacity:0.85">{{ child.age }}</span>
+          <template v-if="child.age">
+            <span style="opacity:0.5">·</span>
+            <span style="opacity:0.85">{{ child.age }}</span>
+          </template>
         </span>
       </div>
 
@@ -355,7 +357,6 @@ const formattedDate = computed(() => {
 const childAges = computed(() =>
   (props.memory.memory_children ?? [])
     .map((mc) => ({ name: mc.childprofile.name, age: computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date) }))
-    .filter((c) => c.age !== null) as Array<{ name: string; age: string }>
 );
 
 const MAX_AVATARS = 4;

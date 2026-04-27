@@ -4,6 +4,7 @@
  *
  * Rules:
  *   - null/before birth           → null
+ *   - 0 days (birth day)          → "newborn"
  *   - 1–13 days                   → "N day(s) old"
  *   - 14 days – <1 month          → "N weeks old"
  *   - 1 month – <2 years          → "N months[, W weeks]"
@@ -23,7 +24,8 @@ export function computeBabyAge(
   mem.setUTCHours(0, 0, 0, 0)
 
   const totalDays = Math.floor((mem.getTime() - dob.getTime()) / 86_400_000)
-  if (totalDays <= 0) return null
+  if (totalDays < 0) return null
+  if (totalDays === 0) return "newborn"
 
   // ── Days: 1–13 ──────────────────────────────────────────────────────────────
   if (totalDays < 14) {

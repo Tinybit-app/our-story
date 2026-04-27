@@ -21,8 +21,8 @@ describe("computeBabyAge", () => {
     expect(computeBabyAge("2024-06-15", "2024-06-01")).toBeNull()
   })
 
-  it("returns null when memory_date equals date_of_birth (birth day)", () => {
-    expect(computeBabyAge("2024-06-15", "2024-06-15")).toBeNull()
+  it("returns 'newborn' when memory_date equals date_of_birth (birth day)", () => {
+    expect(computeBabyAge("2024-06-15", "2024-06-15")).toBe("newborn")
   })
 
   it("returns null when dateOfBirth is null", () => {
