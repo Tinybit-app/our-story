@@ -81,8 +81,10 @@ async function pick(code: string) {
   open.value = false
   await setLocale(code as any)
   if (props.guest) {
-    // Guest viewers: persist locale in cookie (no account to PATCH)
-    const cookie = useCookie("i18n_locale", { maxAge: 365 * 24 * 60 * 60 })
+    // Guest viewers: persist explicit choice in a separate cookie.
+    // Can't use i18n_locale because @nuxtjs/i18n auto-sets it on every page load,
+    // making it impossible to distinguish "guest chose English" from "browser default".
+    const cookie = useCookie("viewer_locale", { maxAge: 365 * 24 * 60 * 60 })
     cookie.value = code
   } else {
     $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(() => {})

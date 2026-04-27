@@ -382,9 +382,12 @@ async function loadTimeline() {
     })
     timeline.value = data
 
-    // Guest's own choice (cookie) takes priority; fall back to owner's locale
-    const guestLocaleCookie = useCookie("i18n_locale")
-    const targetLocale = guestLocaleCookie.value || data.ownerLocale
+    // Guest's explicit choice (viewer_locale) takes priority; fall back to owner's locale.
+    // We use a separate cookie because i18n_locale is auto-set by @nuxtjs/i18n's
+    // detectBrowserLanguage and is never null — it can't distinguish "guest chose English"
+    // from "browser defaulted to English".
+    const guestExplicitLocale = useCookie("viewer_locale")
+    const targetLocale = guestExplicitLocale.value || data.ownerLocale
     if (targetLocale) {
       await setLocale(targetLocale as any)
     }
