@@ -118,7 +118,7 @@
             <div v-for="group in yearGroups" :key="group.year">
               <!-- Year header (sticky) -->
               <div
-                class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pt-3 pb-2 border-b border-border/20 cursor-pointer select-none"
+                class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pt-3 pb-2 border-b border-border/20 cursor-pointer select-none hover:bg-secondary/60 transition-colors"
                 @click="toggleYearCollapsed(group.year)"
               >
                 <div class="flex items-center gap-2.5">
@@ -191,7 +191,7 @@
                   >
                     <!-- Month header (clickable to collapse) -->
                     <div
-                      class="flex items-center justify-between mb-1.5 cursor-pointer select-none"
+                      class="flex items-center justify-between mb-1.5 px-1.5 -mx-1.5 py-1 rounded-lg cursor-pointer select-none hover:bg-secondary/60 transition-colors"
                       @click="toggleMonthCollapsed(group.year, mg.month)"
                     >
                       <div class="flex items-center gap-1.5">
