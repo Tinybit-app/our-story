@@ -187,6 +187,9 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     // Scroll to trigger the sentinel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
+    // Wait for the IntersectionObserver to have had a chance to fire (one animation frame)
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())))
+
     expect(callCount).toBe(1)
   })
 
