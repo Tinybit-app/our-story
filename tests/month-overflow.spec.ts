@@ -73,8 +73,10 @@ const QUICK_NOTE_MEMORY = {
   memory_date: '2024-06-15',
   visibility: 'circle',
   former_owner_name: null,
+  former_owner_user_id: null,
   memorymedia: [],
   memoryreaction: [],
+  memorycomment: [],
   memory_children: [],
   memory_members: [],
   user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
@@ -191,6 +193,87 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await page.getByRole('link', { name: /back/i }).click()
     await page.waitForURL(/\/timeline$/, { timeout: 5_000 })
     await expect(page).toHaveURL(/\/timeline$/)
+  })
+
+  // ── Load-more pagination ─────────────────────────────────────────────────────
+
+  test('scrolling to bottom loads the next page and appends memories', async ({ page }) => {
+    await mockMembership(page)
+    await mockCirclesList(page)
+
+    // Generate 24 stub memories for the first page
+    const page1Memories = Array.from({ length: 24 }, (_, i) => ({
+      id: `memory-${String(i).padStart(3, '0')}`,
+      owner_user_id: '00000000-dead-beef-0000-000000000001',
+      circle_id: CIRCLE_ID,
+      note: null,
+      milestone_label: null,
+      memory_date: `2024-06-${String(15 - Math.floor(i / 2)).padStart(2, '0')}`,
+      visibility: 'circle',
+      former_owner_name: null,
+      former_owner_user_id: null,
+      memorymedia: [],
+      memoryreaction: [],
+      memorycomment: [],
+      memory_children: [],
+      memory_members: [],
+      user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
+    }))
+
+    // 3 extra memories for the second page
+    const page2Memories = Array.from({ length: 3 }, (_, i) => ({
+      id: `memory-extra-${i}`,
+      owner_user_id: '00000000-dead-beef-0000-000000000001',
+      circle_id: CIRCLE_ID,
+      note: `Extra note ${i}`,
+      milestone_label: null,
+      memory_date: '2024-06-01',
+      visibility: 'circle',
+      former_owner_name: null,
+      former_owner_user_id: null,
+      memorymedia: [],
+      memoryreaction: [],
+      memorycomment: [],
+      memory_children: [],
+      memory_members: [],
+      user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
+    }))
+
+    let page2Fetched = false
+
+    await page.route('**/api/timeline**', (route) => {
+      const url = new URL(route.request().url())
+      const cursor = url.searchParams.get('cursor')
+      if (cursor === 'cursor-page-2') {
+        page2Fetched = true
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ memories: page2Memories, nextCursor: null, children: [], members: [] }),
+        })
+      }
+      // First page
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ memories: page1Memories, nextCursor: 'cursor-page-2', children: [], members: [] }),
+      })
+    })
+
+    await page.goto('/timeline/2024/06')
+
+    // Wait for first page to render — count label should show 24
+    await expect(page.getByText(/24 memories/i)).toBeVisible({ timeout: 10_000 })
+
+    // Scroll the IntersectionObserver sentinel into view
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+
+    // Wait for the second API call to fire and memories to be appended
+    await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, { timeout: 10_000 })
+
+    // Verify second-page memories were appended (second-page note visible)
+    expect(page2Fetched).toBe(true)
+    await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
   })
 
 })
