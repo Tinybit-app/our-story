@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(51);
+SELECT plan(53);
 
 -- ============================================================
 -- FIXTURES
@@ -811,6 +811,31 @@ SELECT is(
    WHERE circle_id = '10000000-0000-0000-0000-000000000002'),
   0,
   'owner of circle B sees 0 viewer_links (none created for circle B)'
+);
+
+-- ============================================================
+-- TEST 52: admin cannot SELECT viewer_links
+-- user_b was promoted to admin in TEST 12 — admin is NOT owner,
+-- so the owner-only SELECT policy must block them.
+-- ============================================================
+SELECT set_auth('00000000-0000-0000-0000-000000000002');
+SET LOCAL ROLE authenticated;
+
+SELECT is(
+  (SELECT count(*)::int FROM public.viewer_link
+   WHERE circle_id = '10000000-0000-0000-0000-000000000001'),
+  0,
+  'admin cannot select viewer_links'
+);
+
+-- ============================================================
+-- TEST 53: admin cannot INSERT a viewer_link
+-- ============================================================
+SELECT throws_ok(
+  $$INSERT INTO public.viewer_link (circle_id, mode, label, expires_at)
+    VALUES ('10000000-0000-0000-0000-000000000001', 'full', 'Admin link', now() + interval '30 days')$$,
+  'new row violates row-level security policy for table "viewer_link"',
+  'admin cannot insert viewer_link'
 );
 
 SELECT * FROM finish();

@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!viewerLink || viewerLink.nonce !== nonce) {
-    throw createError({ statusCode: 401, message: "Invalid viewer token." })
+    throw createError({ statusCode: 401, message: "revoked" })
   }
 
   if (new Date(viewerLink.expires_at).getTime() < Date.now()) {
@@ -50,11 +50,15 @@ export default defineEventHandler(async (event) => {
 
   if (!circle) throw createError({ statusCode: 404, message: "Circle not found." })
 
-  const { data: owner } = await supabase
+  const { data: owner, error: ownerError } = await supabase
     .from("user")
     .select("first_name")
     .eq("id", circle.created_by)
     .maybeSingle()
+
+  if (ownerError) {
+    console.error("[viewer/timeline] owner lookup failed:", ownerError.message)
+  }
 
   // Build memory query based on mode
   const mode = viewerLink.mode as "full" | "date_range" | "selection"

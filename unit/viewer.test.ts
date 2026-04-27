@@ -20,18 +20,20 @@ import {
 
 const TEST_SECRET = "test-secret-at-least-32-chars-long!!"
 const TEST_CIRCLE_ID = "aaaaaaaa-1111-4111-8111-111111111111"
+const BASE_VIEWER_LINK_ID = "10000000-0000-0000-0000-000000000001"
+const BASE_NONCE = "ffffffff-ffff-4fff-8fff-ffffffffffff"
 
 // ── signViewerToken ───────────────────────────────────────────────────────────
 
 describe("signViewerToken", () => {
   it("returns a non-empty string token", () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, BASE_VIEWER_LINK_ID, BASE_NONCE)
     expect(typeof token).toBe("string")
     expect(token.length).toBeGreaterThan(0)
   })
 
   it("returns a dot-separated JWT (header.payload.signature)", () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, BASE_VIEWER_LINK_ID, BASE_NONCE)
     expect(token.split(".")).toHaveLength(3)
   })
 })
@@ -40,13 +42,13 @@ describe("signViewerToken", () => {
 
 describe("verifyViewerToken — valid token", () => {
   it("returns the circle_id embedded in the token", () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, BASE_VIEWER_LINK_ID, BASE_NONCE)
     const payload = verifyViewerToken(token, TEST_SECRET)
     expect(payload.circle_id).toBe(TEST_CIRCLE_ID)
   })
 
   it("returns role 'viewer'", () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, BASE_VIEWER_LINK_ID, BASE_NONCE)
     const payload = verifyViewerToken(token, TEST_SECRET)
     expect(payload.role).toBe("viewer")
   })
@@ -54,7 +56,7 @@ describe("verifyViewerToken — valid token", () => {
 
 describe("verifyViewerToken — wrong secret", () => {
   it("throws when the token was signed with a different secret", () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, BASE_VIEWER_LINK_ID, BASE_NONCE)
     expect(() => verifyViewerToken(token, "wrong-secret-that-is-long-enough!!")).toThrow()
   })
 })
@@ -62,14 +64,14 @@ describe("verifyViewerToken — wrong secret", () => {
 describe("verifyViewerToken — expired token", () => {
   it("throws when the token is past its expiry", () => {
     // Sign with exp already in the past
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, -1)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, -1, BASE_VIEWER_LINK_ID, BASE_NONCE)
     expect(() => verifyViewerToken(token, TEST_SECRET)).toThrow(/expired/i)
   })
 })
 
 describe("verifyViewerToken — tampered token", () => {
   it("throws when the payload has been modified", () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET)
+    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, BASE_VIEWER_LINK_ID, BASE_NONCE)
     const [header, , sig] = token.split(".")
     // Encode a different circle_id
     const fakePart = Buffer.from(

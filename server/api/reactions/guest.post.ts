@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!viewerLink || viewerLink.nonce !== nonce) {
-    throw createError({ statusCode: 401, message: "Invalid viewer token." })
+    throw createError({ statusCode: 401, message: "revoked" })
   }
   if (new Date(viewerLink.expires_at).getTime() < Date.now()) {
     throw createError({ statusCode: 401, message: "expired" })
