@@ -243,7 +243,16 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `buildPushPayload` with batch coalescing: counts uploads in last 30 min; singular/plural title; `renotify: false` for silent updates
   - Triggers: `POST /api/push/notify` (client calls after upload), inline in comments.post, reactions.post, quick-note.post
   - Notification settings currently owner-only (circle-settings page redirects non-owners); non-owners use the prompt banner — consider making circle-settings accessible to all members in 10.3
-  - **E2E test plan:** (1) enable push on User A, upload from User B → verify notification + deep link (2) batch upload 3 photos → verify coalescing (3) comment + reaction → verify notifications (4) mute circle → verify no notification (5) snooze banner → verify 7-day hide
+  - **E2E test plan** (manual, two browsers on localhost — Chrome allows Web Push on localhost without HTTPS):
+    1. Open `http://localhost:3001/timeline` in Chrome as User A → push prompt banner should appear → click "Enable" → allow browser permission → verify `pushsubscription` table has a row for User A
+    2. Open incognito/different browser as User B (same circle) → upload a photo or post a quick note
+    3. Verify User A receives push notification: *"{name} added a memory"* → click it → should open timeline with the memory
+    4. Batch coalescing: User B uploads 3 photos quickly → User A should see one notification that silently updates to *"{name} added 3 memories"* (buzzes once, updates silently)
+    5. Comment: User B comments on a memory → User A notification: *"{name} commented"* with comment text
+    6. Reaction: User B reacts with emoji → User A notification: *"{name} reacted {emoji}"*
+    7. Mute: User A (if owner) goes to `/circle-settings` → toggle "Mute this circle" on → User B uploads → User A gets no notification → toggle off → User B uploads → notification appears
+    8. Snooze banner: clear localStorage → refresh timeline → banner appears → click "Later" → refresh → banner stays hidden → clear `push_prompt_snoozed_at` from localStorage → banner reappears
+    9. Note: Web Push requires HTTPS in production; `localhost` is an exception for dev. If testing on a non-localhost domain, HTTPS is required
 - [ ] 10.2 On This Day daily cron — activates at 30+ memories and 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification — build for all users in Phase 1 (no tier check); add Plus gate in Phase 2 alongside Stripe billing
 - [ ] 10.3 Full notification preferences UI — quiet hours, email digest frequency, per-circle mute — dedicated settings page accessible to all members (not just owners), wired to existing NotificationPreference table
 
