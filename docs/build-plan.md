@@ -235,8 +235,14 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - Note: see design spec §Guest Contributor for full token flow
 
 ### Milestone 10: Push Notifications & On This Day
-- [ ] 10.1 Basic push (new upload, comment, reaction) — default push_enabled = true on join; prompt to configure on first notification received
+- [ ] 10.1 Basic push (new upload, comment, reaction) — Web Push via VAPID + service worker; inline dispatch from Nitro routes; upload notifications triggered by client post-upload; batch coalescing via notification tags (30-min rolling window, silent replacement); contextual permission prompt banner on timeline; push_enabled + circle_muted toggles in circle settings
+  - PWA foundation: manifest.json, service worker (push + notificationclick), app icons, client plugin for SW registration
+  - PushSubscription table with RLS; subscribe/unsubscribe API routes
+  - `usePushNotifications` composable (requestPermission, unsubscribe, isSupported, permissionState)
+  - `sendPushToCircle` utility checks NotificationPreference (push_enabled, circle_muted, quiet hours) before dispatch
+  - Notification settings currently owner-only (circle-settings page redirects non-owners); non-owners use the prompt banner — consider making circle-settings accessible to all members in 10.3
 - [ ] 10.2 On This Day daily cron — activates at 30+ memories and 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification — build for all users in Phase 1 (no tier check); add Plus gate in Phase 2 alongside Stripe billing
+- [ ] 10.3 Full notification preferences UI — quiet hours, email digest frequency, per-circle mute — dedicated settings page accessible to all members (not just owners), wired to existing NotificationPreference table
 
 ### Milestone 11: PWA & Mobile Polish
 - [ ] 11.1 PWA manifest + service worker
