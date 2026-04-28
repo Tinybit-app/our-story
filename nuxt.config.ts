@@ -13,6 +13,7 @@ export default defineNuxtConfig({
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap',
         },
+        { rel: 'manifest', href: '/manifest.json' },
       ],
     },
   },
@@ -94,10 +95,13 @@ export default defineNuxtConfig({
     jwtSecret: process.env.JWT_SECRET,
     sentryAuthToken: process.env.SENTRY_AUTH_TOKEN,
     appUrl: process.env.APP_URL,  // used in invite emails and view-only links
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
+    vapidSubject: process.env.VAPID_SUBJECT,
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
       sentryDsn: process.env.SENTRY_DSN,
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
     },
   },
 });
