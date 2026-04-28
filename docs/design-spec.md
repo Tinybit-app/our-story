@@ -1245,9 +1245,21 @@ Files are uploaded one at a time (not all in parallel) to:
 - Supabase Realtime (websockets) — listens to DB changes, pushes to connected clients instantly
 - Triggers: new upload, comment, reaction, milestone
 
-### Push notifications (mobile, backgrounded)
-- FCM (Android) + APNs (iOS) via Capacitor
-- Triggered by Supabase Edge Function on DB insert
+### Push notifications
+
+**Phase 1 (Web Push — implemented):**
+- Web Push via VAPID keys + service worker
+- Triggered inline from Nitro server routes (comments, reactions, quick notes) and via `POST /api/push/notify` (client calls after upload)
+- `PushSubscription` table stores browser push endpoints (endpoint, p256dh, auth keys)
+- `sendPushToCircle()` utility: fetches circle members, checks NotificationPreference (push_enabled, circle_muted, quiet hours), sends via `web-push` npm library
+- Batch coalescing via notification tags: same (circleId, userId, type) tag replaces previous notification silently; `renotify: false` after first in 30-min window
+- Permission prompt: contextual banner on timeline (snooze 7 days, permanent dismiss on browser deny)
+- Works on Android Chrome and iOS Safari 16.4+ without app install
+
+**Phase 2 (Native push via Capacitor — not yet implemented):**
+- FCM (Android) + APNs (iOS) via `@capacitor/push-notifications`
+- Migration path from Phase 1: add `platform` column to PushSubscription (`'web' | 'fcm' | 'apns'`); `sendPushToCircle` branches on platform — web subscriptions use `web-push`, FCM/APNs tokens use respective APIs; `usePushNotifications` composable detects `Capacitor.isNativePlatform()` and uses native plugin instead of PushManager; deep links handled by Capacitor `appUrlOpen` listener instead of service worker `notificationclick`
+- Web Push keeps working for browser users — both paths coexist
 
 ### Email notifications
 - **Provider:** Resend
