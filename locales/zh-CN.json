@@ -363,7 +363,13 @@
     "errorUpdateChild": "更新孩子信息失败，请重试。",
     "errorAddChild": "添加孩子失败，请重试。",
     "errorRemoveChild": "移除孩子失败，请重试。",
-    "errorSaveAnniversary": "保存周年纪念日失败，请重试。"
+    "errorSaveAnniversary": "保存周年纪念日失败，请重试。",
+    "notifications": "通知",
+    "notificationsDesc": "控制你如何收到此圈子活动的通知。",
+    "pushNotifications": "推送通知",
+    "pushNotificationsDesc": "当成员分享回忆、评论或回应时收到通知。",
+    "muteCircle": "静音此圈子",
+    "muteCircleDesc": "暂停来自此圈子的所有通知。"
   },
   "circleTypeConfig": {
     "parents": {

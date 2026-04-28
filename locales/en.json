@@ -516,7 +516,13 @@
     "errorUpdateChild": "Failed to update child. Please try again.",
     "errorAddChild": "Failed to add child. Please try again.",
     "errorRemoveChild": "Failed to remove child. Please try again.",
-    "errorSaveAnniversary": "Failed to save anniversary date. Please try again."
+    "errorSaveAnniversary": "Failed to save anniversary date. Please try again.",
+    "notifications": "Notifications",
+    "notificationsDesc": "Control how you're notified about activity in this circle.",
+    "pushNotifications": "Push notifications",
+    "pushNotificationsDesc": "Get notified when members share memories, comment, or react.",
+    "muteCircle": "Mute this circle",
+    "muteCircleDesc": "Pause all notifications from this circle."
   },
   "circleTypeConfig": {
     "parents": {

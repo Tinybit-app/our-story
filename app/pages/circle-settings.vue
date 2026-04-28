@@ -275,6 +275,48 @@
 
           <div v-if="isOwner" class="h-px bg-border" />
 
+          <!-- Notification preferences — all members -->
+          <div>
+            <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
+              {{ t('circleSettings.notifications') }}
+            </h2>
+            <p class="text-xs text-muted-foreground mb-4">
+              {{ t('circleSettings.notificationsDesc') }}
+            </p>
+
+            <div v-if="!loadingPrefs" class="space-y-4">
+              <!-- Push toggle -->
+              <label class="flex items-center justify-between gap-3 cursor-pointer">
+                <div>
+                  <p class="text-sm font-medium text-foreground">{{ t('circleSettings.pushNotifications') }}</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">{{ t('circleSettings.pushNotificationsDesc') }}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  :checked="pushEnabled"
+                  class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+                  @change="pushEnabled = !pushEnabled; saveNotificationPref('push_enabled', pushEnabled)"
+                />
+              </label>
+
+              <!-- Mute toggle -->
+              <label class="flex items-center justify-between gap-3 cursor-pointer">
+                <div>
+                  <p class="text-sm font-medium text-foreground">{{ t('circleSettings.muteCircle') }}</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">{{ t('circleSettings.muteCircleDesc') }}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  :checked="circleMuted"
+                  class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+                  @change="circleMuted = !circleMuted; saveNotificationPref('circle_muted', circleMuted)"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div class="h-px bg-border" />
+
           <!-- Danger zone (owner only) -->
           <div v-if="isOwner">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-4">
@@ -633,6 +675,48 @@ async function clearAnniversary() {
   anniversaryDateInput.value = ''
   await saveAnniversary()
 }
+
+// ── Notification preferences ───────────────────────────────
+const pushEnabled = ref(true)
+const circleMuted = ref(false)
+const loadingPrefs = ref(true)
+
+async function loadNotificationPrefs() {
+  if (!circle.value) return
+  const supabase = useSupabaseClient()
+  const user = useSupabaseUser()
+  const { data } = await supabase
+    .from('notificationpreference')
+    .select('push_enabled, circle_muted')
+    .eq('user_id', user.value!.id)
+    .eq('circle_id', circle.value.id)
+    .maybeSingle()
+
+  if (data) {
+    pushEnabled.value = data.push_enabled
+    circleMuted.value = data.circle_muted
+  }
+  loadingPrefs.value = false
+}
+
+async function saveNotificationPref(field: 'push_enabled' | 'circle_muted', value: boolean) {
+  if (!circle.value) return
+  const supabase = useSupabaseClient()
+  const user = useSupabaseUser()
+
+  await supabase
+    .from('notificationpreference')
+    .upsert(
+      {
+        user_id: user.value!.id,
+        circle_id: circle.value.id,
+        [field]: value,
+      },
+      { onConflict: 'user_id,circle_id' }
+    )
+}
+
+watch(() => circle.value?.id, () => { loadNotificationPrefs() }, { immediate: true })
 
 // ── Circle deletion ────────────────────────────────────────
 const deleteDialogOpen = ref(false)
