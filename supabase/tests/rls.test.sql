@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(53);
+SELECT plan(57);
 
 -- ============================================================
 -- FIXTURES
@@ -836,6 +836,51 @@ SELECT throws_ok(
     VALUES ('10000000-0000-0000-0000-000000000001', 'full', 'Admin link', now() + interval '30 days')$$,
   'new row violates row-level security policy for table "viewer_link"',
   'admin cannot insert viewer_link'
+);
+
+-- ============================================================
+-- PUSH SUBSCRIPTION RLS
+-- ============================================================
+
+-- Fixture: push subscription for user_a (insert as superuser to bypass RLS)
+RESET ROLE;
+INSERT INTO public.PushSubscription (id, user_id, endpoint, p256dh, auth)
+VALUES ('60000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
+        'https://push.example.com/user_a', 'p256dh_key_a', 'auth_key_a');
+
+-- user_a can read own push subscriptions
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001"}';
+SELECT results_eq(
+  $$ SELECT count(*)::int FROM PushSubscription WHERE user_id = '00000000-0000-0000-0000-000000000001' $$,
+  ARRAY[1],
+  'user_a can read own push subscriptions'
+);
+
+-- user_b cannot read user_a push subscriptions
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002"}';
+SELECT results_eq(
+  $$ SELECT count(*)::int FROM PushSubscription WHERE user_id = '00000000-0000-0000-0000-000000000001' $$,
+  ARRAY[0],
+  'user_b cannot read user_a push subscriptions'
+);
+
+-- user_b cannot delete user_a push subscriptions (DELETE silently no-ops — verify row survives)
+DELETE FROM public.PushSubscription WHERE user_id = '00000000-0000-0000-0000-000000000001';
+
+RESET ROLE;
+SELECT is(
+  (SELECT count(*)::int FROM public.PushSubscription WHERE id = '60000000-0000-0000-0000-000000000001'),
+  1,
+  'user_b cannot delete user_a push subscriptions — row still exists'
+);
+SET LOCAL ROLE authenticated;
+
+-- user_a can delete own push subscriptions
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001"}';
+SELECT lives_ok(
+  $$ DELETE FROM PushSubscription WHERE id = '60000000-0000-0000-0000-000000000001' $$,
+  'user_a can delete own push subscriptions'
 );
 
 SELECT * FROM finish();

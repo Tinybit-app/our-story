@@ -63,8 +63,51 @@ export type Database = {
           },
         ]
       }
+      childprofile: {
+        Row: {
+          avatar_media_id: string | null
+          circle_id: string
+          created_at: string
+          date_of_birth: string
+          id: string
+          name: string
+        }
+        Insert: {
+          avatar_media_id?: string | null
+          circle_id: string
+          created_at?: string
+          date_of_birth: string
+          id?: string
+          name: string
+        }
+        Update: {
+          avatar_media_id?: string | null
+          circle_id?: string
+          created_at?: string
+          date_of_birth?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "childprofile_avatar_media_id_fkey"
+            columns: ["avatar_media_id"]
+            isOneToOne: false
+            referencedRelation: "memorymedia"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "childprofile_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circle"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       circle: {
         Row: {
+          anniversary_date: string | null
           challenge_streak: number
           circle_type: string
           created_at: string
@@ -73,12 +116,23 @@ export type Database = {
           deletion_initiated_by: string | null
           e2ee_enabled: boolean
           e2ee_enabled_at: string | null
+          first_memory_at: string | null
+          first_month_email_sent: boolean
           grace_period_until: string | null
           id: string
+          last_challenge_completed_at: string | null
+          last_memory_at: string | null
+          memory_count: number
           name: string
+          quiet_nudge_count: number
+          quiet_nudge_last_sent_at: string | null
           subscription_status: string
+          timeline_style: string
+          trial_ends_at: string | null
+          trial_used: boolean
         }
         Insert: {
+          anniversary_date?: string | null
           challenge_streak?: number
           circle_type?: string
           created_at?: string
@@ -87,12 +141,23 @@ export type Database = {
           deletion_initiated_by?: string | null
           e2ee_enabled?: boolean
           e2ee_enabled_at?: string | null
+          first_memory_at?: string | null
+          first_month_email_sent?: boolean
           grace_period_until?: string | null
           id?: string
+          last_challenge_completed_at?: string | null
+          last_memory_at?: string | null
+          memory_count?: number
           name: string
+          quiet_nudge_count?: number
+          quiet_nudge_last_sent_at?: string | null
           subscription_status?: string
+          timeline_style?: string
+          trial_ends_at?: string | null
+          trial_used?: boolean
         }
         Update: {
+          anniversary_date?: string | null
           challenge_streak?: number
           circle_type?: string
           created_at?: string
@@ -101,15 +166,32 @@ export type Database = {
           deletion_initiated_by?: string | null
           e2ee_enabled?: boolean
           e2ee_enabled_at?: string | null
+          first_memory_at?: string | null
+          first_month_email_sent?: boolean
           grace_period_until?: string | null
           id?: string
+          last_challenge_completed_at?: string | null
+          last_memory_at?: string | null
+          memory_count?: number
           name?: string
+          quiet_nudge_count?: number
+          quiet_nudge_last_sent_at?: string | null
           subscription_status?: string
+          timeline_style?: string
+          trial_ends_at?: string | null
+          trial_used?: boolean
         }
         Relationships: [
           {
             foreignKeyName: "circle_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circle_deletion_initiated_by_fkey"
+            columns: ["deletion_initiated_by"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["id"]
@@ -205,6 +287,51 @@ export type Database = {
           },
         ]
       }
+      exportjob: {
+        Row: {
+          circle_id: string | null
+          created_at: string
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          circle_id?: string | null
+          created_at?: string
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          circle_id?: string | null
+          created_at?: string
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exportjob_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circle"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exportjob_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       featureflag: {
         Row: {
           enabled_globally: boolean
@@ -232,12 +359,11 @@ export type Database = {
       memory: {
         Row: {
           alt_text: string | null
+          circle_id: string
           contributions_open: boolean
           created_at: string
-          circle_id: string
           former_owner_name: string | null
           former_owner_user_id: string | null
-          group_id: string | null
           id: string
           is_collaborative: boolean
           memory_date: string
@@ -253,7 +379,6 @@ export type Database = {
           created_at?: string
           former_owner_name?: string | null
           former_owner_user_id?: string | null
-          group_id?: string | null
           id?: string
           is_collaborative?: boolean
           memory_date?: string
@@ -269,7 +394,6 @@ export type Database = {
           created_at?: string
           former_owner_name?: string | null
           former_owner_user_id?: string | null
-          group_id?: string | null
           id?: string
           is_collaborative?: boolean
           memory_date?: string
@@ -295,12 +419,73 @@ export type Database = {
           },
         ]
       }
+      memory_children: {
+        Row: {
+          child_id: string
+          memory_id: string
+        }
+        Insert: {
+          child_id: string
+          memory_id: string
+        }
+        Update: {
+          child_id?: string
+          memory_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_children_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "childprofile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_children_memory_id_fkey"
+            columns: ["memory_id"]
+            isOneToOne: false
+            referencedRelation: "memory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_members: {
+        Row: {
+          memory_id: string
+          user_id: string
+        }
+        Insert: {
+          memory_id: string
+          user_id: string
+        }
+        Update: {
+          memory_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_members_memory_id_fkey"
+            columns: ["memory_id"]
+            isOneToOne: false
+            referencedRelation: "memory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorycomment: {
         Row: {
           body: string
           created_at: string
           id: string
           memory_id: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -308,6 +493,7 @@ export type Database = {
           created_at?: string
           id?: string
           memory_id: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -315,6 +501,7 @@ export type Database = {
           created_at?: string
           id?: string
           memory_id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -395,31 +582,34 @@ export type Database = {
           created_at: string
           duration_seconds: number | null
           emoji: string | null
+          guest_name: string | null
           id: string
           media_path: string | null
           memory_id: string
           type: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           duration_seconds?: number | null
           emoji?: string | null
+          guest_name?: string | null
           id?: string
           media_path?: string | null
           memory_id: string
           type?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           duration_seconds?: number | null
           emoji?: string | null
+          guest_name?: string | null
           id?: string
           media_path?: string | null
           memory_id?: string
           type?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -434,6 +624,69 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletterrecipient: {
+        Row: {
+          added_by: string
+          circle_id: string
+          click_count: number
+          created_at: string
+          email: string
+          frequency: string
+          id: string
+          join_prompt_count: number
+          last_clicked_at: string | null
+          name: string | null
+          open_count: number
+          subscribed: boolean
+          unsubscribe_token: string
+        }
+        Insert: {
+          added_by: string
+          circle_id: string
+          click_count?: number
+          created_at?: string
+          email: string
+          frequency?: string
+          id?: string
+          join_prompt_count?: number
+          last_clicked_at?: string | null
+          name?: string | null
+          open_count?: number
+          subscribed?: boolean
+          unsubscribe_token?: string
+        }
+        Update: {
+          added_by?: string
+          circle_id?: string
+          click_count?: number
+          created_at?: string
+          email?: string
+          frequency?: string
+          id?: string
+          join_prompt_count?: number
+          last_clicked_at?: string | null
+          name?: string | null
+          open_count?: number
+          subscribed?: boolean
+          unsubscribe_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletterrecipient_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletterrecipient_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
         ]
@@ -486,90 +739,37 @@ export type Database = {
           },
         ]
       }
-      exportjob: {
+      pushsubscription: {
         Row: {
+          auth: string
           created_at: string
-          deleted_at: string | null
-          download_url: string | null
-          expires_at: string | null
+          endpoint: string
           id: string
-          status: string
+          p256dh: string
           user_id: string
         }
         Insert: {
+          auth: string
           created_at?: string
-          deleted_at?: string | null
-          download_url?: string | null
-          expires_at?: string | null
+          endpoint: string
           id?: string
-          status?: string
+          p256dh: string
           user_id: string
         }
         Update: {
+          auth?: string
           created_at?: string
-          deleted_at?: string | null
-          download_url?: string | null
-          expires_at?: string | null
+          endpoint?: string
           id?: string
-          status?: string
+          p256dh?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "exportjob_user_id_fkey"
+            foreignKeyName: "pushsubscription_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      viewer_link: {
-        Row: {
-          id: string
-          circle_id: string
-          nonce: string
-          mode: string
-          memory_ids: string[] | null
-          date_from: string | null
-          date_to: string | null
-          label: string
-          expires_at: string
-          notified_expiry_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          circle_id: string
-          nonce?: string
-          mode: string
-          memory_ids?: string[] | null
-          date_from?: string | null
-          date_to?: string | null
-          label: string
-          expires_at: string
-          notified_expiry_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          circle_id?: string
-          nonce?: string
-          mode?: string
-          memory_ids?: string[] | null
-          date_from?: string | null
-          date_to?: string | null
-          label?: string
-          expires_at?: string
-          notified_expiry_at?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "viewer_link_circle_id_fkey"
-            columns: ["circle_id"]
-            isOneToOne: false
-            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
         ]
@@ -635,6 +835,50 @@ export type Database = {
             columns: ["referred_by_user_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      viewer_link: {
+        Row: {
+          circle_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          label: string
+          memory_ids: string[] | null
+          mode: string
+          nonce: string
+          notified_expiry_at: string | null
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          label: string
+          memory_ids?: string[] | null
+          mode: string
+          nonce?: string
+          notified_expiry_at?: string | null
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          memory_ids?: string[] | null
+          mode?: string
+          nonce?: string
+          notified_expiry_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_link_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circle"
             referencedColumns: ["id"]
           },
         ]
