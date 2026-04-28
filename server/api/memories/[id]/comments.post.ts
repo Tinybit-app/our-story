@@ -47,6 +47,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: "Failed to post comment." })
   }
 
+  // Push notification (fire-and-forget)
+  const { data: actor } = await supabase
+    .from("user")
+    .select("first_name")
+    .eq("id", user.sub)
+    .single()
+
+  const payload = buildPushPayload({
+    type: "comment",
+    actorName: actor?.first_name ?? "Someone",
+    circleId: memory.circle_id,
+    actorUserId: user.sub,
+    memoryId,
+    bodyText: body,
+  })
+
+  sendPushToCircle(supabase, memory.circle_id, user.sub, payload).catch((err) =>
+    console.error("[push] comment notify error:", err)
+  )
+
   // Return fresh comments
   const { data: comments } = await supabase
     .from("memorycomment")

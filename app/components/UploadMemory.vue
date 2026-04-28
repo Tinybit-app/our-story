@@ -847,6 +847,12 @@ async function uploadItem(item: UploadItem): Promise<void> {
                 )
               : Promise.resolve(),
           ]);
+
+          // Trigger push notification (fire-and-forget)
+          $fetch('/api/push/notify', {
+            method: 'POST',
+            body: { memoryId: result.memoryId },
+          }).catch(() => {}) // silent — push failure should never affect upload UX
         }
       } else {
         item.error =

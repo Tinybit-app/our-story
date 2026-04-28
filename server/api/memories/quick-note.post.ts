@@ -63,5 +63,35 @@ export default defineEventHandler(async (event) => {
     )
   }
 
+  // Push notification (fire-and-forget)
+  const { data: actor } = await supabase
+    .from("user")
+    .select("first_name")
+    .eq("id", user.sub)
+    .single()
+
+  // Count recent uploads for coalescing
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+  const { count: recentCount } = await supabase
+    .from("memory")
+    .select("id", { count: "exact", head: true })
+    .eq("circle_id", circleId)
+    .eq("owner_user_id", user.sub)
+    .gte("created_at", thirtyMinAgo)
+
+  const payload = buildPushPayload({
+    type: "upload",
+    actorName: actor?.first_name ?? "Someone",
+    circleId,
+    actorUserId: user.sub,
+    memoryId: memory.id,
+    bodyText: note,
+    recentUploadCount: recentCount ?? 1,
+  })
+
+  sendPushToCircle(supabase, circleId, user.sub, payload).catch((err) =>
+    console.error("[push] quick-note notify error:", err)
+  )
+
   return { memoryId: memory.id }
 })

@@ -55,6 +55,26 @@ export default defineEventHandler(async (event) => {
       type: "emoji",
     })
     if (error) throw createError({ statusCode: 500, message: "Failed to add reaction." })
+
+    // Push notification for new reaction (fire-and-forget)
+    const { data: actor } = await supabase
+      .from("user")
+      .select("first_name")
+      .eq("id", user.sub)
+      .single()
+
+    const reactionPayload = buildPushPayload({
+      type: "reaction",
+      actorName: actor?.first_name ?? "Someone",
+      circleId: memory.circle_id,
+      actorUserId: user.sub,
+      memoryId,
+      emoji,
+    })
+
+    sendPushToCircle(supabase, memory.circle_id, user.sub, reactionPayload).catch((err) =>
+      console.error("[push] reaction notify error:", err)
+    )
   }
 
   // Return fresh reactions for this memory
