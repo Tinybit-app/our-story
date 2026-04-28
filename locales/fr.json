@@ -574,6 +574,12 @@
     "skip": "Ignorer pour l'instant",
     "corsError": "Impossible de charger la photo — essayez de la télécharger d'abord."
   },
+  "push": {
+    "promptTitle": "Restez connecté",
+    "promptBody": "Recevez une notification quand votre cercle partage de nouveaux souvenirs.",
+    "enable": "Activer",
+    "later": "Plus tard"
+  },
   "viewerLink": {
     "shareButton": "Partager",
     "emptyHeadline": "Partagez votre cercle",

@@ -421,6 +421,12 @@
     "skip": "暂时跳过",
     "corsError": "无法加载照片，请先下载后再试。"
   },
+  "push": {
+    "promptTitle": "保持同步",
+    "promptBody": "当你的圈子分享新回忆时收到通知。",
+    "enable": "开启",
+    "later": "稍后"
+  },
   "viewerLink": {
     "shareButton": "分享",
     "emptyHeadline": "分享你的圈子",

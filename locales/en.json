@@ -574,6 +574,12 @@
     "skip": "Skip for now",
     "corsError": "Could not load photo — try downloading it first."
   },
+  "push": {
+    "promptTitle": "Stay in the loop",
+    "promptBody": "Get notified when your circle shares new memories.",
+    "enable": "Enable",
+    "later": "Later"
+  },
   "viewerLink": {
     "shareButton": "Share",
     "emptyHeadline": "Share your circle",

@@ -264,6 +264,7 @@
 
     <!-- Feed -->
     <main class="max-w-[1280px] mx-auto px-5 py-6">
+      <PushPromptBanner />
       <!-- Timeline -->
       <TimelinePolaroid
         ref="timelinePolaroidRef"
