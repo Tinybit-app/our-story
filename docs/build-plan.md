@@ -244,7 +244,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `sendPushToCircle` utility checks NotificationPreference (push_enabled, circle_muted, quiet hours) before dispatch
   - `buildPushPayload` with batch coalescing: counts uploads in last 30 min; singular/plural title; `renotify: false` for silent updates
   - Triggers: `POST /api/push/notify` (client calls after upload), inline in comments.post, reactions.post, quick-note.post
-  - Notification settings currently owner-only (circle-settings page redirects non-owners); non-owners use the prompt banner — consider making circle-settings accessible to all members in 10.3
+  - Notification settings moved to dedicated `/notification-settings` page (10.3) — accessible to all members via bell icon in timeline header
   - **E2E test plan** (manual, two browsers on localhost — Chrome allows Web Push on localhost without HTTPS):
     1. Open `http://localhost:3001/timeline` in Chrome as User A → push prompt banner should appear → click "Enable" → allow browser permission → verify `pushsubscription` table has a row for User A
     2. Open incognito/different browser as User B (same circle) → upload a photo or post a quick note
@@ -256,7 +256,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
     8. Snooze banner: clear localStorage → refresh timeline → banner appears → click "Later" → refresh → banner stays hidden → clear `push_prompt_snoozed_at` from localStorage → banner reappears
     9. Note: Web Push requires HTTPS in production; `localhost` is an exception for dev. If testing on a non-localhost domain, HTTPS is required
 - [ ] 10.2 On This Day daily cron — activates at 30+ memories and 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification — build for all users in Phase 1 (no tier check); add Plus gate in Phase 2 alongside Stripe billing
-- [ ] 10.3 Notification preferences page — dedicated `/notification-settings` page accessible to all members; per-circle push toggle, mute toggle, email digest frequency (weekly/monthly/off, default monthly); circle selector for multi-circle users; bell icon in timeline header; notification toggles removed from circle-settings *(implementation complete — pending end-to-end test)*
+- [x] 10.3 Notification preferences page — dedicated `/notification-settings` page accessible to all members; per-circle push toggle, mute toggle, email digest frequency (weekly/monthly/off, default monthly); circle selector for multi-circle users; bell icon in timeline header; notification toggles removed from circle-settings
   - Migration 027: `email_digest_frequency` CHECK constraint updated to include `'monthly'`; default changed from `'weekly'` to `'monthly'`
   - Quiet hours UI deferred (backend already checks in `sendPushToCircle`); daily digest option dropped
   - **Phase 2 Capacitor migration note:** When adding native push (FCM/APNs), the 10.1 architecture stays intact. Changes needed: (1) add `platform` column to PushSubscription (`'web' | 'fcm' | 'apns'`), (2) `sendPushToCircle` branches on platform — web → `web-push`, FCM/APNs → respective APIs, (3) `usePushNotifications` detects `Capacitor.isNativePlatform()` and uses `@capacitor/push-notifications` plugin instead of PushManager, (4) deep links handled by Capacitor `appUrlOpen` listener instead of SW `notificationclick`. Web Push keeps working for browser users — both paths coexist.
