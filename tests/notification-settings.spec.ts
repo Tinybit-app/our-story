@@ -96,26 +96,31 @@ function mockTimeline(page: any, memories: any[]) {
   )
 }
 
-/** Intercept Supabase PostgREST calls to the notificationpreference table. */
+/** Mock GET /api/notification-preferences (server API route). */
 function mockNotificationPrefs(page: any, prefs: Record<string, any> | null = null) {
-  // The Supabase client calls its REST API at http://127.0.0.1:54321/rest/v1/notificationpreference
-  return page.route('**/rest/v1/notificationpreference**', (route: any) => {
+  const defaults = {
+    push_enabled: true,
+    circle_muted: false,
+    email_digest_frequency: 'monthly',
+  }
+  return page.route('**/api/notification-preferences**', (route: any) => {
     const method = route.request().method()
-    if (method === 'GET' || method === 'HEAD') {
-      // maybeSingle returns an array; the client unwraps the first element
-      const body = prefs ? [prefs] : []
+    if (method === 'GET') {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(body),
+        body: JSON.stringify(prefs ?? defaults),
+      })
+    } else if (method === 'PATCH') {
+      // Let individual tests intercept PATCH if they need to capture the body;
+      // this fallback just acknowledges the save.
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
       })
     } else {
-      // PATCH / POST (upsert) — just acknowledge
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({}),
-      })
+      route.continue()
     }
   })
 }

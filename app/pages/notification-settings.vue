@@ -117,8 +117,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const router = useRouter()
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
 
 // ── Circle list ───────────────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
@@ -145,21 +143,16 @@ const digestOptions = computed(() => [
 ])
 
 async function loadPrefs() {
-  if (!selectedCircleId.value || !user.value) return
+  if (!selectedCircleId.value) return
 
-  const { data } = await supabase
-    .from('notificationpreference')
-    .select('push_enabled, circle_muted, email_digest_frequency')
-    .eq('user_id', user.value.id)
-    .eq('circle_id', selectedCircleId.value)
-    .maybeSingle()
-
-  if (data) {
+  try {
+    const data = await $fetch<{ push_enabled: boolean; circle_muted: boolean; email_digest_frequency: string }>('/api/notification-preferences', {
+      query: { circleId: selectedCircleId.value },
+    })
     pushEnabled.value = data.push_enabled
     circleMuted.value = data.circle_muted
-    digestFrequency.value = (data.email_digest_frequency as 'weekly' | 'monthly' | 'off') ?? 'monthly'
-  } else {
-    // No row yet — show defaults
+    digestFrequency.value = data.email_digest_frequency as 'weekly' | 'monthly' | 'off'
+  } catch {
     pushEnabled.value = true
     circleMuted.value = false
     digestFrequency.value = 'monthly'
@@ -169,7 +162,7 @@ async function loadPrefs() {
 watch(selectedCircleId, () => { loadPrefs() }, { immediate: true })
 
 async function savePref(fields: Record<string, any>) {
-  if (!selectedCircleId.value || !user.value) return
+  if (!selectedCircleId.value) return
 
   await $fetch('/api/notification-preferences', {
     method: 'PATCH',

@@ -2148,3 +2148,27 @@ describe("PATCH /api/notification-preferences — input validation", () => {
   })
 })
 
+// ============================================================
+// GET /api/notification-preferences — query schema from server/api/notification-preferences.get.ts
+// ============================================================
+const notificationPrefsQuerySchema = z.object({
+  circleId: z.uuid(),
+})
+
+describe("GET /api/notification-preferences — input validation", () => {
+  it("accepts valid circleId", () => {
+    const r = notificationPrefsQuerySchema.safeParse({ circleId: VALID_CIRCLE_UUID })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects missing circleId", () => {
+    const r = notificationPrefsQuerySchema.safeParse({})
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects invalid circleId", () => {
+    const r = notificationPrefsQuerySchema.safeParse({ circleId: "not-a-uuid" })
+    expect(r.success).toBe(false)
+  })
+})
+
