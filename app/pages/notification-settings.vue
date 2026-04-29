@@ -171,16 +171,10 @@ watch(selectedCircleId, () => { loadPrefs() }, { immediate: true })
 async function savePref(fields: Record<string, any>) {
   if (!selectedCircleId.value || !user.value) return
 
-  await supabase
-    .from('notificationpreference')
-    .upsert(
-      {
-        user_id: user.value.id,
-        circle_id: selectedCircleId.value,
-        ...fields,
-      },
-      { onConflict: 'user_id,circle_id' }
-    )
+  await $fetch('/api/notification-preferences', {
+    method: 'PATCH',
+    body: { circleId: selectedCircleId.value, ...fields },
+  })
 }
 
 function togglePush() {
