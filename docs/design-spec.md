@@ -1917,7 +1917,7 @@ Viewer opens link
 
 **Multiple links per circle:** Owner can maintain separate links (e.g. "Grandma's link" for full timeline, "Christmas 2024" for a date range). Each independently revocable.
 
-**Owner UI:** "Share" button in timeline header (owner-only). Opens `ShareLinksSheet` (list + revoke) → `CreateLinkSheet` (mode picker, date range, memory grid, label field). All strings i18n'd (en/zh-CN/fr, 40+ `viewerLink.*` keys).
+**Owner UI:** "Share" button in timeline header (owner-only). Opens `ShareLinksSheet` (list + revoke) → `CreateLinkSheet` (mode picker, label field, create/edit flow). Memory selection handled by `MemoryPicker` component (timeline-style grouped grid with year/month headers, collapse, multi-select checkboxes). Selection state managed by `useMemoryPicker` composable (shared via provide/inject). All strings i18n'd (en/zh-CN/fr, 40+ `viewerLink.*` keys).
 
 **Expired link UX:**
 A grandparent who bookmarks the view-only link and opens it 31 days later must not see a generic error. On JWT expiry, show:

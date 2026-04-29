@@ -210,7 +210,9 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - JWT payload extended: `viewer_link_id` + `nonce`; viewer API verifies both on every request (row deleted = instant revocation)
   - API: `GET/POST/DELETE /api/circles/[id]/viewer-links` (owner-only); `DELETE` revokes link immediately
   - `ShareLinksSheet.vue` — bottom sheet: link list with copy/revoke/renew, expired badge, inline revoke confirm
-  - `CreateLinkSheet.vue` — mode picker, year quick-select chips, date range inputs, 3-column memory grid
+  - `CreateLinkSheet.vue` — mode picker, label input, create/edit flow; uses `useMemoryPicker` composable via provide/inject
+  - `MemoryPicker.vue` — timeline-style grouped memory grid (year/month headers, collapse, selection checkboxes); injects composable, zero props
+  - `useMemoryPicker.ts` — data loading, selection state, grouping logic, batch loading with cursor pagination
   - `view.vue` updated: mode banner, empty state, referral CTA after 3+ memories scrolled, all strings i18n'd
   - i18n: 40+ `viewerLink.*` keys in en/zh-CN/fr
   - RLS: owner-only SELECT/INSERT/DELETE; member, admin, cross-circle all blocked (53 pgTAP tests)
