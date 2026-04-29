@@ -809,10 +809,10 @@ async function loadMonthComplete(
       yearMonth: ym,
     };
     if (cursor) query.cursor = cursor;
-    const res: { memories: any[]; nextCursor: string | null } = await $fetch(
-      "/api/timeline",
-      { query },
-    );
+    const res = await ($fetch as Function)("/api/timeline", { query }) as {
+      memories: any[];
+      nextCursor: string | null;
+    };
     all.push(...(res.memories ?? []).map(mapMemory));
     cursor = res.nextCursor ?? null;
     hasMore = cursor !== null;
