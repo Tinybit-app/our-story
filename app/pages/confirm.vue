@@ -48,8 +48,14 @@ function retry() {
   else router.push("/login")
 }
 
+// If no user after 5 seconds, redirect to login (handles direct URL access)
+const noAuthTimeout = setTimeout(() => {
+  if (!user.value) router.push("/login")
+}, 5000)
+
 watchEffect(() => {
   if (!user.value) return
+  clearTimeout(noAuthTimeout)
 
   // Check for pending invite token
   const inviteToken = useCookie("pending_invite_token")
