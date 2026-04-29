@@ -53,6 +53,13 @@
 
           <div class="h-px bg-border" />
 
+          <!-- Loading prefs -->
+          <div v-if="!prefsLoaded" class="flex justify-center py-8">
+            <div class="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+          </div>
+
+          <template v-else>
+
           <!-- Push toggle -->
           <label class="flex items-center justify-between gap-3 cursor-pointer">
             <div>
@@ -108,6 +115,8 @@
             </div>
           </div>
 
+          </template>
+
         </template>
       </div>
     </main>
@@ -135,6 +144,7 @@ watch(circles, (list) => {
 const pushEnabled = ref(true)
 const circleMuted = ref(false)
 const digestFrequency = ref<'weekly' | 'monthly' | 'off'>('monthly')
+const prefsLoaded = ref(false)
 
 const digestOptions = computed(() => [
   { value: 'weekly' as const, label: t('notificationSettings.digestWeekly') },
@@ -144,6 +154,7 @@ const digestOptions = computed(() => [
 
 async function loadPrefs() {
   if (!selectedCircleId.value) return
+  prefsLoaded.value = false
 
   try {
     const data = await $fetch<{ push_enabled: boolean; circle_muted: boolean; email_digest_frequency: string }>('/api/notification-preferences', {
@@ -157,6 +168,7 @@ async function loadPrefs() {
     circleMuted.value = false
     digestFrequency.value = 'monthly'
   }
+  prefsLoaded.value = true
 }
 
 watch(selectedCircleId, () => { loadPrefs() }, { immediate: true })
