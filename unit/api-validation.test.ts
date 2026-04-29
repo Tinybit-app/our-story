@@ -1976,3 +1976,106 @@ describe('GET /api/timeline — year param validation', () => {
   })
 })
 
+// ============================================================
+// POST /api/push/subscribe — schema from server/api/push/subscribe.post.ts
+// ============================================================
+const pushSubscribeSchema = z.object({
+  endpoint: z.url(),
+  keys: z.object({
+    p256dh: z.string().min(1),
+    auth: z.string().min(1),
+  }),
+})
+
+describe("POST /api/push/subscribe — input validation", () => {
+  const VALID_ENDPOINT = "https://fcm.googleapis.com/fcm/send/abc123"
+  const VALID_KEYS = { p256dh: "BNcRd...", auth: "tBHItJ..." }
+
+  it("accepts valid endpoint URL and keys", () => {
+    const r = pushSubscribeSchema.safeParse({ endpoint: VALID_ENDPOINT, keys: VALID_KEYS })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects missing endpoint", () => {
+    const r = pushSubscribeSchema.safeParse({ keys: VALID_KEYS })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects invalid URL for endpoint", () => {
+    const r = pushSubscribeSchema.safeParse({ endpoint: "not-a-url", keys: VALID_KEYS })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects missing keys.p256dh", () => {
+    const r = pushSubscribeSchema.safeParse({
+      endpoint: VALID_ENDPOINT,
+      keys: { auth: "tBHItJ..." },
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects missing keys.auth", () => {
+    const r = pushSubscribeSchema.safeParse({
+      endpoint: VALID_ENDPOINT,
+      keys: { p256dh: "BNcRd..." },
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects empty p256dh string", () => {
+    const r = pushSubscribeSchema.safeParse({
+      endpoint: VALID_ENDPOINT,
+      keys: { p256dh: "", auth: "tBHItJ..." },
+    })
+    expect(r.success).toBe(false)
+  })
+})
+
+// ============================================================
+// DELETE /api/push/subscribe — schema from server/api/push/subscribe.delete.ts
+// ============================================================
+const pushUnsubscribeSchema = z.object({
+  endpoint: z.url(),
+})
+
+describe("DELETE /api/push/subscribe — input validation", () => {
+  it("accepts valid endpoint URL", () => {
+    const r = pushUnsubscribeSchema.safeParse({ endpoint: "https://fcm.googleapis.com/fcm/send/abc123" })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects missing endpoint", () => {
+    const r = pushUnsubscribeSchema.safeParse({})
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects invalid URL", () => {
+    const r = pushUnsubscribeSchema.safeParse({ endpoint: "not-a-url" })
+    expect(r.success).toBe(false)
+  })
+})
+
+// ============================================================
+// POST /api/push/notify — schema from server/api/push/notify.post.ts
+// ============================================================
+const pushNotifySchema = z.object({
+  memoryId: z.uuid(),
+})
+
+describe("POST /api/push/notify — input validation", () => {
+  it("accepts valid UUID", () => {
+    const r = pushNotifySchema.safeParse({ memoryId: "123e4567-e89b-12d3-a456-426614174000" })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects missing memoryId", () => {
+    const r = pushNotifySchema.safeParse({})
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects invalid UUID format", () => {
+    const r = pushNotifySchema.safeParse({ memoryId: "not-a-uuid" })
+    expect(r.success).toBe(false)
+  })
+})
+

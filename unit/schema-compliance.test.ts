@@ -19,12 +19,14 @@ function sql(filename: string): string {
   return readFileSync(resolve(root, "supabase/migrations", filename), "utf-8")
 }
 
-// All four migrations combined — represents the full deployed schema
+// All migrations combined — represents the full deployed schema
 const allMigrations = [
   sql("001_initial_schema.sql"),
   sql("002_rls_policies.sql"),
   sql("003_storage.sql"),
   sql("004_schema_additions.sql"),
+  sql("026_push_subscriptions.sql"),
+  sql("027_digest_monthly_default.sql"),
 ].join("\n")
 
 // ============================================================
@@ -254,5 +256,50 @@ describe("Rename guard — no Family/family_id references in migrations", () => 
     expect(allMigrations).not.toContain("family_id")
     expect(allMigrations).not.toContain("family_muted")
     expect(allMigrations).not.toContain("get_my_family_ids")
+  })
+})
+
+// ============================================================
+// Step 10.1 — PushSubscription table
+// ============================================================
+describe("Step 10.1 — PushSubscription table", () => {
+  const m026 = sql("026_push_subscriptions.sql")
+
+  it("defines PushSubscription table with required columns", () => {
+    expect(m026).toContain("CREATE TABLE PushSubscription")
+    expect(m026).toContain("user_id")
+    expect(m026).toContain("endpoint")
+    expect(m026).toContain("p256dh")
+    expect(m026).toContain("auth")
+    expect(m026).toContain("created_at")
+  })
+
+  it("has unique constraint on endpoint", () => {
+    expect(m026).toContain("UNIQUE")
+  })
+
+  it("enables RLS", () => {
+    expect(m026).toContain("ENABLE ROW LEVEL SECURITY")
+  })
+
+  it("has RLS policies for own subscriptions", () => {
+    expect(m026).toContain("users can read own push subscriptions")
+    expect(m026).toContain("users can insert own push subscriptions")
+    expect(m026).toContain("users can delete own push subscriptions")
+  })
+})
+
+// ============================================================
+// Step 10.3 — Monthly digest default
+// ============================================================
+describe("Step 10.3 — Monthly digest default", () => {
+  const m027 = sql("027_digest_monthly_default.sql")
+
+  it("adds monthly to CHECK constraint", () => {
+    expect(m027).toContain("monthly")
+  })
+
+  it("changes default to monthly", () => {
+    expect(m027).toContain("SET DEFAULT 'monthly'")
   })
 })
