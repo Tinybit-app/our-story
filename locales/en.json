@@ -516,13 +516,7 @@
     "errorUpdateChild": "Failed to update child. Please try again.",
     "errorAddChild": "Failed to add child. Please try again.",
     "errorRemoveChild": "Failed to remove child. Please try again.",
-    "errorSaveAnniversary": "Failed to save anniversary date. Please try again.",
-    "notifications": "Notifications",
-    "notificationsDesc": "Control how you're notified about activity in this circle.",
-    "pushNotifications": "Push notifications",
-    "pushNotificationsDesc": "Get notified when members share memories, comment, or react.",
-    "muteCircle": "Mute this circle",
-    "muteCircleDesc": "Pause all notifications from this circle."
+    "errorSaveAnniversary": "Failed to save anniversary date. Please try again."
   },
   "circleTypeConfig": {
     "parents": {
@@ -652,5 +646,19 @@
     "createErrorGeneric": "Something went wrong. Please try again.",
     "redirecting": "Redirecting…",
     "reminderSmsBody": "Hey! The link you shared has expired — could you send me a new one? 😊"
+  },
+  "notificationSettings": {
+    "title": "Notification settings",
+    "selectCircle": "Select a circle",
+    "pushNotifications": "Push notifications",
+    "pushNotificationsDesc": "Get notified when members share memories, comment, or react.",
+    "muteCircle": "Mute this circle",
+    "muteCircleDesc": "Pause all notifications from this circle.",
+    "muteActiveNote": "Push notifications and email digests from this circle are paused.",
+    "emailDigest": "Email digest",
+    "emailDigestDesc": "A summary of new memories and activity.",
+    "digestWeekly": "Weekly",
+    "digestMonthly": "Monthly",
+    "digestOff": "Off"
   }
 }

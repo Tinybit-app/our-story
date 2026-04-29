@@ -516,13 +516,7 @@
     "errorUpdateChild": "Échec de la mise à jour de l'enfant. Veuillez réessayer.",
     "errorAddChild": "Échec de l'ajout de l'enfant. Veuillez réessayer.",
     "errorRemoveChild": "Échec de la suppression de l'enfant. Veuillez réessayer.",
-    "errorSaveAnniversary": "Échec de la sauvegarde de la date d'anniversaire. Veuillez réessayer.",
-    "notifications": "Notifications",
-    "notificationsDesc": "Configurez vos notifications pour ce cercle.",
-    "pushNotifications": "Notifications push",
-    "pushNotificationsDesc": "Soyez notifié quand les membres partagent des souvenirs, commentent ou réagissent.",
-    "muteCircle": "Couper les notifications",
-    "muteCircleDesc": "Mettre en pause toutes les notifications de ce cercle."
+    "errorSaveAnniversary": "Échec de la sauvegarde de la date d'anniversaire. Veuillez réessayer."
   },
   "circleTypeConfig": {
     "parents": {
@@ -652,5 +646,19 @@
     "createErrorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
     "redirecting": "Redirection en cours…",
     "reminderSmsBody": "Hey ! Le lien que tu as partagé a expiré — tu peux m'en envoyer un nouveau ? 😊"
+  },
+  "notificationSettings": {
+    "title": "Paramètres de notification",
+    "selectCircle": "Sélectionner un cercle",
+    "pushNotifications": "Notifications push",
+    "pushNotificationsDesc": "Soyez notifié quand les membres partagent des souvenirs, commentent ou réagissent.",
+    "muteCircle": "Couper les notifications",
+    "muteCircleDesc": "Mettre en pause toutes les notifications de ce cercle.",
+    "muteActiveNote": "Les notifications push et les résumés par email de ce cercle sont en pause.",
+    "emailDigest": "Résumé par email",
+    "emailDigestDesc": "Un résumé des nouveaux souvenirs et de l'activité.",
+    "digestWeekly": "Hebdomadaire",
+    "digestMonthly": "Mensuel",
+    "digestOff": "Désactivé"
   }
 }
