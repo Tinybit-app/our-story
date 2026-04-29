@@ -51,12 +51,22 @@ const SNOOZE_KEY = 'push_prompt_snoozed_at'
 const DENIED_KEY = 'push_prompt_denied'
 const SNOOZE_DAYS = 7
 
+const VISITED_KEY = 'has_visited_timeline'
+
+// Mark this visit — banner won't show until the *next* visit
+onMounted(() => {
+  if (import.meta.client) localStorage.setItem(VISITED_KEY, 'true')
+})
+
 const shouldShow = computed(() => {
   if (!import.meta.client) return false
   if (!isSupported.value) return false
   if (dismissed.value) return false
   if (permissionState.value === 'granted') return false
   if (localStorage.getItem(DENIED_KEY) === 'true') return false
+
+  // Don't prompt on first-ever visit — let the user experience the app first
+  if (!localStorage.getItem(VISITED_KEY)) return false
 
   const snoozedAt = localStorage.getItem(SNOOZE_KEY)
   if (snoozedAt) {
