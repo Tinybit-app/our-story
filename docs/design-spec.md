@@ -444,7 +444,7 @@ AlbumMemory
 NotificationPreference
   - user_id, circle_id
   - push_enabled (bool)
-  - email_digest_frequency: "daily" | "weekly" | "off"
+  - email_digest_frequency: "weekly" | "monthly" | "off"
   - quiet_hours_start, quiet_hours_end
   - circle_muted (bool)
 
@@ -1281,12 +1281,12 @@ Per user, per circle — circle apps get noisy fast.
 NotificationPreference
   - user_id, circle_id
   - push_enabled (bool)
-  - email_digest_frequency: "daily" | "weekly" | "off"
+  - email_digest_frequency: "weekly" | "monthly" | "off"
   - quiet_hours_start, quiet_hours_end (e.g. 22:00–08:00)
   - circle_muted (bool) — mute a specific circle entirely
 ```
 
-**Default state on join:** `push_enabled = true`, `email_digest_frequency = "weekly"`, `circle_muted = false`. Push is opt-out, not opt-in — members who never touch settings still receive activity. A member who accepts an invite and never opens Settings should not silently miss everything.
+**Default state on join:** `push_enabled = true`, `email_digest_frequency = "monthly"`, `circle_muted = false`. Push is opt-out, not opt-in — members who never touch settings still receive activity. A member who accepts an invite and never opens Settings should not silently miss everything.
 
 On the first push notification received, show an in-app prompt: *"Stay in the loop — configure your notification preferences"* with a link to settings. Never show a configuration screen upfront before they've experienced a notification.
 
