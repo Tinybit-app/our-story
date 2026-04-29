@@ -1,4 +1,4 @@
-import { serverSupabaseUser, serverSupabaseClient } from "#supabase/server"
+import { serverSupabaseUser, serverSupabaseServiceRole } from "#supabase/server"
 import { z } from "zod"
 
 const bodySchema = z.object({
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
   const { memoryIds, label } = parsed.data
 
-  const supabase = await serverSupabaseClient(event)
+  const supabase = serverSupabaseServiceRole(event)
 
   // Verify requester is owner
   const { data: membership } = await supabase
