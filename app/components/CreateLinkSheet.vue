@@ -104,29 +104,7 @@
         </div>
 
         <!-- CUSTOM mode: memory picker -->
-        <template v-else>
-          <MemoryPicker
-            :year-groups="picker.yearGroups.value"
-            :years-loading="picker.yearsLoading.value"
-            :selected-memory-ids="picker.selectedMemoryIds.value"
-            :collapsed-years="picker.collapsedYears.value"
-            :collapsed-months="picker.collapsedMonths.value"
-            :get-month-groups="picker.getMonthGroups"
-            :month-name="picker.monthName"
-            :format-tile-date="picker.formatTileDate"
-            :is-year-fully-selected="picker.isYearFullySelected"
-            :is-year-partially-selected="picker.isYearPartiallySelected"
-            :is-month-selected="picker.isMonthSelected"
-            :year-checkbox-class="picker.yearCheckboxClass"
-            :month-checkbox-class="picker.monthCheckboxClass"
-            :toggle-year="picker.toggleYear"
-            :toggle-month="picker.toggleMonth"
-            :toggle-memory="picker.toggleMemory"
-            :toggle-year-collapsed="picker.toggleYearCollapsed"
-            :toggle-month-collapsed="picker.toggleMonthCollapsed"
-            :load-year-complete="picker.loadYearComplete"
-          />
-        </template>
+        <MemoryPicker v-else />
 
         <!-- Label input -->
         <div class="px-5 mt-4 mb-1">
@@ -158,6 +136,8 @@
 </template>
 
 <script setup lang="ts">
+import { MEMORY_PICKER_KEY } from '~/composables/useMemoryPicker'
+
 const { t } = useI18n()
 
 export interface EditLinkData {
@@ -175,9 +155,10 @@ const emit = defineEmits<{ close: []; created: [] }>()
 
 const isEditMode = computed(() => !!props.editLink)
 
-// ── Composable ─────────────────────────────────────────────
+// ── Memory picker (provided to MemoryPicker child) ─────────
 const circleIdRef = computed(() => props.circleId)
 const picker = useMemoryPicker(circleIdRef)
+provide(MEMORY_PICKER_KEY, picker)
 
 // ── Local state ────────────────────────────────────────────
 const selectedMode = ref<"full" | "custom">("full")

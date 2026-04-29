@@ -1,11 +1,11 @@
 <template>
   <!-- Loading -->
-  <div v-if="yearsLoading" class="flex justify-center py-10">
+  <div v-if="picker.yearsLoading.value" class="flex justify-center py-10">
     <div class="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
   </div>
 
   <!-- Empty state -->
-  <div v-else-if="yearGroups.length === 0" class="py-12 px-5 text-center">
+  <div v-else-if="picker.yearGroups.value.length === 0" class="py-12 px-5 text-center">
     <div class="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto mb-4">
       <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
         <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5z"/>
@@ -17,25 +17,25 @@
 
   <!-- Year groups -->
   <div v-else>
-    <div v-for="group in yearGroups" :key="group.year">
+    <div v-for="group in picker.yearGroups.value" :key="group.year">
       <!-- Year header (sticky) -->
       <div
         class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pt-3 pb-2 border-b border-border/20 cursor-pointer select-none hover:bg-secondary/60 transition-colors"
-        @click="toggleYearCollapsed(group.year)"
+        @click="picker.toggleYearCollapsed(group.year)"
       >
         <div class="flex items-center gap-2.5">
           <!-- Year selection checkbox -->
           <button
             type="button"
             :disabled="!group.loaded"
-            @click.stop="group.loaded && toggleYear(group.year)"
+            @click.stop="group.loaded && picker.toggleYear(group.year)"
             class="w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-40"
-            :class="yearCheckboxClass(group.year)"
+            :class="picker.yearCheckboxClass(group.year)"
           >
-            <svg v-if="isYearFullySelected(group.year)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <svg v-if="picker.isYearFullySelected(group.year)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
               <path d="M5 13l4 4L19 7" />
             </svg>
-            <div v-else-if="isYearPartiallySelected(group.year)" class="w-2 h-px bg-primary rounded-full" />
+            <div v-else-if="picker.isYearPartiallySelected(group.year)" class="w-2 h-px bg-primary rounded-full" />
           </button>
           <span class="text-sm font-bold text-foreground">{{ group.year }}</span>
           <span v-if="group.loaded && group.memories.length > 0" class="text-[11px] text-muted-foreground">
@@ -44,10 +44,9 @@
         </div>
         <div class="flex items-center gap-2">
           <div v-if="group.loading" class="w-3.5 h-3.5 border-[1.5px] border-muted-foreground border-t-transparent rounded-full animate-spin" />
-          <!-- Collapse chevron -->
           <svg
             class="w-4 h-4 text-muted-foreground transition-transform duration-200"
-            :class="collapsedYears.has(group.year) ? '-rotate-90' : 'rotate-0'"
+            :class="picker.collapsedYears.value.has(group.year) ? '-rotate-90' : 'rotate-0'"
             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
           >
             <path d="M19 9l-7 7-7-7" />
@@ -56,37 +55,35 @@
       </div>
 
       <!-- Year content (collapsible) -->
-      <div v-if="!collapsedYears.has(group.year)">
+      <div v-if="!picker.collapsedYears.value.has(group.year)">
         <!-- Month groups -->
         <div v-if="group.loaded" class="px-5">
-          <div v-for="mg in getMonthGroups(group)" :key="mg.month" class="mt-4 mb-2">
+          <div v-for="mg in picker.getMonthGroups(group)" :key="mg.month" class="mt-4 mb-2">
             <!-- Month header -->
             <div
               class="flex items-center justify-between mb-2 px-2 -mx-2 py-1.5 rounded-lg cursor-pointer select-none bg-secondary/40 hover:bg-secondary/70 transition-colors border border-border/15"
-              @click="toggleMonthCollapsed(group.year, mg.month)"
+              @click="picker.toggleMonthCollapsed(group.year, mg.month)"
             >
               <div class="flex items-center gap-1.5">
-                <!-- Month selection checkbox -->
                 <button
                   type="button"
-                  @click.stop="toggleMonth(group.year, mg.month)"
+                  @click.stop="picker.toggleMonth(group.year, mg.month)"
                   class="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-all"
-                  :class="monthCheckboxClass(group.year, mg.month)"
+                  :class="picker.monthCheckboxClass(group.year, mg.month)"
                 >
-                  <svg v-if="isMonthSelected(group.year, mg.month) === 'full'" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <svg v-if="picker.isMonthSelected(group.year, mg.month) === 'full'" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                     <path d="M5 13l4 4L19 7" />
                   </svg>
-                  <div v-else-if="isMonthSelected(group.year, mg.month) === 'partial'" class="w-1.5 h-px bg-primary rounded-full" />
+                  <div v-else-if="picker.isMonthSelected(group.year, mg.month) === 'partial'" class="w-1.5 h-px bg-primary rounded-full" />
                 </button>
-                <span class="text-xs font-semibold text-foreground/70">{{ monthName(mg.month) }}</span>
+                <span class="text-xs font-semibold text-foreground/70">{{ picker.monthName(mg.month) }}</span>
                 <span class="text-[10px] text-muted-foreground tabular-nums">
                   {{ t("viewerLink.memoriesCount", { count: mg.memories.length }) }}
                 </span>
               </div>
-              <!-- Month collapse chevron -->
               <svg
                 class="w-3.5 h-3.5 text-muted-foreground transition-transform duration-200"
-                :class="collapsedMonths.has(`${group.year}-${mg.month}`) ? '-rotate-90' : 'rotate-0'"
+                :class="picker.collapsedMonths.value.has(`${group.year}-${mg.month}`) ? '-rotate-90' : 'rotate-0'"
                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
               >
                 <path d="M19 9l-7 7-7-7" />
@@ -94,14 +91,14 @@
             </div>
 
             <!-- Month grid (collapsible) -->
-            <div v-if="!collapsedMonths.has(`${group.year}-${mg.month}`)" class="grid grid-cols-5 gap-1">
+            <div v-if="!picker.collapsedMonths.value.has(`${group.year}-${mg.month}`)" class="grid grid-cols-5 gap-1">
               <button
                 v-for="memory in mg.memories"
                 :key="memory.id"
                 type="button"
-                @click="toggleMemory(memory.id)"
+                @click="picker.toggleMemory(memory.id)"
                 class="relative aspect-square rounded-[6px] overflow-hidden bg-secondary cursor-pointer transition-transform active:scale-95"
-                :class="selectedMemoryIds.has(memory.id) ? 'ring-2 ring-primary ring-offset-1 ring-offset-card' : ''"
+                :class="picker.selectedMemoryIds.value.has(memory.id) ? 'ring-2 ring-primary ring-offset-1 ring-offset-card' : ''"
               >
                 <!-- Image -->
                 <img
@@ -143,15 +140,15 @@
 
                 <!-- Date overlay (images/videos) -->
                 <div v-if="memory.mediaType !== null" class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent pt-4 pb-0.5 px-0.5">
-                  <p class="text-[7px] font-medium text-white text-center leading-tight truncate">{{ formatTileDate(memory.memory_date) }}</p>
+                  <p class="text-[7px] font-medium text-white text-center leading-tight truncate">{{ picker.formatTileDate(memory.memory_date) }}</p>
                 </div>
                 <!-- Date label (notes) -->
                 <div v-else-if="memory.note" class="absolute bottom-0.5 inset-x-0 flex justify-center">
-                  <p class="text-[7px] text-amber-600 dark:text-amber-400 font-medium leading-tight">{{ formatTileDate(memory.memory_date) }}</p>
+                  <p class="text-[7px] text-amber-600 dark:text-amber-400 font-medium leading-tight">{{ picker.formatTileDate(memory.memory_date) }}</p>
                 </div>
 
                 <!-- Selected checkmark -->
-                <div v-if="selectedMemoryIds.has(memory.id)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                <div v-if="picker.selectedMemoryIds.value.has(memory.id)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-sm">
                   <svg class="w-2.5 h-2.5 text-primary-foreground" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                     <path d="M5 13l4 4L19 7" />
                   </svg>
@@ -176,7 +173,7 @@
             <button
               type="button"
               :disabled="group.loading"
-              @click="loadYearComplete(group.year)"
+              @click="picker.loadYearComplete(group.year)"
               class="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100 transition-colors disabled:opacity-50"
             >
               {{ group.loading ? t("viewerLink.loading") : t("viewerLink.loadAll") }}
@@ -194,29 +191,8 @@
 </template>
 
 <script setup lang="ts">
-import type { YearGroup } from '~/composables/useMemoryPicker'
+import { MEMORY_PICKER_KEY } from '~/composables/useMemoryPicker'
 
 const { t } = useI18n()
-
-defineProps<{
-  yearGroups: YearGroup[]
-  yearsLoading: boolean
-  selectedMemoryIds: Set<string>
-  collapsedYears: Set<number>
-  collapsedMonths: Set<string>
-  getMonthGroups: Function
-  monthName: Function
-  formatTileDate: Function
-  isYearFullySelected: Function
-  isYearPartiallySelected: Function
-  isMonthSelected: Function
-  yearCheckboxClass: Function
-  monthCheckboxClass: Function
-  toggleYear: Function
-  toggleMonth: Function
-  toggleMemory: Function
-  toggleYearCollapsed: Function
-  toggleMonthCollapsed: Function
-  loadYearComplete: Function
-}>()
+const picker = inject(MEMORY_PICKER_KEY)!
 </script>

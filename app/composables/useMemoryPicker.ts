@@ -1,3 +1,5 @@
+import type { InjectionKey } from 'vue'
+
 export interface MemoryItem {
   id: string
   memory_date: string
@@ -19,6 +21,9 @@ export interface MonthGroup {
   month: number
   memories: MemoryItem[]
 }
+
+export type MemoryPickerReturn = ReturnType<typeof useMemoryPicker>
+export const MEMORY_PICKER_KEY = Symbol('memory-picker') as InjectionKey<MemoryPickerReturn>
 
 export function useMemoryPicker(circleId: Ref<string>) {
   const { locale } = useI18n()
