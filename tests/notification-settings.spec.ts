@@ -221,6 +221,116 @@ test.describe('Notification settings (10.3)', () => {
     ).not.toBeAttached()
   })
 
+  test('toggling push calls PATCH /api/notification-preferences', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page, [CIRCLE_ONE])
+    await mockNotificationPrefs(page, {
+      push_enabled: true,
+      circle_muted: false,
+      email_digest_frequency: 'monthly',
+    })
+
+    // Capture the PATCH request body
+    let patchBody: any = null
+    await page.route('**/api/notification-preferences', (route: any) => {
+      if (route.request().method() === 'PATCH') {
+        patchBody = route.request().postDataJSON()
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true }),
+        })
+      } else {
+        route.continue()
+      }
+    })
+
+    await page.goto('/notification-settings')
+    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+
+    // Click the push checkbox to toggle it off (currently on)
+    const pushCheckbox = page.locator('input[type="checkbox"]').first()
+    await pushCheckbox.click()
+
+    // Wait for the PATCH to fire
+    await page.waitForResponse('**/api/notification-preferences')
+
+    expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, push_enabled: false })
+  })
+
+  test('toggling mute calls PATCH /api/notification-preferences', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page, [CIRCLE_ONE])
+    await mockNotificationPrefs(page, {
+      push_enabled: true,
+      circle_muted: false,
+      email_digest_frequency: 'monthly',
+    })
+
+    // Capture the PATCH request body
+    let patchBody: any = null
+    await page.route('**/api/notification-preferences', (route: any) => {
+      if (route.request().method() === 'PATCH') {
+        patchBody = route.request().postDataJSON()
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true }),
+        })
+      } else {
+        route.continue()
+      }
+    })
+
+    await page.goto('/notification-settings')
+    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+
+    // Click the mute checkbox to toggle it on (currently off)
+    const muteCheckbox = page.locator('input[type="checkbox"]').nth(1)
+    await muteCheckbox.click()
+
+    // Wait for the PATCH to fire
+    await page.waitForResponse('**/api/notification-preferences')
+
+    expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, circle_muted: true })
+  })
+
+  test('changing digest calls PATCH /api/notification-preferences', async ({ page }) => {
+    await mockMembership(page)
+    await mockCircles(page, [CIRCLE_ONE])
+    await mockNotificationPrefs(page, {
+      push_enabled: true,
+      circle_muted: false,
+      email_digest_frequency: 'monthly',
+    })
+
+    // Capture the PATCH request body
+    let patchBody: any = null
+    await page.route('**/api/notification-preferences', (route: any) => {
+      if (route.request().method() === 'PATCH') {
+        patchBody = route.request().postDataJSON()
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true }),
+        })
+      } else {
+        route.continue()
+      }
+    })
+
+    await page.goto('/notification-settings')
+    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+
+    // Click the "Weekly" button (currently on "Monthly")
+    await page.getByRole('button', { name: /weekly/i }).click()
+
+    // Wait for the PATCH to fire
+    await page.waitForResponse('**/api/notification-preferences')
+
+    expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, email_digest_frequency: 'weekly' })
+  })
+
   test('bell icon link to /notification-settings exists in timeline header', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])

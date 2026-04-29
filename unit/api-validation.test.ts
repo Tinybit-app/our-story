@@ -2079,3 +2079,72 @@ describe("POST /api/push/notify — input validation", () => {
   })
 })
 
+// ============================================================
+// PATCH /api/notification-preferences — schema from server/api/notification-preferences.patch.ts
+// ============================================================
+const notificationPrefsSchema = z.object({
+  circleId: z.uuid(),
+  push_enabled: z.boolean().optional(),
+  circle_muted: z.boolean().optional(),
+  email_digest_frequency: z.enum(["weekly", "monthly", "off"]).optional(),
+})
+
+const VALID_CIRCLE_UUID = "123e4567-e89b-12d3-a456-426614174000"
+
+describe("PATCH /api/notification-preferences — input validation", () => {
+  it("accepts valid circleId with push_enabled", () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, push_enabled: false })
+    expect(r.success).toBe(true)
+  })
+
+  it("accepts valid circleId with circle_muted", () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, circle_muted: true })
+    expect(r.success).toBe(true)
+  })
+
+  it('accepts valid circleId with email_digest_frequency "monthly"', () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, email_digest_frequency: "monthly" })
+    expect(r.success).toBe(true)
+  })
+
+  it('accepts valid circleId with email_digest_frequency "weekly"', () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, email_digest_frequency: "weekly" })
+    expect(r.success).toBe(true)
+  })
+
+  it('accepts valid circleId with email_digest_frequency "off"', () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, email_digest_frequency: "off" })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects missing circleId", () => {
+    const r = notificationPrefsSchema.safeParse({ push_enabled: true })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects invalid circleId (not UUID)", () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: "not-a-uuid", push_enabled: true })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects invalid email_digest_frequency value "daily"', () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, email_digest_frequency: "daily" })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects invalid email_digest_frequency value "hourly"', () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, email_digest_frequency: "hourly" })
+    expect(r.success).toBe(false)
+  })
+
+  it("accepts all fields together", () => {
+    const r = notificationPrefsSchema.safeParse({
+      circleId: VALID_CIRCLE_UUID,
+      push_enabled: true,
+      circle_muted: false,
+      email_digest_frequency: "weekly",
+    })
+    expect(r.success).toBe(true)
+  })
+})
+
