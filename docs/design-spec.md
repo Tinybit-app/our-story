@@ -5123,8 +5123,8 @@ What requires native (Capacitor) — deferred to Phase 2:
 
 **Phase 1 PWA requirements:**
 - Fully mobile-responsive — designed mobile-first, desktop secondary
-- `manifest.json` with app name, icons, `display: standalone` — enables "Add to Home Screen"
-- Service worker for offline asset caching (not offline upload — that's Phase 2)
+- `manifest.json` with app name, icons, `display: standalone`, description, scope, orientation, categories, maskable icon purpose — enables "Add to Home Screen" **[Implemented §11.1]**
+- Service worker (`public/sw.js`) with offline asset caching: cache-first for `_nuxt/*` build assets and static files (images, fonts, icons); network-first with cache fallback for HTML pages; API/Supabase calls bypass cache. Also handles Web Push (push + notificationclick events, §10.1). Versioned cache (`our-story-v1`) with old cache purge on activate. **[Implemented §11.1]**
 - All invite links, view-only links, and deep links open cleanly in mobile Safari/Chrome
 - No feature should require an app download to access
 
