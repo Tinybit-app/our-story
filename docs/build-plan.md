@@ -262,7 +262,11 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **Phase 2 Capacitor migration note:** When adding native push (FCM/APNs), the 10.1 architecture stays intact. Changes needed: (1) add `platform` column to PushSubscription (`'web' | 'fcm' | 'apns'`), (2) `sendPushToCircle` branches on platform — web → `web-push`, FCM/APNs → respective APIs, (3) `usePushNotifications` detects `Capacitor.isNativePlatform()` and uses `@capacitor/push-notifications` plugin instead of PushManager, (4) deep links handled by Capacitor `appUrlOpen` listener instead of SW `notificationclick`. Web Push keeps working for browser users — both paths coexist.
 
 ### Milestone 11: PWA & Mobile Polish
-- [ ] 11.1 PWA manifest + service worker
+- [ ] 11.1 PWA offline asset caching — service worker upgraded with install/activate/fetch handlers; cache-first for Nuxt build assets (`_nuxt/*`) and static files (images, fonts, icons); network-first with cache fallback for HTML pages; API/Supabase calls bypass cache; manifest enriched (description, scope, orientation, categories, maskable icons)
+  - Manifest and SW registration already existed from 10.1 (push notifications); this step adds caching strategies
+  - `CACHE_NAME` versioned (`our-story-v1`) — bump on breaking changes to purge old caches
+  - `skipWaiting()` + `clients.claim()` for immediate activation
+  - No offline upload queue (Phase 2 with Capacitor)
 - [ ] 11.2 Mobile-first CSS (tap targets, safe areas, no zoom)
 - [ ] 11.3 Performance targets (Lighthouse CI)
 - [ ] 11.4 Add to Home Screen prompt
