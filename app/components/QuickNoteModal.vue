@@ -151,7 +151,7 @@
           v-model="editDate"
           type="date"
           :max="new Date().toLocaleDateString('en-CA')"
-          class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
+          class="w-full bg-secondary rounded-lg px-3 py-1.5 text-base text-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
           :style="{ colorScheme: $colorMode.value === 'dark' ? 'dark' : 'light' }"
         />
 
@@ -164,7 +164,7 @@
           type="text"
           :placeholder="t('modal.milestonePlaceholder')"
           maxlength="40"
-          class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
+          class="w-full bg-secondary rounded-lg px-3 py-1.5 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
         />
 
         <div class="flex items-baseline justify-between mb-1">
@@ -177,7 +177,7 @@
           :placeholder="t('modal.notePlaceholder')"
           rows="3"
           maxlength="500"
-          class="w-full bg-secondary rounded-lg px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed mb-3"
+          class="w-full bg-secondary rounded-lg px-3 py-2 text-base text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed mb-3"
           style="max-height: 120px; overflow-y: auto"
         />
 
@@ -239,7 +239,7 @@
                 v-model="commentDraft"
                 :placeholder="t('modal.addComment')"
                 rows="1"
-                class="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
+                class="flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
                 style="max-height: 80px; overflow-y: auto"
                 @keydown.enter.exact.prevent="submitComment"
                 @input="autoResize"
@@ -323,7 +323,7 @@
                       v-model="commentEditDraft"
                       rows="2"
                       maxlength="2000"
-                      class="w-full bg-transparent text-[13px] text-foreground resize-none outline-none leading-snug"
+                      class="w-full bg-transparent text-base text-foreground resize-none outline-none leading-snug"
                       style="max-height: 120px; overflow-y: auto"
                       @keydown.enter.exact.prevent="saveCommentEdit(c.id)"
                       @keydown.escape="cancelCommentEdit"

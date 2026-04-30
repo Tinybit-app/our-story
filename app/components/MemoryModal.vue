@@ -46,7 +46,7 @@
         <!-- Share with watermark (images only) -->
         <button
           v-if="firstMedia.media_type !== 'video'"
-          class="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+          class="w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors"
           :title="t('modal.sharePhoto')"
           aria-label="Share photo"
           @click.stop="shareMedia"
@@ -58,7 +58,7 @@
         </button>
         <!-- Save to device -->
         <button
-          class="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors disabled:opacity-50"
+          class="w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors disabled:opacity-50"
           :title="t('modal.saveToDevice')"
           aria-label="Save to device"
           :disabled="downloading"
@@ -127,7 +127,7 @@
             </div>
             <button
               v-if="isOwner"
-              class="flex-shrink-0 mt-0.5 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              class="flex-shrink-0 mt-0.5 w-10 h-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               :title="t('modal.editNote')"
               @click="startEditing"
             >
@@ -180,7 +180,7 @@
               v-model="editDate"
               type="date"
               :max="new Date().toLocaleDateString('en-CA')"
-              class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
+              class="w-full bg-secondary rounded-lg px-3 py-1.5 text-base text-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
               :style="{ colorScheme: $colorMode.value === 'dark' ? 'dark' : 'light' }"
             />
             <div class="flex items-baseline justify-between mb-1">
@@ -192,7 +192,7 @@
               type="text"
               :placeholder="t('modal.milestonePlaceholder')"
               maxlength="40"
-              class="w-full bg-secondary rounded-lg px-3 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
+              class="w-full bg-secondary rounded-lg px-3 py-1.5 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent/40 mb-3"
             />
             <div class="flex items-baseline justify-between mb-1">
               <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]">{{ t('modal.note') }}</label>
@@ -204,7 +204,7 @@
               :placeholder="t('modal.notePlaceholder')"
               rows="3"
               maxlength="500"
-              class="w-full bg-secondary rounded-lg px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed"
+              class="w-full bg-secondary rounded-lg px-3 py-2 text-base text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40 leading-relaxed"
               style="max-height: 140px; overflow-y: auto"
             />
             <div v-if="props.members?.length || props.children?.length" class="mt-3">
@@ -341,7 +341,7 @@
                 v-model="commentDraft"
                 :placeholder="t('modal.addComment')"
                 rows="1"
-                class="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
+                class="flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground resize-none outline-none leading-snug"
                 style="max-height: 80px; overflow-y: auto"
                 @keydown.enter.exact.prevent="submitComment"
                 @input="autoResize"
@@ -424,7 +424,7 @@
                       v-model="commentEditDraft"
                       rows="2"
                       maxlength="2000"
-                      class="w-full bg-transparent text-[13px] text-foreground resize-none outline-none leading-snug"
+                      class="w-full bg-transparent text-base text-foreground resize-none outline-none leading-snug"
                       style="max-height: 120px; overflow-y: auto"
                       @keydown.enter.exact.prevent="saveCommentEdit(c.id)"
                       @keydown.escape="cancelCommentEdit"

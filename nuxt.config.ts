@@ -5,7 +5,10 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Our Story',
-      meta: [{ name: 'description', content: 'Your circle of memories.' }],
+      meta: [
+        { name: 'description', content: 'Your circle of memories.' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover' },
+      ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },

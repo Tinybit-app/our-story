@@ -12,7 +12,7 @@
   <Transition name="slide-up">
     <div
       v-if="open"
-      class="fixed inset-x-0 bottom-0 z-50 bg-card border-t border-border rounded-t-[24px] shadow-2xl max-h-[85vh] overflow-y-auto"
+      class="fixed inset-x-0 bottom-0 z-50 bg-card border-t border-border rounded-t-[24px] shadow-2xl max-h-[85vh] overflow-y-auto pb-safe"
     >
       <!-- Handle -->
       <div class="flex justify-center pt-3 pb-1">

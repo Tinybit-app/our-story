@@ -466,14 +466,14 @@
                   <input
                     v-model="item.date"
                     type="date"
-                    class="w-full bg-transparent text-xs text-foreground focus:outline-none"
+                    class="w-full bg-transparent text-base text-foreground focus:outline-none"
                   />
                   <textarea
                     v-model="item.note"
                     :placeholder="t('upload.noteShort')"
                     rows="1"
                     maxlength="500"
-                    class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground resize-none focus:outline-none leading-snug"
+                    class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none leading-snug"
                     style="max-height: 48px; overflow-y: auto"
                   />
                   <input
@@ -481,7 +481,7 @@
                     type="text"
                     :placeholder="typeConfig.milestoneShort"
                     maxlength="40"
-                    class="w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
                   />
                   <!-- Per-item people picker -->
                   <div
