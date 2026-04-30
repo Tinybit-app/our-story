@@ -34,8 +34,9 @@ Your circle includes grandparents, non-technical family members, and people who 
 - Magic link login — no passwords to forget
 - Every error message is human-readable ("Your invite link has expired — ask the circle owner for a new one"), never a raw error code
 - Every async action has visible feedback within 200ms (progress bar, spinner, skeleton)
-- Minimum tap target size: 44×44px on all interactive elements
-- Font size minimum 16px on all inputs (prevents iOS auto-zoom)
+- Minimum tap target size: 44×44px on all interactive elements **[Implemented §11.2]** — dialog/sheet close buttons, MemoryModal action buttons, toast close
+- Font size minimum 16px on all inputs (prevents iOS auto-zoom) **[Implemented §11.2]** — all `<input>` and `<textarea>` elements use `text-base`
+- Safe area insets for notched devices (iPhone X+, Dynamic Island) **[Implemented §11.2]** — `viewport-fit=cover` + `env(safe-area-inset-*)` on body + `pb-safe` on bottom sheets
 - WCAG 2.1 AA compliance is a baseline — test with VoiceOver and TalkBack before every release
 - New users must reach their "aha moment" (first shared memory) in one session — onboarding is never optional to fix
 

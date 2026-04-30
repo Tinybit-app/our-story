@@ -267,7 +267,11 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `CACHE_NAME` versioned (`our-story-v1`) — bump on breaking changes to purge old caches
   - `skipWaiting()` + `clients.claim()` for immediate activation
   - No offline upload queue (Phase 2 with Capacitor)
-- [ ] 11.2 Mobile-first CSS (tap targets, safe areas, no zoom)
+- [x] 11.2 Mobile-first CSS (tap targets, safe areas, no zoom)
+  - Viewport meta: `width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover`
+  - Input font sizes: all `<input>` and `<textarea>` elements bumped to `text-base` (16px) to prevent iOS auto-zoom — UploadMemory, QuickNoteModal, MemoryModal
+  - Safe area insets: `env(safe-area-inset-*)` on body for notched devices; `pb-safe` on bottom sheets (CreateLinkSheet, ShareLinksSheet); utility classes in globals.css
+  - Tap targets: dialog/sheet close buttons enlarged (p-2 + w-5 icon); MemoryModal share/download buttons w-11 (was w-8); edit button w-10 (was w-6); toast close p-2 (was p-1)
 - [ ] 11.3 Performance targets (Lighthouse CI)
 - [ ] 11.4 Add to Home Screen prompt
 
