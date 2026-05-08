@@ -141,7 +141,13 @@
     "errorStorageFull": "Espace de stockage plein",
     "errorVideoTooLarge": "Vidéo trop volumineuse",
     "errorPhotoTooLarge": "Photo trop volumineuse",
-    "errorFailed": "Échec du téléversement"
+    "errorFailed": "Échec du téléversement",
+    "postSeparately": "Publier séparément",
+    "postAsOne": "Publier comme un souvenir",
+    "addTextSlide": "Ajouter une note",
+    "setAsCover": "Définir comme couverture",
+    "coverLabel": "Couverture",
+    "removeTextSlide": "Supprimer"
   },
   "common": {
     "back": "Retour",

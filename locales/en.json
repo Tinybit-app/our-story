@@ -141,7 +141,13 @@
     "errorStorageFull": "Storage full",
     "errorVideoTooLarge": "Video too large",
     "errorPhotoTooLarge": "Photo too large",
-    "errorFailed": "Upload failed"
+    "errorFailed": "Upload failed",
+    "postSeparately": "Post separately",
+    "postAsOne": "Post as one memory",
+    "addTextSlide": "Add note",
+    "setAsCover": "Set as cover",
+    "coverLabel": "Cover",
+    "removeTextSlide": "Remove"
   },
   "common": {
     "back": "Back",

@@ -141,7 +141,13 @@
     "errorStorageFull": "存储空间已满",
     "errorVideoTooLarge": "视频太大",
     "errorPhotoTooLarge": "照片太大",
-    "errorFailed": "上传失败"
+    "errorFailed": "上传失败",
+    "postSeparately": "分开发布",
+    "postAsOne": "作为一条记忆发布",
+    "addTextSlide": "添加文字",
+    "setAsCover": "设为封面",
+    "coverLabel": "封面",
+    "removeTextSlide": "删除"
   },
   "common": {
     "back": "返回",
