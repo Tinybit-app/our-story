@@ -15,9 +15,10 @@ const querySchema = z.object({
 
 const MEMORY_SELECT = `
   id, owner_user_id, former_owner_name, former_owner_user_id, visibility, note, memory_date, milestone_label, created_at,
+  cover_media_id,
   memory_children(child_id, childprofile(id, name, date_of_birth)),
   memory_members(user_id, user:user_id(id, first_name, last_name, avatar_url)),
-  memorymedia(id, storage_path, media_type, file_size),
+  memorymedia(id, storage_path, media_type, file_size, text_content, display_order),
   user!owner_user_id(first_name, last_name, avatar_url),
   memoryreaction(id, emoji, user_id, guest_name, user!user_id(first_name, last_name)),
   memorycomment(id)
@@ -221,13 +222,35 @@ async function getPrevYear(supabase: any, circleId: string, userId: string, curr
 async function attachSignedUrls(supabase: any, memories: any[]) {
   return Promise.all(
     memories.map(async (memory) => {
-      const mediaWithUrls = await Promise.all(
-        ((memory.memorymedia as any[]) ?? []).map(async (media) => {
-          const { storage_path, ...safeMedia } = media
-          if (!storage_path) return { ...safeMedia, url: null, thumbnailUrl: null }
+      const allMedia: any[] = (memory.memorymedia ?? []).slice().sort(
+        (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
+      )
 
-          const isVideo = media.media_type === "video"
+      const media_count = allMedia.length
 
+      // Resolve the cover row
+      let coverRow: any | null = null
+      if (memory.cover_media_id) {
+        coverRow = allMedia.find((m: any) => m.id === memory.cover_media_id) ?? null
+      }
+      if (!coverRow) {
+        coverRow = allMedia.find((m: any) => m.media_type !== "text") ?? null
+      }
+
+      // cover_text_content: for all-text memories, provide first text row's content
+      const cover_text_content: string | null =
+        coverRow === null
+          ? (allMedia.find((m: any) => m.media_type === "text")?.text_content ?? null)
+          : null
+
+      let memorymedia: any[] = []
+
+      if (coverRow) {
+        const { storage_path, ...safeMedia } = coverRow
+        if (!storage_path) {
+          memorymedia = [{ ...safeMedia, url: null, thumbnailUrl: null }]
+        } else {
+          const isVideo = coverRow.media_type === "video"
           const [fullResult, thumbResult] = await Promise.allSettled([
             supabase.storage.from("memories-private").createSignedUrl(storage_path, 3600),
             isVideo
@@ -236,14 +259,14 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
                   transform: { width: 800, format: "webp" as "origin", quality: 85 },
                 }),
           ])
-
           const url = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
           const thumbnailUrl = isVideo ? url : (thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? url) : url)
+          memorymedia = [{ ...safeMedia, url, thumbnailUrl }]
+        }
+      }
 
-          return { ...safeMedia, url, thumbnailUrl }
-        })
-      )
-      return { ...memory, memorymedia: mediaWithUrls }
+      const { cover_media_id: _cmi, ...memoryRest } = memory
+      return { ...memoryRest, memorymedia, media_count, cover_text_content }
     })
   )
 }

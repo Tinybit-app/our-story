@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
 
   let memoryQuery = supabase
     .from("memory")
-    .select("id, memory_date, note, memorymedia(storage_path, media_type)")
+    .select("id, memory_date, note, cover_media_id, memorymedia(id, storage_path, media_type, text_content, display_order)")
     .eq("circle_id", circleId)
     .eq("visibility", "circle")
     .order("memory_date", { ascending: false })
@@ -79,21 +79,40 @@ export default defineEventHandler(async (event) => {
 
   const { data: memories } = await memoryQuery
 
-  // Generate signed URLs (full + thumbnail, matching main timeline approach)
+  // Generate signed URLs — cover only (full + thumbnail), matching main timeline approach
   const memoriesWithUrls = await Promise.all(
     (memories ?? []).map(async (m: any) => {
-      const media = m.memorymedia?.[0]
-      if (!media?.storage_path) {
-        return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: null, mediaType: null }
+      const allMedia: any[] = (m.memorymedia ?? []).slice().sort(
+        (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
+      )
+      const media_count = allMedia.length
+
+      // Resolve cover row
+      let coverRow: any | null = null
+      if (m.cover_media_id) {
+        coverRow = allMedia.find((r: any) => r.id === m.cover_media_id) ?? null
       }
-      const isVideo = media.media_type === "video"
+      if (!coverRow) {
+        coverRow = allMedia.find((r: any) => r.media_type !== "text") ?? null
+      }
+
+      const cover_text_content: string | null =
+        coverRow === null
+          ? (allMedia.find((r: any) => r.media_type === "text")?.text_content ?? null)
+          : null
+
+      if (!coverRow?.storage_path) {
+        return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl: null, mediaType: null, media_count, cover_text_content }
+      }
+
+      const isVideo = coverRow.media_type === "video"
       const mediaType: "video" | "image" = isVideo ? "video" : "image"
 
       const [fullResult, thumbResult] = await Promise.allSettled([
-        supabase.storage.from("memories-private").createSignedUrl(media.storage_path, 3600),
+        supabase.storage.from("memories-private").createSignedUrl(coverRow.storage_path, 3600),
         isVideo
           ? Promise.resolve({ data: null })
-          : supabase.storage.from("memories-private").createSignedUrl(media.storage_path, 86400, {
+          : supabase.storage.from("memories-private").createSignedUrl(coverRow.storage_path, 86400, {
               transform: { width: 800, format: "webp" as "origin", quality: 85 },
             }),
       ])
@@ -103,7 +122,7 @@ export default defineEventHandler(async (event) => {
         ? fullUrl
         : (thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? fullUrl) : fullUrl)
 
-      return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl, mediaType }
+      return { id: m.id, memory_date: m.memory_date, note: m.note, signedUrl, mediaType, media_count, cover_text_content }
     })
   )
 
