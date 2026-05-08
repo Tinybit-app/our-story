@@ -28,6 +28,7 @@ const allMigrations = [
   sql("026_push_subscriptions.sql"),
   sql("027_digest_monthly_default.sql"),
   sql("028_circle_digest_tracking.sql"),
+  sql("029_multi_item_memories.sql"),
 ].join("\n")
 
 // ============================================================
@@ -317,5 +318,37 @@ describe("Step 12.1 — Circle digest tracking", () => {
 
   it("adds last_monthly_digest_sent_at column", () => {
     expect(m028).toContain("last_monthly_digest_sent_at TIMESTAMPTZ")
+  })
+})
+
+// ============================================================
+// Step 5.4 — Multi-item memories
+// ============================================================
+describe("Step 5.4 — Multi-item memories", () => {
+  const m029 = sql("029_multi_item_memories.sql")
+
+  it("adds text_content column to memorymedia", () => {
+    expect(m029).toContain("ADD COLUMN text_content TEXT")
+  })
+
+  it("adds display_order column to memorymedia", () => {
+    expect(m029).toContain("ADD COLUMN display_order INT NOT NULL DEFAULT 0")
+  })
+
+  it("makes storage_path nullable", () => {
+    expect(m029).toContain("ALTER COLUMN storage_path DROP NOT NULL")
+  })
+
+  it("extends media_type CHECK to include text", () => {
+    expect(m029).toMatch(/CHECK \(media_type IN \('photo', 'video', 'live_photo', 'text'\)\)/)
+  })
+
+  it("adds content_check constraint", () => {
+    expect(m029).toContain("memorymedia_content_check")
+    expect(m029).toContain("text_content IS NOT NULL")
+  })
+
+  it("adds cover_media_id to memory", () => {
+    expect(m029).toContain("ADD COLUMN cover_media_id UUID REFERENCES memorymedia(id) ON DELETE SET NULL")
   })
 })

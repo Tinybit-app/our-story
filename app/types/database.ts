@@ -367,6 +367,7 @@ export type Database = {
           alt_text: string | null
           circle_id: string
           contributions_open: boolean
+          cover_media_id: string | null
           created_at: string
           former_owner_name: string | null
           former_owner_user_id: string | null
@@ -382,6 +383,7 @@ export type Database = {
           alt_text?: string | null
           circle_id: string
           contributions_open?: boolean
+          cover_media_id?: string | null
           created_at?: string
           former_owner_name?: string | null
           former_owner_user_id?: string | null
@@ -397,6 +399,7 @@ export type Database = {
           alt_text?: string | null
           circle_id?: string
           contributions_open?: boolean
+          cover_media_id?: string | null
           created_at?: string
           former_owner_name?: string | null
           former_owner_user_id?: string | null
@@ -414,6 +417,13 @@ export type Database = {
             columns: ["circle_id"]
             isOneToOne: false
             referencedRelation: "circle"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_cover_media_id_fkey"
+            columns: ["cover_media_id"]
+            isOneToOne: false
+            referencedRelation: "memorymedia"
             referencedColumns: ["id"]
           },
           {
@@ -530,6 +540,7 @@ export type Database = {
       memorymedia: {
         Row: {
           created_at: string
+          display_order: number
           file_size: number
           guest_name: string | null
           id: string
@@ -541,10 +552,12 @@ export type Database = {
           memory_id: string
           phash: string | null
           still_path: string | null
-          storage_path: string
+          storage_path: string | null
+          text_content: string | null
         }
         Insert: {
           created_at?: string
+          display_order?: number
           file_size: number
           guest_name?: string | null
           id?: string
@@ -556,10 +569,12 @@ export type Database = {
           memory_id: string
           phash?: string | null
           still_path?: string | null
-          storage_path: string
+          storage_path?: string | null
+          text_content?: string | null
         }
         Update: {
           created_at?: string
+          display_order?: number
           file_size?: number
           guest_name?: string | null
           id?: string
@@ -571,7 +586,8 @@ export type Database = {
           memory_id?: string
           phash?: string | null
           still_path?: string | null
-          storage_path?: string
+          storage_path?: string | null
+          text_content?: string | null
         }
         Relationships: [
           {
