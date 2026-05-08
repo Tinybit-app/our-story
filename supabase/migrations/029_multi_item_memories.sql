@@ -6,6 +6,7 @@ ALTER TABLE memorymedia
   ADD COLUMN display_order INT NOT NULL DEFAULT 0;
 
 ALTER TABLE memorymedia ALTER COLUMN storage_path DROP NOT NULL;
+ALTER TABLE memorymedia ALTER COLUMN file_size DROP NOT NULL;
 
 ALTER TABLE memorymedia DROP CONSTRAINT IF EXISTS memorymedia_media_type_check;
 ALTER TABLE memorymedia ADD CONSTRAINT memorymedia_media_type_check

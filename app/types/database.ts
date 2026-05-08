@@ -541,7 +541,7 @@ export type Database = {
         Row: {
           created_at: string
           display_order: number
-          file_size: number
+          file_size: number | null
           guest_name: string | null
           id: string
           lat: number | null
@@ -558,7 +558,7 @@ export type Database = {
         Insert: {
           created_at?: string
           display_order?: number
-          file_size: number
+          file_size?: number | null
           guest_name?: string | null
           id?: string
           lat?: number | null
@@ -575,7 +575,7 @@ export type Database = {
         Update: {
           created_at?: string
           display_order?: number
-          file_size?: number
+          file_size?: number | null
           guest_name?: string | null
           id?: string
           lat?: number | null
