@@ -73,6 +73,9 @@ Deno.serve(async (req) => {
     }
   }
 
+  const url = new URL(req.url)
+  const isDeferred = url.searchParams.get("defer") === "true"
+
   // Upload to private storage bucket
   const ext = file.name.split(".").pop()
   const storagePath = `${user.id}/${crypto.randomUUID()}.${ext}`
@@ -92,9 +95,9 @@ Deno.serve(async (req) => {
     .insert({
       owner_user_id: user.id,
       circle_id: circleId,
-      visibility: "circle",
-      note: note || null,
-      milestone_label: milestoneLabel || null,
+      visibility: isDeferred ? "private" : "circle",
+      note: isDeferred ? null : (note || null),
+      milestone_label: isDeferred ? null : (milestoneLabel || null),
       memory_date: memoryDate || new Date().toISOString(),
     })
     .select()
@@ -107,12 +110,24 @@ Deno.serve(async (req) => {
   }
 
   // Insert MemoryMedia row (storage_path never leaves the server)
-  await supabase.from("memorymedia").insert({
-    memory_id: memory.id,
-    storage_path: storagePath,
-    file_size: file.size,
-    media_type: isVideo ? "video" : "photo",
-  })
+  const { data: media, error: mediaError } = await supabase
+    .from("memorymedia")
+    .insert({
+      memory_id: memory.id,
+      storage_path: storagePath,
+      file_size: file.size,
+      media_type: isVideo ? "video" : "photo",
+      display_order: 0,
+    })
+    .select("id")
+    .single()
+
+  if (mediaError || !media) {
+    // Clean up storage + memory on failure
+    await supabase.storage.from("memories-private").remove([storagePath])
+    await supabase.from("memory").delete().eq("id", memory.id)
+    return Response.json({ error: mediaError?.message ?? "Failed to save media" }, { status: 500 })
+  }
 
   // Increment storage usage
   await supabase
@@ -120,5 +135,5 @@ Deno.serve(async (req) => {
     .update({ total_used_bytes: (storage?.total_used_bytes ?? 0) + file.size })
     .eq("user_id", user.id)
 
-  return Response.json({ ok: true, memoryId: memory.id })
+  return Response.json({ ok: true, memoryId: memory.id, mediaId: media.id })
 })
