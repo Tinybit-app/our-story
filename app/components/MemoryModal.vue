@@ -2,8 +2,8 @@
   <!-- Fills the shell's flex-col card. @click closes the emoji picker. -->
   <div class="flex flex-col flex-1 min-h-0" @click="pickerOpen = false">
 
-    <!-- Photo / video -->
-    <div class="relative overflow-hidden bg-border flex-shrink-0 aspect-[4/3]">
+    <!-- Photo / video — single item -->
+    <div v-if="(memory.media_count ?? 1) <= 1" class="relative overflow-hidden bg-border flex-shrink-0 aspect-[4/3]">
       <template v-if="firstMedia && firstMedia.media_type !== 'video'">
         <div v-if="!modalImgLoaded" class="absolute inset-0 skeleton-shimmer" />
         <img
@@ -71,6 +71,58 @@
           </svg>
         </button>
       </div>
+    </div>
+
+    <!-- Photo / video — multi-item carousel -->
+    <div v-if="(memory.media_count ?? 1) > 1" class="relative flex-shrink-0 bg-border">
+      <!-- Loading skeleton -->
+      <div v-if="slidesLoading" class="aspect-[4/3] skeleton-shimmer" />
+      <!-- Carousel -->
+      <template v-else-if="slides.length > 0">
+        <div ref="carouselRef" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar" @scroll="onCarouselScroll">
+          <div v-for="slide in slides" :key="slide.id" class="snap-center flex-shrink-0 w-full">
+            <div class="relative aspect-[4/3] overflow-hidden bg-border">
+              <img
+                v-if="slide.mediaType === 'photo'"
+                :src="slide.url ?? undefined"
+                class="absolute inset-0 w-full h-full object-cover block"
+              />
+              <video
+                v-else-if="slide.mediaType === 'video'"
+                :src="slide.url ?? undefined"
+                class="absolute inset-0 w-full h-full object-cover block"
+                controls
+                playsinline
+                preload="auto"
+              />
+              <div
+                v-else
+                class="absolute inset-0 w-full h-full flex items-center justify-center p-8"
+                style="
+                  background-color: color-mix(in srgb, var(--accent) 12%, var(--card));
+                  background-image: repeating-linear-gradient(transparent, transparent 23px, color-mix(in srgb, var(--border) 80%, transparent) 24px);
+                "
+              >
+                <p class="text-[15px] text-foreground leading-7 text-center">{{ slide.textContent }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Dot indicators + counter -->
+        <div class="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none">
+          <div class="flex justify-center gap-1">
+            <span
+              v-for="(_, idx) in slides"
+              :key="idx"
+              class="w-1.5 h-1.5 rounded-full transition-colors"
+              :class="idx === currentSlideIdx ? 'bg-white' : 'bg-white/40'"
+            />
+          </div>
+          <span class="text-[10px] text-white/70 font-medium tabular-nums drop-shadow">
+            {{ currentSlideIdx + 1 }} / {{ slides.length }}
+          </span>
+        </div>
+      </template>
     </div>
 
     <!-- Caption section: tab bar + independent scroll panels -->
@@ -500,6 +552,41 @@ const modalImgLoaded = ref(false)
 
 const memory = computed(() => props.memory)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
+
+// ── Multi-item carousel ────────────────────────────────────
+interface Slide {
+  id: string
+  mediaType: 'photo' | 'video' | 'text'
+  url?: string | null
+  textContent?: string
+  displayOrder: number
+}
+
+const slides = ref<Slide[]>([])
+const slidesLoading = ref(false)
+const currentSlideIdx = ref(0)
+const carouselRef = ref<HTMLDivElement | null>(null)
+
+watch(() => props.memory?.id, async (id) => {
+  currentSlideIdx.value = 0
+  if (!id || (props.memory?.media_count ?? 1) <= 1) {
+    slides.value = []
+    return
+  }
+  slidesLoading.value = true
+  try {
+    const data = await $fetch<{ slides: Slide[] }>(`/api/memories/${id}/slides`)
+    slides.value = data.slides
+  } finally {
+    slidesLoading.value = false
+  }
+}, { immediate: true })
+
+function onCarouselScroll() {
+  if (!carouselRef.value) return
+  const idx = Math.round(carouselRef.value.scrollLeft / carouselRef.value.clientWidth)
+  currentSlideIdx.value = idx
+}
 
 const formattedDate = computed(() =>
   new Date(props.memory.memory_date).toLocaleDateString(locale.value, { month: 'long', day: 'numeric', year: 'numeric' })

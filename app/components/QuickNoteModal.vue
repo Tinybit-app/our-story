@@ -2,8 +2,9 @@
   <!-- Fills the shell's flex-col card. @click closes the emoji picker. -->
   <div class="flex flex-col flex-1 min-h-0" @click="pickerOpen = false">
 
-    <!-- Editorial quote area -->
+    <!-- Editorial quote area — single quick note -->
     <div
+      v-if="(props.memory.media_count ?? 0) <= 1"
       class="relative flex-shrink-0 flex flex-col justify-center px-8 pt-9 pb-8"
       style="background: color-mix(in srgb, var(--accent) 6%, var(--card)); min-height: 190px; border-bottom: 1px solid hsl(var(--border));"
     >
@@ -31,13 +32,76 @@
         class="relative"
         style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 17px; line-height: 1.72; color: hsl(var(--foreground)); z-index: 1; max-height: 210px; overflow-y: auto;"
       >
-        {{ props.memory.note }}
+        {{ props.memory.cover_text_content ?? props.memory.note }}
       </p>
 
       <span
         class="absolute bottom-3 right-4 text-[10px] select-none"
         style="color: hsl(var(--muted-foreground) / 0.5)"
       >{{ formattedDate }}</span>
+    </div>
+
+    <!-- Multi-slide carousel — multi-text memory -->
+    <div
+      v-else
+      class="relative flex-shrink-0"
+      style="background: color-mix(in srgb, var(--accent) 6%, var(--card)); border-bottom: 1px solid hsl(var(--border));"
+    >
+      <!-- Loading skeleton -->
+      <div v-if="slidesLoading" class="skeleton-shimmer" style="min-height: 230px;" />
+      <!-- Carousel -->
+      <template v-else-if="slides.length > 0">
+        <div ref="carouselRef" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar" @scroll="onCarouselScroll">
+          <div
+            v-for="slide in slides"
+            :key="slide.id"
+            class="snap-center flex-shrink-0 w-full relative px-8 pt-9 pb-10"
+            style="min-height: 230px;"
+          >
+            <span
+              class="absolute select-none pointer-events-none"
+              aria-hidden="true"
+              style="font-size: 130px; font-family: Georgia, 'Times New Roman', serif; color: rgba(200,168,130,0.16); top: -8px; left: 12px; line-height: 1; z-index: 0;"
+            >&ldquo;</span>
+            <p
+              v-if="slide.mediaType === 'text'"
+              class="relative flex items-center justify-center text-center"
+              style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 17px; line-height: 1.72; color: hsl(var(--foreground)); z-index: 1; max-height: 180px; overflow-y: auto;"
+            >
+              {{ slide.textContent }}
+            </p>
+            <img
+              v-else-if="slide.mediaType === 'photo'"
+              :src="slide.url ?? undefined"
+              class="w-full h-full object-contain block"
+              style="max-height: 200px; margin: 0 auto;"
+            />
+            <video
+              v-else-if="slide.mediaType === 'video'"
+              :src="slide.url ?? undefined"
+              class="w-full h-full object-contain block"
+              style="max-height: 200px; margin: 0 auto;"
+              controls
+              playsinline
+              preload="auto"
+            />
+          </div>
+        </div>
+        <!-- Dot indicators + counter -->
+        <div class="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none">
+          <div class="flex justify-center gap-1">
+            <span
+              v-for="(_, idx) in slides"
+              :key="idx"
+              class="w-1.5 h-1.5 rounded-full transition-colors"
+              :class="idx === currentSlideIdx ? 'bg-foreground' : 'bg-foreground/20'"
+            />
+          </div>
+          <span class="text-[10px] text-muted-foreground font-medium tabular-nums">
+            {{ currentSlideIdx + 1 }} / {{ slides.length }}
+          </span>
+        </div>
+      </template>
     </div>
 
     <!-- Bottom: info row + comments -->
@@ -389,6 +453,40 @@ const pickerOpen = ref(false)
 const formattedDate = computed(() =>
   new Date(props.memory.memory_date).toLocaleDateString(locale.value, { month: 'long', day: 'numeric', year: 'numeric' })
 )
+
+// ── Multi-item slides (carousel) ─────────────────────────────────────
+interface Slide {
+  id: string
+  mediaType: 'photo' | 'video' | 'text'
+  url?: string | null
+  textContent?: string
+  displayOrder: number
+}
+const slides = ref<Slide[]>([])
+const slidesLoading = ref(false)
+const currentSlideIdx = ref(0)
+const carouselRef = ref<HTMLDivElement | null>(null)
+
+watch(() => props.memory?.id, async (id) => {
+  if (!id || (props.memory?.media_count ?? 0) <= 1) {
+    slides.value = []
+    return
+  }
+  slidesLoading.value = true
+  try {
+    const data = await $fetch<{ slides: Slide[] }>(`/api/memories/${id}/slides`)
+    slides.value = data.slides
+    currentSlideIdx.value = 0
+  } finally {
+    slidesLoading.value = false
+  }
+}, { immediate: true })
+
+function onCarouselScroll() {
+  if (!carouselRef.value) return
+  const idx = Math.round(carouselRef.value.scrollLeft / carouselRef.value.clientWidth)
+  currentSlideIdx.value = idx
+}
 
 const childAges = computed(() =>
   (props.memory.memory_children ?? [])
