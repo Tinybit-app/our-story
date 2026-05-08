@@ -27,6 +27,7 @@ const allMigrations = [
   sql("004_schema_additions.sql"),
   sql("026_push_subscriptions.sql"),
   sql("027_digest_monthly_default.sql"),
+  sql("028_circle_digest_tracking.sql"),
 ].join("\n")
 
 // ============================================================
@@ -301,5 +302,20 @@ describe("Step 10.3 — Monthly digest default", () => {
 
   it("changes default to monthly", () => {
     expect(m027).toContain("SET DEFAULT 'monthly'")
+  })
+})
+
+// ============================================================
+// Step 12.1 — Circle digest tracking
+// ============================================================
+describe("Step 12.1 — Circle digest tracking", () => {
+  const m028 = sql("028_circle_digest_tracking.sql")
+
+  it("adds last_weekly_digest_sent_at column", () => {
+    expect(m028).toContain("last_weekly_digest_sent_at TIMESTAMPTZ")
+  })
+
+  it("adds last_monthly_digest_sent_at column", () => {
+    expect(m028).toContain("last_monthly_digest_sent_at TIMESTAMPTZ")
   })
 })

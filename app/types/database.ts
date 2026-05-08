@@ -122,6 +122,8 @@ export type Database = {
           id: string
           last_challenge_completed_at: string | null
           last_memory_at: string | null
+          last_monthly_digest_sent_at: string | null
+          last_weekly_digest_sent_at: string | null
           memory_count: number
           name: string
           quiet_nudge_count: number
@@ -147,6 +149,8 @@ export type Database = {
           id?: string
           last_challenge_completed_at?: string | null
           last_memory_at?: string | null
+          last_monthly_digest_sent_at?: string | null
+          last_weekly_digest_sent_at?: string | null
           memory_count?: number
           name: string
           quiet_nudge_count?: number
@@ -172,6 +176,8 @@ export type Database = {
           id?: string
           last_challenge_completed_at?: string | null
           last_memory_at?: string | null
+          last_monthly_digest_sent_at?: string | null
+          last_weekly_digest_sent_at?: string | null
           memory_count?: number
           name?: string
           quiet_nudge_count?: number
