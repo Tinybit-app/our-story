@@ -299,6 +299,24 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Reactions from email: login-redirect (no signed JWTs); CTA "Open Our Story to react ❤️" deep-links to `/timeline?circle=X&memory=Y`
   - Thumbnails: signed URLs with 7-day TTL (matches typical email open window)
   - **Manual setup remaining:** schedule `send-weekly-digest` and `send-monthly-digest` jobs in Supabase Studio (SQL templates in migration 028 comment block)
+  - **Local verification steps** (deferred — return to before production deploy):
+    1. Make sure local Supabase is running: `supabase status`
+    2. Ensure at least one circle has a memory in the last 7 days (use the app's onboarding/upload flow if DB is empty)
+    3. Serve the function locally: `supabase functions serve send-digest --no-verify-jwt` (leave terminal running)
+    4. In a separate terminal, get the local service role key: `supabase status -o env | grep SERVICE_ROLE_KEY`
+    5. Trigger weekly: `curl -X POST 'http://127.0.0.1:54321/functions/v1/send-digest?frequency=weekly' -H "Authorization: Bearer <service-role-key>"`
+    6. Trigger monthly: `curl -X POST 'http://127.0.0.1:54321/functions/v1/send-digest?frequency=monthly' -H "Authorization: Bearer <service-role-key>"`
+    7. Bad input check: `?frequency=daily` should return `400`
+    8. Expected response: `{ "ok": true, "frequency": "weekly", "sent": N, "skipped": M }`
+    9. With `RESEND_API_KEY` unset in dev, the `supabase functions serve` terminal should log `[dev] digest email to <addr>: <subject>` lines per recipient
+    10. Idempotency: run the same curl twice; second call should return `sent: 0, skipped: N` (because `last_*_digest_sent_at` is within cutoff). Reset with: `UPDATE circle SET last_weekly_digest_sent_at = NULL, last_monthly_digest_sent_at = NULL;`
+    11. Edge cases to verify in Studio (`http://127.0.0.1:54323`):
+        - Set `notificationpreference.circle_muted = true` for one user → that user is skipped, others receive
+        - Set `notificationpreference.email_digest_frequency = 'off'` → user skipped
+        - Member with no preference row → defaults to `monthly` (so weekly cron skips, monthly cron sends)
+        - Empty period (no memories in last 7d/30d) → entire circle skipped
+        - User with `deletion_requested_at IS NOT NULL` → skipped
+    12. Known troubleshooting: if the function reports "name resolution failed", it's a Docker hostname issue inside the Edge Function container. Try removing any `SUPABASE_URL` overrides from `.env` files; the runtime should auto-inject `http://kong:8000` for the functions container
   - See spec: `docs/superpowers/specs/2026-05-08-digest-emails-design.md`
 - [ ] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3 follow-up), auto-calculated from ChildProfile.date_of_birth
 - [ ] 12.3 First-memory anniversary (30-day cron)
