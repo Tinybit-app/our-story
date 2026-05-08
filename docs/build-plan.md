@@ -272,7 +272,10 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Input font sizes: all `<input>` and `<textarea>` elements bumped to `text-base` (16px) to prevent iOS auto-zoom — UploadMemory, QuickNoteModal, MemoryModal
   - Safe area insets: `env(safe-area-inset-*)` on body for notched devices; `pb-safe` on bottom sheets (CreateLinkSheet, ShareLinksSheet); utility classes in globals.css
   - Tap targets: dialog/sheet close buttons enlarged (p-2 + w-5 icon); MemoryModal share/download buttons w-11 (was w-8); edit button w-10 (was w-6); toast close p-2 (was p-1)
-- [ ] 11.3 Performance targets (Lighthouse CI)
+- [x] 11.3 Performance targets (Lighthouse CI)
+  - `lighthouserc.js` config: performance >= 0.7 (warn), accessibility >= 0.9 (error), best-practices >= 0.8 (warn); LCP < 2.5s, CLS < 0.1, TTI < 3.5s
+  - CI workflow: builds Nuxt, runs `lhci autorun` against preview server
+  - Mobile simulation: Fast 4G throttling, 4x CPU slowdown (per design spec)
 - [ ] 11.4 Add to Home Screen prompt
 
 ### Milestone 12: Early Retention Hooks

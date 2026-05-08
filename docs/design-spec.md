@@ -2114,7 +2114,7 @@ The timeline is the core experience. If it loads slowly, the app feels broken re
 - Memory page must be renderable without full timeline load — fetch single memory by ID, not the full timeline
 
 ### Testing
-- Measure with Lighthouse (PWA mode) in CI — fail builds that regress below targets
+- Measure with Lighthouse CI in GitHub Actions — `lighthouserc.js` asserts performance >= 0.7, accessibility >= 0.9, LCP < 2.5s, CLS < 0.1, TTI < 3.5s; runs against Nuxt preview server with Fast 4G throttling **[Implemented §11.3]**
 - Test on a mid-range Android device (e.g. Samsung A-series) — not just iPhone 15 Pro
 - Throttle to "Fast 4G" in DevTools for all timeline performance testing
 

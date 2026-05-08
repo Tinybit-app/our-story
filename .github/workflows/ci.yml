@@ -90,5 +90,19 @@ jobs:
           path: test-results/
           retention-days: 7
 
+      - name: Build for Lighthouse
+        run: pnpm build
+        env:
+          VAPID_PUBLIC_KEY: placeholder
+          VAPID_PRIVATE_KEY: placeholder
+          VAPID_SUBJECT: mailto:ci@example.com
+
+      - name: Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+
       - name: Stop Supabase
         run: supabase stop
