@@ -1,13 +1,25 @@
 <template>
+  <div class="relative inline-block flex-shrink-0" :style="{ zIndex: isHovered ? 10 : 1 }">
+    <!-- Stack silhouettes when media_count > 1 -->
+    <div
+      v-if="(memory.media_count ?? 1) > 1"
+      class="absolute inset-0 -translate-y-1 translate-x-1 rotate-1 bg-card border border-border/40 shadow-md pointer-events-none -z-10"
+      aria-hidden="true"
+    />
+    <div
+      v-if="(memory.media_count ?? 1) > 2"
+      class="absolute inset-0 -translate-y-2 translate-x-2 rotate-2 bg-card border border-border/30 shadow-md pointer-events-none -z-20"
+      aria-hidden="true"
+    />
+
   <article
     ref="articleEl"
-    class="polaroid-card relative bg-card flex-shrink-0 cursor-pointer select-none shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)] p-[8px] pb-[15px]"
+    class="polaroid-card relative bg-card cursor-pointer select-none shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)] p-[8px] pb-[15px]"
     :class="wide ? 'w-[290px]' : 'w-[210px]'"
     :style="{
       transform: isHovered
         ? 'rotate(0deg) scale(1.05) translateY(-4px)'
         : `rotate(${tilt}deg)`,
-      zIndex: isHovered ? 10 : 1,
       boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined,
     }"
     @mouseenter="isHovered = true"
@@ -149,6 +161,15 @@
         >
       </div>
 
+      <!-- Count badge — bottom-right of photo area when multi-item -->
+      <span
+        v-if="(memory.media_count ?? 1) > 1"
+        class="absolute bottom-2 right-2 z-10 inline-flex items-center px-1.5 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-semibold backdrop-blur-sm pointer-events-none"
+        aria-label="`${memory.media_count} items`"
+      >
+        ⊕{{ memory.media_count }}
+      </span>
+
       <!-- Reaction overlay — appears on hover at bottom of photo -->
       <Transition
         enter-active-class="transition duration-150 ease-out"
@@ -286,6 +307,7 @@
       </div>
     </div>
   </article>
+  </div>
 </template>
 
 <script setup lang="ts">

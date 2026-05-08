@@ -25,6 +25,8 @@ export interface Memory {
   user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null
   memoryreaction: { id: string; emoji: string; user_id: string; user: { first_name: string | null; last_name: string | null } | null }[]
   memorycomment: { id: string }[]
+  media_count?: number
+  cover_text_content?: string | null
 }
 
 export interface MonthGroup {

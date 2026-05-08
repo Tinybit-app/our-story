@@ -1,13 +1,25 @@
 <template>
+  <div class="relative inline-block flex-shrink-0" :style="{ zIndex: isHovered ? 10 : 1 }">
+    <!-- Stack silhouettes when media_count > 1 (stacked postcards) -->
+    <div
+      v-if="(memory.media_count ?? 1) > 1"
+      class="absolute inset-0 -translate-y-1 translate-x-1 rotate-1 bg-card border border-border/40 shadow-md pointer-events-none -z-10"
+      aria-hidden="true"
+    />
+    <div
+      v-if="(memory.media_count ?? 1) > 2"
+      class="absolute inset-0 -translate-y-2 translate-x-2 rotate-2 bg-card border border-border/30 shadow-md pointer-events-none -z-20"
+      aria-hidden="true"
+    />
+
   <article
     ref="articleEl"
-    class="quick-note-card relative bg-card cursor-pointer select-none flex-shrink-0"
+    class="quick-note-card relative bg-card cursor-pointer select-none"
     :style="{
       width: '210px',
       transform: isHovered
         ? 'rotate(0deg) scale(1.04) translateY(-3px)'
         : `rotate(${tilt}deg)`,
-      zIndex: isHovered ? 10 : 1,
       boxShadow: isHovered
         ? '0 14px 44px rgba(44,36,32,.22)'
         : '0 4px 16px rgba(44,36,32,.14), 0 1px 3px rgba(44,36,32,.08)',
@@ -45,13 +57,22 @@
         </span>
       </div>
 
-      <!-- Note text -->
+      <!-- Note text: prefer cover_text_content (multi-item) over note (legacy) -->
       <p
         class="text-[12.5px] leading-[1.65] line-clamp-5 text-foreground mb-3"
         :class="memory.milestone_label ? '' : 'mt-0.5'"
       >
-        {{ memory.note }}
+        {{ memory.cover_text_content ?? memory.note }}
       </p>
+
+      <!-- Count badge — shown when multi-item memory -->
+      <div v-if="(memory.media_count ?? 1) > 1" class="flex justify-end mb-1">
+        <span
+          class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-foreground/8 border border-border text-muted-foreground text-[10px] font-semibold pointer-events-none"
+        >
+          ⊕{{ memory.media_count }}
+        </span>
+      </div>
 
       <!-- Postcard divider -->
       <div class="h-px bg-border mb-2.5" />
@@ -203,6 +224,7 @@
       </div>
     </div>
   </article>
+  </div>
 </template>
 
 <script setup lang="ts">
