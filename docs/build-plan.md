@@ -119,6 +119,17 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 5.1 Upload Edge Function (quota check, size check, storage)
 - [x] 5.2 Upload UI component (file picker, preview, progress bar)
 - [x] 5.3 Batch upload with automatic mem_date detection (multi-select, EXIF extraction, per-item progress). `multiple` file input; `extractExifDate()` tries `DateTimeOriginal → CreateDate → DateTime → file.lastModified → today`; videos skip EXIF entirely; group-date field shown when N > 1; sequential uploads with per-item progress overlay. No "from photo" source label (spec simplified — date is pre-filled silently). No new API surface — reuses existing `upload-media` edge function per file.
+- [x] 5.4 Multi-item memories — multiple photos/videos/text slides per memory *(implementation complete — pending E2E + manual verification)*
+  - Migration 029: extend `memorymedia` (text_content, display_order, nullable storage_path/file_size, type='text'); add `Memory.cover_media_id`
+  - Upload toggle: "Post as one memory" / "Post separately" (default: separate)
+  - Backend: `POST /api/memories/upload-batch` (multi-item commit), `POST/DELETE/PATCH /api/memories/[id]/items*` (edit), `GET /api/memories/[id]/slides` (modal fetch)
+  - Edge Function: `upload-media?defer=true` mode for draft media before batch
+  - Timeline: stack visual + count badge ⊕N on PolaroidCard and QuickNoteCard
+  - Modal: swipe carousel + dot indicators for multi-item; unchanged for single-item
+  - Edit slides: add text slides, remove, reorder (move up/down), set cover (owner only); adding photos via edit deferred to Phase 2
+  - Backwards compatible: single-photo memories and quick notes unchanged
+  - Known issue: deleted slides leave orphan storage files; cleanup cron deferred
+  - See spec: `docs/superpowers/specs/2026-05-09-multi-item-memories-design.md`
 
 
 ### Milestone 6: Timeline

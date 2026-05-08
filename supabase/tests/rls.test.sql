@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(57);
+SELECT plan(59);
 
 -- ============================================================
 -- FIXTURES
@@ -882,6 +882,45 @@ SELECT lives_ok(
   $$ DELETE FROM PushSubscription WHERE id = '60000000-0000-0000-0000-000000000001' $$,
   'user_a can delete own push subscriptions'
 );
+
+-- ============================================================
+-- MULTI-ITEM MEMORIES — text slides on memorymedia (12.0)
+-- ============================================================
+-- Reuses existing fixtures: user_a (owner of Circle A), user_b (member),
+-- user_c (member of Circle A since TEST 12), user_outsider (NOT a member of Circle A).
+-- Memory '20000000-0000-0000-0000-000000000002' is a circle-visible memory owned by user_a.
+
+-- Insert a text slide on an existing memory in Circle A (run as superuser to bypass RLS)
+RESET ROLE;
+INSERT INTO public.memorymedia (id, memory_id, media_type, text_content, display_order)
+VALUES (
+  '70000000-0000-0000-0000-000000000001',
+  '20000000-0000-0000-0000-000000000002', -- circle-visible memory owned by user_a in Circle A
+  'text',
+  'A test text slide',
+  1
+);
+
+-- user_b (Circle A member) can read text slide
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002"}';
+SELECT results_eq(
+  $$ SELECT count(*)::int FROM memorymedia WHERE id = '70000000-0000-0000-0000-000000000001' $$,
+  ARRAY[1],
+  'circle member can read text slides'
+);
+
+-- user_outsider (NOT a Circle A member) cannot read text slide
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000005"}';
+SELECT results_eq(
+  $$ SELECT count(*)::int FROM memorymedia WHERE id = '70000000-0000-0000-0000-000000000001' $$,
+  ARRAY[0],
+  'non-member cannot read text slides'
+);
+
+-- Cleanup
+RESET ROLE;
+DELETE FROM public.memorymedia WHERE id = '70000000-0000-0000-0000-000000000001';
 
 SELECT * FROM finish();
 ROLLBACK;

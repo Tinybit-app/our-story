@@ -393,13 +393,18 @@ Memory
 
 MemoryMedia
   - id, memory_id, contribution_id (nullable)
-  - storage_path
-  - file_size, media_type: "photo" | "video" | "live_photo" | "audio"  -- "audio" reserved for Phase 2 voice memos; add to CHECK constraint now so the migration is additive when voice memos ship
+  - storage_path (nullable — NULL for text slides)
+  - file_size (nullable — NULL for text slides)
+  - media_type: "photo" | "video" | "live_photo" | "audio" | "text"  -- "audio" reserved for Phase 2 voice memos; "text" added in §5.4 for text slides
+  - text_content (nullable — populated for media_type='text'; NULL for photo/video)
+  - display_order INT NOT NULL DEFAULT 0  -- sort key within a memory's gallery (§5.4)
   - still_path, live_path (nullable — for live photos)
   - phash
   - lat, lng, location_name (nullable — from EXIF GPS)
   - event_token_id (nullable — for guest uploads)
   - guest_name (nullable)
+
+**[Implemented §5.4]** — A memory may now have multiple gallery items (photo/video/text slides). The `MemoryMedia` table supports `media_type='text'` with `text_content`. `Memory.cover_media_id` selects which media is the timeline thumbnail. See `docs/superpowers/specs/2026-05-09-multi-item-memories-design.md`.
 
 MemoryContribution        -- for collaborative memories
   - id, memory_id, contributor_user_id
