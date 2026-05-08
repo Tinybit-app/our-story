@@ -276,7 +276,13 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - `lighthouserc.js` config: performance >= 0.7 (warn), accessibility >= 0.9 (error), best-practices >= 0.8 (warn); LCP < 2.5s, CLS < 0.1, TTI < 3.5s
   - CI workflow: builds Nuxt, runs `lhci autorun` against preview server
   - Mobile simulation: Fast 4G throttling, 4x CPU slowdown (per design spec)
-- [ ] 11.4 Add to Home Screen prompt
+- [x] 11.4 Add to Home Screen prompt
+  - `InstallPromptBanner.vue` — shown on timeline after 3+ visits (tracked in localStorage)
+  - Android: captures `beforeinstallprompt` event, shows native install prompt on click
+  - iOS: detects iPhone/iPad UA, shows manual instructions ("Tap Share → Add to Home Screen")
+  - Auto-hides when app is launched in standalone mode (`display-mode: standalone`)
+  - Snooze: 14-day cooldown on "Later"; permanent dismiss on `appinstalled` event
+  - i18n keys in en/zh-CN/fr
 
 ### Milestone 12: Early Retention Hooks
 - [ ] 12.1 Weekly digest email — grandparent-first design, one-tap email reactions

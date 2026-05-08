@@ -580,6 +580,14 @@
     "enable": "Activer",
     "later": "Plus tard"
   },
+  "install": {
+    "promptTitle": "Ajouter Our Story à l'écran d'accueil",
+    "promptBody": "Ouvrez-le en un clic, comme une vraie application.",
+    "iosInstructions": "Appuyez sur le bouton Partager dans Safari, puis « Sur l'écran d'accueil ».",
+    "install": "Installer",
+    "showHow": "Comment faire",
+    "later": "Plus tard"
+  },
   "viewerLink": {
     "shareButton": "Partager",
     "emptyHeadline": "Partagez votre cercle",

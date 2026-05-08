@@ -5114,7 +5114,7 @@ What works on mobile web today:
 - Photo/video upload via `<input type="file" accept="image/*,video/*" capture>`
 - Timeline viewing, comments, reactions
 - Web Push notifications on Android Chrome and iOS Safari 16.4+ (March 2023)
-- "Add to Home Screen" install prompt (Android auto-prompt; iOS: manual via share sheet)
+- "Add to Home Screen" install prompt (Android auto-prompt; iOS: manual via share sheet) **[Implemented §11.4]** — `InstallPromptBanner` shown after 3+ timeline visits; Android captures `beforeinstallprompt` for native dialog; iOS shows manual instructions; auto-hides in standalone mode; 14-day snooze on "Later"
 
 What requires native (Capacitor) — deferred to Phase 2:
 - Background upload (continues when app is backgrounded)

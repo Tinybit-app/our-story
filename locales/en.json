@@ -580,6 +580,14 @@
     "enable": "Enable",
     "later": "Later"
   },
+  "install": {
+    "promptTitle": "Add Our Story to your home screen",
+    "promptBody": "Open it in one tap, like a real app.",
+    "iosInstructions": "Tap the Share button in Safari, then \"Add to Home Screen\".",
+    "install": "Install",
+    "showHow": "Show me how",
+    "later": "Later"
+  },
   "viewerLink": {
     "shareButton": "Share",
     "emptyHeadline": "Share your circle",

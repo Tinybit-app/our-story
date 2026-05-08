@@ -427,6 +427,14 @@
     "enable": "开启",
     "later": "稍后"
   },
+  "install": {
+    "promptTitle": "将「Our Story」添加到主屏幕",
+    "promptBody": "一键打开，就像原生应用一样。",
+    "iosInstructions": "在 Safari 中点击分享按钮，然后选择「添加到主屏幕」。",
+    "install": "安装",
+    "showHow": "查看方法",
+    "later": "稍后"
+  },
   "viewerLink": {
     "shareButton": "分享",
     "emptyHeadline": "分享你的圈子",
