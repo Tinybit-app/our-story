@@ -114,7 +114,18 @@
     "delete": "Supprimer",
     "whoIsIn": "Qui est dans ce souvenir?",
     "saveToDevice": "Enregistrer sur l'appareil",
-    "sharePhoto": "Partager la photo"
+    "sharePhoto": "Partager la photo",
+    "slides": "Diapositives",
+    "slideTypeText": "Texte",
+    "slideTypePhoto": "Photo",
+    "slideTypeVideo": "Vidéo",
+    "cover": "Couverture",
+    "setAsCover": "Définir comme couverture",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "removeSlide": "Supprimer la diapositive",
+    "addTextSlide": "Ajouter une diapositive texte",
+    "add": "Ajouter"
   },
   "upload": {
     "addMemory": "Ajouter un souvenir",

@@ -114,7 +114,18 @@
     "delete": "删除",
     "whoIsIn": "这条记忆中有谁？",
     "saveToDevice": "保存到设备",
-    "sharePhoto": "分享照片"
+    "sharePhoto": "分享照片",
+    "slides": "幻灯片",
+    "slideTypeText": "文字",
+    "slideTypePhoto": "照片",
+    "slideTypeVideo": "视频",
+    "cover": "封面",
+    "setAsCover": "设为封面",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "removeSlide": "删除幻灯片",
+    "addTextSlide": "添加文字幻灯片",
+    "add": "添加"
   },
   "upload": {
     "addMemory": "添加记忆",

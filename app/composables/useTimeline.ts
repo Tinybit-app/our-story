@@ -27,6 +27,7 @@ export interface Memory {
   memorycomment: { id: string }[]
   media_count?: number
   cover_text_content?: string | null
+  cover_media_id?: string | null
 }
 
 export interface MonthGroup {

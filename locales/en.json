@@ -114,7 +114,18 @@
     "delete": "Delete",
     "whoIsIn": "Who's in this memory?",
     "saveToDevice": "Save to device",
-    "sharePhoto": "Share photo"
+    "sharePhoto": "Share photo",
+    "slides": "Slides",
+    "slideTypeText": "Text",
+    "slideTypePhoto": "Photo",
+    "slideTypeVideo": "Video",
+    "cover": "Cover",
+    "setAsCover": "Set as cover",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeSlide": "Remove slide",
+    "addTextSlide": "Add text slide",
+    "add": "Add"
   },
   "upload": {
     "addMemory": "Add a memory",

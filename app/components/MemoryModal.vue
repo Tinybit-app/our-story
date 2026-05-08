@@ -288,6 +288,112 @@
                 </button>
               </div>
             </div>
+            <!-- Slides editor (multi-item only) -->
+            <div v-if="(memory.media_count ?? 1) > 1" class="mt-4 pt-4 border-t border-border">
+              <p class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em] mb-2">
+                {{ t('modal.slides') }}
+              </p>
+
+              <!-- Slide list -->
+              <div class="space-y-2 mb-3">
+                <div
+                  v-for="(slide, idx) in slidesEdit"
+                  :key="slide.id"
+                  class="flex items-center gap-2 p-2 bg-secondary rounded-[10px]"
+                >
+                  <!-- Thumbnail / preview -->
+                  <div class="w-10 h-10 rounded-[6px] bg-border flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    <img v-if="slide.mediaType === 'photo'" :src="slide.url ?? undefined" class="w-full h-full object-cover" />
+                    <video v-else-if="slide.mediaType === 'video'" :src="slide.url ?? undefined" class="w-full h-full object-cover" muted />
+                    <span v-else class="text-[8px] italic text-muted-foreground p-1 text-center line-clamp-3">{{ (slide.textContent ?? '').slice(0, 30) }}…</span>
+                  </div>
+                  <!-- Type label -->
+                  <span class="text-[11px] text-muted-foreground flex-1 min-w-0">
+                    {{ slide.mediaType === 'text' ? t('modal.slideTypeText') : slide.mediaType === 'video' ? t('modal.slideTypeVideo') : t('modal.slideTypePhoto') }}
+                    <span v-if="slide.id === memory.cover_media_id" class="ml-1 text-[9px] text-accent uppercase tracking-wider">{{ t('modal.cover') }}</span>
+                  </span>
+                  <!-- Move up -->
+                  <button
+                    type="button"
+                    :disabled="idx === 0"
+                    class="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground disabled:opacity-30 flex-shrink-0"
+                    :aria-label="t('modal.moveUp')"
+                    @click="moveSlide(idx, -1)"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg>
+                  </button>
+                  <!-- Move down -->
+                  <button
+                    type="button"
+                    :disabled="idx === slidesEdit.length - 1"
+                    class="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground disabled:opacity-30 flex-shrink-0"
+                    :aria-label="t('modal.moveDown')"
+                    @click="moveSlide(idx, 1)"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                  <!-- Set cover (photo/video only) -->
+                  <button
+                    v-if="slide.mediaType !== 'text' && slide.id !== memory.cover_media_id"
+                    type="button"
+                    class="text-[10px] text-accent hover:opacity-70 px-1 flex-shrink-0"
+                    @click="setCover(slide.id)"
+                  >
+                    {{ t('modal.setAsCover') }}
+                  </button>
+                  <!-- Remove -->
+                  <button
+                    type="button"
+                    class="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive flex-shrink-0"
+                    :aria-label="t('modal.removeSlide')"
+                    @click="removeSlide(slide.id)"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Add text slide -->
+              <div v-if="!showAddTextSlide" class="text-center">
+                <button
+                  type="button"
+                  class="text-[11px] text-accent hover:opacity-70 font-medium"
+                  @click="showAddTextSlide = true"
+                >
+                  + {{ t('modal.addTextSlide') }}
+                </button>
+              </div>
+              <div v-else class="space-y-2">
+                <textarea
+                  v-model="newTextSlideContent"
+                  :placeholder="t('modal.notePlaceholder')"
+                  rows="3"
+                  maxlength="2000"
+                  class="w-full bg-secondary rounded-lg px-3 py-2 text-base text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-accent/40"
+                />
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    class="text-[12px] text-muted-foreground hover:text-foreground"
+                    @click="showAddTextSlide = false; newTextSlideContent = ''"
+                  >
+                    {{ t('modal.cancel') }}
+                  </button>
+                  <button
+                    type="button"
+                    :disabled="!newTextSlideContent.trim()"
+                    class="text-[12px] font-semibold text-accent disabled:text-muted-foreground"
+                    @click="addTextSlide"
+                  >
+                    {{ t('modal.add') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="flex items-center justify-end mt-1.5">
               <div class="flex items-center gap-2">
                 <button class="text-[12px] text-muted-foreground hover:text-foreground transition-colors" @click="cancelEditing">
@@ -616,6 +722,86 @@ const editDate = ref('')
 const editChildIds = ref<string[]>([])
 const editMemberIds = ref<string[]>([])
 const editTextareaEl = ref<HTMLTextAreaElement>()
+
+// ── Slides edit state ──────────────────────────────────────
+const slidesEdit = ref<Slide[]>([])
+const newTextSlideContent = ref('')
+const showAddTextSlide = ref(false)
+
+watch(editing, async (isEditing) => {
+  if (isEditing && (props.memory.media_count ?? 1) > 1) {
+    try {
+      const data = await $fetch<{ slides: Slide[] }>(`/api/memories/${props.memory.id}/slides`)
+      slidesEdit.value = data.slides.slice().sort((a, b) => a.displayOrder - b.displayOrder)
+    } catch (err) {
+      console.error('[MemoryModal] failed to load slides for edit:', err)
+    }
+  } else if (!isEditing) {
+    slidesEdit.value = []
+    showAddTextSlide.value = false
+    newTextSlideContent.value = ''
+  }
+})
+
+async function addTextSlide() {
+  const content = newTextSlideContent.value.trim()
+  if (!content) return
+  try {
+    const { itemId } = await $fetch<{ itemId: string }>(`/api/memories/${props.memory.id}/items`, {
+      method: 'POST',
+      body: { type: 'text', textContent: content },
+    })
+    slidesEdit.value.push({
+      id: itemId,
+      mediaType: 'text',
+      textContent: content,
+      displayOrder: slidesEdit.value.length,
+    })
+    showAddTextSlide.value = false
+    newTextSlideContent.value = ''
+    emit('update', { id: props.memory.id, media_count: slidesEdit.value.length })
+  } catch (err) {
+    console.error('[edit] add text slide failed:', err)
+  }
+}
+
+async function removeSlide(itemId: string) {
+  try {
+    await $fetch(`/api/memories/${props.memory.id}/items/${itemId}`, { method: 'DELETE' })
+    slidesEdit.value = slidesEdit.value.filter((s) => s.id !== itemId)
+    emit('update', { id: props.memory.id, media_count: slidesEdit.value.length })
+  } catch (err) {
+    console.error('[edit] remove slide failed:', err)
+  }
+}
+
+async function moveSlide(idx: number, direction: -1 | 1) {
+  const newIdx = idx + direction
+  if (newIdx < 0 || newIdx >= slidesEdit.value.length) return
+  const reordered = slidesEdit.value.slice()
+  ;[reordered[idx], reordered[newIdx]] = [reordered[newIdx]!, reordered[idx]!]
+  slidesEdit.value = reordered
+  try {
+    await $fetch(`/api/memories/${props.memory.id}/items/order`, {
+      method: 'PATCH',
+      body: { orderedIds: reordered.map((s) => s.id) },
+    })
+  } catch (err) {
+    console.error('[edit] reorder failed:', err)
+  }
+}
+
+async function setCover(itemId: string) {
+  try {
+    await $fetch(`/api/memories/${props.memory.id}`, {
+      method: 'PATCH',
+      body: { coverMediaId: itemId },
+    })
+    emit('update', { id: props.memory.id, cover_media_id: itemId })
+  } catch (err) {
+    console.error('[edit] set cover failed:', err)
+  }
+}
 
 function startEditing() {
   editNote.value = props.memory.note ?? ''
