@@ -287,7 +287,19 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - i18n keys in en/zh-CN/fr
 
 ### Milestone 12: Early Retention Hooks
-- [ ] 12.1 Weekly digest email — grandparent-first design, one-tap email reactions
+- [x] 12.1 Weekly + monthly digest emails — grandparent-first design, login-redirect for reactions *(implementation complete — pg_cron schedules pending manual setup in Supabase Studio)*
+  - Migration 028: `last_weekly_digest_sent_at` + `last_monthly_digest_sent_at` columns on Circle (idempotency)
+  - Edge Function `send-digest?frequency=weekly|monthly` — single function, two cron schedules
+  - Email builders in `server/utils/email.ts` (Vitest-tested, 11 unit tests) mirrored 1:1 in `supabase/functions/send-digest/digestEmail.ts` (Deno-side)
+  - Subject personalisation: child name + age when `ChildProfile` exists; otherwise circle name
+  - Locales: en, zh-CN, fr (subject + body)
+  - Recipient filter: `circle_muted = false` AND `email_digest_frequency = <cron's frequency>` AND `user.deletion_requested_at IS NULL` AND `user.email IS NOT NULL`
+  - Memory ordering: most recent first (reaction-count "best photo" ranking deferred to Phase 2)
+  - Zero-upload weeks/months: skip entirely (let §12.4 quiet-circle nudge handle re-engagement, owner-only with caps)
+  - Reactions from email: login-redirect (no signed JWTs); CTA "Open Our Story to react ❤️" deep-links to `/timeline?circle=X&memory=Y`
+  - Thumbnails: signed URLs with 7-day TTL (matches typical email open window)
+  - **Manual setup remaining:** schedule `send-weekly-digest` and `send-monthly-digest` jobs in Supabase Studio (SQL templates in migration 028 comment block)
+  - See spec: `docs/superpowers/specs/2026-05-08-digest-emails-design.md`
 - [ ] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3 follow-up), auto-calculated from ChildProfile.date_of_birth
 - [ ] 12.3 First-memory anniversary (30-day cron)
 - [ ] 12.3.1 "Your first month" recap email — sent 30 days after first upload, shows memory count, milestone highlights, and top reaction; simpler than Year in Review but creates a felt delight moment early

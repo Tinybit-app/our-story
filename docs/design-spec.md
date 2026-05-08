@@ -1264,9 +1264,9 @@ Files are uploaded one at a time (not all in parallel) to:
 
 ### Email notifications
 - **Provider:** Resend
-- **Templates:** React Email
+- **Templates:** Inline HTML template literals in `server/utils/email.ts` (Phase 1) — design spec aspiration is React Email, but the existing helpers (`buildMemberRemovedEmail`, `buildAccountDeletionEmail`, etc.) use HTML strings with shared `layout()` and `primaryButton()` helpers. This works fine and incurs no migration cost; revisit if template complexity grows.
 - Triggered via Supabase Edge Function on DB events (new upload, comment, milestone)
-- Digest emails ("5 new memories this week") via scheduled Edge Function (cron)
+- Digest emails ("5 new memories this week") via scheduled Edge Function (cron) **[Implemented §12.1]**
 
 ```
 DB insert (Memory/Comment)
@@ -3850,6 +3850,8 @@ Every day at 8am (user's local timezone):
 ### Weekly digest (every Monday 9am)
 
 > See the **Early Retention** section (Hook 1) for the canonical weekly digest implementation — including the zero-upload re-engagement variant, subject line personalisation, and build priority. The digest is built in Phase 1 alongside the On This Day cron; both share the same Edge Function invocation pattern.
+
+**[Implemented §12.1]** — Edge Function `send-digest?frequency=weekly|monthly` (one function serves both cadences). Templates in `server/utils/email.ts` (Vitest-tested) and mirrored in `supabase/functions/send-digest/digestEmail.ts` (Deno-side). Login-redirect for reactions (no signed JWTs in Phase 1). Zero-upload weeks/months skip entirely; quiet-circle nudge (§12.4) handles re-engagement separately.
 
 #### Grandparent-first digest design
 The weekly digest is the primary product for grandparents — many will never open the app. Design the email for them, not for the circle creator.
