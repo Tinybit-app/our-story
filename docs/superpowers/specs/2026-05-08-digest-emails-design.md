@@ -165,7 +165,7 @@ The email's "Adjust your email preferences" link points to `/notification-settin
 - **No `Resend` API key in dev** — existing `sendEmail` falls back to `console.log`, so dev runs are safe
 - **Recipient has no `first_name`** — fall back to "Hi there" / locale equivalent
 - **Memory's media has expired thumbnail URL** — signed at email send time with 7-day TTL (matches typical email open window)
-- **Best photo selection ranking** — `ORDER BY (reactions count) DESC, created_at DESC LIMIT 6`. The first row in the result is used as the hero image; the next 5 fill the thumbnail grid. If no reactions exist across all memories, the most recent memory becomes the hero.
+- **Memory ordering** — `ORDER BY created_at DESC LIMIT 6`. The first row is the hero image; the next 5 fill the thumbnail grid. (Reaction-count-based "best photo" ranking deferred to Phase 2 — recency is good enough and avoids needing a custom RPC for Phase 1.)
 
 ## 7. Testing
 
