@@ -15,26 +15,8 @@
         {{ t('login.subtitle') }}
       </p>
 
-      <!-- Google -->
-      <button
-        v-if="!sent"
-        type="button"
-        class="w-full flex items-center gap-3 bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm font-medium text-foreground shadow-sm hover:bg-secondary transition-colors mb-2.5"
-        @click="signInWithGoogle"
-      >
-        <GoogleIcon class="w-[18px] h-[18px] shrink-0" />
-        {{ t('login.continueWithGoogle') }}
-      </button>
-
-      <!-- Divider -->
-      <div v-if="!sent" class="flex items-center gap-3 my-1.5 text-xs text-muted-foreground">
-        <div class="flex-1 h-px bg-border" />
-        {{ t('login.or') }}
-        <div class="flex-1 h-px bg-border" />
-      </div>
-
       <!-- Email form -->
-      <form v-if="!sent" class="mt-1.5" @submit.prevent="submitEmail">
+      <form v-if="!sent" @submit.prevent="submitEmail">
         <input
           v-model="email"
           type="email"
@@ -119,15 +101,4 @@ async function submitEmail() {
   loading.value = false
 }
 
-async function signInWithGoogle() {
-  authError.value = null
-  sent.value = false
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: `${window.location.origin}/confirm` },
-  })
-  if (error) {
-    authError.value = error.message
-  }
-}
 </script>

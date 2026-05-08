@@ -26,11 +26,13 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 2.4 Storage bucket setup
 
 ### Milestone 3: Authentication
-- [x] 3.1 Login page (magic link + Google) — redesigned with warm & nostalgic theme
+- [x] 3.1 Login page (magic link only for Phase 1) — redesigned with warm & nostalgic theme
+  - **Google SSO deferred to Phase 2** — button removed from `/login`. Acquisition is invite-based (users arrive from email), so magic link is the natural path. Google adds OAuth setup, account-linking edge cases (invite at one email, Google at another), and complexity that doesn't move the retention needle at 0–50 users. Re-enable when (a) magic link friction is data-proven, or (b) Capacitor wrap ships and native Sign-in-with-Apple is needed for iOS App Store
+  - Preserved for re-enable: `app/components/GoogleIcon.vue`, `login.continueWithGoogle` / `login.or` i18n keys, `signInWithGoogle()` logic pattern (commit history)
 - [x] 3.2 Auth callback page
 - [x] 3.3 Auth middleware (protect routes)
 - [x] 3.4 Profile setup page (first_name + last_name collection for magic link users)
-- [ ] 3.5 Linked login methods (connect Google OAuth as fallback for magic link users)
+- [ ] 3.5 Linked login methods (connect Google OAuth as fallback for magic link users) — **deferred with 3.1 Google SSO; reconsider in Phase 2 alongside Capacitor wrap and Sign-in-with-Apple**
 - [x] 3.6 Account deletion flow:
   - Member deletion: content choice ("keep as Former member" vs "remove from circles"), reactions always removed
   - Owner deletion: resolve ownership first (auto-promote admin, force transfer, or delete circle)

@@ -616,8 +616,8 @@ if (user.platform_role === "platform_admin") {
 - **Provider:** Supabase Auth (no custom SSO for now)
 - **Primary:** Magic link (email login, no password) — lowest friction for any user; no password to forget
 - **No email?** The view-only JWT link requires no account at all. For users without email who want full membership, phone/SMS OTP is the Phase 2 solution (see below).
-- **Secondary:** Google OAuth — one-tap login, used as fallback if magic link email is ever lost
-- No username/password — adds credential stuffing risk, password reset still requires email, solves nothing magic link + Google don't already cover
+- **Google OAuth — deferred to Phase 2.** Acquisition is invite-based (users arrive from an emailed invite), so magic link is the natural path. Google SSO adds OAuth setup, account-linking edge cases (invite to one email, Google at another), and complexity that doesn't move retention at 0–50 users. Re-enable in Phase 2 alongside Capacitor wrap and native Sign-in-with-Apple. Code preserved (`GoogleIcon.vue`, i18n keys); button removed from login page in §11.4 cleanup.
+- No username/password — adds credential stuffing risk, password reset still requires email, solves nothing magic link doesn't already cover
 - No MFA at launch (adds friction for the wrong audience)
 - Row-level security (RLS) via Supabase enforces all access rules at DB level
 
@@ -5139,7 +5139,7 @@ Capacitor wraps Nuxt with ~zero code changes. The jump from PWA to native app in
 **Goal:** Get a family using it daily. Prove retention before adding anything else.
 
 **Build this:**
-- [ ] Auth — magic link + Google login (Supabase Auth)
+- [ ] Auth — magic link only for Phase 1 (Supabase Auth); Google OAuth deferred to Phase 2
 - [ ] Create circle + invite members (email invite, token-based)
 - [ ] Upload photo/video to timeline
 - [x] Batch upload with per-item EXIF date detection (multi-select, date review before submit) — **Implemented (§5.3)**
