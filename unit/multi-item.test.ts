@@ -72,3 +72,50 @@ describe("upload-batch schema", () => {
     expect(r.success).toBe(false)
   })
 })
+
+const itemsPostSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("media"),
+    storagePath: z.string().min(1),
+    fileSize: z.number().int().positive(),
+    mediaType: z.enum(["photo", "video", "live_photo"]),
+  }),
+  z.object({ type: z.literal("text"), textContent: z.string().min(1).max(2000) }),
+])
+
+const orderPatchSchema = z.object({ orderedIds: z.array(z.uuid()).min(1) })
+
+describe("items.post schema", () => {
+  it("accepts media item", () => {
+    const r = itemsPostSchema.safeParse({
+      type: "media",
+      storagePath: "abc/def.jpg",
+      fileSize: 1234,
+      mediaType: "photo",
+    })
+    expect(r.success).toBe(true)
+  })
+  it("accepts text item", () => {
+    expect(itemsPostSchema.safeParse({ type: "text", textContent: "hi" }).success).toBe(true)
+  })
+  it("rejects unknown mediaType", () => {
+    const r = itemsPostSchema.safeParse({
+      type: "media",
+      storagePath: "x",
+      fileSize: 1,
+      mediaType: "audio",
+    })
+    expect(r.success).toBe(false)
+  })
+})
+
+describe("items/order schema", () => {
+  it("accepts non-empty orderedIds", () => {
+    expect(
+      orderPatchSchema.safeParse({ orderedIds: ["12345678-1234-4234-8234-123456789012"] }).success
+    ).toBe(true)
+  })
+  it("rejects empty orderedIds", () => {
+    expect(orderPatchSchema.safeParse({ orderedIds: [] }).success).toBe(false)
+  })
+})
