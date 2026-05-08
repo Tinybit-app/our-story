@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
       .in("id", draftMemoryIds)
       .eq("owner_user_id", user.sub)
       .eq("circle_id", circleId)
-      .eq("visibility", "private")
+      .eq("visibility", "draft")
     if ((drafts?.length ?? 0) !== draftMemoryIds.length) {
       throw createError({ statusCode: 403, message: "Invalid draft media ownership." })
     }

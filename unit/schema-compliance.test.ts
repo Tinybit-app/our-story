@@ -29,6 +29,7 @@ const allMigrations = [
   sql("027_digest_monthly_default.sql"),
   sql("028_circle_digest_tracking.sql"),
   sql("029_multi_item_memories.sql"),
+  sql("030_draft_visibility.sql"),
 ].join("\n")
 
 // ============================================================
@@ -350,5 +351,13 @@ describe("Step 5.4 — Multi-item memories", () => {
 
   it("adds cover_media_id to memory", () => {
     expect(m029).toContain("ADD COLUMN cover_media_id UUID REFERENCES memorymedia(id) ON DELETE SET NULL")
+  })
+})
+
+describe("Migration 030 — draft visibility", () => {
+  const m030 = sql("030_draft_visibility.sql")
+
+  it("extends visibility CHECK to include draft", () => {
+    expect(m030).toMatch(/CHECK \(visibility IN \('private', 'circle', 'draft'\)\)/)
   })
 })
