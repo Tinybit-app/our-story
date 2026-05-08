@@ -18,7 +18,7 @@ We do **not** introduce "Event," "Group," "Album," or any other new noun.
 - **Upload toggle copy:** "Post as one memory" / "Post separately." No "Event" or "Group" wording.
 - **Mixed types in one memory:** image + video + text slides can coexist in a single memory.
 - **`Memory.note` is preserved** as the event-level caption (always shown above the gallery). Text slides (`MemoryMedia.media_type='text'`) are *additional* in-gallery content. See "Two text fields" below.
-- **Cover image:** `Memory.cover_media_id` (nullable FK). If null, defaults to first image/video by `display_order`. User can tap any image/video to set as cover. Text-only memories have no cover.
+- **Cover image:** `Memory.cover_media_id` (nullable FK). If null, defaults to first photo/video by `display_order`. User can tap any photo/video to set as cover. Text-only memories have no cover.
 - **Backwards compatible.** Single-photo memories and quick notes (zero MemoryMedia) keep working unchanged. No data migration needed.
 - **Visual hint for multi-item:** stacked-polaroid effect — 1-2 silhouettes peeking out behind the front card, slightly rotated, with deeper shadow. Plus a small count badge (`⊕12`) in the corner.
 - **Modal:** swipe-able horizontal carousel with dot indicators for multi-item; unchanged for single-item.
@@ -50,16 +50,16 @@ ALTER TABLE memorymedia ALTER COLUMN storage_path DROP NOT NULL;
 
 ALTER TABLE memorymedia DROP CONSTRAINT IF EXISTS memorymedia_media_type_check;
 ALTER TABLE memorymedia ADD CONSTRAINT memorymedia_media_type_check
-  CHECK (media_type IN ('image', 'video', 'text'));
+  CHECK (media_type IN ('photo', 'video', 'live_photo', 'text'));
 
--- Defensive: image/video must have a storage_path; text must have text_content
+-- Defensive: photo/video/live_photo must have a storage_path; text must have text_content
 ALTER TABLE memorymedia ADD CONSTRAINT memorymedia_content_check
   CHECK (
-    (media_type IN ('image', 'video') AND storage_path IS NOT NULL) OR
+    (media_type IN ('photo', 'video', 'live_photo') AND storage_path IS NOT NULL) OR
     (media_type = 'text' AND text_content IS NOT NULL)
   );
 
--- Cover image FK (nullable; default to first image/video by display_order)
+-- Cover image FK (nullable; default to first photo/video by display_order)
 ALTER TABLE memory
   ADD COLUMN cover_media_id UUID REFERENCES memorymedia(id) ON DELETE SET NULL;
 
@@ -93,7 +93,7 @@ When user selects 2+ photos in the upload sheet:
    - **Per-slide reorder handle** — drag to reorder
    - **"+" button to add a text slide** between photos
    - **Tap a photo to set as cover** (visual highlight on cover; default = first)
-3. **On submit:** create ONE Memory + N MemoryMedia rows ordered by `display_order`. Cover defaults to first image/video unless explicitly chosen.
+3. **On submit:** create ONE Memory + N MemoryMedia rows ordered by `display_order`. Cover defaults to first photo/video unless explicitly chosen.
 
 ### Quick note in a multi-item memory
 
@@ -111,7 +111,7 @@ User can tap "+ Add note" inside the upload UI when in multi-item mode. Inserts 
   milestoneLabel: string | null
   childIds: string[]                      // tagged children
   memberIds: string[]                     // tagged members
-  coverIndex: number | null               // index into items array; null = first image/video
+  coverIndex: number | null               // index into items array; null = first photo/video
   items: Array<
     | { type: 'image' | 'video', mediaId: string }   // mediaId from prior upload-media calls
     | { type: 'text',  textContent: string }
@@ -119,14 +119,14 @@ User can tap "+ Add note" inside the upload UI when in multi-item mode. Inserts 
 }
 ```
 
-The Edge Function `upload-media` (existing) continues to handle individual image/video uploads — it returns `mediaId` and stores the file. The new `upload-batch` Nitro route then **groups** those previously-uploaded media into one Memory, plus inserts text slides.
+The Edge Function `upload-media` (existing) continues to handle individual photo/video uploads — it returns `mediaId` and stores the file. The new `upload-batch` Nitro route then **groups** those previously-uploaded media into one Memory, plus inserts text slides.
 
 This split is necessary because:
 - Image/video upload happens via the Edge Function for streaming + size handling
 - Memory creation happens in Nitro for transactional consistency
 
 For the multi-item flow:
-1. Client uploads each image/video individually via `upload-media` Edge Function — gets back a list of `mediaId`s. **Key change:** `upload-media` accepts a new `defer=true` query parameter. With `defer=true`, the Edge Function uploads the file to storage and creates a `MemoryMedia` row but does not create a parent `Memory` (the row's `memory_id` is set to a temporary "orphan holder" memory owned by the user, OR — better — `memory_id` is left nullable in a follow-up migration). For Phase 1, the simplest concrete approach is: `upload-media?defer=true` creates a draft Memory owned by the caller (private, `visibility = 'private'`, `note = null`) and returns `{ memoryId, mediaId }`. The draft Memory is consumed and merged when `upload-batch` is called. If the draft is abandoned (user closes the upload sheet), it lingers as a private memory and is purged by a future cleanup cron (out of scope here, but tracked).
+1. Client uploads each photo/video individually via `upload-media` Edge Function — gets back a list of `mediaId`s. **Key change:** `upload-media` accepts a new `defer=true` query parameter. With `defer=true`, the Edge Function uploads the file to storage and creates a `MemoryMedia` row but does not create a parent `Memory` (the row's `memory_id` is set to a temporary "orphan holder" memory owned by the user, OR — better — `memory_id` is left nullable in a follow-up migration). For Phase 1, the simplest concrete approach is: `upload-media?defer=true` creates a draft Memory owned by the caller (private, `visibility = 'private'`, `note = null`) and returns `{ memoryId, mediaId }`. The draft Memory is consumed and merged when `upload-batch` is called. If the draft is abandoned (user closes the upload sheet), it lingers as a private memory and is purged by a future cleanup cron (out of scope here, but tracked).
 2. After all media uploads complete, client posts to `POST /api/memories/upload-batch` with `{ draftMemoryIds: [...], textItems: [...], coverIndex, ...metadata }`. Server merges all draft memories' MemoryMedia into one canonical Memory (deletes the now-empty draft memories), inserts text-slide rows, sets `cover_media_id`, and returns the new memory id.
 3. **Cleaner alternative for Phase 2:** make `MemoryMedia.memory_id` nullable so deferred uploads create truly orphan rows. Avoids the draft-Memory dance. This requires another migration and audit of all existing code paths, so deferred for now.
 
@@ -138,7 +138,7 @@ The existing `upload-media` Edge Function and single-photo path do exactly what 
 
 ## 3. Timeline Rendering
 
-### PolaroidCard (image/video memories)
+### PolaroidCard (photo/video memories)
 
 | State | Visual |
 |-------|--------|
@@ -170,7 +170,7 @@ Position: bottom-right corner of the cover, with subtle backdrop-blur disc behin
 
 ### Single-item: unchanged
 
-One image/video, no swipe affordance, no dots.
+One photo/video, no swipe affordance, no dots.
 
 ### Multi-item: carousel
 
@@ -190,14 +190,14 @@ Reuse the existing edit affordance on `MemoryModal`. New abilities:
 
 - **Add photo/video:** opens upload picker, runs through `upload-media`, attaches to this memory
 - **Add text slide:** opens text input, inserts at end
-- **Remove slide:** trash icon per slide; with confirmation if it's the last image/video (would change cover)
+- **Remove slide:** trash icon per slide; with confirmation if it's the last photo/video (would change cover)
 - **Reorder:** drag handle on each slide
-- **Set cover:** tap an image/video slide → "Set as cover" action
+- **Set cover:** tap a photo/video slide → "Set as cover" action
 
 ### Server endpoints (new)
 
 - **`POST /api/memories/[id]/items`** — add a slide. Body: `{ type: 'image'|'video'|'text', mediaId?: string, textContent?: string }`. Inserts at end (`max(display_order) + 1`).
-- **`DELETE /api/memories/[id]/items/[itemId]`** — remove a slide. If it was the cover, clears `cover_media_id` (timeline falls back to first image/video).
+- **`DELETE /api/memories/[id]/items/[itemId]`** — remove a slide. If it was the cover, clears `cover_media_id` (timeline falls back to first photo/video).
 - **`PATCH /api/memories/[id]/items/order`** — body: `{ orderedIds: string[] }`. Sets `display_order` per row.
 - **`PATCH /api/memories/[id]`** *(extend existing)* — accept `coverMediaId` to set the cover.
 
@@ -225,7 +225,7 @@ Returns full ordered slide list with signed URLs (7-day TTL for thumbnails, fres
 ## 7. Email Digest (12.1) — minor adjustment
 
 The weekly/monthly digest currently shows `memorymedia[0]` thumbnail per memory. With multi-item memories:
-- Use the cover (`cover_media_id` or first image/video by `display_order`)
+- Use the cover (`cover_media_id` or first photo/video by `display_order`)
 - Add a small count overlay `⊕N` in the corner of the digest thumbnail to hint multi-item
 - All existing digest tests should still pass — the cover thumbnail concept is unchanged
 
@@ -279,7 +279,7 @@ Add to `docs/build-plan.md` Milestone 5 (after 5.3 batch upload):
 - [ ] 5.4 Multi-item memories — multiple photos/videos/text slides per memory
   - Toggle in upload UI: "Post as one memory" / "Post separately" (default: separate)
   - Text slides via `MemoryMedia.media_type = 'text'` + `text_content` (migration 029)
-  - Cover image: `Memory.cover_media_id`, defaults to first image/video by display_order
+  - Cover image: `Memory.cover_media_id`, defaults to first photo/video by display_order
   - Edit later: add/remove/reorder slides, change cover (owner only)
   - Timeline visual: stacked-polaroid effect + count badge (⊕N)
   - Modal: horizontal swipe carousel + dot indicators
