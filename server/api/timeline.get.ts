@@ -1,5 +1,6 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
 import { z } from "zod"
+import { getMilestoneKeyForAge, getAnniversaryYear } from "../utils/milestoneCron"
 
 const YEAR_LIMIT_DEFAULT = 156 // 12 per month × 13 months (main timeline cap)
 const YEAR_LIMIT_MAX = 1000    // hard ceiling for picker use-cases
@@ -44,6 +45,84 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership) throw createError({ statusCode: 403 })
+
+  // ── Compute upcoming milestone (for in-app banner — §12.2) ──────────────
+  const { data: prefRow } = await supabase
+    .from("notificationpreference")
+    .select("milestone_nudges_enabled")
+    .eq("user_id", user.sub)
+    .eq("circle_id", circleId)
+    .maybeSingle()
+
+  const milestoneNudgesEnabledForActiveCircle = prefRow?.milestone_nudges_enabled !== false
+
+  type UpcomingMilestone = {
+    scopeType: "child" | "couple" | "trip"
+    name: string
+    milestoneKey: string
+    phase: "T-3" | "T0" | "T+3"
+    daysUntil: number
+    milestoneLabelSuggestion: string
+  }
+
+  let upcomingMilestone: UpcomingMilestone | null = null
+
+  if (milestoneNudgesEnabledForActiveCircle) {
+    const today = new Date().toISOString().slice(0, 10)
+    const targets: Array<["T-3" | "T0" | "T+3", string, number]> = [
+      ["T0", today, 0],
+      ["T-3", isoAddDays(today, 3), 3],
+      ["T+3", isoAddDays(today, -3), -3],
+    ]
+
+    // Children
+    const { data: milestoneChildren } = await supabase
+      .from("childprofile")
+      .select("id, name, date_of_birth")
+      .eq("circle_id", circleId)
+    for (const child of milestoneChildren ?? []) {
+      for (const [phase, target, days] of targets) {
+        const key = getMilestoneKeyForAge(child.date_of_birth, target)
+        if (!key) continue
+        upcomingMilestone = {
+          scopeType: "child",
+          name: child.name,
+          milestoneKey: key,
+          phase,
+          daysUntil: days,
+          milestoneLabelSuggestion: humanizeMilestoneKey(key),
+        }
+        break
+      }
+      if (upcomingMilestone) break
+    }
+
+    // Anniversary (couple / trip) if no child milestone found
+    if (!upcomingMilestone) {
+      const { data: circleRow } = await supabase
+        .from("circle")
+        .select("circle_type, anniversary_date")
+        .eq("id", circleId)
+        .single()
+      if (circleRow?.anniversary_date && ["couple", "friends", "travel"].includes(circleRow.circle_type)) {
+        for (const [phase, target, days] of targets) {
+          const year = getAnniversaryYear(circleRow.anniversary_date, target)
+          if (!year) continue
+          const isCouple = circleRow.circle_type === "couple"
+          upcomingMilestone = {
+            scopeType: isCouple ? "couple" : "trip",
+            name: isCouple ? "your anniversary" : "your trip anniversary",
+            milestoneKey: isCouple ? `anniversary_${year}` : `trip_anniversary_${year}`,
+            phase,
+            daysUntil: days,
+            milestoneLabelSuggestion: `${year} years`,
+          }
+          break
+        }
+      }
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Fetch child profiles for baby age stamp display + upload picker
   const { data: childProfiles, error: childError } = await (supabase as any)
@@ -134,7 +213,7 @@ export default defineEventHandler(async (event) => {
     const withUrls = await attachSignedUrls(supabase, page)
     const last = withUrls[withUrls.length - 1]
     const nextCursor = hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
-    return { memories: withUrls, nextCursor, children, members }
+    return { memories: withUrls, nextCursor, children, members, upcomingMilestone, milestoneNudgesEnabledForActiveCircle }
   }
 
   // ── Branch 2: Member page (cursor-based, authorId filter) ──
@@ -161,14 +240,14 @@ export default defineEventHandler(async (event) => {
     const withUrls = await attachSignedUrls(supabase, memories ?? [])
     const last = withUrls[withUrls.length - 1]
     const nextCursor = last ? `${last.memory_date},${last.created_at},${last.id}` : null
-    return { memories: withUrls, nextCursor, children, members }
+    return { memories: withUrls, nextCursor, children, members, upcomingMilestone, milestoneNudgesEnabledForActiveCircle }
   }
 
   // ── Branch 3: Main timeline (year-at-a-time) ───────────────
   const targetYear = year ?? await getLatestYear(supabase, circleId, user.sub)
 
   if (!targetYear) {
-    return { memories: [], prevYear: null, children, members }
+    return { memories: [], prevYear: null, children, members, upcomingMilestone, milestoneNudgesEnabledForActiveCircle }
   }
 
   const from = new Date(Date.UTC(targetYear, 0, 1)).toISOString()
@@ -188,8 +267,28 @@ export default defineEventHandler(async (event) => {
   const truncated = raw.length > yearLimit
   const page = truncated ? raw.slice(0, yearLimit) : raw
   const withUrls = await attachSignedUrls(supabase, page)
-  return { memories: withUrls, prevYear, truncated, children, members }
+  return { memories: withUrls, prevYear, truncated, children, members, upcomingMilestone, milestoneNudgesEnabledForActiveCircle }
 })
+
+// ── Module-scope helpers ───────────────────────────────────────
+
+function isoAddDays(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00Z")
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+function humanizeMilestoneKey(key: string): string {
+  if (key.endsWith("mo")) {
+    const n = parseInt(key, 10)
+    return n === 1 ? "1 month" : `${n} months`
+  }
+  if (key.endsWith("yr")) {
+    const n = parseInt(key, 10)
+    return n === 1 ? "1 year" : `${n} years`
+  }
+  return key
+}
 
 // ── Helpers ────────────────────────────────────────────────────
 
