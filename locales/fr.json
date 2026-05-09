@@ -591,6 +591,20 @@
     "skip": "Ignorer pour l'instant",
     "corsError": "Impossible de charger la photo — essayez de la télécharger d'abord."
   },
+  "milestoneBanner": {
+    "childT-3": "{name} aura {label} dans {days} jours 🎉",
+    "childT0": "Aujourd'hui {name} a {label} 🎉",
+    "childT+3": "Avez-vous capturé les {label} de {name} ?",
+    "coupleT-3": "Vos {years} ans approchent dans {days} jours",
+    "coupleT0": "Joyeux {years} ans 🥂",
+    "coupleT+3": "Avez-vous célébré vos {years} ans ?",
+    "tripT-3": "L'anniversaire de votre voyage de {years} ans est dans {days} jours",
+    "tripT0": "{years} ans depuis votre voyage 🌍",
+    "tripT+3": "Avez-vous marqué {years} ans depuis le voyage ?",
+    "addMemory": "Ajouter un souvenir",
+    "addNow": "Ajouter maintenant",
+    "dismiss": "Plus tard"
+  },
   "push": {
     "promptTitle": "Restez connecté",
     "promptBody": "Recevez une notification quand votre cercle partage de nouveaux souvenirs.",

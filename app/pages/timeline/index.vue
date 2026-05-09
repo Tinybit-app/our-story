@@ -277,6 +277,11 @@
     <main class="max-w-[1280px] mx-auto px-5 py-6">
       <PushPromptBanner />
       <InstallPromptBanner />
+      <MilestoneBanner
+        :milestone="upcomingMilestone"
+        :enabled="milestoneNudgesEnabled"
+        @add="onMilestoneAdd"
+      />
       <!-- Timeline -->
       <TimelinePolaroid
         ref="timelinePolaroidRef"
@@ -445,6 +450,7 @@
       :circle-type="circle?.circle_type ?? null"
       :children="children"
       :members="members"
+      :prefill-milestone-label="prefillMilestoneLabel"
       hide-trigger
       @uploaded="onUploaded"
     />
@@ -654,9 +660,15 @@ const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>();
 // ── Add memory sheet ───────────────────────────────────────
 const addMemorySheetOpen = ref(false);
 const quickNoteOpen = ref(false);
+const prefillMilestoneLabel = ref<string | undefined>(undefined);
 
 function onChoosePhoto() {
   addMemorySheetOpen.value = false;
+  nextTick(() => uploadRef.value?.open());
+}
+
+function onMilestoneAdd(labelSuggestion: string) {
+  prefillMilestoneLabel.value = labelSuggestion;
   nextTick(() => uploadRef.value?.open());
 }
 
@@ -728,6 +740,18 @@ const children = ref<ChildProfile[]>([]);
 const members = ref<CircleMember[]>([]);
 const loading = ref(false);
 
+interface UpcomingMilestone {
+  scopeType: 'child' | 'couple' | 'trip'
+  name: string
+  milestoneKey: string
+  phase: 'T-3' | 'T0' | 'T+3'
+  daysUntil: number
+  milestoneLabelSuggestion: string
+}
+
+const upcomingMilestone = ref<UpcomingMilestone | null>(null);
+const milestoneNudgesEnabled = ref(true);
+
 async function fetchTimeline(year?: number) {
   if (loading.value || !circleId.value) return;
   loading.value = true;
@@ -737,6 +761,8 @@ async function fetchTimeline(year?: number) {
       prevYear: number | null;
       children: ChildProfile[];
       members: CircleMember[];
+      upcomingMilestone?: UpcomingMilestone | null;
+      milestoneNudgesEnabledForActiveCircle?: boolean;
     }>("/api/timeline", {
       query: { circleId: circleId.value, ...(year ? { year } : {}) },
     });
@@ -747,6 +773,8 @@ async function fetchTimeline(year?: number) {
     if (!year) {
       children.value = data.children ?? [];
       members.value = data.members ?? [];
+      upcomingMilestone.value = data.upcomingMilestone ?? null;
+      milestoneNudgesEnabled.value = data.milestoneNudgesEnabledForActiveCircle ?? true;
     }
   } catch (err) {
     console.error("[timeline] fetch error:", err);

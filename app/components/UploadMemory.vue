@@ -904,6 +904,7 @@ const props = defineProps<{
   hideTrigger?: boolean;
   children?: ChildProfile[];
   members?: CircleMember[];
+  prefillMilestoneLabel?: string;
 }>();
 const typeConfig = computed(() => useCircleTypeConfig(props.circleType, t));
 
@@ -1065,7 +1066,7 @@ async function onFilesSelected(e: Event) {
       isVideo,
       date,
       note: "",
-      milestoneLabel: "",
+      milestoneLabel: props.prefillMilestoneLabel ?? "",
       selectedChildIds: [],
       selectedMemberIds: [],
       uploading: false,
@@ -1073,6 +1074,11 @@ async function onFilesSelected(e: Event) {
       done: false,
       error: "",
     });
+  }
+
+  // Prefill group milestone label when first batch of items is added
+  if (items.value.length === 0 && newItems.length > 0 && props.prefillMilestoneLabel) {
+    groupMilestoneLabel.value = props.prefillMilestoneLabel;
   }
 
   items.value = [...items.value, ...newItems];

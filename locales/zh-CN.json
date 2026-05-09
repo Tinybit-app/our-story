@@ -438,6 +438,20 @@
     "skip": "暂时跳过",
     "corsError": "无法加载照片，请先下载后再试。"
   },
+  "milestoneBanner": {
+    "childT-3": "{name} 还有 {days} 天就 {label} 了 🎉",
+    "childT0": "今天是 {name} 的 {label} 🎉",
+    "childT+3": "{name} 的 {label} 你拍到了吗？",
+    "coupleT-3": "你们的 {years} 周年还有 {days} 天",
+    "coupleT0": "{years} 周年快乐 🥂",
+    "coupleT+3": "你们庆祝 {years} 周年了吗？",
+    "tripT-3": "旅行 {years} 周年还有 {days} 天",
+    "tripT0": "这次旅行已经 {years} 年了 🌍",
+    "tripT+3": "你们记录了旅行 {years} 周年了吗？",
+    "addMemory": "添加记忆",
+    "addNow": "现在添加",
+    "dismiss": "稍后"
+  },
   "push": {
     "promptTitle": "保持同步",
     "promptBody": "当你的圈子分享新回忆时收到通知。",

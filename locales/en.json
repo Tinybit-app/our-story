@@ -591,6 +591,20 @@
     "skip": "Skip for now",
     "corsError": "Could not load photo — try downloading it first."
   },
+  "milestoneBanner": {
+    "childT-3": "{name} turns {label} in {days} days 🎉",
+    "childT0": "Today is {name}'s {label} milestone 🎉",
+    "childT+3": "Did you capture {name}'s {label}?",
+    "coupleT-3": "Your {years}-year anniversary is in {days} days",
+    "coupleT0": "Happy {years} years 🥂",
+    "coupleT+3": "Did you celebrate {years} years together?",
+    "tripT-3": "Your {years}-year trip anniversary is in {days} days",
+    "tripT0": "{years} years since your trip 🌍",
+    "tripT+3": "Did you mark {years} years since the trip?",
+    "addMemory": "Add a memory",
+    "addNow": "Add now",
+    "dismiss": "Dismiss"
+  },
   "push": {
     "promptTitle": "Stay in the loop",
     "promptBody": "Get notified when your circle shares new memories.",
