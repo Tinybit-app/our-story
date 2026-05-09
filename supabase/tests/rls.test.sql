@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(59);
+SELECT plan(61);
 
 -- ============================================================
 -- FIXTURES
@@ -921,6 +921,41 @@ SELECT results_eq(
 -- Cleanup
 RESET ROLE;
 DELETE FROM public.memorymedia WHERE id = '70000000-0000-0000-0000-000000000001';
+
+-- ============================================================
+-- MILESTONE NUDGE — owner-only SELECT (§12.2)
+-- ============================================================
+RESET ROLE;
+INSERT INTO public.MilestoneNudge (id, user_id, scope_type, scope_id, milestone_key, nudge_phase, channel)
+VALUES (
+  '80000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000001',
+  'child',
+  '00000000-0000-0000-0000-000000000099',
+  '6mo',
+  'T0',
+  'push'
+);
+
+-- user_a can read own milestone nudges
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001"}';
+SELECT results_eq(
+  $$ SELECT count(*)::int FROM MilestoneNudge WHERE user_id = '00000000-0000-0000-0000-000000000001' $$,
+  ARRAY[1],
+  'user_a can read own milestone nudges'
+);
+
+-- user_b cannot read user_a's milestone nudges
+SET LOCAL request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002"}';
+SELECT results_eq(
+  $$ SELECT count(*)::int FROM MilestoneNudge WHERE user_id = '00000000-0000-0000-0000-000000000001' $$,
+  ARRAY[0],
+  'user_b cannot read user_a milestone nudges'
+);
+
+RESET ROLE;
+DELETE FROM public.MilestoneNudge WHERE id = '80000000-0000-0000-0000-000000000001';
 
 SELECT * FROM finish();
 ROLLBACK;

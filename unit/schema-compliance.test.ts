@@ -30,6 +30,9 @@ const allMigrations = [
   sql("028_circle_digest_tracking.sql"),
   sql("029_multi_item_memories.sql"),
   sql("030_draft_visibility.sql"),
+  sql("031_milestone_nudge.sql"),
+  sql("032_milestone_nudges_enabled.sql"),
+  sql("033_anniversary_date_comment.sql"),
 ].join("\n")
 
 // ============================================================
@@ -359,5 +362,42 @@ describe("Migration 030 — draft visibility", () => {
 
   it("extends visibility CHECK to include draft", () => {
     expect(m030).toMatch(/CHECK \(visibility IN \('private', 'circle', 'draft'\)\)/)
+  })
+})
+
+describe("Migration 031 — MilestoneNudge table", () => {
+  const m = sql("031_milestone_nudge.sql")
+
+  it("creates MilestoneNudge table", () => {
+    expect(m).toContain("CREATE TABLE public.MilestoneNudge")
+  })
+
+  it("has scope_type CHECK with three values", () => {
+    expect(m).toContain("scope_type TEXT NOT NULL CHECK (scope_type IN ('child', 'couple', 'trip'))")
+  })
+
+  it("has nudge_phase CHECK with three values", () => {
+    expect(m).toContain("nudge_phase TEXT NOT NULL CHECK (nudge_phase IN ('T-3', 'T0', 'T+3'))")
+  })
+
+  it("has unique dedupe index", () => {
+    expect(m).toContain("CREATE UNIQUE INDEX idx_milestone_nudge_dedupe")
+    expect(m).toContain("(user_id, scope_type, scope_id, milestone_key, nudge_phase)")
+  })
+
+  it("enables RLS", () => {
+    expect(m).toContain("ENABLE ROW LEVEL SECURITY")
+  })
+
+  it("has owner-only SELECT policy", () => {
+    expect(m).toContain("users can read own milestone nudges")
+  })
+})
+
+describe("Migration 032 — milestone_nudges_enabled preference", () => {
+  const m = sql("032_milestone_nudges_enabled.sql")
+
+  it("adds milestone_nudges_enabled with default true", () => {
+    expect(m).toContain("ADD COLUMN milestone_nudges_enabled BOOLEAN NOT NULL DEFAULT true")
   })
 })

@@ -650,6 +650,47 @@ export type Database = {
           },
         ]
       }
+      milestonenudge: {
+        Row: {
+          channel: string
+          id: string
+          milestone_key: string
+          nudge_phase: string
+          scope_id: string
+          scope_type: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          id?: string
+          milestone_key: string
+          nudge_phase: string
+          scope_id: string
+          scope_type: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          id?: string
+          milestone_key?: string
+          nudge_phase?: string
+          scope_id?: string
+          scope_type?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestonenudge_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletterrecipient: {
         Row: {
           added_by: string
@@ -719,6 +760,7 @@ export type Database = {
           circle_muted: boolean
           email_digest_frequency: string
           id: string
+          milestone_nudges_enabled: boolean
           push_enabled: boolean
           quiet_hours_end: string | null
           quiet_hours_start: string | null
@@ -729,6 +771,7 @@ export type Database = {
           circle_muted?: boolean
           email_digest_frequency?: string
           id?: string
+          milestone_nudges_enabled?: boolean
           push_enabled?: boolean
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
@@ -739,6 +782,7 @@ export type Database = {
           circle_muted?: boolean
           email_digest_frequency?: string
           id?: string
+          milestone_nudges_enabled?: boolean
           push_enabled?: boolean
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
