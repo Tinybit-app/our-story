@@ -724,6 +724,13 @@ USING (
 -- but the UI never exposes it — all uploads are circle-visible.
 -- These policies are kept in place in case private is introduced later (Phase 3+)
 -- but are effectively no-ops in Phase 1–2 since no memories have visibility='private'.
+--
+-- "draft" visibility was added in migration 030 for transient draft memories created by
+-- upload-media?defer=true (multi-item upload flow). Drafts are NOT matched by any RLS or
+-- timeline filter, so they're invisible to all users. They're accessed only by the service
+-- role from /api/memories/upload-batch, which merges them into a canonical Memory and deletes
+-- the drafts. Abandoned drafts (user closes upload sheet mid-batch) currently linger; a
+-- cleanup cron is a known follow-up item.
 CREATE POLICY "private memories owner only"
 ON Memory FOR SELECT
 AS RESTRICTIVE

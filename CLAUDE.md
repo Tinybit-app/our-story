@@ -34,7 +34,7 @@ The build plan and design spec are the source of truth. Do not deviate from them
 ## Terminology
 
 - **UI / copy and Code / DB:** "Circle", "CircleMember", "CircleInvite" — consistent throughout
-- Memory visibility values: `'private'` (owner only) and `'circle'` (all circle members)
+- Memory visibility values: `'private'` (owner only — schema-supported but never exposed in Phase 1 UI), `'circle'` (all circle members — default for all uploads), and `'draft'` (transient staging for multi-item upload via `upload-media?defer=true`; invisible to all read paths, merged into a canonical Memory by `POST /api/memories/upload-batch`)
 
 ## UI Layout
 
