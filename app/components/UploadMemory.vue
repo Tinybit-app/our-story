@@ -867,6 +867,7 @@
 <script setup lang="ts">
 import exifr from "exifr";
 import { computeBabyAge } from "~/composables/useBabyAge";
+import { useAnalytics } from "~/composables/useAnalytics";
 const { t } = useI18n();
 
 interface ChildProfile {
@@ -914,6 +915,7 @@ const emit = defineEmits<{ uploaded: [] }>();
 
 const supabase = useSupabaseClient();
 const config = useRuntimeConfig();
+const { track } = useAnalytics();
 
 interface ShareCardData {
   photoUrl: string;
@@ -1169,6 +1171,17 @@ async function uploadItem(item: UploadItem): Promise<void> {
             method: 'POST',
             body: { memoryId: result.memoryId },
           }).catch(() => {}) // silent — push failure should never affect upload UX
+
+          track("memory_uploaded", {
+            circle_id: props.circleId,
+            memory_type: item.isVideo ? "video" : "photo",
+            visibility: "circle",
+            media_count: 1,
+          })
+          track("memory_shared_to_circle", {
+            circle_id: props.circleId,
+            memory_id: result.memoryId,
+          })
         }
       } else {
         item.error =
@@ -1282,7 +1295,7 @@ async function uploadAsOneMemory() {
 
   // 4. Call upload-batch
   try {
-    await $fetch('/api/memories/upload-batch', {
+    const batchResult = await $fetch('/api/memories/upload-batch', {
       method: 'POST',
       body: {
         circleId: props.circleId,
@@ -1295,6 +1308,30 @@ async function uploadAsOneMemory() {
         items: orderedItems,
       },
     });
+
+    const mediaTypes = new Set<"photo" | "video" | "note">()
+    for (const it of items.value) {
+      mediaTypes.add(it.isVideo ? "video" : "photo")
+    }
+    if (textSlides.value.length > 0) mediaTypes.add("note")
+
+    const singleType = mediaTypes.values().next().value as "photo" | "video" | "note" | undefined
+    const memoryType: "photo" | "video" | "note" | "mixed" =
+      mediaTypes.size > 1 ? "mixed" : (singleType ?? "photo")
+
+    const mediaCount = items.value.length + textSlides.value.length
+
+    track("memory_uploaded", {
+      circle_id: props.circleId,
+      memory_type: memoryType,
+      visibility: "circle",
+      media_count: mediaCount,
+    })
+    track("memory_shared_to_circle", {
+      circle_id: props.circleId,
+      memory_id: batchResult.memoryId,
+    })
+
     emit('uploaded');
     cancel();
   } catch (err) {
