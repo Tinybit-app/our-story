@@ -6,6 +6,7 @@ const bodySchema = z.object({
   push_enabled: z.boolean().optional(),
   circle_muted: z.boolean().optional(),
   email_digest_frequency: z.enum(["weekly", "monthly", "off"]).optional(),
+  milestone_nudges_enabled: z.boolean().optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -37,10 +38,11 @@ export default defineEventHandler(async (event) => {
   if (fields.push_enabled !== undefined) upsertData.push_enabled = fields.push_enabled
   if (fields.circle_muted !== undefined) upsertData.circle_muted = fields.circle_muted
   if (fields.email_digest_frequency !== undefined) upsertData.email_digest_frequency = fields.email_digest_frequency
+  if (fields.milestone_nudges_enabled !== undefined) upsertData.milestone_nudges_enabled = fields.milestone_nudges_enabled
 
   const { error } = await supabase
     .from("notificationpreference")
-    .upsert(upsertData, { onConflict: "user_id,circle_id" })
+    .upsert(upsertData as any, { onConflict: "user_id,circle_id" })
 
   if (error) {
     console.error("[notification-preferences] upsert error:", error.message)

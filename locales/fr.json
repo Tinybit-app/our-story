@@ -527,6 +527,8 @@
     "childrenMax": "Maximum de 10 enfants atteint.",
     "anniversary": "Anniversaire",
     "anniversaryDesc": "Définissez une date d'anniversaire à afficher sur votre chronologie.",
+    "tripDate": "Date du voyage",
+    "tripDateDesc": "Quand ce groupe a-t-il voyagé ensemble pour la première fois ? Utilisé pour les rappels de jalons.",
     "clearAnniversary": "Effacer la date d'anniversaire",
     "errorSaveCircleName": "Échec de la sauvegarde du nom du cercle. Veuillez réessayer.",
     "errorSaveCircleType": "Échec de la sauvegarde. Veuillez réessayer.",
@@ -698,6 +700,8 @@
     "emailDigestDesc": "Un résumé des nouveaux souvenirs et de l'activité.",
     "digestWeekly": "Hebdomadaire",
     "digestMonthly": "Mensuel",
-    "digestOff": "Désactivé"
+    "digestOff": "Désactivé",
+    "milestoneNudges": "Rappels de jalons",
+    "milestoneNudgesDesc": "Recevez un rappel pour les anniversaires et autres jalons à venir."
   }
 }

@@ -233,21 +233,21 @@
             <p v-if="childrenError" class="text-xs text-destructive mt-2">{{ childrenError }}</p>
           </div>
 
-          <div v-if="isOwner" class="h-px bg-border" />
+          <div v-if="isOwner && ['couple', 'friends', 'travel'].includes(circle.circle_type)" class="h-px bg-border" />
 
-          <!-- Anniversary date — all circle types, owner only -->
-          <div v-if="isOwner">
+          <!-- Anniversary / Trip date — couple/friends/travel circles, owner only -->
+          <div v-if="isOwner && ['couple', 'friends', 'travel'].includes(circle.circle_type)">
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-              {{ t('circleSettings.anniversary') }}
+              {{ circle.circle_type === 'couple' ? t('circleSettings.anniversary') : t('circleSettings.tripDate') }}
             </h2>
             <p class="text-xs text-muted-foreground mb-4">
-              {{ t('circleSettings.anniversaryDesc') }}
+              {{ circle.circle_type === 'couple' ? t('circleSettings.anniversaryDesc') : t('circleSettings.tripDateDesc') }}
             </p>
             <div class="flex gap-2 items-start">
               <input
                 v-model="anniversaryDateInput"
                 type="date"
-                aria-label="Anniversary date"
+                :aria-label="circle.circle_type === 'couple' ? 'Anniversary date' : 'Trip date'"
                 class="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 :style="{ colorScheme: isDark ? 'dark' : 'light' }"
               />

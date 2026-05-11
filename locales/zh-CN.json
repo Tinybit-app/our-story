@@ -374,6 +374,8 @@
     "childrenMax": "已达到最多 10 名孩子的上限。",
     "anniversary": "周年纪念日",
     "anniversaryDesc": "设置周年纪念日，在时间线上显示。",
+    "tripDate": "旅行日期",
+    "tripDateDesc": "这个团体第一次一起旅行是什么时候？用于里程碑提醒。",
     "clearAnniversary": "清除周年纪念日",
     "errorSaveCircleName": "保存圈子名称失败，请重试。",
     "errorSaveCircleType": "保存失败，请重试。",
@@ -545,6 +547,8 @@
     "emailDigestDesc": "新回忆和活动的摘要。",
     "digestWeekly": "每周",
     "digestMonthly": "每月",
-    "digestOff": "关闭"
+    "digestOff": "关闭",
+    "milestoneNudges": "里程碑提醒",
+    "milestoneNudgesDesc": "在生日、纪念日等里程碑临近时收到提醒。"
   }
 }

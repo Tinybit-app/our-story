@@ -527,6 +527,8 @@
     "childrenMax": "Maximum of 10 children reached.",
     "anniversary": "Anniversary",
     "anniversaryDesc": "Set an anniversary date to display on your timeline.",
+    "tripDate": "Trip date",
+    "tripDateDesc": "When did this group first travel together? Used for milestone reminders.",
     "clearAnniversary": "Clear anniversary date",
     "errorSaveCircleName": "Failed to save circle name. Please try again.",
     "errorSaveCircleType": "Failed to save. Please try again.",
@@ -698,6 +700,8 @@
     "emailDigestDesc": "A summary of new memories and activity.",
     "digestWeekly": "Weekly",
     "digestMonthly": "Monthly",
-    "digestOff": "Off"
+    "digestOff": "Off",
+    "milestoneNudges": "Milestone reminders",
+    "milestoneNudgesDesc": "Get nudged about upcoming birthdays, anniversaries, and milestones."
   }
 }

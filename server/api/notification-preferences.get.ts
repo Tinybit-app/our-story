@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const { data } = await supabase
     .from("notificationpreference")
-    .select("push_enabled, circle_muted, email_digest_frequency")
+    .select("push_enabled, circle_muted, email_digest_frequency, milestone_nudges_enabled")
     .eq("user_id", user.sub)
     .eq("circle_id", circleId)
     .maybeSingle()
@@ -36,5 +36,6 @@ export default defineEventHandler(async (event) => {
     push_enabled: data?.push_enabled ?? true,
     circle_muted: data?.circle_muted ?? false,
     email_digest_frequency: data?.email_digest_frequency ?? "monthly",
+    milestone_nudges_enabled: data?.milestone_nudges_enabled ?? true,
   }
 })

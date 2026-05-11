@@ -93,6 +93,20 @@
             {{ t('notificationSettings.muteActiveNote') }}
           </p>
 
+          <!-- Milestone reminders toggle -->
+          <label class="flex items-center justify-between gap-3 cursor-pointer">
+            <div>
+              <p class="text-sm font-medium text-foreground">{{ t('notificationSettings.milestoneNudges') }}</p>
+              <p class="text-xs text-muted-foreground mt-0.5">{{ t('notificationSettings.milestoneNudgesDesc') }}</p>
+            </div>
+            <input
+              type="checkbox"
+              :checked="milestoneNudgesEnabled"
+              class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+              @change="toggleMilestoneNudges"
+            />
+          </label>
+
           <div class="h-px bg-border" />
 
           <!-- Email digest frequency -->
@@ -144,6 +158,7 @@ watch(circles, (list) => {
 const pushEnabled = ref(true)
 const circleMuted = ref(false)
 const digestFrequency = ref<'weekly' | 'monthly' | 'off'>('monthly')
+const milestoneNudgesEnabled = ref(true)
 const prefsLoaded = ref(false)
 
 const digestOptions = computed(() => [
@@ -157,16 +172,18 @@ async function loadPrefs() {
   prefsLoaded.value = false
 
   try {
-    const data = await $fetch<{ push_enabled: boolean; circle_muted: boolean; email_digest_frequency: string }>('/api/notification-preferences', {
+    const data = await $fetch<{ push_enabled: boolean; circle_muted: boolean; email_digest_frequency: string; milestone_nudges_enabled: boolean }>('/api/notification-preferences', {
       query: { circleId: selectedCircleId.value },
     })
     pushEnabled.value = data.push_enabled
     circleMuted.value = data.circle_muted
     digestFrequency.value = data.email_digest_frequency as 'weekly' | 'monthly' | 'off'
+    milestoneNudgesEnabled.value = data.milestone_nudges_enabled
   } catch {
     pushEnabled.value = true
     circleMuted.value = false
     digestFrequency.value = 'monthly'
+    milestoneNudgesEnabled.value = true
   }
   prefsLoaded.value = true
 }
@@ -195,5 +212,10 @@ function toggleMute() {
 function setDigest(value: 'weekly' | 'monthly' | 'off') {
   digestFrequency.value = value
   savePref({ email_digest_frequency: value })
+}
+
+function toggleMilestoneNudges() {
+  milestoneNudgesEnabled.value = !milestoneNudgesEnabled.value
+  savePref({ milestone_nudges_enabled: milestoneNudgesEnabled.value })
 }
 </script>

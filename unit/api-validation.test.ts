@@ -2087,6 +2087,7 @@ const notificationPrefsSchema = z.object({
   push_enabled: z.boolean().optional(),
   circle_muted: z.boolean().optional(),
   email_digest_frequency: z.enum(["weekly", "monthly", "off"]).optional(),
+  milestone_nudges_enabled: z.boolean().optional(),
 })
 
 const VALID_CIRCLE_UUID = "123e4567-e89b-12d3-a456-426614174000"
@@ -2143,8 +2144,19 @@ describe("PATCH /api/notification-preferences — input validation", () => {
       push_enabled: true,
       circle_muted: false,
       email_digest_frequency: "weekly",
+      milestone_nudges_enabled: true,
     })
     expect(r.success).toBe(true)
+  })
+
+  it("accepts milestone_nudges_enabled boolean", () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, milestone_nudges_enabled: false })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejects non-boolean milestone_nudges_enabled", () => {
+    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, milestone_nudges_enabled: "no" })
+    expect(r.success).toBe(false)
   })
 })
 
