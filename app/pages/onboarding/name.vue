@@ -49,8 +49,11 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics } from "~/composables/useAnalytics"
+
 definePageMeta({ middleware: 'onboarding' })
 const { t } = useI18n()
+const { track } = useAnalytics()
 
 const router = useRouter()
 const name = ref('')
@@ -84,6 +87,11 @@ async function createCircle() {
     })
 
     circleIdCookie.value = circleId
+
+    track("circle_created", {
+      circle_id: circleId,
+      circle_type: circleTypeCookie.value ?? "custom",
+    })
 
     const { refresh } = useUserState()
     await refresh()
