@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Our Story — 测试者指南（打印版）</title>
+<style>
+  @page { size: letter; margin: 0.6in 0.65in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Hiragino Sans GB", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #111;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+  h1 { font-size: 22pt; margin: 0 0 4pt 0; font-weight: 700; letter-spacing: 0; }
+  h2 {
+    font-size: 14pt; margin: 18pt 0 6pt 0; font-weight: 700;
+    border-bottom: 1.5pt solid #111; padding-bottom: 3pt;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.5pt; margin: 10pt 0 3pt 0; font-weight: 700;
+    page-break-after: avoid;
+  }
+  p, ol, ul { margin: 4pt 0; }
+  ol, ul { padding-left: 18pt; }
+  ol li, ul li { margin: 2pt 0; }
+  .lead { font-size: 11pt; color: #333; }
+  .cover {
+    border: 1.5pt solid #111;
+    padding: 12pt 14pt;
+    margin: 10pt 0 14pt 0;
+  }
+  .cover-row { display: flex; gap: 14pt; margin: 4pt 0; align-items: baseline; flex-wrap: wrap; }
+  .cover-label { font-weight: 700; min-width: 80pt; }
+  .cover-blank { flex: 1; border-bottom: 1pt solid #999; min-width: 140pt; height: 14pt; }
+  .test {
+    page-break-inside: avoid;
+    margin: 8pt 0 10pt 0;
+    padding: 6pt 8pt;
+    border-left: 2.5pt solid #222;
+    background: #fafafa;
+  }
+  .test h3 { margin-top: 0; }
+  .expected { font-size: 10pt; margin: 3pt 0; }
+  .expected::before { content: "✓ "; font-weight: 700; color: #060; }
+  .notes-row {
+    margin-top: 6pt; display: flex; gap: 10pt; align-items: center;
+    font-size: 9.5pt;
+  }
+  .check { font-size: 12pt; letter-spacing: 2pt; }
+  .notes-line {
+    flex: 1; border-bottom: 1pt solid #aaa;
+    height: 11pt;
+  }
+  .warn {
+    background: #fff8e1;
+    border-left: 2.5pt solid #c87800;
+    padding: 5pt 8pt;
+    margin: 6pt 0;
+    font-size: 10pt;
+  }
+  .callout {
+    background: #eef4ff;
+    border-left: 2.5pt solid #2a5db0;
+    padding: 5pt 8pt;
+    margin: 6pt 0;
+    font-size: 10pt;
+  }
+  .small { font-size: 9.5pt; color: #555; }
+  hr { border: none; border-top: 0.5pt solid #ccc; margin: 14pt 0; }
+  .footer-note {
+    margin-top: 18pt;
+    padding: 8pt;
+    border: 1pt dashed #888;
+    font-size: 10pt;
+  }
+  @media print {
+    .no-print { display: none; }
+    body { font-size: 10pt; }
+    .test { background: transparent; }
+    .warn, .callout { background: transparent; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Our Story — 测试者指南</h1>
+<p class="lead">感谢你帮我们测试！按顺序走完每一节，打勾确认。大约 30 分钟。</p>
+
+<div class="cover">
+  <div class="cover-row"><span class="cover-label">测试者姓名：</span><span class="cover-blank"></span></div>
+  <div class="cover-row"><span class="cover-label">日期：</span><span class="cover-blank"></span></div>
+  <div class="cover-row"><span class="cover-label">设备：</span><span class="cover-blank"></span><span class="small">（如：iPhone 14 Safari）</span></div>
+  <div class="cover-row"><span class="cover-label">测试邮箱：</span><span class="cover-blank"></span></div>
+  <div class="cover-row"><span class="cover-label">第二邮箱：</span><span class="cover-blank"></span></div>
+</div>
+
+<div class="callout">
+  <strong>如何报告问题：</strong>每个问题记下：（1）你当时在做什么，（2）实际发生了什么，（3）你期望的结果，（4）如可能附截图，（5）设备和浏览器。测试结束后一起发给我们。
+</div>
+
+<div class="callout">
+  <strong>无需担心的：</strong>iPhone 上的推送通知暂不支持；邮件通知可能会延迟几分钟，或测试期间根本不到——这是预期的。
+</div>
+
+<h2>第 1 部分 — 入门</h2>
+
+<div class="test">
+  <h3>1.1 打开网站</h3>
+  <p>用手机浏览器打开我们发的链接。</p>
+  <p class="expected">看到欢迎页，顶部有"创建你的圈子——免费"。</p>
+  <p class="expected">往下滚——看到"如何使用"、圈子类型卡片、隐私承诺。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>1.2 注册（魔法链接）</h3>
+  <ol>
+    <li>点"创建你的圈子——免费"或"登录"</li>
+    <li>输入邮箱→"发送魔法链接"</li>
+    <li>在同一设备打开邮箱</li>
+    <li>一分钟内点击邮件里的链接</li>
+    <li>首次：填姓名</li>
+  </ol>
+  <p class="expected">邮件 60 秒内到达。</p>
+  <p class="expected">点击链接后自动登录。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>1.3 退出登录再登入</h3>
+  <p>找到菜单（右上角）→退出→用同一邮箱再登录。</p>
+  <p class="expected">不应再次让你填姓名。</p>
+  <p class="expected">应回到你离开的位置。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 2 部分 — 创建你的第一个圈子</h2>
+
+<div class="test">
+  <h3>2.1 选择圈子类型</h3>
+  <p>点击：新手父母 / 情侣 / 家庭 / 朋友 / 旅行 / 只有我 / 其他。</p>
+  <p class="expected">所选卡片高亮；"继续"按钮可进入下一步。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>2.2 给圈子起名</h3>
+  <p>输入名字→"继续"。</p>
+  <p class="expected">进入邀请步骤。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>2.3 发送邀请</h3>
+  <p>输入第二个邮箱→"发送"。查看那个邮箱。</p>
+  <p class="expected">出现"已发送至..."的确认。</p>
+  <p class="expected">邀请邮件一分钟内到达第二邮箱。</p>
+  <p class="small">如一个人测试，可"暂时跳过"，以后再邀请。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>2.4 接受邀请（第二人视角）</h3>
+  <p>在第二邮箱——用隐私/无痕窗口或不同设备打开邀请链接。</p>
+  <p class="expected">出现简短的"正在加入..."屏幕。</p>
+  <p class="expected">登录后进入被邀请圈子的时间线。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 3 部分 — 添加记忆</h2>
+
+<div class="test">
+  <h3>3.1 上传单张照片</h3>
+  <p>"+"按钮→"照片或视频"→选一张照片→（可选）加备注/里程碑/日期→上传。</p>
+  <p class="expected">出现上传转圈；照片出现在时间线上。</p>
+  <p class="expected">照片略微倾斜，像拍立得。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>3.2 上传一段视频</h3>
+  <p>流程相同；选短视频（一分钟内最佳）。</p>
+  <p class="expected">视频出现，带播放标志，可点击播放。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>3.3 写一条快速记录（无照片）</h3>
+  <p>"+"→"快速记录"→输入文字→（可选）里程碑→"保存"。</p>
+  <p class="expected">带红色图钉的明信片样式卡片出现。</p>
+  <p class="expected">和照片卡片明显不同。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>3.4 多张照片：开启"发布为一条记忆"</h3>
+  <p>"+"→"照片或视频"→选 3 张以上→开启"发布为一条记忆"→（可选）加文字幻灯片、排序、设封面→上传。</p>
+  <p class="expected">时间线上出现一张带堆叠效果和"+N"标记的卡片。</p>
+  <p class="expected">点击→可左右滑动的轮播。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>3.5 多张照片：关闭"发布为一条记忆"</h3>
+  <p>用不同的照片重复 3.4，但关闭开关。</p>
+  <p class="expected">时间线出现 N 张独立的卡片。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>3.6 编辑你的某条记忆</h3>
+  <p>打开你上传的记忆→铅笔图标→改一改→保存。</p>
+  <p class="expected">变更反映在时间线和详情上。</p>
+  <p class="expected">别人的记忆上不应看到铅笔。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 4 部分 — 回应、评论、里程碑</h2>
+
+<div class="test">
+  <h3>4.1 添加并切换回应</h3>
+  <p>悬停/点击记忆→"+"表情按钮→选一个（如 ❤️）→再点小标签可切换关闭。</p>
+  <p class="expected">小标签出现，数量为 1；再次点击消失。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>4.2 发布评论</h3>
+  <p>打开记忆→评论区→输入→"发布"或回车。</p>
+  <p class="expected">评论立即出现在评论列表底部。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>4.3 编辑你的评论</h3>
+  <p>悬停/点击你的评论→铅笔→修改→保存。</p>
+  <p class="expected">评论更新；时间戳旁出现"已编辑"标签。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>4.4 删除你的评论</h3>
+  <p>评论上的垃圾桶→确认提示→"删除"。</p>
+  <p class="expected">评论被移除。"取消"按钮也要能用。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>4.5 添加里程碑</h3>
+  <p>上传新记忆→点推荐的里程碑标签或自己输入（如"小美的第一天"）→保存。</p>
+  <p class="expected">记忆显示带 ✦ 的里程碑标识。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>4.6 里程碑分享卡片</h3>
+  <p>保存 4.5 的记忆后，应自动弹出分享卡片。</p>
+  <p class="expected">卡片显示：照片 + 里程碑 + 日期 + "Our Story" 标识。</p>
+  <p class="expected">9:16 / 1:1 切换可用。</p>
+  <p class="expected">"分享"在手机弹出系统分享菜单；电脑下载图片。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 5 部分 — 与无账号查看者分享</h2>
+
+<div class="test">
+  <h3>5.1 创建分享链接</h3>
+  <p>作为所有者：时间线顶部→"分享链接"→"创建新链接"→选"完整圈子"→起名→创建。</p>
+  <p class="expected">出现链接，带复制/撤销/续期按钮。</p>
+  <p class="expected">非所有者成员不应看到"分享链接"按钮。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>5.2 打开分享链接（无需账号）</h3>
+  <p>复制链接→在隐私/无痕窗口或不同设备打开。</p>
+  <p class="expected">不提示登录；直接来到查看页。</p>
+  <p class="expected">圈子记忆可见；首次出现欢迎屏。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>5.3 作为访客回应</h3>
+  <p>查看页上点击回应→首次提示输入名字→确认。</p>
+  <p class="expected">回应保留并带访客名字。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>5.4 撤销分享链接</h3>
+  <p>回所有者侧→分享链接面板→垃圾桶→确认。刷新查看页标签。</p>
+  <p class="expected">查看页显示已过期/不可用状态。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 6 部分 — 通知</h2>
+
+<div class="callout">推送测试仅适用于安卓 Chrome。iPhone 网页版暂不支持推送——iPhone 上跳过这些测试。</div>
+
+<div class="test">
+  <h3>6.1 启用推送（仅安卓）</h3>
+  <p>在安卓 Chrome 上访问时间线几次后，横幅出现→启用→浏览器弹出权限框时允许。</p>
+  <p class="expected">横幅消失；订阅已保存。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用（iPhone）</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>6.2 接收活动推送（仅安卓）</h3>
+  <p>让第二账号上传照片 / 评论 / 回应。观察通知。</p>
+  <p class="expected">几秒内出现通知；点击打开相关记忆。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用（iPhone）</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>6.3 通知设置</h3>
+  <p>时间线顶部的铃铛→每个圈子的开关：静音、推送、里程碑提醒、邮件频率（每周/每月/关闭）。试着切换。</p>
+  <p class="expected">设置在刷新后仍保留。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>6.4 静音圈子阻止推送</h3>
+  <p>静音一个圈子→让第二账号在那里上传。</p>
+  <p class="expected">静音期间不收到推送。</p>
+  <p class="expected">取消静音后推送恢复。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用（iPhone）</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 7 部分 — 个性化</h2>
+
+<div class="test">
+  <h3>7.1 修改你的名字</h3>
+  <p>设置→账号→改姓和名→保存。</p>
+  <p class="expected">评论、回应、顶部头像处的名字都更新。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>7.2 切换语言</h3>
+  <p>语言选择器→English→中文→Français→切回。</p>
+  <p class="expected">屏幕上所有文字立即改变。</p>
+  <p class="expected">日期格式更新（如 May 11, 2026 → 2026年5月11日 → 11 mai 2026）。</p>
+  <p class="expected">退出登录再登入后仍保留。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>7.3 修改圈子名字（仅所有者）</h3>
+  <p>圈子设置→改名字→保存。</p>
+  <p class="expected">圈子切换器、顶部、后续邮件里都是新名字。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>7.4 更改圈子类型</h3>
+  <p>圈子设置→从网格里选不同类型→保存。</p>
+  <p class="expected">空状态文案和里程碑建议相应更新。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>7.5 添加孩子（仅新手父母圈子）</h3>
+  <p>圈子设置→孩子部分→添加名字 + 出生日期。上传一张照片并标记这个孩子。</p>
+  <p class="expected">照片卡片显示带名字和当时年龄的小标签（如"小美·3 个月 2 周"）。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 8 部分 — 手机优化</h2>
+
+<div class="test">
+  <h3>8.1 添加到主屏幕——安卓</h3>
+  <p>安卓 Chrome 上访问 3 次以上后，横幅显示"安装"→点击→确认。</p>
+  <p class="expected">主屏幕出现图标；启动后是独立模式（无浏览器界面）。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用（iPhone）</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>8.2 添加到主屏幕——iPhone</h3>
+  <p>访问 3 次以上后，横幅显示手动步骤："点分享→添加到主屏幕"。照做。</p>
+  <p class="expected">图标出现；点击以全屏模式打开。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用（安卓）</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>8.3 在多个圈子间切换</h3>
+  <p>如果有 2+ 圈子，使用顶部的圈子切换器。</p>
+  <p class="expected">时间线重新加载，显示每个圈子各自的记忆。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 不适用</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 9 部分 — 可选高级</h2>
+
+<div class="test">
+  <h3>9.1 导出你的数据</h3>
+  <p>设置→账号→"导出我的数据"→选圈子→开始。</p>
+  <p class="expected">"已加入导出队列"提示。</p>
+  <p class="expected">收到带 24 小时下载链接的邮件，里面是 ZIP（照片 + 说明文件）。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>9.2 删除你的账号</h3>
+  <div class="warn"><strong>⚠ 只用你可以丢掉的测试账号。</strong></div>
+  <p>设置→账号→"删除"→选择："作为'前成员'保留我的内容" 或 "移除我的所有内容"。</p>
+  <p class="expected">确认后被退出登录。30 天宽限期后才永久删除。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 跳过</span><span class="notes-line"></span></div>
+</div>
+
+<div class="test">
+  <h3>9.3 删除一个圈子（所有者）</h3>
+  <div class="warn"><strong>⚠ 只用测试圈子。</strong></div>
+  <p>圈子设置→底部的"删除圈子"→输入圈子名字确认。</p>
+  <p class="expected">出现警告；你和成员收到通知邮件；30 天宽限期。</p>
+  <div class="notes-row"><span class="check">☐ 通过 &nbsp;&nbsp; ☐ 有问题 &nbsp;&nbsp; ☐ 跳过</span><span class="notes-line"></span></div>
+</div>
+
+<h2>第 10 部分 — 整体留意</h2>
+
+<ul>
+  <li>☐ 慢页面（超过 3 秒）</li>
+  <li>☐ 像代码一样的文字（如 <code>t('common.someone')</code>、<code>{{ name }}</code>）</li>
+  <li>☐ 点了没反应的按钮</li>
+  <li>☐ 加载失败或质量奇差的照片</li>
+  <li>☐ 超出屏幕或被截断的文字</li>
+  <li>☐ 让人不舒服的空状态</li>
+  <li>☐ 错别字或语法问题</li>
+  <li>☐ iPhone 底部 home 指示条遮挡内容</li>
+  <li>☐ 暗色模式下颜色不对</li>
+</ul>
+
+<div class="footer-note">
+  <strong>结语反思——请简短回答：</strong>
+  <p>感觉平静温馨还是紧张？</p>
+  <div style="height: 30pt;"></div>
+  <p>最让你困惑的是什么（哪怕不是 bug）？</p>
+  <div style="height: 30pt;"></div>
+  <p>有什么希望它能做到的？</p>
+  <div style="height: 30pt;"></div>
+</div>
+
+<p class="small" style="margin-top: 14pt; text-align: center;">
+  非常感谢——你的反馈真正影响着我们接下来要做什么。🙏
+</p>
+
+</body>
+</html>
