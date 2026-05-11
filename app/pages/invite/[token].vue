@@ -26,8 +26,10 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics } from "~/composables/useAnalytics"
 definePageMeta({ auth: false })
 const { t } = useI18n()
+const { track } = useAnalytics()
 
 const route = useRoute()
 const user = useSupabaseUser()
@@ -75,6 +77,10 @@ async function acceptInvite() {
   try {
     const result = await $fetch<{ ok: boolean; circleId: string }>(`/api/invites/${token}/accept`, { method: 'POST' })
     inviteCookie.value = null
+    track("member_joined", {
+      circle_id: result.circleId,
+      joined_via: "invite",
+    })
     // Refresh user state so the index page guard sees hasMembership: true
     const { refresh } = useUserState()
     await refresh()

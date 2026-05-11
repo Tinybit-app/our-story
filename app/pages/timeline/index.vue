@@ -566,9 +566,11 @@
 
 <script setup lang="ts">
 import type { Memory } from "~/composables/useTimeline";
+import { useAnalytics } from "~/composables/useAnalytics"
 
 // ── i18n ───────────────────────────────────────────────────
 const { t, locale, setLocale } = useI18n()
+const { track } = useAnalytics()
 
 // Locale-aware month abbreviation using Intl (auto-adapts to zh-CN)
 function monthAbbr(month: number): string {
@@ -897,6 +899,10 @@ async function sendInvite() {
     await $fetch("/api/circles/invite", {
       method: "POST",
       body: { circleId: circleId.value, email: inviteEmail.value },
+    });
+    track("member_invited", {
+      circle_id: circleId.value,
+      invite_method: "link",
     });
     inviteSentTo.value = inviteEmail.value;
     inviteEmail.value = "";

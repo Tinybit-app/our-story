@@ -54,8 +54,10 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics } from "~/composables/useAnalytics"
 definePageMeta({ middleware: 'onboarding' })
 const { t } = useI18n()
+const { track } = useAnalytics()
 
 const email = ref('')
 const loading = ref(false)
@@ -74,6 +76,10 @@ async function sendInvite() {
     await $fetch('/api/circles/invite', {
       method: 'POST',
       body: { circleId: circleIdCookie.value, email: email.value },
+    })
+    track("member_invited", {
+      circle_id: circleIdCookie.value ?? '',
+      invite_method: "link",
     })
     sent.value = true
   } catch (err: any) {

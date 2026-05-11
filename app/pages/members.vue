@@ -391,8 +391,10 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics } from "~/composables/useAnalytics"
 definePageMeta({})
 const { t } = useI18n()
+const { track } = useAnalytics()
 
 const router = useRouter()
 const authUser = useSupabaseUser()
@@ -547,6 +549,10 @@ async function resendInvite(invite: any) {
       method: 'POST',
       body: { circleId: circleId.value, email: invite.email },
     })
+    track("member_invited", {
+      circle_id: circleId.value,
+      invite_method: "link",
+    })
     await refresh()
   } catch (err: any) {
     alert(err?.data?.message ?? t('members.resendInviteError'))
@@ -578,6 +584,10 @@ async function sendInvite() {
     await $fetch('/api/circles/invite', {
       method: 'POST',
       body: { circleId: circleId.value, email: inviteEmail.value },
+    })
+    track("member_invited", {
+      circle_id: circleId.value,
+      invite_method: "link",
     })
     inviteSentTo.value = inviteEmail.value
     inviteEmail.value = ''
