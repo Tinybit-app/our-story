@@ -867,7 +867,7 @@
 <script setup lang="ts">
 import exifr from "exifr";
 import { computeBabyAge } from "~/composables/useBabyAge";
-import { useAnalytics } from "~/composables/useAnalytics";
+import { useAnalytics, classifyMilestone } from "~/composables/useAnalytics";
 const { t } = useI18n();
 
 interface ChildProfile {
@@ -1185,7 +1185,7 @@ async function uploadItem(item: UploadItem): Promise<void> {
           if (item.milestoneLabel.trim()) {
             track("milestone_created", {
               circle_id: props.circleId,
-              milestone_type: item.milestoneLabel.trim(),
+              milestone_type: classifyMilestone(item.milestoneLabel),
             })
           }
         }
@@ -1301,7 +1301,7 @@ async function uploadAsOneMemory() {
 
   // 4. Call upload-batch
   try {
-    const batchResult = await $fetch('/api/memories/upload-batch', {
+    const batchResult = await $fetch<{ memoryId: string }>('/api/memories/upload-batch', {
       method: 'POST',
       body: {
         circleId: props.circleId,
@@ -1340,7 +1340,7 @@ async function uploadAsOneMemory() {
     if (groupMilestoneLabel.value.trim()) {
       track("milestone_created", {
         circle_id: props.circleId,
-        milestone_type: groupMilestoneLabel.value.trim(),
+        milestone_type: classifyMilestone(groupMilestoneLabel.value),
       })
     }
 

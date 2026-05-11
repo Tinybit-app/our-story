@@ -114,7 +114,10 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics, classifyMilestone } from "~/composables/useAnalytics"
+
 const { t } = useI18n()
+const { track } = useAnalytics()
 const colorMode = useColorMode()
 const isDark = computed(() =>
   colorMode.preference === 'system' ? colorMode.value === 'dark' : colorMode.preference === 'dark'
@@ -169,7 +172,7 @@ async function save() {
   }
   saving.value = true
   try {
-    await $fetch('/api/memories/quick-note', {
+    const result = await $fetch<{ memoryId: string }>('/api/memories/quick-note', {
       method: 'POST',
       body: {
         circleId: props.circleId,
@@ -180,6 +183,22 @@ async function save() {
         memberIds: [...selectedMemberIds.value],
       },
     })
+    track("memory_uploaded", {
+      circle_id: props.circleId,
+      memory_type: "note",
+      visibility: "circle",
+      media_count: 1,
+    })
+    track("memory_shared_to_circle", {
+      circle_id: props.circleId,
+      memory_id: result.memoryId,
+    })
+    if (milestoneLabel.value.trim()) {
+      track("milestone_created", {
+        circle_id: props.circleId,
+        milestone_type: classifyMilestone(milestoneLabel.value),
+      })
+    }
     emit('saved')
   } catch {
     error.value = t('quickNote.errorFailed')

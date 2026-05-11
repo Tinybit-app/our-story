@@ -633,7 +633,7 @@
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
 import { computeBabyAge } from '~/composables/useBabyAge'
-import { useAnalytics } from "~/composables/useAnalytics"
+import { useAnalytics, classifyMilestone } from "~/composables/useAnalytics"
 const { t, locale } = useI18n()
 const { track } = useAnalytics()
 
@@ -861,7 +861,7 @@ async function saveEdit() {
     if (updated.milestone_label && !prevMilestone) {
       track("milestone_created", {
         circle_id: props.memory.circle_id,
-        milestone_type: updated.milestone_label,
+        milestone_type: classifyMilestone(updated.milestone_label ?? ""),
       })
       const firstPhoto = props.memory.memorymedia.find(m => m.media_type !== 'video')
       if (firstPhoto?.url) {

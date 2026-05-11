@@ -1,5 +1,15 @@
 import type { PostHog } from "posthog-js"
 
+export type CircleType =
+  | "parents"
+  | "couple"
+  | "family"
+  | "friends"
+  | "caregiving"
+  | "travel"
+  | "solo"
+  | "custom"
+
 /**
  * Discriminated union of every analytics event in the Phase 1 catalog.
  * Adding a new event = adding a variant here. TypeScript enforces the
@@ -10,7 +20,7 @@ import type { PostHog } from "posthog-js"
  */
 export type AnalyticsEvent =
   | { name: "user_signed_up"; props: { method: "email" } }
-  | { name: "circle_created"; props: { circle_id: string; circle_type: string } }
+  | { name: "circle_created"; props: { circle_id: string; circle_type: CircleType } }
   | { name: "member_invited"; props: { circle_id: string; invite_method: "link" } }
   | { name: "member_joined"; props: { circle_id: string; joined_via: "invite" } }
   | {
@@ -25,7 +35,7 @@ export type AnalyticsEvent =
   | { name: "memory_shared_to_circle"; props: { circle_id: string; memory_id: string } }
   | { name: "comment_added"; props: { circle_id: string; memory_id: string } }
   | { name: "reaction_added"; props: { circle_id: string; memory_id: string; emoji: string } }
-  | { name: "milestone_created"; props: { circle_id: string; milestone_type: string } }
+  | { name: "milestone_created"; props: { circle_id: string; milestone_type: "suggested" | "custom" } }
   | { name: "export_requested"; props: { circle_id: string; format: "zip" } }
   | { name: "subscription_upgraded"; props: { tier: "plus"; interval: "monthly" | "annual" } }
   | { name: "subscription_cancelled"; props: { tier: "plus" } }
@@ -61,4 +71,32 @@ export function createAnalytics(posthog: PostHog | null) {
 export function useAnalytics() {
   const { $posthog } = useNuxtApp()
   return createAnalytics(($posthog as PostHog | null) ?? null)
+}
+
+// Known milestone chip labels from useCircleTypeConfig.ts — kept in sync manually.
+// Must match the CHIPS constant in app/composables/useCircleTypeConfig.ts exactly.
+const KNOWN_MILESTONE_CHIPS = new Set<string>([
+  // parents
+  "First smile", "First steps", "First word", "First birthday", "First tooth",
+  // couple
+  "First date", "Anniversary", "Engaged", "Moved in together", "Wedding day",
+  // family
+  "Family trip", "Birthday", "Holiday", "Graduation", "Reunion",
+  // friends
+  "Trip", "Party", "Concert", "Road trip",
+  // caregiving
+  "Good day", "Doctor visit", "Treatment", "Recovery", "Milestone",
+  // travel
+  "Arrived", "Best meal", "Hidden gem", "Adventure", "Last day",
+  // solo
+  "Achievement", "New chapter", "Goal reached", "Reflection", "Memory",
+])
+
+/**
+ * Classifies a milestone_label as "suggested" (matched a known chip) or
+ * "custom" (free-form user text). Used to avoid sending PII in analytics
+ * events while still tracking which milestones came from suggestions.
+ */
+export function classifyMilestone(label: string): "suggested" | "custom" {
+  return KNOWN_MILESTONE_CHIPS.has(label.trim()) ? "suggested" : "custom"
 }

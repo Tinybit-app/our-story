@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAnalytics } from "~/composables/useAnalytics"
+import { useAnalytics, type CircleType } from "~/composables/useAnalytics"
 
 definePageMeta({ middleware: 'onboarding' })
 const { t } = useI18n()
@@ -90,7 +90,7 @@ async function createCircle() {
 
     track("circle_created", {
       circle_id: circleId,
-      circle_type: circleTypeCookie.value ?? "custom",
+      circle_type: (circleTypeCookie.value ?? "custom") as CircleType,
     })
 
     const { refresh } = useUserState()

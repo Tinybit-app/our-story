@@ -56,6 +56,8 @@ const noAuthTimeout = setTimeout(() => {
   if (!user.value) router.push("/login")
 }, 5000)
 
+let signupTracked = false
+
 watchEffect(() => {
   if (!user.value) return
   clearTimeout(noAuthTimeout)
@@ -66,7 +68,8 @@ watchEffect(() => {
   const lastSignIn = user.value.last_sign_in_at
     ? new Date(user.value.last_sign_in_at).getTime()
     : created
-  if (Math.abs(lastSignIn - created) < 5000) {
+  if (!signupTracked && Math.abs(lastSignIn - created) < 5000) {
+    signupTracked = true
     track("user_signed_up", { method: "email" })
   }
 

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest"
-import { createAnalytics } from "../app/composables/useAnalytics"
+import { createAnalytics, classifyMilestone } from "../app/composables/useAnalytics"
 
 function makeMockPostHog() {
   return {
@@ -98,5 +98,22 @@ describe("createAnalytics", () => {
         emoji: "❤️",
       })
     })
+  })
+})
+
+describe("classifyMilestone", () => {
+  it("returns 'suggested' for known chip labels", () => {
+    expect(classifyMilestone("First steps")).toBe("suggested")
+    expect(classifyMilestone("Anniversary")).toBe("suggested")
+    expect(classifyMilestone("Wedding day")).toBe("suggested")
+  })
+
+  it("returns 'custom' for free-form user text", () => {
+    expect(classifyMilestone("Emma's first day at school")).toBe("custom")
+    expect(classifyMilestone("Dad's 50th")).toBe("custom")
+  })
+
+  it("trims whitespace before matching", () => {
+    expect(classifyMilestone("  First steps  ")).toBe("suggested")
   })
 })

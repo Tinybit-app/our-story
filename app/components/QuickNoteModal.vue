@@ -427,7 +427,7 @@
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
 import { computeBabyAge } from '~/composables/useBabyAge'
-import { useAnalytics } from "~/composables/useAnalytics"
+import { useAnalytics, classifyMilestone } from "~/composables/useAnalytics"
 
 const { t, locale } = useI18n()
 const { track } = useAnalytics()
@@ -569,7 +569,7 @@ async function saveEdit() {
     if (updated.milestone_label && !prevMilestone) {
       track("milestone_created", {
         circle_id: props.memory.circle_id,
-        milestone_type: updated.milestone_label,
+        milestone_type: classifyMilestone(updated.milestone_label ?? ""),
       })
     }
   } catch (err) {
@@ -609,6 +609,7 @@ async function toggleReaction(emoji: string) {
   const userId = props.currentUserId ?? (await supabaseClient.auth.getSession()).data.session?.user?.id
   if (!userId) return
   const existing = localReactions.value.find(r => r.emoji === emoji && r.user_id === userId)
+  const wasAdding = !existing
   if (existing) localReactions.value = localReactions.value.filter(r => r !== existing)
   else localReactions.value = [...localReactions.value, { id: 'optimistic', emoji, user_id: userId, guest_name: null, user: null }]
 
@@ -617,6 +618,13 @@ async function toggleReaction(emoji: string) {
     const { reactions } = await $fetch<{ reactions: any[] }>(`/api/memories/${memoryId}/reactions`, { method: 'POST', body: { emoji } })
     localReactions.value = reactions
     emit('update', { id: memoryId, memoryreaction: reactions })
+    if (wasAdding) {
+      track("reaction_added", {
+        circle_id: props.memory.circle_id,
+        memory_id: memoryId,
+        emoji,
+      })
+    }
   } catch (err) {
     console.error('[QuickNoteModal] reaction error:', err)
     localReactions.value = [...(props.memory.memoryreaction ?? [])] as Reaction[]
@@ -653,6 +661,10 @@ async function submitComment() {
     comments.value = updated
     commentDraft.value = ''
     if (textareaEl.value) textareaEl.value.style.height = 'auto'
+    track("comment_added", {
+      circle_id: props.memory.circle_id,
+      memory_id: props.memory.id,
+    })
   } catch (err) {
     console.error('[QuickNoteModal] failed to post comment:', err)
   } finally {
