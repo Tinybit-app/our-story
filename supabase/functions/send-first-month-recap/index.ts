@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         .select(`
           id, note, memory_date, owner_user_id, milestone_label,
           memorymedia(storage_path, media_type),
-          user!memory_owner_user_id_fkey(first_name)
+          user!owner_user_id(first_name)
         `)
         .eq("circle_id", c.id)
         .order("created_at", { ascending: true })
