@@ -271,9 +271,12 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics } from "~/composables/useAnalytics"
+
 const { t } = useI18n()
 const router = useRouter()
 const supabase = useSupabaseClient()
+const { track } = useAnalytics()
 
 const { data: profile } = await useFetch<{ deletedAt: string | null }>('/api/profile')
 
@@ -317,6 +320,10 @@ async function requestExport() {
       body: { circleId: selectedCircleId.value },
     })
     exportMsg.value = res.message ?? t('settings.account.exportQueued')
+    track("export_requested", {
+      circle_id: selectedCircleId.value,
+      format: "zip",
+    })
   } catch (err: any) {
     exportError.value = true
     const msg = err?.data?.message ?? ''
