@@ -56,6 +56,10 @@
       "@sentry/cli",
       "esbuild",
       "vue-demi"
+    ],
+    "ignoredBuiltDependencies": [
+      "core-js",
+      "protobufjs"
     ]
   }
 }
