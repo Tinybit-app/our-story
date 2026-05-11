@@ -330,7 +330,20 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
         - User with `deletion_requested_at IS NOT NULL` → skipped
     12. Known troubleshooting: if the function reports "name resolution failed", it's a Docker hostname issue inside the Edge Function container. Try removing any `SUPABASE_URL` overrides from `.env` files; the runtime should auto-inject `http://kong:8000` for the functions container
   - See spec: `docs/superpowers/specs/2026-05-08-digest-emails-design.md`
-- [ ] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3 follow-up), auto-calculated from ChildProfile.date_of_birth
+- [x] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3) for child age + couple/friend/travel anniversaries *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+  - Migration 031: `MilestoneNudge` tracking table (idempotency); Migration 032: `milestone_nudges_enabled` preference; Migration 033: `Circle.anniversary_date` COMMENT generalised for couple/friends/travel
+  - Edge Function `send-milestone-nudges` runs daily at 9am UTC
+  - Channels: push (if subscribed + not quiet hours) → email (fallback) → in-app banner (always when in window)
+  - Recipients: circle owner + admins only
+  - T+3 skip rule: skip if any memory with non-null `milestone_label` exists in ±3 day window
+  - Calendar: child months `[1, 2, 3, 6, 9, 12, 18]` + years `[2..10, 12, 15, 18]`; couples/trip yearly anniversary
+  - In-app: `MilestoneBanner.vue` on `/timeline`; click opens upload with milestone label pre-filled
+  - `/notification-settings`: new "Milestone reminders" toggle (default true) — granular kill switch separate from `circle_muted`
+  - `/circle-settings`: anchor-date input shown for couple (labelled "Anniversary") and friends/travel (labelled "Trip date")
+  - Locales: en, zh-CN, fr (subject + body + banner copy)
+  - Tests: 17 unit (calendar math) + 11 unit (email builders) + 2 unit (api validation) + 2 RLS (owner-only SELECT on MilestoneNudge) + 7 schema-compliance
+  - Manual setup remaining: schedule `send-milestone-nudges` in Supabase Studio (`0 9 * * *`)
+  - See spec: `docs/superpowers/specs/2026-05-09-milestone-suggestions-design.md`
 - [ ] 12.3 First-memory anniversary (30-day cron)
 - [ ] 12.3.1 "Your first month" recap email — sent 30 days after first upload, shows memory count, milestone highlights, and top reaction; simpler than Year in Review but creates a felt delight moment early
 - [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Circle table)

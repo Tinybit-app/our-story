@@ -3762,6 +3762,8 @@ Friend groups:
   > 14 days since last upload: "Your crew hasn't added anything in 2 weeks — what's new?"
 ```
 
+**[Implemented §12.2]** — Edge Function `send-milestone-nudges` runs daily at 9am UTC. Channel selection: push if subscribed → email fallback → in-app banner (always). T+3 skip rule based on `milestone_label IS NOT NULL` in ±3 day window. Recipients: owner + admins only. New `MilestoneNudge` table (migration 031) ensures dedupe via UNIQUE on `(user_id, scope_type, scope_id, milestone_key, nudge_phase)`. New `milestone_nudges_enabled` preference (migration 032) is a granular toggle separate from `circle_muted`. Trip anchors reuse the existing `Circle.anniversary_date` column for `circle_type IN ('friends', 'travel')` (migration 033 generalises the COMMENT). Friend-group "no upload in 14 days" nudge is tracked separately as §12.4 (quiet circle).
+
 ### Hook 3: First-memory anniversary (month 1)
 Sent exactly 1 month after a circle's first upload. Implemented as part of the **"Your First Month" recap email** (see Key Features §7.5) — not a separate send.
 
