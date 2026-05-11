@@ -3793,6 +3793,8 @@ if circle.last_memory_at < now() - INTERVAL '14 days'
 - Reset nudge count if a new memory is uploaded (circle is active again) — implemented in the `handle_memory_insert()` trigger: `quiet_nudge_count = 0` on every Memory insert. This gives the circle a fresh 3-nudge window the next time it goes quiet. Do not reset in the cron — the trigger is the right place because it fires immediately on any upload.
 - Never send to members — owner only
 
+**[Implemented §12.4]** — Edge Function `send-quiet-circle-nudges` runs daily at 9am UTC. Owner only. Channels: push if subscribed → email fallback. Eligibility requires `first_memory_at IS NOT NULL` (brand-new circles excluded). Tone differentiates count=1/2/3, with the 3rd explicitly framed as "the last nudge" to respect owner autonomy. Reset-on-activity handled by the existing `handle_memory_insert` trigger.
+
 > `quiet_nudge_count` and `quiet_nudge_last_sent_at` are in the canonical `Circle` model — see the Data Model section. No migration addition needed here.
 
 ### Hook 5: Circle streak

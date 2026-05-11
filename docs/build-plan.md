@@ -356,7 +356,19 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Manual setup remaining: schedule `send-first-month-recap` in Supabase Studio (`0 9 * * *`)
   - Known issue: mid-batch failure may cause duplicate sends on retry (flag set only after all recipients processed). Acceptable for Phase 1.
   - See spec: `docs/superpowers/specs/2026-05-11-first-month-recap-design.md`
-- [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Circle table)
+- [x] 12.4 Quiet circle nudge — 14-day inactivity → owner only, max 3 nudges per quiet period, min 14 days between sends, reset on memory upload *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+  - Edge Function `send-quiet-circle-nudges` runs daily at 9am UTC
+  - Channels: push if subscribed → email fallback (consistent with §12.2 pattern; spec said push-only but we extend for reach)
+  - Recipients: circle owner only (never members) — spec-mandated to avoid spam
+  - Eligibility: `deleted_at IS NULL AND first_memory_at IS NOT NULL AND last_memory_at < now() - 14d AND quiet_nudge_count < 3 AND (quiet_nudge_last_sent_at IS NULL OR < now() - 14d)`
+  - Excludes brand-new circles that never had an upload (`first_memory_at IS NOT NULL` gate)
+  - Tone varies by count: count=1 gentle, count=2 firmer, count=3 explicit "last nudge"
+  - Reset on activity: existing `handle_memory_insert` trigger sets `quiet_nudge_count = 0` on every memory insert (already wired in migration 004)
+  - No new migrations — `last_memory_at`, `quiet_nudge_count`, `quiet_nudge_last_sent_at` already in Circle
+  - Locales: en, zh-CN, fr
+  - Tests: 10 unit tests for the email builder
+  - Manual setup remaining: schedule `send-quiet-circle-nudges` in Supabase Studio (`0 9 * * *`)
+  - See spec: `docs/superpowers/specs/2026-05-11-quiet-circle-nudge-design.md`
 
 ### Milestone 13: Pre-Launch Checklist
 - [ ] Auth: verify magic link on device 2 does not invalidate existing session on device 1 — test with two devices simultaneously; if it does, switch to PKCE flow (see design spec §Magic link session behavior)
