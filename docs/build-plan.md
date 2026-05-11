@@ -17,7 +17,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 1.4 CI/CD pipeline (GitHub Actions)
 - [x] 1.5 Sentry error tracking
 - [x] 1.6 Security hardening baseline (headers, zod, CORS, Dependabot, audit CI)
-- [ ] 1.7 PostHog analytics setup
+- [x] 1.7 PostHog analytics setup — `posthog-js` client plugin (`app/plugins/posthog.client.ts`), typed composable (`app/composables/useAnalytics.ts`) with discriminated-union event catalog, identify-on-supabase-user-resolution wired in `app/app.vue`. **PostHog Cloud EU** (not self-hosted). `autocapture: false`, `respect_dnt: true`, `persistence: 'localStorage'`, `disable_session_recording: true`. 12-event catalog wired at natural call sites (signup, circle create, invite send/accept, memory upload, comment, reaction, milestone, export). Subscription events (`subscription_upgraded`, `subscription_cancelled`) reserved in the catalog but no call site until Phase 2 billing. Plugin no-ops when `NUXT_PUBLIC_POSTHOG_KEY` is unset (local dev). Spec: `docs/superpowers/specs/2026-05-11-posthog-analytics-design.md`. Plan: `docs/superpowers/plans/2026-05-11-posthog-analytics.md`.
 
 ### Milestone 2: Database Schema & RLS
 - [x] 2.1 Initial schema migration (all core tables)

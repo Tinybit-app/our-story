@@ -2387,27 +2387,30 @@ Spec this explicitly in ToS:
 ### Why NOT Google Analytics
 Contradicts your "private by design" positioning. Never use GA on this app.
 
-### Recommendation: PostHog (self-hostable, privacy-first)
-- Open source, can self-host on your own infra
+### Recommendation: PostHog Cloud EU (privacy-first) **[Implemented §1.7]**
+- Phase 1 uses **PostHog Cloud EU** — zero ops overhead, GDPR-friendly region, free tier covers 0–50 user scale
+- Self-hosted at a subdomain remains an option to revisit if data-sovereignty or scale demands it (ops overhead not justified at Phase 1 user counts)
 - No data sold, no third-party tracking
 - Works with Nuxt via `posthog-js`
-- Session recording, funnels, retention charts built-in
+- Session recording disabled in Phase 1 (can enable in Phase 2 if useful)
 
-### Key events to track
+### Key events tracked
 ```
-user_signed_up
-circle_created
-member_invited
-member_joined
-memory_uploaded          { type: photo|video, visibility: private|circle }
-memory_shared_to_circle
-comment_added
-reaction_added
-milestone_created
-export_requested
-subscription_upgraded
-subscription_cancelled
+user_signed_up           { method: "email" }
+circle_created           { circle_id, circle_type }
+member_invited           { circle_id, invite_method: "link" }
+member_joined            { circle_id, joined_via: "invite" }
+memory_uploaded          { circle_id, memory_type: photo|video|note|mixed, visibility: circle|private, media_count }
+memory_shared_to_circle  { circle_id, memory_id }
+comment_added            { circle_id, memory_id }
+reaction_added           { circle_id, memory_id, emoji }
+milestone_created        { circle_id, milestone_type }
+export_requested         { circle_id, format: "zip" }
+subscription_upgraded    { tier: "plus", interval: monthly|annual }  // Phase 2 — reserved
+subscription_cancelled   { tier: "plus" }                            // Phase 2 — reserved
 ```
+
+All event payloads enforced via a discriminated-union type in `app/composables/useAnalytics.ts` — TypeScript rejects unknown event names and missing/extra props at compile time. No PII in any payload: IDs and enums only.
 
 ### Key metrics
 | Metric | Why it matters |
@@ -2416,24 +2419,35 @@ subscription_cancelled
 | D7 / D30 retention | Are circles coming back? |
 | Uploads per circle per week | Engagement health |
 | Invite conversion rate | % of invites → joined |
-| Free → paid conversion | Monetisation funnel |
+| Free → paid conversion | Monetisation funnel (Phase 2) |
 | Storage usage distribution | Informs tier sizing |
 
 ### Implementation
 ```ts
-// Nuxt plugin: plugins/posthog.client.ts
+// app/plugins/posthog.client.ts
 import posthog from "posthog-js"
 
-posthog.init(process.env.POSTHOG_KEY, {
-  api_host: "https://analytics.our-story.tinybit.app", // self-hosted
-  capture_pageview: true,
-  autocapture: false, // manual events only — avoid capturing PII
-  persistence: "localStorage",
+export default defineNuxtPlugin(() => {
+  const config = useRuntimeConfig()
+  const key = config.public.posthogKey
+  if (!key) return { provide: { posthog: null } }  // no-op when key unset (local dev)
+
+  posthog.init(key, {
+    api_host: config.public.posthogHost,  // https://eu.i.posthog.com
+    autocapture: false,                   // explicit track() calls only
+    capture_pageview: true,
+    persistence: "localStorage",
+    respect_dnt: true,                    // DNT browsers send zero events
+    disable_session_recording: true,
+  })
+  return { provide: { posthog } }
 })
 ```
 
-- Never log PII in events (no names, emails, photo content)
-- PostHog self-hosted keeps all data on your infra
+Identity: `posthog.identify(user.id, { circle_count })` is called once after `useSupabaseUser()` resolves (in `app/app.vue`). `posthog.reset()` on logout. Anonymous pre-auth events get aliased on identify automatically. Person profile holds `{ circle_count }` only.
+
+- Never log PII in events (no names, emails, photo content, notes, file names)
+- `respect_dnt: true` — DNT browsers send zero events; no settings-page toggle in Phase 1
 
 ---
 
@@ -5246,7 +5260,7 @@ Everything else in this spec. No billing, no albums, no search, no Upstash Redis
 - [ ] Live Photos (full support, LivePhotosKit)
 - [ ] Year in Review full slideshow/video (Remotion, Pro only — Phase 2 built the free shareable card; this is the immersive in-app video with blurred preview for Free/Plus)
 - [ ] S3 + CloudFront + MediaConvert (video at scale)
-- [ ] PostHog analytics (self-hosted)
+- [ ] PostHog self-hosted migration (revisit if scale or data-sovereignty demands it; Phase 1 uses Cloud EU — §1.7)
 - [ ] Feature flags (FeatureFlag table)
 - [ ] Memorial / legacy mode
 - [ ] Memory backup guarantee (S3 Glacier)
