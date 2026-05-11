@@ -1182,6 +1182,12 @@ async function uploadItem(item: UploadItem): Promise<void> {
             circle_id: props.circleId,
             memory_id: result.memoryId,
           })
+          if (item.milestoneLabel.trim()) {
+            track("milestone_created", {
+              circle_id: props.circleId,
+              milestone_type: item.milestoneLabel.trim(),
+            })
+          }
         }
       } else {
         item.error =
@@ -1331,6 +1337,12 @@ async function uploadAsOneMemory() {
       circle_id: props.circleId,
       memory_id: batchResult.memoryId,
     })
+    if (groupMilestoneLabel.value.trim()) {
+      track("milestone_created", {
+        circle_id: props.circleId,
+        milestone_type: groupMilestoneLabel.value.trim(),
+      })
+    }
 
     emit('uploaded');
     cancel();

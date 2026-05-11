@@ -427,8 +427,10 @@
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
 import { computeBabyAge } from '~/composables/useBabyAge'
+import { useAnalytics } from "~/composables/useAnalytics"
 
 const { t, locale } = useI18n()
+const { track } = useAnalytics()
 
 interface ChildProfile { id: string; name: string; date_of_birth: string }
 interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
@@ -543,6 +545,7 @@ function memberInitials(member: CircleMember): string {
 async function saveEdit() {
   if (saving.value) return
   saving.value = true
+  const prevMilestone = props.memory.milestone_label
   try {
     const [{ memory: updated }] = await Promise.all([
       $fetch<{ memory: { id: string; note: string | null; milestone_label: string | null; memory_date: string } }>(
@@ -563,6 +566,12 @@ async function saveEdit() {
 
     emit('update', { id: updated.id, note: updated.note, milestone_label: updated.milestone_label, memory_date: updated.memory_date, memory_children: updatedMemoryChildren, memory_members: updatedMemoryMembers })
     editing.value = false
+    if (updated.milestone_label && !prevMilestone) {
+      track("milestone_created", {
+        circle_id: props.memory.circle_id,
+        milestone_type: updated.milestone_label,
+      })
+    }
   } catch (err) {
     console.error('[QuickNoteModal] failed to save edit:', err)
   } finally {

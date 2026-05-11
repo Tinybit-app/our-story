@@ -859,6 +859,10 @@ async function saveEdit() {
     editing.value = false
 
     if (updated.milestone_label && !prevMilestone) {
+      track("milestone_created", {
+        circle_id: props.memory.circle_id,
+        milestone_type: updated.milestone_label,
+      })
       const firstPhoto = props.memory.memorymedia.find(m => m.media_type !== 'video')
       if (firstPhoto?.url) {
         const ages = updatedMemoryChildren
