@@ -17,7 +17,7 @@ export interface YearGroup {
   truncated: boolean
 }
 
-export interface MonthGroup {
+interface MonthGroup {
   month: number
   memories: MemoryItem[]
 }

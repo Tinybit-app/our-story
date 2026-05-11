@@ -9,6 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Placeholders satisfy @nuxtjs/supabase during `pnpm install` (nuxt prepare
+    # postinstall). The real values are exported into $GITHUB_ENV by the
+    # "Export Supabase env vars" step below and override these.
+    env:
+      NUXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NUXT_PUBLIC_SUPABASE_KEY: ci-placeholder-anon-key
     steps:
       - uses: actions/checkout@v4
 
