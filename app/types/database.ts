@@ -121,6 +121,7 @@ export type Database = {
           grace_period_until: string | null
           id: string
           last_challenge_completed_at: string | null
+          last_first_month_memory_sent_at: string | null
           last_memory_at: string | null
           last_monthly_digest_sent_at: string | null
           last_weekly_digest_sent_at: string | null
@@ -148,6 +149,7 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           last_challenge_completed_at?: string | null
+          last_first_month_memory_sent_at?: string | null
           last_memory_at?: string | null
           last_monthly_digest_sent_at?: string | null
           last_weekly_digest_sent_at?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           grace_period_until?: string | null
           id?: string
           last_challenge_completed_at?: string | null
+          last_first_month_memory_sent_at?: string | null
           last_memory_at?: string | null
           last_monthly_digest_sent_at?: string | null
           last_weekly_digest_sent_at?: string | null

@@ -33,6 +33,7 @@ const allMigrations = [
   sql("031_milestone_nudge.sql"),
   sql("032_milestone_nudges_enabled.sql"),
   sql("033_anniversary_date_comment.sql"),
+  sql("034_on_this_day_tracking.sql"),
 ].join("\n")
 
 // ============================================================
@@ -399,5 +400,13 @@ describe("Migration 032 — milestone_nudges_enabled preference", () => {
 
   it("adds milestone_nudges_enabled with default true", () => {
     expect(m).toContain("ADD COLUMN milestone_nudges_enabled BOOLEAN NOT NULL DEFAULT true")
+  })
+})
+
+describe("Migration 034 — On This Day tracking", () => {
+  const m = sql("034_on_this_day_tracking.sql")
+
+  it("adds last_first_month_memory_sent_at column to Circle", () => {
+    expect(m).toContain("ADD COLUMN last_first_month_memory_sent_at TIMESTAMPTZ")
   })
 })
