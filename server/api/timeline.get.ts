@@ -15,7 +15,7 @@ const querySchema = z.object({
 })
 
 const MEMORY_SELECT = `
-  id, owner_user_id, former_owner_name, former_owner_user_id, visibility, note, memory_date, milestone_label, created_at,
+  id, circle_id, owner_user_id, former_owner_name, former_owner_user_id, visibility, note, memory_date, milestone_label, created_at,
   cover_media_id,
   memory_children(child_id, childprofile(id, name, date_of_birth)),
   memory_members(user_id, user:user_id(id, first_name, last_name, avatar_url)),

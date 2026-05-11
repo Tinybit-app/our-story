@@ -633,7 +633,9 @@
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
 import { computeBabyAge } from '~/composables/useBabyAge'
+import { useAnalytics } from "~/composables/useAnalytics"
 const { t, locale } = useI18n()
+const { track } = useAnalytics()
 
 interface ChildProfile { id: string; name: string; date_of_birth: string }
 interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
@@ -990,10 +992,18 @@ async function toggleReaction(emoji: string) {
   else localReactions.value = [...localReactions.value, { id: 'optimistic', emoji, user_id: userId, guest_name: null, user: null }]
 
   const memoryId = props.memory.id
+  const wasAdding = !existing
   try {
     const { reactions } = await $fetch<{ reactions: any[] }>(`/api/memories/${memoryId}/reactions`, { method: 'POST', body: { emoji } })
     localReactions.value = reactions
     emit('update', { id: memoryId, memoryreaction: reactions })
+    if (wasAdding) {
+      track("reaction_added", {
+        circle_id: props.memory.circle_id,
+        memory_id: memoryId,
+        emoji,
+      })
+    }
   } catch (err) {
     console.error('[MemoryModal] reaction error:', err)
     localReactions.value = [...(props.memory.memoryreaction ?? [])] as Reaction[]
@@ -1030,6 +1040,10 @@ async function submitComment() {
     comments.value = updated
     commentDraft.value = ''
     if (textareaEl.value) textareaEl.value.style.height = 'auto'
+    track("comment_added", {
+      circle_id: props.memory.circle_id,
+      memory_id: props.memory.id,
+    })
   } catch (err) {
     console.error('[MemoryModal] failed to post comment:', err)
   } finally {

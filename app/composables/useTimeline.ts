@@ -11,6 +11,7 @@ export interface MediaItem {
 
 export interface Memory {
   id: string
+  circle_id: string
   owner_user_id: string | null
   former_owner_name: string | null
   former_owner_user_id: string | null
