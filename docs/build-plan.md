@@ -344,8 +344,18 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Tests: 17 unit (calendar math) + 11 unit (email builders) + 2 unit (api validation) + 2 RLS (owner-only SELECT on MilestoneNudge) + 7 schema-compliance
   - Manual setup remaining: schedule `send-milestone-nudges` in Supabase Studio (`0 9 * * *`)
   - See spec: `docs/superpowers/specs/2026-05-09-milestone-suggestions-design.md`
-- [ ] 12.3 First-memory anniversary (30-day cron)
-- [ ] 12.3.1 "Your first month" recap email — sent 30 days after first upload, shows memory count, milestone highlights, and top reaction; simpler than Year in Review but creates a felt delight moment early
+- [x] 12.3 First-memory anniversary (30-day cron) — implemented as one send with 12.3.1 *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+- [x] 12.3.1 "Your first month" recap email — sent 30 days after first upload; nostalgia hook (original first memory) + month stats (memory count, milestone count, top reaction) + dual CTA (add memory / invite). One send per circle, gated by `Circle.first_month_email_sent`.
+  - Edge Function `send-first-month-recap` runs daily at 9am UTC; window: `first_memory_at` 29–31 days ago
+  - Recipients: all circle members (not just owner+admins) — celebration moment, sent once per circle's lifetime
+  - Notification preference filter: skip if `circle_muted = true` OR `email_digest_frequency = 'off'`
+  - No-reactions fallback: omit the top-reaction section entirely (no substitute)
+  - Locales: en, zh-CN, fr
+  - No new migrations — `Circle.first_memory_at` (auto-populated by `handle_memory_insert` trigger) and `Circle.first_month_email_sent` already exist (migration 004)
+  - Tests: 13 unit tests for the email builder
+  - Manual setup remaining: schedule `send-first-month-recap` in Supabase Studio (`0 9 * * *`)
+  - Known issue: mid-batch failure may cause duplicate sends on retry (flag set only after all recipients processed). Acceptable for Phase 1.
+  - See spec: `docs/superpowers/specs/2026-05-11-first-month-recap-design.md`
 - [ ] 12.4 Quiet circle nudge (14-day inactivity → owner push only, max 3 nudges, min 14 days between, hard stop after 3 ignored — add `quiet_nudge_count` + `quiet_nudge_last_sent_at` to Circle table)
 
 ### Milestone 13: Pre-Launch Checklist

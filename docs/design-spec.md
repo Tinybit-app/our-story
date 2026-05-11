@@ -232,6 +232,8 @@ This is also the implementation of the "first-memory anniversary" retention hook
 
 **Implementation:** Scheduled Edge Function checks for circles where `first_memory_at` is between 29–31 days ago AND `first_month_email_sent = false` → compile stats + fetch oldest memory → send via Resend → set `first_month_email_sent = true`. Reuses the same email design system as the weekly digest.
 
+**[Implemented §12.3 + §12.3.1]** — Edge Function `send-first-month-recap` runs daily at 9am UTC. Recipients: all circle members (excluding `circle_muted` or `email_digest_frequency = 'off'`). One send per circle, gated by `Circle.first_month_email_sent`. Top-reaction section omitted entirely if no reactions exist. Locales: en, zh-CN, fr.
+
 ---
 
 ### 8. Annual Recap / Year in Review
@@ -3768,6 +3770,8 @@ Friend groups:
 Sent exactly 1 month after a circle's first upload. Implemented as part of the **"Your First Month" recap email** (see Key Features §7.5) — not a separate send.
 
 The nostalgia element ("One month ago, [uploader] added your first memory") is the opening section of that email. `Circle.first_month_email_sent` is the guard flag. There is one email, one flag, one Edge Function invocation.
+
+**[Implemented §12.3]** — see §7.5 cross-reference. Same Edge Function (`send-first-month-recap`), same `first_month_email_sent` flag.
 
 ### Hook 4: "Quiet circle" nudge (14-day inactivity)
 If no uploads in 14 days, send a soft nudge to the owner only (not all members — don't spam).
