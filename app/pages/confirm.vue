@@ -20,9 +20,12 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalytics } from "~/composables/useAnalytics"
+
 definePageMeta({ auth: false })
 const { t } = useI18n()
 
+const { track } = useAnalytics()
 const user = useSupabaseUser()
 const router = useRouter()
 const errorMsg = ref<string | null>(null)
@@ -56,6 +59,16 @@ const noAuthTimeout = setTimeout(() => {
 watchEffect(() => {
   if (!user.value) return
   clearTimeout(noAuthTimeout)
+
+  // First sign-in heuristic: user just signed up if created_at and last_sign_in_at
+  // are within 5 seconds (or last_sign_in_at is null on the freshly returned user)
+  const created = new Date(user.value.created_at).getTime()
+  const lastSignIn = user.value.last_sign_in_at
+    ? new Date(user.value.last_sign_in_at).getTime()
+    : created
+  if (Math.abs(lastSignIn - created) < 5000) {
+    track("user_signed_up", { method: "email" })
+  }
 
   // Check for pending invite token
   const inviteToken = useCookie("pending_invite_token")
