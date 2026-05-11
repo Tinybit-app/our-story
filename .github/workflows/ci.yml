@@ -20,7 +20,9 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: latest
+          # Pinned to match local dev — `latest` introduced a stricter
+          # ignored-builds policy that fights with our pnpm config.
+          version: 10.33.0
 
       - uses: actions/setup-node@v4
         with:
