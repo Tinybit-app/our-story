@@ -105,6 +105,8 @@ export default defineNuxtConfig({
       supabaseKey: process.env.SUPABASE_KEY,
       sentryDsn: process.env.SENTRY_DSN,
       vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+      posthogKey: process.env.NUXT_PUBLIC_POSTHOG_KEY,
+      posthogHost: process.env.NUXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
     },
   },
 });
