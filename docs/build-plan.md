@@ -269,7 +269,19 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
     7. Mute: User A (if owner) goes to `/circle-settings` → toggle "Mute this circle" on → User B uploads → User A gets no notification → toggle off → User B uploads → notification appears
     8. Snooze banner: clear localStorage → refresh timeline → banner appears → click "Later" → refresh → banner stays hidden → clear `push_prompt_snoozed_at` from localStorage → banner reappears
     9. Note: Web Push requires HTTPS in production; `localhost` is an exception for dev. If testing on a non-localhost domain, HTTPS is required
-- [ ] 10.2 On This Day daily cron — activates at 30+ memories and 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification — build for all users in Phase 1 (no tier check); add Plus gate in Phase 2 alongside Stripe billing
+- [x] 10.2 On This Day daily cron — activates at 30+ memories AND 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+  - Edge Function `send-on-this-day` runs daily at 9am UTC
+  - **Above threshold:** find oldest memory whose MM-DD matches today from a past year; push to all members (no email fallback — daily cadence)
+  - **Below threshold:** weekly "memory from your first month" fallback (oldest memory in circle); push if subscribed → email fallback; capped at once per 7 days via `Circle.last_first_month_memory_sent_at` (migration 034)
+  - Recipients: all circle members (skip muted)
+  - One push per circle per day, oldest matching year (most nostalgic)
+  - Locales: en, zh-CN, fr
+  - Migration 034: `last_first_month_memory_sent_at TIMESTAMPTZ` on Circle
+  - Tests: 16 push-copy unit tests + 10 email-builder unit tests + 1 schema-compliance
+  - Manual setup remaining: schedule `send-on-this-day` in Supabase Studio (`0 9 * * *`)
+  - No Plus tier check — build for all users in Phase 1; gate added in Phase 2 with Stripe billing
+  - In-app carousel is Phase 3 (deliberately not built)
+  - See spec: `docs/superpowers/specs/2026-05-11-on-this-day-design.md`
 - [x] 10.3 Notification preferences page — dedicated `/notification-settings` page accessible to all members; per-circle push toggle, mute toggle, email digest frequency (weekly/monthly/off, default monthly); circle selector for multi-circle users; bell icon in timeline header; notification toggles removed from circle-settings
   - Migration 027: `email_digest_frequency` CHECK constraint updated to include `'monthly'`; default changed from `'weekly'` to `'monthly'`
   - Quiet hours UI deferred (backend already checks in `sendPushToCircle`); daily digest option dropped

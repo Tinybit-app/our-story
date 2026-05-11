@@ -3867,6 +3867,8 @@ Every day at 8am (user's local timezone):
       deep_link: /memory/{id}
 ```
 
+**[Implemented §10.2]** — Edge Function `send-on-this-day` runs daily at 9am UTC. Above-threshold circles get a push-only nostalgia notification (one per circle per day, oldest matching year). Below-threshold circles fall back to a weekly "memory from your first month" notification with push-or-email channel selection, capped via `Circle.last_first_month_memory_sent_at` (migration 034). All circle members are recipients (skip muted). No Plus tier check in Phase 1.
+
 ### Weekly digest (every Monday 9am)
 
 > See the **Early Retention** section (Hook 1) for the canonical weekly digest implementation — including the zero-upload re-engagement variant, subject line personalisation, and build priority. The digest is built in Phase 1 alongside the On This Day cron; both share the same Edge Function invocation pattern.
