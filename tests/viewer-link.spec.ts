@@ -74,13 +74,33 @@ function mockCircles(page: any, role: 'owner' | 'member' = 'owner') {
 }
 
 function mockTimeline(page: any, memories: any[] = []) {
-  return page.route('**/api/timeline**', (route: any) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
-    })
-  )
+  // The picker inside CreateLinkSheet calls /api/timeline/years to seed its
+  // year groups; hasMemories (= yearGroups.length > 0) gates the Create
+  // button. Default to one stub year so "Create full-timeline link" tests
+  // aren't blocked by an empty-state guard.
+  //
+  // Order matters: Playwright matches routes most-recent-first. We register
+  // the generic /api/timeline handler first so /api/timeline/years (registered
+  // after) takes precedence on URLs that include `/years`.
+  return Promise.resolve()
+    .then(() =>
+      page.route('**/api/timeline**', (route: any) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+        })
+      )
+    )
+    .then(() =>
+      page.route('**/api/timeline/years**', (route: any) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ years: [2024] }),
+        })
+      )
+    )
 }
 
 function makeExpiredLink(token: string) {
@@ -92,6 +112,7 @@ function makeExpiredLink(token: string) {
     isExpired: true,
     memoryCount: null,
     dateRange: null,
+    previews: [],
     token,
     createdAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString(),
   }
@@ -151,6 +172,7 @@ test.describe('Viewer link management — owner dashboard', () => {
             isExpired: false,
             memoryCount: null,
             dateRange: null,
+            previews: [],
             token: createdToken,
           }),
         })
@@ -229,6 +251,7 @@ test.describe('Viewer link management — owner dashboard', () => {
             isExpired: false,
             memoryCount: null,
             dateRange: null,
+            previews: [],
             token,
             createdAt: new Date().toISOString(),
           }]),
@@ -420,8 +443,8 @@ test.describe('Viewer link management — public viewer page', () => {
     await page.waitForTimeout(500)
 
     // Referral CTA should appear after the 3rd memory enters the viewport
-    await expect(page.getByText(/know someone who.d love this/i)).toBeVisible({ timeout: 8_000 })
-    await expect(page.getByText(/share this app with them/i)).toBeVisible()
+    await expect(page.getByText(/enjoying these memories/i)).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText(/create your own circle/i)).toBeVisible()
   })
 
   // ── 7. Empty state when selection link has no memories ────────────────────

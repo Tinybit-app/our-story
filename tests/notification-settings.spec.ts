@@ -253,12 +253,15 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
     await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
 
-    // Click the push checkbox to toggle it off (currently on)
+    // Click the push checkbox to toggle it off (currently on). Set up the
+    // response listener BEFORE the click so we don't race past the PATCH.
     const pushCheckbox = page.locator('input[type="checkbox"]').first()
-    await pushCheckbox.click()
-
-    // Wait for the PATCH to fire
-    await page.waitForResponse('**/api/notification-preferences')
+    await Promise.all([
+      page.waitForResponse(r =>
+        r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH'
+      ),
+      pushCheckbox.click(),
+    ])
 
     expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, push_enabled: false })
   })
@@ -290,12 +293,15 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
     await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
 
-    // Click the mute checkbox to toggle it on (currently off)
+    // Click the mute checkbox to toggle it on (currently off). Listener
+    // before click — see push test for rationale.
     const muteCheckbox = page.locator('input[type="checkbox"]').nth(1)
-    await muteCheckbox.click()
-
-    // Wait for the PATCH to fire
-    await page.waitForResponse('**/api/notification-preferences')
+    await Promise.all([
+      page.waitForResponse(r =>
+        r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH'
+      ),
+      muteCheckbox.click(),
+    ])
 
     expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, circle_muted: true })
   })
@@ -327,11 +333,14 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
     await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
 
-    // Click the "Weekly" button (currently on "Monthly")
-    await page.getByRole('button', { name: /weekly/i }).click()
-
-    // Wait for the PATCH to fire
-    await page.waitForResponse('**/api/notification-preferences')
+    // Click the "Weekly" button (currently on "Monthly"). Listener before
+    // click — see push test for rationale.
+    await Promise.all([
+      page.waitForResponse(r =>
+        r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH'
+      ),
+      page.getByRole('button', { name: /weekly/i }).click(),
+    ])
 
     expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, email_digest_frequency: 'weekly' })
   })

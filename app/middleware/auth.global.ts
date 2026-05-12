@@ -1,3 +1,5 @@
+import { useOnboardingIntent } from "~/composables/useOnboardingIntent"
+
 export default defineNuxtRouteMiddleware(async (to) => {
   const client = useSupabaseClient()
   const publicRoutePrefixes = ["/login", "/confirm", "/invite", "/view"]
@@ -36,8 +38,16 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return navigateTo("/settings/account")
     }
 
-    // Already onboarded users should not be able to re-enter onboarding
-    if (to.path.startsWith("/onboarding") && state.hasMembership) {
+    // Already onboarded users should not be able to re-enter the picker page,
+    // except via the 'Start new circle' flow which sets a one-shot intent flag
+    // (see useOnboardingIntent). Sub-routes (/onboarding/name, /invite, /profile)
+    // are part of an in-progress flow and stay accessible.
+    if (to.path === "/onboarding" && state.hasMembership) {
+      const intent = useOnboardingIntent()
+      if (intent.value) {
+        intent.value = false  // one-shot — consume on first allowed render
+        return
+      }
       return navigateTo("/timeline")
     }
 

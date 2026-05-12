@@ -15,10 +15,11 @@ test.describe('Login page', () => {
     await expect(page.getByText('For you, your family, your friends.')).toBeVisible()
   })
 
-  test('shows both sign-in methods', async ({ page }) => {
-    await expect(page.getByRole('button', { name: /continue with google/i })).toBeVisible()
+  test('shows the magic-link sign-in method', async ({ page }) => {
+    // Google SSO is deferred to Phase 2 (build-plan §3.1) — only magic link in Phase 1.
     await expect(page.getByPlaceholder('your@email.com')).toBeVisible()
     await expect(page.getByRole('button', { name: /continue with email/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /continue with google/i })).toHaveCount(0)
   })
 
   test('shows success message after valid email submission', async ({ page }) => {

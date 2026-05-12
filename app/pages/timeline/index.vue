@@ -567,6 +567,7 @@
 <script setup lang="ts">
 import type { Memory } from "~/composables/useTimeline";
 import { useAnalytics } from "~/composables/useAnalytics"
+import { useOnboardingIntent } from "~/composables/useOnboardingIntent"
 
 // ── i18n ───────────────────────────────────────────────────
 const { t, locale, setLocale } = useI18n()
@@ -858,6 +859,7 @@ function switchCircle(id: string) {
 
 function startNewCircle() {
   circleSwitcherOpen.value = false;
+  useOnboardingIntent().value = true;
   router.push("/onboarding");
 }
 

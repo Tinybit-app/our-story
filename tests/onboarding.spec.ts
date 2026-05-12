@@ -8,15 +8,26 @@ test.use({ storageState: 'tests/.auth/user.json' })
 const TEST_CIRCLE_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
 
 test.describe('Onboarding flow', () => {
+  // The auth middleware hard-blocks /onboarding/* for onboarded members (except
+  // via the in-app 'Start new circle' intent flag, which tests don't trigger).
+  // So we start each test with hasMembership: false to keep /onboarding reachable.
+  // Tests that complete circle creation and need /timeline accessible flip this
+  // to true via setHasMembership().
+  let hasMembership = false
+  const setHasMembership = (v: boolean) => { hasMembership = v }
+
   test.beforeEach(async ({ page }) => {
-    // Return hasMembership: true so the global middleware allows /timeline navigation.
-    // Onboarding routes (/onboarding/*) skip the membership check, so this is safe
-    // to use across all steps.
+    hasMembership = false
+    // Pre-mark the value-prop screens as seen so the onboarding middleware
+    // sends us straight to the picker, not to /onboarding/value-prop.
+    await page.addInitScript(() => {
+      localStorage.setItem('value_prop_seen', '1')
+    })
     await page.route('**/api/auth/membership**', route =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({ hasMembership, needsProfile: false, deletedAt: null }),
       })
     )
   })
@@ -97,13 +108,16 @@ test.describe('Onboarding flow', () => {
       await page.getByRole('button', { name: 'Continue' }).click()
       await page.waitForURL('/onboarding/name')
 
-      await page.route('**/api/circles/create**', route =>
-        route.fulfill({
+      await page.route('**/api/circles/create**', async route => {
+        await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({ circleId: TEST_CIRCLE_ID }),
         })
-      )
+        // After circle creation, the user IS a member — flip the mock so the
+        // post-create navigation to /timeline isn't bounced by the middleware.
+        setHasMembership(true)
+      })
 
       await page.locator('input[type="text"]').fill('My Journal')
       await page.getByRole('button', { name: 'Continue' }).click()
@@ -141,13 +155,16 @@ test.describe('Onboarding flow', () => {
       await page.getByRole('button', { name: 'Continue' }).click()
       await page.waitForURL('/onboarding/name')
 
-      await page.route('**/api/circles/create**', route =>
-        route.fulfill({
+      await page.route('**/api/circles/create**', async route => {
+        await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({ circleId: TEST_CIRCLE_ID }),
         })
-      )
+        // Post-create the user is a member — flip the mock so subsequent
+        // navigations (eventually /timeline in the skip test) aren't bounced.
+        setHasMembership(true)
+      })
 
       await page.locator('input[type="text"]').fill('The Smith Family')
       await page.getByRole('button', { name: 'Continue' }).click()

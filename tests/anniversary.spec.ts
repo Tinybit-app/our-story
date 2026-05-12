@@ -185,16 +185,19 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await expect(page.locator('input[aria-label="Anniversary date"]')).toBeVisible()
   })
 
-  test('circle settings shows anniversary input for non-couple circle owner', async ({ page }) => {
+  test('circle settings shows trip-date input for friends/travel circle owner', async ({ page }) => {
+    // Friends and travel circles get the same anchor-date UI as couple, but
+    // labelled "Trip date" instead of "Anniversary" (build-plan §4.10.4).
+    // Family/parents/caregiving/solo circles get no anchor-date UI at all.
     await mockMembership(page)
-    await mockCirclesList(page, 'family')
-    await mockCircleDetail(page, 'family')
+    await mockCirclesList(page, 'friends')
+    await mockCircleDetail(page, 'friends')
     await mockCircleMembers(page)
     await mockChildren(page)
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(page.getByText('Anniversary', { exact: true })).toBeVisible({ timeout: 10_000 })
-    await expect(page.locator('input[aria-label="Anniversary date"]')).toBeVisible()
+    await expect(page.getByText('Trip date', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('input[aria-label="Trip date"]')).toBeVisible()
   })
 
   test('saving anniversary date calls PATCH /api/circles/:id with anniversaryDate', async ({ page }) => {
