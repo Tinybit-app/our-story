@@ -18,6 +18,10 @@ ALTER TABLE memorymedia ADD CONSTRAINT memorymedia_content_check
     (media_type = 'text' AND text_content IS NOT NULL)
   );
 
+-- Creates a second FK between memory and memorymedia (the original is
+-- memorymedia.memory_id → memory). PostgREST cannot auto-pick a relationship
+-- when two exist, so all `memorymedia(...)` embeds under `memory` must be
+-- disambiguated with `memorymedia!memory_id(...)`.
 ALTER TABLE memory
   ADD COLUMN cover_media_id UUID REFERENCES memorymedia(id) ON DELETE SET NULL;
 

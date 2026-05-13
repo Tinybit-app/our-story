@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
   let memoryQuery = supabase
     .from('memory')
     .select(
-      'id, memory_date, note, cover_media_id, memorymedia(id, storage_path, media_type, text_content, display_order)',
+      'id, memory_date, note, cover_media_id, memorymedia!memory_id(id, storage_path, media_type, text_content, display_order)',
     )
     .eq('circle_id', circleId)
     .eq('visibility', 'circle')

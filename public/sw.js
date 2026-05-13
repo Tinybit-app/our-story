@@ -1,7 +1,10 @@
 // Service worker: push notifications + offline asset caching
 // Offline upload queue is Phase 2 (Capacitor)
 
-const CACHE_NAME = 'our-story-v1'
+const CACHE_NAME = 'our-story-v2'
+const IS_DEV =
+  self.location.hostname === 'localhost' ||
+  self.location.hostname === '127.0.0.1'
 
 // Static assets to precache on install (app shell)
 const PRECACHE_URLS = [
@@ -36,8 +39,17 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests (POST uploads, PATCH, DELETE, etc.)
   if (request.method !== 'GET') return
 
+  // Skip WebSocket upgrades — respondWith would break the upgrade handshake
+  // (Vite HMR uses ws://host/_nuxt/?token=... in dev).
+  if (request.headers.get('upgrade')?.toLowerCase() === 'websocket') return
+
   // Skip API calls and Supabase requests — always go to network
   if (url.pathname.startsWith('/api/') || url.hostname !== self.location.hostname) return
+
+  // In dev, never cache Vite-served modules: URLs are stable but contents
+  // change via HMR, so cache-first would pin stale chunks. The push handler
+  // below still works because it doesn't depend on the fetch interceptor.
+  if (IS_DEV && url.pathname.startsWith('/_nuxt/')) return
 
   // Nuxt build assets (_nuxt/*): cache-first (hashed filenames, immutable)
   if (url.pathname.startsWith('/_nuxt/')) {

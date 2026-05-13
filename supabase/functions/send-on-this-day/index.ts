@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
           .select(
             `
             id, note, memory_date, owner_user_id,
-            memorymedia(storage_path),
+            memorymedia!memory_id(storage_path),
             user!owner_user_id(first_name)
           `,
           )
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
           .select(
             `
             id, note, memory_date, owner_user_id,
-            memorymedia(storage_path),
+            memorymedia!memory_id(storage_path),
             user!owner_user_id(first_name)
           `,
           )

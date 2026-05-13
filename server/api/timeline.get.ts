@@ -22,7 +22,7 @@ const MEMORY_SELECT = `
   cover_media_id,
   memory_children(child_id, childprofile(id, name, date_of_birth)),
   memory_members(user_id, user:user_id(id, first_name, last_name, avatar_url)),
-  memorymedia(id, storage_path, media_type, file_size, text_content, display_order),
+  memorymedia!memory_id(id, storage_path, media_type, file_size, text_content, display_order),
   user!owner_user_id(first_name, last_name, avatar_url),
   memoryreaction(id, emoji, user_id, guest_name, user!user_id(first_name, last_name)),
   memorycomment(id)

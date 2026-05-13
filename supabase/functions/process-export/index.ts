@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     let memoriesQuery = supabase
       .from('memory')
       .select(
-        'id, memory_date, note, milestone_label, visibility, owner_user_id, memorymedia(storage_path, media_type)',
+        'id, memory_date, note, milestone_label, visibility, owner_user_id, memorymedia!memory_id(storage_path, media_type)',
       )
       .eq('circle_id', job.circle_id)
 

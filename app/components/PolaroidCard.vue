@@ -51,6 +51,7 @@
             :class="imgLoaded ? 'opacity-100' : 'opacity-0'"
             loading="lazy"
             @load="imgLoaded = true"
+            @error="imgLoaded = true"
           />
         </template>
 

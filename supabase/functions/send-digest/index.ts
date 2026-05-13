@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       // Memories in the period, ordered by recency
       const { data: memories } = await supabase
         .from('memory')
-        .select('id, note, milestone_label, memorymedia(storage_path, media_type)')
+        .select('id, note, milestone_label, memorymedia!memory_id(storage_path, media_type)')
         .eq('circle_id', c.id)
         .gte('created_at', periodStart)
         .order('created_at', { ascending: false })

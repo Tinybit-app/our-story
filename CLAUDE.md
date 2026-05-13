@@ -54,6 +54,7 @@ The build plan and design spec are the source of truth. Do not deviate from them
 - Timeline queries order by `memory_date` (not `created_at`) — this drives correct chronological position for old photos uploaded today
 - `circle_type` values are: `'parents' | 'couple' | 'family' | 'friends' | 'caregiving' | 'travel' | 'solo' | 'custom'` — validate with `z.enum()`, never `z.string()`
 - Sentry client config must use `useRuntimeConfig().public.sentryDsn` — `process.env.SENTRY_DSN` is not available in the browser SPA bundle
+- PostgREST embeds of `memorymedia` under `memory` must use `memorymedia!memory_id(...)` — two FKs exist (`memorymedia.memory_id → memory` and `memory.cover_media_id → memorymedia`), so the embed is ambiguous without a hint
 
 ## Tests
 

@@ -126,7 +126,7 @@
       </template>
 
       <!-- Infinite scroll sentinel -->
-      <div ref="loadMoreEl" class="mt-2 h-4" />
+      <div ref="loadMoreEl" :class="'mt-2 h-4'" />
 
       <!-- Pagination loading -->
       <div v-if="loading && monthGroups.length > 0" class="flex justify-center py-6">

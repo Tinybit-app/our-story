@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
         const previewIds = link.memory_ids.slice(0, PREVIEW_LIMIT)
         const { data: memories } = await serviceSupabase
           .from('memory')
-          .select('id, note, memorymedia(storage_path, media_type)')
+          .select('id, note, memorymedia!memory_id(storage_path, media_type)')
           .in('id', previewIds)
           .limit(PREVIEW_LIMIT)
 

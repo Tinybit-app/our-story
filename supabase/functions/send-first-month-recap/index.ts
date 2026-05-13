@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         .select(
           `
           id, note, memory_date, owner_user_id, milestone_label,
-          memorymedia(storage_path, media_type),
+          memorymedia!memory_id(storage_path, media_type),
           user!owner_user_id(first_name)
         `,
         )
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
       if (topReactionMemoryId) {
         const { data: topMem } = await supabase
           .from('memory')
-          .select('note, memorymedia(storage_path)')
+          .select('note, memorymedia!memory_id(storage_path)')
           .eq('id', topReactionMemoryId)
           .maybeSingle()
         topReactionMemoryNote = topMem?.note ?? null
