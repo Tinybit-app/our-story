@@ -5,7 +5,16 @@ export default defineEventHandler((event) => {
     "'self'",
     "https://*.supabase.co",
     "wss://*.supabase.co",
-    ...(isDev ? ["http://127.0.0.1:54321", "ws://127.0.0.1:54321"] : []),
+    // Dev only: local Supabase + Vite HMR websockets. CSP 'self' doesn't grant
+    // ws://, so the HMR origins have to be listed explicitly here.
+    ...(isDev
+      ? [
+          "http://127.0.0.1:54321",
+          "ws://127.0.0.1:54321",
+          "ws://localhost:3000",
+          "ws://localhost:5173",
+        ]
+      : []),
   ].join(" ")
 
   const imgSrc = [
