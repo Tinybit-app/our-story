@@ -1,39 +1,49 @@
 <template>
   <div class="min-h-screen bg-background">
-
     <!-- Header -->
-    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
+    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <button
-          class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1 flex-shrink-0"
+          class="-ml-1 flex flex-shrink-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           @click="router.back()"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M15 18l-6-6 6-6"/>
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 18l-6-6 6-6" />
           </svg>
           {{ t('common.back') }}
         </button>
       </div>
     </header>
 
-    <main class="max-w-[1280px] mx-auto px-5">
-
+    <main class="mx-auto max-w-[1280px] px-5">
       <!-- Profile hero -->
-      <div v-if="member" class="flex items-end gap-5 pt-8 pb-8 border-b border-border">
+      <div v-if="member" class="flex items-end gap-5 border-b border-border pb-8 pt-8">
         <!-- Avatar -->
-        <div class="w-16 h-16 rounded-full overflow-hidden ring-2 ring-border flex-shrink-0 flex items-center justify-center bg-secondary">
-          <img v-if="member.avatarUrl" :src="member.avatarUrl" class="w-full h-full object-cover" />
+        <div
+          class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border"
+        >
+          <img v-if="member.avatarUrl" :src="member.avatarUrl" class="h-full w-full object-cover" />
           <span v-else class="text-xl font-bold text-foreground">{{ initials(member) }}</span>
         </div>
 
         <!-- Name + stats -->
         <div class="min-w-0 flex-1">
-          <h1 class="text-xl font-semibold text-foreground leading-tight truncate">{{ displayName(member) }}</h1>
-          <div class="flex items-center gap-3 mt-1.5 flex-wrap">
-            <span class="text-[11px] text-muted-foreground capitalize">{{ member.role }}</span>
-            <span class="text-border text-xs">·</span>
-            <span class="text-[11px] text-muted-foreground">{{ t('member.joined', { date: joinedLabel }) }}</span>
-            <span v-if="totalMemories > 0" class="text-border text-xs">·</span>
+          <h1 class="truncate text-xl font-semibold leading-tight text-foreground">
+            {{ displayName(member) }}
+          </h1>
+          <div class="mt-1.5 flex flex-wrap items-center gap-3">
+            <span class="text-[11px] capitalize text-muted-foreground">{{ member.role }}</span>
+            <span class="text-xs text-border">·</span>
+            <span class="text-[11px] text-muted-foreground">{{
+              t('member.joined', { date: joinedLabel })
+            }}</span>
+            <span v-if="totalMemories > 0" class="text-xs text-border">·</span>
             <span v-if="totalMemories > 0" class="text-[11px] text-muted-foreground">
               {{ t('member.memories', totalMemories) }}
             </span>
@@ -52,9 +62,7 @@
           @reaction-update="onReactionUpdate"
         />
       </div>
-
     </main>
-
   </div>
 
   <MemoryShell
@@ -88,7 +96,8 @@ function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
 
 function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions: any[] }) {
   const i = memoriesFlat.value.findIndex((m) => m.id === memoryId)
-  if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], memoryreaction: reactions } as Memory
+  if (i !== -1)
+    memoriesFlat.value[i] = { ...memoriesFlat.value[i], memoryreaction: reactions } as Memory
 }
 
 definePageMeta({})
@@ -107,7 +116,9 @@ const { data: membersData } = await useAsyncData(
   () => $fetch<{ members: any[] }>(`/api/circles/${circleId.value!}/members`),
   { immediate: !!circleId.value },
 )
-const member = computed(() => membersData.value?.members.find((m: any) => m.userId === userId) ?? null)
+const member = computed(
+  () => membersData.value?.members.find((m: any) => m.userId === userId) ?? null,
+)
 
 function displayName(m: any): string {
   const parts = [m.firstName, m.lastName].filter(Boolean)
@@ -122,7 +133,10 @@ function initials(m: any): string {
 
 const joinedLabel = computed(() => {
   if (!member.value?.joinedAt) return ''
-  return new Date(member.value.joinedAt).toLocaleDateString(locale.value, { month: 'long', year: 'numeric' })
+  return new Date(member.value.joinedAt).toLocaleDateString(locale.value, {
+    month: 'long',
+    year: 'numeric',
+  })
 })
 
 // ── Timeline ───────────────────────────────────────────────

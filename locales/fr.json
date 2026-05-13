@@ -41,13 +41,13 @@
     "language": "Langue"
   },
   "circleType": {
-    "parents":    { "label": "Nouveaux parents",  "description": "Jalons et croissance de bébé" },
-    "couple":     { "label": "Couple",             "description": "Jalons de la relation" },
-    "family":     { "label": "Famille",            "description": "Souvenirs de famille" },
-    "friends":    { "label": "Groupe d'amis",      "description": "Voyages, retrouvailles, moments" },
-    "caregiving": { "label": "Soins",              "description": "Santé et événements de vie" },
-    "travel":     { "label": "Groupe de voyage",   "description": "Aventures ensemble" },
-    "solo":       { "label": "Juste moi",          "description": "Chronologie personnelle" }
+    "parents": { "label": "Nouveaux parents", "description": "Jalons et croissance de bébé" },
+    "couple": { "label": "Couple", "description": "Jalons de la relation" },
+    "family": { "label": "Famille", "description": "Souvenirs de famille" },
+    "friends": { "label": "Groupe d'amis", "description": "Voyages, retrouvailles, moments" },
+    "caregiving": { "label": "Soins", "description": "Santé et événements de vie" },
+    "travel": { "label": "Groupe de voyage", "description": "Aventures ensemble" },
+    "solo": { "label": "Juste moi", "description": "Chronologie personnelle" }
   },
   "nav": {
     "addMemory": "Ajouter un souvenir",
@@ -281,31 +281,66 @@
     "circleTypes": {
       "parents": {
         "tagline": "Documentez chaque première fois — ensemble.",
-        "bullets": ["Indicateur d'âge de bébé sur chaque souvenir", "Catégories de jalons de développement", "Résumé hebdomadaire pour les grands-parents", "Courbe de croissance et suivi des vaccins"]
+        "bullets": [
+          "Indicateur d'âge de bébé sur chaque souvenir",
+          "Catégories de jalons de développement",
+          "Résumé hebdomadaire pour les grands-parents",
+          "Courbe de croissance et suivi des vaccins"
+        ]
       },
       "couple": {
         "tagline": "Votre relation, depuis le tout début.",
-        "bullets": ["Date de début et rappel d'anniversaire", "Souvenir épinglé \"Comment on s'est rencontrés\"", "Stats du couple — souvenirs, pays, mois documentés", "Chronologie privée juste pour vous deux"]
+        "bullets": [
+          "Date de début et rappel d'anniversaire",
+          "Souvenir épinglé \"Comment on s'est rencontrés\"",
+          "Stats du couple — souvenirs, pays, mois documentés",
+          "Chronologie privée juste pour vous deux"
+        ]
       },
       "family": {
         "tagline": "Un seul endroit pour toute la famille.",
-        "bullets": ["Étiquettes de personnes — grand-maman, papa, les enfants", "\"Ce jour l'an passé\" dans le résumé hebdomadaire", "Regroupement d'événements — Noël, vacances d'été", "Accès multigénérationnel sur invitation seulement"]
+        "bullets": [
+          "Étiquettes de personnes — grand-maman, papa, les enfants",
+          "\"Ce jour l'an passé\" dans le résumé hebdomadaire",
+          "Regroupement d'événements — Noël, vacances d'été",
+          "Accès multigénérationnel sur invitation seulement"
+        ]
       },
       "friends": {
         "tagline": "Vos voyages et moments, tous au même endroit.",
-        "bullets": ["Conteneurs de voyages et d'événements", "Étiquettes \"Qui était là\"", "Classement des réactions — photo la plus aimée", "Jalons du nombre de souvenirs à célébrer ensemble"]
+        "bullets": [
+          "Conteneurs de voyages et d'événements",
+          "Étiquettes \"Qui était là\"",
+          "Classement des réactions — photo la plus aimée",
+          "Jalons du nombre de souvenirs à célébrer ensemble"
+        ]
       },
       "caregiving": {
         "tagline": "Un journal structuré avec les moments émotionnels.",
-        "bullets": ["Journal quotidien d'humeur et d'énergie", "Types d'événements de santé — Visite médicale, Bonne journée, Traitement", "Notes de l'équipe soignante visibles seulement aux administrateurs", "Export en PDF pour les rendez-vous médicaux"]
+        "bullets": [
+          "Journal quotidien d'humeur et d'énergie",
+          "Types d'événements de santé — Visite médicale, Bonne journée, Traitement",
+          "Notes de l'équipe soignante visibles seulement aux administrateurs",
+          "Export en PDF pour les rendez-vous médicaux"
+        ]
       },
       "travel": {
         "tagline": "Chaque étape de votre voyage, mémorisée.",
-        "bullets": ["Étiquette de localisation avec remplissage automatique EXIF", "Itinéraire de voyage avec destinations et dates", "Vue carte montrant où les souvenirs ont été pris", "Statistiques du voyage — pays, jours, km parcourus"]
+        "bullets": [
+          "Étiquette de localisation avec remplissage automatique EXIF",
+          "Itinéraire de voyage avec destinations et dates",
+          "Vue carte montrant où les souvenirs ont été pris",
+          "Statistiques du voyage — pays, jours, km parcourus"
+        ]
       },
       "solo": {
         "tagline": "Votre histoire personnelle, magnifiquement conservée.",
-        "bullets": ["Invitations à la réflexion à chaque téléversement", "Étiquettes d'humeur et d'émotion", "Bilan de l'année généré automatiquement", "Suivi de série — documentez chaque jour"]
+        "bullets": [
+          "Invitations à la réflexion à chaque téléversement",
+          "Étiquettes d'humeur et d'émotion",
+          "Bilan de l'année généré automatiquement",
+          "Suivi de série — documentez chaque jour"
+        ]
       }
     },
     "features": {
@@ -313,7 +348,11 @@
     },
     "privacy": {
       "title": "Vos photos ne quittent jamais votre cercle.",
-      "items": ["Aucune publicité", "Aucun algorithme", "Aucun entraînement d'IA sur vos souvenirs"],
+      "items": [
+        "Aucune publicité",
+        "Aucun algorithme",
+        "Aucun entraînement d'IA sur vos souvenirs"
+      ],
       "sub": "Sur invitation seulement. Privé par conception."
     },
     "vision": {

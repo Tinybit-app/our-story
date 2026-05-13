@@ -10,8 +10,8 @@ export const YEAR_MILESTONES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18] as const
  * (e.g., '6mo', '2yr') if the target date is exactly that age. Else null.
  */
 export function getMilestoneKeyForAge(dob: string, targetDate: string): string | null {
-  const d = new Date(dob + "T00:00:00Z")
-  const t = new Date(targetDate + "T00:00:00Z")
+  const d = new Date(dob + 'T00:00:00Z')
+  const t = new Date(targetDate + 'T00:00:00Z')
   if (Number.isNaN(d.getTime()) || Number.isNaN(t.getTime())) return null
   if (t.getTime() < d.getTime()) return null
 
@@ -51,8 +51,8 @@ export function getMilestoneKeyForAge(dob: string, targetDate: string): string |
  * accept Feb 28 as the matching day.
  */
 export function getAnniversaryYear(anniversaryDate: string, targetDate: string): number | null {
-  const a = new Date(anniversaryDate + "T00:00:00Z")
-  const t = new Date(targetDate + "T00:00:00Z")
+  const a = new Date(anniversaryDate + 'T00:00:00Z')
+  const t = new Date(targetDate + 'T00:00:00Z')
   if (Number.isNaN(a.getTime()) || Number.isNaN(t.getTime())) return null
 
   const ay = a.getUTCFullYear()

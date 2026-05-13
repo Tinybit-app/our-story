@@ -8,12 +8,12 @@ test.use({ storageState: 'tests/.auth/user.json' })
 test.describe('Value proposition screens', () => {
   test.beforeEach(async ({ page }) => {
     // Fresh user: no membership, no profile issues
-    await page.route('**/api/auth/membership**', route =>
+    await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ hasMembership: false, needsProfile: false, deletedAt: null }),
-      })
+      }),
     )
     // Clear the "seen" flag so each test starts fresh
     await page.addInitScript(() => {
@@ -23,7 +23,9 @@ test.describe('Value proposition screens', () => {
 
   // ── Redirect ────────────────────────────────────────────────────────────────
 
-  test('visiting /onboarding redirects to /onboarding/value-prop when not yet seen', async ({ page }) => {
+  test('visiting /onboarding redirects to /onboarding/value-prop when not yet seen', async ({
+    page,
+  }) => {
     await page.goto('/onboarding')
     await page.waitForURL(/\/onboarding\/value-prop/, { timeout: 10_000 })
     await expect(page).toHaveURL(/\/onboarding\/value-prop/)
@@ -83,12 +85,12 @@ test.describe('Value proposition screens', () => {
   // ── Existing member creating a second circle ────────────────────────────────
 
   test('existing member navigating to /onboarding is redirected to /timeline', async ({ page }) => {
-    await page.route('**/api/auth/membership**', route =>
+    await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-      })
+      }),
     )
     await page.goto('/onboarding')
     await page.waitForURL(/\/timeline/, { timeout: 5_000 })
@@ -97,7 +99,9 @@ test.describe('Value proposition screens', () => {
 
   // ── Shown once ──────────────────────────────────────────────────────────────
 
-  test('/onboarding does NOT redirect when value_prop_seen flag is already set', async ({ page }) => {
+  test('/onboarding does NOT redirect when value_prop_seen flag is already set', async ({
+    page,
+  }) => {
     // Pre-set the localStorage flag before navigation
     await page.addInitScript(() => {
       localStorage.setItem('value_prop_seen', '1')

@@ -15,11 +15,13 @@
 ## File Structure
 
 ### New
+
 - `unit/firstMonthRecapEmail.test.ts` — TDD tests
 - `supabase/functions/send-first-month-recap/index.ts` — Edge Function
 - `supabase/functions/send-first-month-recap/firstMonthRecapEmail.ts` — Deno mirror of the builder
 
 ### Modified
+
 - `server/utils/email.ts` — add `buildFirstMonthRecapEmail`
 - `docs/build-plan.md` — mark 12.3 + 12.3.1 complete
 - `docs/design-spec.md` — cross-reference §7.5
@@ -31,6 +33,7 @@ No new migrations needed — `Circle.first_memory_at` and `Circle.first_month_em
 ## Task 1: Email builder (TDD)
 
 **Files:**
+
 - Create: `unit/firstMonthRecapEmail.test.ts`
 - Modify: `server/utils/email.ts`
 
@@ -39,76 +42,76 @@ No new migrations needed — `Circle.first_memory_at` and `Circle.first_month_em
 Create `unit/firstMonthRecapEmail.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest"
-import { buildFirstMonthRecapEmail } from "../server/utils/email"
+import { describe, it, expect } from 'vitest'
+import { buildFirstMonthRecapEmail } from '../server/utils/email'
 
 const baseOpts = {
-  recipientFirstName: "Dao",
-  circleName: "The Smiths",
-  firstMemoryUploaderName: "Mom",
-  firstMemoryNote: "First steps at the park",
-  firstMemoryDate: "2026-04-11",
-  firstMemoryThumbnailUrl: "https://example.com/first.jpg",
+  recipientFirstName: 'Dao',
+  circleName: 'The Smiths',
+  firstMemoryUploaderName: 'Mom',
+  firstMemoryNote: 'First steps at the park',
+  firstMemoryDate: '2026-04-11',
+  firstMemoryThumbnailUrl: 'https://example.com/first.jpg',
   memoryCount: 12,
   milestoneCount: 2,
-  topReactionMemoryThumbnailUrl: "https://example.com/top.jpg",
-  topReactionMemoryNote: "Cake time",
-  topReactionEmoji: "❤️",
+  topReactionMemoryThumbnailUrl: 'https://example.com/top.jpg',
+  topReactionMemoryNote: 'Cake time',
+  topReactionEmoji: '❤️',
   topReactionCount: 5,
-  appUrl: "https://our-story.tinybit.app/timeline?circle=c1",
-  inviteUrl: "https://our-story.tinybit.app/timeline?circle=c1&invite=1",
-  unsubscribeUrl: "https://our-story.tinybit.app/notification-settings",
-  locale: "en" as const,
+  appUrl: 'https://our-story.tinybit.app/timeline?circle=c1',
+  inviteUrl: 'https://our-story.tinybit.app/timeline?circle=c1&invite=1',
+  unsubscribeUrl: 'https://our-story.tinybit.app/notification-settings',
+  locale: 'en' as const,
 }
 
-describe("buildFirstMonthRecapEmail — subject", () => {
-  it("en subject includes circle name", () => {
+describe('buildFirstMonthRecapEmail — subject', () => {
+  it('en subject includes circle name', () => {
     const { subject } = buildFirstMonthRecapEmail(baseOpts)
-    expect(subject).toContain("The Smiths")
+    expect(subject).toContain('The Smiths')
     expect(subject.toLowerCase()).toMatch(/first month|month with/)
   })
 
-  it("zh-CN subject is in Chinese", () => {
-    const { subject } = buildFirstMonthRecapEmail({ ...baseOpts, locale: "zh-CN" })
+  it('zh-CN subject is in Chinese', () => {
+    const { subject } = buildFirstMonthRecapEmail({ ...baseOpts, locale: 'zh-CN' })
     expect(subject).toMatch(/[一-鿿]/)
-    expect(subject).toContain("The Smiths")
+    expect(subject).toContain('The Smiths')
   })
 
-  it("fr subject is in French (not English)", () => {
-    const { subject } = buildFirstMonthRecapEmail({ ...baseOpts, locale: "fr" })
+  it('fr subject is in French (not English)', () => {
+    const { subject } = buildFirstMonthRecapEmail({ ...baseOpts, locale: 'fr' })
     expect(subject.toLowerCase()).not.toMatch(/^your first month/)
   })
 })
 
-describe("buildFirstMonthRecapEmail — body", () => {
-  it("includes the first memory thumbnail URL", () => {
+describe('buildFirstMonthRecapEmail — body', () => {
+  it('includes the first memory thumbnail URL', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("https://example.com/first.jpg")
+    expect(html).toContain('https://example.com/first.jpg')
   })
 
-  it("includes the first memory note", () => {
+  it('includes the first memory note', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("First steps at the park")
+    expect(html).toContain('First steps at the park')
   })
 
-  it("includes uploader name in the nostalgia hook", () => {
+  it('includes uploader name in the nostalgia hook', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("Mom")
+    expect(html).toContain('Mom')
   })
 
-  it("renders memory count and milestone count", () => {
+  it('renders memory count and milestone count', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("12")
-    expect(html).toContain("2")
+    expect(html).toContain('12')
+    expect(html).toContain('2')
   })
 
-  it("includes top reaction section when reactions exist", () => {
+  it('includes top reaction section when reactions exist', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("❤️")
-    expect(html).toContain("5")
+    expect(html).toContain('❤️')
+    expect(html).toContain('5')
   })
 
-  it("omits top reaction section when topReactionMemoryThumbnailUrl is null", () => {
+  it('omits top reaction section when topReactionMemoryThumbnailUrl is null', () => {
     const { html } = buildFirstMonthRecapEmail({
       ...baseOpts,
       topReactionMemoryThumbnailUrl: null,
@@ -116,28 +119,28 @@ describe("buildFirstMonthRecapEmail — body", () => {
       topReactionEmoji: null,
       topReactionCount: null,
     })
-    expect(html).not.toContain("https://example.com/top.jpg")
+    expect(html).not.toContain('https://example.com/top.jpg')
     // Reaction count of 5 shouldn't appear (would have been the only "5")
   })
 
-  it("includes appUrl as primary CTA", () => {
+  it('includes appUrl as primary CTA', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("https://our-story.tinybit.app/timeline?circle=c1")
+    expect(html).toContain('https://our-story.tinybit.app/timeline?circle=c1')
   })
 
-  it("includes inviteUrl as secondary CTA", () => {
+  it('includes inviteUrl as secondary CTA', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("invite=1")
+    expect(html).toContain('invite=1')
   })
 
-  it("includes unsubscribe link", () => {
+  it('includes unsubscribe link', () => {
     const { html } = buildFirstMonthRecapEmail(baseOpts)
-    expect(html).toContain("/notification-settings")
+    expect(html).toContain('/notification-settings')
   })
 
   it("handles null firstMemoryNote without rendering 'null'", () => {
     const { html } = buildFirstMonthRecapEmail({ ...baseOpts, firstMemoryNote: null })
-    expect(html).not.toContain("null")
+    expect(html).not.toContain('null')
   })
 })
 ```
@@ -172,75 +175,108 @@ export interface FirstMonthRecapEmailOpts {
   appUrl: string
   inviteUrl: string
   unsubscribeUrl: string
-  locale: "en" | "zh-CN" | "fr"
+  locale: 'en' | 'zh-CN' | 'fr'
 }
 
-export function buildFirstMonthRecapEmail(opts: FirstMonthRecapEmailOpts): { subject: string; html: string } {
+export function buildFirstMonthRecapEmail(opts: FirstMonthRecapEmailOpts): {
+  subject: string
+  html: string
+} {
   const {
-    recipientFirstName, circleName, firstMemoryUploaderName, firstMemoryNote,
-    firstMemoryDate, firstMemoryThumbnailUrl, memoryCount, milestoneCount,
-    topReactionMemoryThumbnailUrl, topReactionEmoji, topReactionCount,
-    appUrl, inviteUrl, unsubscribeUrl, locale,
+    recipientFirstName,
+    circleName,
+    firstMemoryUploaderName,
+    firstMemoryNote,
+    firstMemoryDate,
+    firstMemoryThumbnailUrl,
+    memoryCount,
+    milestoneCount,
+    topReactionMemoryThumbnailUrl,
+    topReactionEmoji,
+    topReactionCount,
+    appUrl,
+    inviteUrl,
+    unsubscribeUrl,
+    locale,
   } = opts
 
   const subject = (() => {
-    if (locale === "zh-CN") return `「${circleName}」的第一个月 💛`
-    if (locale === "fr") return `Votre premier mois avec ${circleName} 💛`
+    if (locale === 'zh-CN') return `「${circleName}」的第一个月 💛`
+    if (locale === 'fr') return `Votre premier mois avec ${circleName} 💛`
     return `Your first month with ${circleName} 💛`
   })()
 
-  const greeting = locale === "zh-CN"
-    ? `你好 ${recipientFirstName}，`
-    : locale === "fr"
-      ? `Bonjour ${recipientFirstName},`
-      : `Hi ${recipientFirstName ?? "there"},`
+  const greeting =
+    locale === 'zh-CN'
+      ? `你好 ${recipientFirstName}，`
+      : locale === 'fr'
+        ? `Bonjour ${recipientFirstName},`
+        : `Hi ${recipientFirstName ?? 'there'},`
 
   const intro = (() => {
-    if (locale === "zh-CN") return `一个月前，${firstMemoryUploaderName} 在「${circleName}」上传了你们的第一条记忆。`
-    if (locale === "fr") return `Il y a un mois, ${firstMemoryUploaderName} a ajouté votre premier souvenir à ${circleName}.`
+    if (locale === 'zh-CN')
+      return `一个月前，${firstMemoryUploaderName} 在「${circleName}」上传了你们的第一条记忆。`
+    if (locale === 'fr')
+      return `Il y a un mois, ${firstMemoryUploaderName} a ajouté votre premier souvenir à ${circleName}.`
     return `One month ago, ${firstMemoryUploaderName} added your first memory to ${circleName}.`
   })()
 
   const dateFormatted = new Date(firstMemoryDate).toLocaleDateString(
-    locale === "zh-CN" ? "zh-CN" : locale === "fr" ? "fr" : "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
+    locale === 'zh-CN' ? 'zh-CN' : locale === 'fr' ? 'fr' : 'en-US',
+    { year: 'numeric', month: 'long', day: 'numeric' },
   )
 
   const heroImg = firstMemoryThumbnailUrl
     ? `<img src="${firstMemoryThumbnailUrl}" style="width:100%;border-radius:12px;display:block;margin:0 0 8px;" alt="" />`
-    : ""
+    : ''
 
   const heroNote = firstMemoryNote
     ? `<p style="font-size:14px;color:#444;font-style:italic;margin:0 0 4px;line-height:1.5;">"${firstMemoryNote}"</p>`
-    : ""
+    : ''
 
   const heroDate = `<p style="font-size:11px;color:#888;margin:0 0 24px;">${dateFormatted}</p>`
 
   const statsLabels = (() => {
-    if (locale === "zh-CN") return { memories: "条记忆", milestones: "个里程碑", topReaction: "最受欢迎" }
-    if (locale === "fr") return { memories: "souvenirs", milestones: "jalons", topReaction: "Le plus aimé" }
-    return { memories: "memories", milestones: "milestones marked", topReaction: "Most loved" }
+    if (locale === 'zh-CN')
+      return { memories: '条记忆', milestones: '个里程碑', topReaction: '最受欢迎' }
+    if (locale === 'fr')
+      return { memories: 'souvenirs', milestones: 'jalons', topReaction: 'Le plus aimé' }
+    return { memories: 'memories', milestones: 'milestones marked', topReaction: 'Most loved' }
   })()
 
   const statsBlock = `
     <div style="background:#f5f0e8;border-radius:12px;padding:20px;margin:0 0 24px;">
       <p style="font-size:13px;color:#888;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">
-        ${locale === "zh-CN" ? "这一个月" : locale === "fr" ? "Ce mois-ci" : "This month"}
+        ${locale === 'zh-CN' ? '这一个月' : locale === 'fr' ? 'Ce mois-ci' : 'This month'}
       </p>
       <p style="font-size:16px;color:#1a1a1a;margin:0 0 8px;">📸 ${memoryCount} ${statsLabels.memories}</p>
-      ${milestoneCount > 0 ? `<p style="font-size:16px;color:#1a1a1a;margin:0 0 8px;">✨ ${milestoneCount} ${statsLabels.milestones}</p>` : ""}
-      ${topReactionMemoryThumbnailUrl && topReactionEmoji && topReactionCount
-        ? `<p style="font-size:16px;color:#1a1a1a;margin:0;">${topReactionEmoji} ${topReactionCount} ${statsLabels.topReaction}</p>`
-        : ""}
+      ${milestoneCount > 0 ? `<p style="font-size:16px;color:#1a1a1a;margin:0 0 8px;">✨ ${milestoneCount} ${statsLabels.milestones}</p>` : ''}
+      ${
+        topReactionMemoryThumbnailUrl && topReactionEmoji && topReactionCount
+          ? `<p style="font-size:16px;color:#1a1a1a;margin:0;">${topReactionEmoji} ${topReactionCount} ${statsLabels.topReaction}</p>`
+          : ''
+      }
     </div>
   `
 
-  const ctaPrimary = locale === "zh-CN" ? "添加新记忆 →" : locale === "fr" ? "Ajouter un souvenir →" : "Add another memory →"
-  const ctaSecondary = locale === "zh-CN" ? "邀请还没加入的人 →" : locale === "fr" ? "Inviter quelqu'un qui n'a pas encore rejoint →" : "Invite someone who hasn't joined yet →"
+  const ctaPrimary =
+    locale === 'zh-CN'
+      ? '添加新记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add another memory →'
+  const ctaSecondary =
+    locale === 'zh-CN'
+      ? '邀请还没加入的人 →'
+      : locale === 'fr'
+        ? "Inviter quelqu'un qui n'a pas encore rejoint →"
+        : "Invite someone who hasn't joined yet →"
 
   const unsubscribe = (() => {
-    if (locale === "zh-CN") return `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
-    if (locale === "fr") return `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
+    if (locale === 'zh-CN')
+      return `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
+    if (locale === 'fr')
+      return `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
     return `You're receiving this because you're a member of ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Manage email preferences</a>.`
   })()
 
@@ -278,6 +314,7 @@ git commit -m "feat(recap): first-month recap email builder (locale-aware)"
 ## Task 2: Edge Function `send-first-month-recap`
 
 **Files:**
+
 - Create: `supabase/functions/send-first-month-recap/index.ts`
 - Create: `supabase/functions/send-first-month-recap/firstMonthRecapEmail.ts`
 
@@ -298,8 +335,8 @@ Reference pattern: `supabase/functions/send-digest/digestEmail.ts` (existing Den
 Create `supabase/functions/send-first-month-recap/index.ts`:
 
 ```ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { buildFirstMonthRecapEmail } from "./firstMonthRecapEmail.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { buildFirstMonthRecapEmail } from './firstMonthRecapEmail.ts'
 
 // Triggered daily by pg_cron at 9am UTC.
 //
@@ -312,21 +349,21 @@ import { buildFirstMonthRecapEmail } from "./firstMonthRecapEmail.ts"
 //   )$$
 // );
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://our-story.tinybit.app"
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, content-type",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, content-type',
       },
     })
   }
 
   const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
   const now = Date.now()
@@ -335,16 +372,16 @@ Deno.serve(async (req) => {
 
   // Find candidate circles
   const { data: circles, error: circlesErr } = await supabase
-    .from("circle")
-    .select("id, name, first_memory_at")
-    .gte("first_memory_at", lower)
-    .lte("first_memory_at", upper)
-    .eq("first_month_email_sent", false)
-    .is("deleted_at", null)
+    .from('circle')
+    .select('id, name, first_memory_at')
+    .gte('first_memory_at', lower)
+    .lte('first_memory_at', upper)
+    .eq('first_month_email_sent', false)
+    .is('deleted_at', null)
 
   if (circlesErr) {
-    console.error("[send-first-month-recap] circles query failed:", circlesErr.message)
-    return Response.json({ error: "circles query failed" }, { status: 500 })
+    console.error('[send-first-month-recap] circles query failed:', circlesErr.message)
+    return Response.json({ error: 'circles query failed' }, { status: 500 })
   }
 
   let sent = 0
@@ -355,14 +392,16 @@ Deno.serve(async (req) => {
     try {
       // 1. Fetch the first memory (oldest by created_at) with media + uploader
       const { data: firstMemoryRows } = await supabase
-        .from("memory")
-        .select(`
+        .from('memory')
+        .select(
+          `
           id, note, memory_date, owner_user_id, milestone_label,
           memorymedia(storage_path, media_type),
           user!memory_owner_user_id_fkey(first_name)
-        `)
-        .eq("circle_id", c.id)
-        .order("created_at", { ascending: true })
+        `,
+        )
+        .eq('circle_id', c.id)
+        .order('created_at', { ascending: true })
         .limit(1)
       const firstMemory = (firstMemoryRows ?? [])[0] as any
 
@@ -376,30 +415,30 @@ Deno.serve(async (req) => {
       const fmm = (firstMemory.memorymedia ?? [])[0]
       if (fmm?.storage_path) {
         const { data: signed } = await supabase.storage
-          .from("memories-private")
+          .from('memories-private')
           .createSignedUrl(fmm.storage_path, 7 * 24 * 60 * 60)
         firstThumbnailUrl = signed?.signedUrl ?? null
       }
 
-      const firstUploaderName = firstMemory.user?.first_name ?? "someone"
+      const firstUploaderName = firstMemory.user?.first_name ?? 'someone'
 
       // 2. Memory count + milestone count
       const { count: memoryCount } = await supabase
-        .from("memory")
-        .select("id", { count: "exact", head: true })
-        .eq("circle_id", c.id)
+        .from('memory')
+        .select('id', { count: 'exact', head: true })
+        .eq('circle_id', c.id)
 
       const { count: milestoneCount } = await supabase
-        .from("memory")
-        .select("id", { count: "exact", head: true })
-        .eq("circle_id", c.id)
-        .not("milestone_label", "is", null)
+        .from('memory')
+        .select('id', { count: 'exact', head: true })
+        .eq('circle_id', c.id)
+        .not('milestone_label', 'is', null)
 
       // 3. Top-reacted memory in this circle
       const { data: reactionRows } = await supabase
-        .from("memoryreaction")
-        .select("memory_id, emoji, memory!inner(circle_id)")
-        .eq("memory.circle_id", c.id)
+        .from('memoryreaction')
+        .select('memory_id, emoji, memory!inner(circle_id)')
+        .eq('memory.circle_id', c.id)
 
       // Tally reactions per memory_id
       const counts = new Map<string, { count: number; emoji: string }>()
@@ -409,7 +448,7 @@ Deno.serve(async (req) => {
         if (prev) {
           counts.set(memId, { count: prev.count + 1, emoji: prev.emoji })
         } else {
-          counts.set(memId, { count: 1, emoji: r.emoji ?? "❤️" })
+          counts.set(memId, { count: 1, emoji: r.emoji ?? '❤️' })
         }
       }
       let topReactionMemoryId: string | null = null
@@ -428,15 +467,15 @@ Deno.serve(async (req) => {
       let topReactionMemoryNote: string | null = null
       if (topReactionMemoryId) {
         const { data: topMem } = await supabase
-          .from("memory")
-          .select("note, memorymedia(storage_path)")
-          .eq("id", topReactionMemoryId)
+          .from('memory')
+          .select('note, memorymedia(storage_path)')
+          .eq('id', topReactionMemoryId)
           .maybeSingle()
         topReactionMemoryNote = topMem?.note ?? null
         const tmm = (topMem as any)?.memorymedia?.[0]
         if (tmm?.storage_path) {
           const { data: signed } = await supabase.storage
-            .from("memories-private")
+            .from('memories-private')
             .createSignedUrl(tmm.storage_path, 7 * 24 * 60 * 60)
           topReactionThumbnailUrl = signed?.signedUrl ?? null
         }
@@ -444,35 +483,39 @@ Deno.serve(async (req) => {
 
       // 4. Recipients — all circle members, filtered by notification prefs
       const { data: members } = await supabase
-        .from("circlemember")
-        .select(`
+        .from('circlemember')
+        .select(
+          `
           user_id,
           user!inner(id, email, first_name, locale, deletion_requested_at),
           notificationpreference(circle_muted, email_digest_frequency)
-        `)
-        .eq("circle_id", c.id)
+        `,
+        )
+        .eq('circle_id', c.id)
 
       const recipients = (members ?? []).filter((row: any) => {
         const u = row.user
         if (!u || u.deletion_requested_at) return false
         if (!u.email) return false
-        const np = Array.isArray(row.notificationpreference) ? row.notificationpreference[0] : row.notificationpreference
+        const np = Array.isArray(row.notificationpreference)
+          ? row.notificationpreference[0]
+          : row.notificationpreference
         if (np?.circle_muted) return false
-        if (np?.email_digest_frequency === "off") return false
+        if (np?.email_digest_frequency === 'off') return false
         return true
       })
 
       if (recipients.length === 0) {
         skipped++
         // Still mark the flag — circle is processed, just no recipients
-        await supabase.from("circle").update({ first_month_email_sent: true }).eq("id", c.id)
+        await supabase.from('circle').update({ first_month_email_sent: true }).eq('id', c.id)
         continue
       }
 
       // 5. Send to each recipient
       for (const r of recipients as any[]) {
         const opts = {
-          recipientFirstName: r.user.first_name ?? "",
+          recipientFirstName: r.user.first_name ?? '',
           circleName: c.name,
           firstMemoryUploaderName: firstUploaderName,
           firstMemoryNote: firstMemory.note ?? null,
@@ -487,14 +530,14 @@ Deno.serve(async (req) => {
           appUrl: `${APP_URL}/timeline?circle=${c.id}`,
           inviteUrl: `${APP_URL}/timeline?circle=${c.id}&invite=1`,
           unsubscribeUrl: `${APP_URL}/notification-settings`,
-          locale: (r.user.locale ?? "en") as "en" | "zh-CN" | "fr",
+          locale: (r.user.locale ?? 'en') as 'en' | 'zh-CN' | 'fr',
         }
         const { subject, html } = buildFirstMonthRecapEmail(opts)
         await sendEmail(r.user.email, subject, html)
       }
 
       // 6. Mark sent
-      await supabase.from("circle").update({ first_month_email_sent: true }).eq("id", c.id)
+      await supabase.from('circle').update({ first_month_email_sent: true }).eq('id', c.id)
       sent++
     } catch (err) {
       console.error(`[send-first-month-recap] failed for circle ${c.id}:`, err)
@@ -506,24 +549,24 @@ Deno.serve(async (req) => {
 })
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  const resendKey = Deno.env.get("RESEND_API_KEY")
+  const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] first-month recap to ${to}: ${subject}`)
     return
   }
   try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: "Our Story <hello@our-story.tinybit.app>",
+        from: 'Our Story <hello@our-story.tinybit.app>',
         to,
         subject,
         html,
       }),
     })
   } catch (err) {
-    console.error("[send-first-month-recap] Resend send failed:", err)
+    console.error('[send-first-month-recap] Resend send failed:', err)
   }
 }
 ```
@@ -531,6 +574,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
 - [ ] **Step 3: Sanity check + commit**
 
 Read the file end-to-end. Confirm:
+
 - No Nitro-only imports (no `useRuntimeConfig`, no `~/`, no `#supabase/server`)
 - All env vars use `Deno.env.get(...)`
 - Imports are either relative `.ts` files or `https://esm.sh/...`
@@ -545,6 +589,7 @@ git commit -m "feat(recap): send-first-month-recap Edge Function with Deno mirro
 ## Task 3: Docs
 
 **Files:**
+
 - Modify: `docs/build-plan.md`
 - Modify: `docs/design-spec.md`
 

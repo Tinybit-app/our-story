@@ -41,13 +41,13 @@
     "language": "Language"
   },
   "circleType": {
-    "parents":    { "label": "New parents",   "description": "Baby milestones & growth" },
-    "couple":     { "label": "Couple",         "description": "Relationship milestones" },
-    "family":     { "label": "Family",         "description": "General family memories" },
-    "friends":    { "label": "Friend group",   "description": "Trips, reunions, moments" },
-    "caregiving": { "label": "Caregiving",     "description": "Health & life events" },
-    "travel":     { "label": "Travel group",   "description": "Adventures together" },
-    "solo":       { "label": "Just me",        "description": "Personal timeline" }
+    "parents": { "label": "New parents", "description": "Baby milestones & growth" },
+    "couple": { "label": "Couple", "description": "Relationship milestones" },
+    "family": { "label": "Family", "description": "General family memories" },
+    "friends": { "label": "Friend group", "description": "Trips, reunions, moments" },
+    "caregiving": { "label": "Caregiving", "description": "Health & life events" },
+    "travel": { "label": "Travel group", "description": "Adventures together" },
+    "solo": { "label": "Just me", "description": "Personal timeline" }
   },
   "nav": {
     "addMemory": "Add memory",
@@ -281,31 +281,66 @@
     "circleTypes": {
       "parents": {
         "tagline": "Document every first — together.",
-        "bullets": ["Baby age stamp on every memory", "Developmental milestone categories", "Weekly digest for grandparents", "Growth chart and vaccination tracker"]
+        "bullets": [
+          "Baby age stamp on every memory",
+          "Developmental milestone categories",
+          "Weekly digest for grandparents",
+          "Growth chart and vaccination tracker"
+        ]
       },
       "couple": {
         "tagline": "Your relationship, from the very beginning.",
-        "bullets": ["Relationship start date & anniversary reminder", "\"How we met\" pinned memory", "Couple stats — memories, countries, months documented", "Private timeline just for the two of you"]
+        "bullets": [
+          "Relationship start date & anniversary reminder",
+          "\"How we met\" pinned memory",
+          "Couple stats — memories, countries, months documented",
+          "Private timeline just for the two of you"
+        ]
       },
       "family": {
         "tagline": "One place for the whole family.",
-        "bullets": ["Person tags — grandma, dad, the kids", "\"This day last year\" in weekly digest", "Event grouping — Christmas, Summer holiday", "Multi-generational, invite-only access"]
+        "bullets": [
+          "Person tags — grandma, dad, the kids",
+          "\"This day last year\" in weekly digest",
+          "Event grouping — Christmas, Summer holiday",
+          "Multi-generational, invite-only access"
+        ]
       },
       "friends": {
         "tagline": "Your trips and moments, all in one place.",
-        "bullets": ["Trip and event containers", "\"Who was there\" tags", "Reaction leaderboard — most-loved photo", "Memory count milestones to celebrate together"]
+        "bullets": [
+          "Trip and event containers",
+          "\"Who was there\" tags",
+          "Reaction leaderboard — most-loved photo",
+          "Memory count milestones to celebrate together"
+        ]
       },
       "caregiving": {
         "tagline": "A structured log alongside the emotional moments.",
-        "bullets": ["Daily mood and energy log", "Health event types — Doctor visit, Good day, Treatment", "Care team notes visible only to admins", "Export as PDF for medical appointments"]
+        "bullets": [
+          "Daily mood and energy log",
+          "Health event types — Doctor visit, Good day, Treatment",
+          "Care team notes visible only to admins",
+          "Export as PDF for medical appointments"
+        ]
       },
       "travel": {
         "tagline": "Every stop on your journey, remembered.",
-        "bullets": ["Location tag with EXIF auto-fill", "Trip itinerary with destinations and dates", "Map view showing where memories were taken", "Trip stats — countries, days, km covered"]
+        "bullets": [
+          "Location tag with EXIF auto-fill",
+          "Trip itinerary with destinations and dates",
+          "Map view showing where memories were taken",
+          "Trip stats — countries, days, km covered"
+        ]
       },
       "solo": {
         "tagline": "Your personal story, beautifully kept.",
-        "bullets": ["Reflection prompts on every upload", "Mood and emotion tags", "Year-in-review generated automatically", "Streak tracker — document every day"]
+        "bullets": [
+          "Reflection prompts on every upload",
+          "Mood and emotion tags",
+          "Year-in-review generated automatically",
+          "Streak tracker — document every day"
+        ]
       }
     },
     "features": {

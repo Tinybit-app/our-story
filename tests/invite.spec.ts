@@ -8,12 +8,12 @@ const TEST_CIRCLE_ID = 'cccccccc-dddd-eeee-ffff-111111111111'
 // before any auth is required, so no storageState is needed.
 test.describe('Invite flow — unauthenticated pre-validation', () => {
   test('expired invite shows error without forcing login', async ({ page }) => {
-    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ status: 'expired' }),
-      })
+      }),
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
@@ -24,12 +24,12 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
   })
 
   test('deleted-circle invite shows error without forcing login', async ({ page }) => {
-    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ status: 'circle_deleted' }),
-      })
+      }),
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
@@ -39,12 +39,12 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
   })
 
   test('both error states show a "Go to sign in" link', async ({ page }) => {
-    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ status: 'expired' }),
-      })
+      }),
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
@@ -53,12 +53,12 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
   })
 
   test('valid invite stores token in cookie and redirects to /login', async ({ page }) => {
-    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ status: 'pending' }),
-      })
+      }),
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
@@ -66,7 +66,7 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
 
     // pending_invite_token cookie must be set so the /confirm page can pick it up
     const cookies = await page.context().cookies()
-    const inviteCookie = cookies.find(c => c.name === 'pending_invite_token')
+    const inviteCookie = cookies.find((c) => c.name === 'pending_invite_token')
     expect(inviteCookie).toBeDefined()
     expect(inviteCookie!.value).toBe(VALID_TOKEN)
   })
@@ -80,29 +80,31 @@ test.describe('Invite flow — authenticated auto-accept', () => {
 
   test.beforeEach(async ({ page }) => {
     // Return hasMembership: true so the /timeline redirect is allowed
-    await page.route('**/api/auth/membership**', route =>
+    await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-      })
+      }),
     )
   })
 
-  test('valid invite auto-accepts and redirects to timeline with welcome flag', async ({ page }) => {
-    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, route =>
+  test('valid invite auto-accepts and redirects to timeline with welcome flag', async ({
+    page,
+  }) => {
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ status: 'pending' }),
-      })
+      }),
     )
-    await page.route(`**/api/invites/${VALID_TOKEN}/accept**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/accept**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ ok: true, circleId: TEST_CIRCLE_ID }),
-      })
+      }),
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
@@ -114,19 +116,19 @@ test.describe('Invite flow — authenticated auto-accept', () => {
   })
 
   test('accept failure shows an error and clears the invite cookie', async ({ page }) => {
-    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ status: 'pending' }),
-      })
+      }),
     )
-    await page.route(`**/api/invites/${VALID_TOKEN}/accept**`, route =>
+    await page.route(`**/api/invites/${VALID_TOKEN}/accept**`, (route) =>
       route.fulfill({
         status: 410,
         contentType: 'application/json',
         body: JSON.stringify({ message: 'invite_expired' }),
-      })
+      }),
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
@@ -136,7 +138,7 @@ test.describe('Invite flow — authenticated auto-accept', () => {
 
     // Cookie must be cleared on failure so the user is not trapped in a retry loop
     const cookies = await page.context().cookies()
-    const inviteCookie = cookies.find(c => c.name === 'pending_invite_token')
+    const inviteCookie = cookies.find((c) => c.name === 'pending_invite_token')
     expect(inviteCookie?.value ?? '').toBe('')
   })
 })
@@ -147,30 +149,34 @@ test.describe('Invite flow — authenticated auto-accept', () => {
 test.describe('Invite flow — post-login cookie pickup', () => {
   test.use({ storageState: 'tests/.auth/user.json' })
 
-  test('/confirm redirects to /invite/[token] when pending_invite_token cookie is set', async ({ page }) => {
+  test('/confirm redirects to /invite/[token] when pending_invite_token cookie is set', async ({
+    page,
+  }) => {
     // Use hasMembership: true so auth.global.ts lets /confirm render.
     // (In the real flow, /confirm is reached via a magic-link callback before any
     //  session exists in storage, so the middleware never sees a session. In tests
     //  we have a pre-existing session, so we need membership=true to avoid the
     //  no-membership redirect that would fire before the watchEffect can read the cookie.)
-    await page.route('**/api/auth/membership**', route =>
+    await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-      })
+      }),
     )
 
     // Simulate the cookie that /invite/[token] sets before redirecting to login
-    await page.context().addCookies([{
-      name: 'pending_invite_token',
-      value: VALID_TOKEN,
-      domain: 'localhost',
-      path: '/',
-      httpOnly: false,
-      secure: false,
-      sameSite: 'Lax',
-    }])
+    await page.context().addCookies([
+      {
+        name: 'pending_invite_token',
+        value: VALID_TOKEN,
+        domain: 'localhost',
+        path: '/',
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax',
+      },
+    ])
 
     await page.goto('/confirm')
 

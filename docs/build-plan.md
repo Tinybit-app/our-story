@@ -11,6 +11,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 ## Progress Tracker
 
 ### Milestone 1: Project Foundation
+
 - [x] 1.1 Create the Nuxt project
 - [x] 1.2 Create the Supabase project (upgrade to Pro, set file size limit)
 - [x] 1.3 GitHub repo + Vercel deployment
@@ -20,12 +21,14 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 1.7 PostHog analytics setup — `posthog-js` client plugin (`app/plugins/posthog.client.ts`), typed composable (`app/composables/useAnalytics.ts`) with discriminated-union event catalog, identify-on-supabase-user-resolution wired in `app/app.vue`. **PostHog Cloud EU** (not self-hosted). `autocapture: false`, `respect_dnt: true`, `persistence: 'localStorage'`, `disable_session_recording: true`. 12-event catalog wired at natural call sites (signup, circle create, invite send/accept, memory upload, comment, reaction, milestone, export). Subscription events (`subscription_upgraded`, `subscription_cancelled`) reserved in the catalog but no call site until Phase 2 billing. Plugin no-ops when `NUXT_PUBLIC_POSTHOG_KEY` is unset (local dev). Spec: `docs/superpowers/specs/2026-05-11-posthog-analytics-design.md`. Plan: `docs/superpowers/plans/2026-05-11-posthog-analytics.md`.
 
 ### Milestone 2: Database Schema & RLS
+
 - [x] 2.1 Initial schema migration (all core tables)
 - [x] 2.2 RLS policies migration
 - [x] 2.3 RLS policy tests (pgTAP)
 - [x] 2.4 Storage bucket setup
 
 ### Milestone 3: Authentication
+
 - [x] 3.1 Login page (magic link only for Phase 1) — redesigned with warm & nostalgic theme
   - **Google SSO deferred to Phase 2** — button removed from `/login`. Acquisition is invite-based (users arrive from email), so magic link is the natural path. Google adds OAuth setup, account-linking edge cases (invite at one email, Google at another), and complexity that doesn't move the retention needle at 0–50 users. Re-enable when (a) magic link friction is data-proven, or (b) Capacitor wrap ships and native Sign-in-with-Apple is needed for iOS App Store
   - Preserved for re-enable: `app/components/GoogleIcon.vue`, `login.continueWithGoogle` / `login.or` i18n keys, `signInWithGoogle()` logic pattern (commit history)
@@ -40,7 +43,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - [x] 3.7 Circle deletion (owner-only): warning screen → type-to-confirm → 30-day soft delete → email all members → hard purge at day 30
   - Danger zone UI moved to dedicated `/circle-settings` page (previously in members page)
   - `useUserState().clear()` called before post-deletion redirect so middleware re-checks membership
-- [ ] 3.8 Data export (ExportJob): single-circle scope; members export own uploads only; owners/admins export full circle *(implementation complete — pending end-to-end test)*
+- [ ] 3.8 Data export (ExportJob): single-circle scope; members export own uploads only; owners/admins export full circle _(implementation complete — pending end-to-end test)_
   - Circle selector shown in account settings when user belongs to more than one circle; auto-selected when only one
   - Rate limit: 1 active job per (user, circle) — parallel exports of different circles allowed
   - Edge Function resolves role via CircleMember query; full-circle vs own-uploads filter applied server-side
@@ -49,6 +52,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **Blocked:** no trigger wires `process-export` Edge Function yet — `pg_net` INSERT trigger and `pg_cron` 5-min poll both unimplemented; need to wire before testing
 
 ### Milestone 3.9: Landing Page + Pricing Page (Cold Discovery)
+
 - [x] 3.9.1 `/` route — landing page for unauthenticated visitors; authenticated users redirect to `/timeline`
 - [x] 3.9.2 Hero: headline ("A private space where your circle builds a shared story."), subhead, single CTA ("Start your circle — free")
 - [x] 3.9.3 How it works: 3-step explainer (invite → upload → remember) + screenshot placeholder
@@ -66,6 +70,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - Note: `landing.*` and `pricing.*` i18n keys added to `locales/en.json` (English only)
 
 ### Milestone 4: Onboarding & Circle Creation
+
 - [x] 4.1 Onboarding flow (circle type picker → name → invite)
 - [x] 4.2 Invite API + email (Resend)
 - [x] 4.3 Invite acceptance flow (token → auto-join)
@@ -109,17 +114,18 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
     - `memory_members.user_id` FK targets `public.User(id)` (not `auth.users`) so PostgREST can join profile data (migration 019)
     - Tests: 6 E2E tests (`tests/member-tagging.spec.ts`), 3 RLS tests (total 27)
   - [ ] 4.10.2 Location tag: text field on upload + EXIF GPS auto-fill, shown below memory date (suggested first for `travel` circles)
-  - [ ] ~~4.10.3 Health event types~~ — **cut from Phase 1.** Caregiving as a circle type serves a fundamentally different emotional use case (health logging, clinical notes, PDF export) that doesn't fit the core product tone and isn't in the 0→50 user target. `circle_type = 'caregiving'` remains in the enum for copy/chips; caregiving-specific features are deferred to Phase 2. The `caregiver` *role* (nanny/babysitter on a parents circle) is unaffected — already implemented.
+  - [ ] ~~4.10.3 Health event types~~ — **cut from Phase 1.** Caregiving as a circle type serves a fundamentally different emotional use case (health logging, clinical notes, PDF export) that doesn't fit the core product tone and isn't in the 0→50 user target. `circle_type = 'caregiving'` remains in the enum for copy/chips; caregiving-specific features are deferred to Phase 2. The `caregiver` _role_ (nanny/babysitter on a parents circle) is unaffected — already implemented.
   - [x] 4.10.4 Anniversary anchoring: `anniversary_date DATE` on `Circle` (migration 020, also drops unused `date_of_birth`); owner sets date in `/circle-settings` (couple circles only); timeline header shows "Year N together · Since [date]" / "X days together" computed from today; `PATCH /api/circles/:id` accepts `anniversaryDate`; RLS tests 16-18 updated to cover `anniversary_date`. Logic extracted to `app/composables/useAnniversaryDisplay.ts` (`computeAnniversaryDisplay`); 13 unit tests (`unit/useAnniversaryDisplay.test.ts`); 6 E2E tests (`tests/anniversary.spec.ts`)
   - [x] 4.10.5 Circle type picker in `/circle-settings`: owner-only 2-column grid of all 8 types (matching onboarding), pre-selected on current type; save button enabled only when selection differs; calls `PATCH /api/circles/:id` with `circleType`; the `custom` type is labelled "Other" (no i18n key needed). No migration required — endpoint already supported `circleType`. 6 E2E tests (`tests/circle-type.spec.ts`); RLS tests 28-29 (total 29) verify owner can update `circle_type` and admin cannot.
 - [x] 4.4 Value proposition screens (3 swipeable screens shown once on first open)
 - [x] 4.5 Viewer-role UX (first-open splash, swipe nav, guest reactions — applies to viewer role, not grandparents specifically)
 
 ### Milestone 5: Media Upload
+
 - [x] 5.1 Upload Edge Function (quota check, size check, storage)
 - [x] 5.2 Upload UI component (file picker, preview, progress bar)
 - [x] 5.3 Batch upload with automatic mem_date detection (multi-select, EXIF extraction, per-item progress). `multiple` file input; `extractExifDate()` tries `DateTimeOriginal → CreateDate → DateTime → file.lastModified → today`; videos skip EXIF entirely; group-date field shown when N > 1; sequential uploads with per-item progress overlay. No "from photo" source label (spec simplified — date is pre-filled silently). No new API surface — reuses existing `upload-media` edge function per file.
-- [x] 5.4 Multi-item memories — multiple photos/videos/text slides per memory *(implementation complete — pending E2E + manual verification)*
+- [x] 5.4 Multi-item memories — multiple photos/videos/text slides per memory _(implementation complete — pending E2E + manual verification)_
   - Migration 029: extend `memorymedia` (text_content, display_order, nullable storage_path/file_size, type='text'); add `Memory.cover_media_id`
   - Migration 030: add `'draft'` to `Memory.visibility` CHECK for transient draft memories used by `upload-media?defer=true` (drafts are invisible to all read paths — RLS and timeline filters only match `'circle'` or `'private'`; merged + deleted by `upload-batch`)
   - Upload toggle: "Post as one memory" / "Post separately" (default: separate)
@@ -132,8 +138,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Known issues: deleted slides leave orphan storage files (cleanup cron deferred); abandoned drafts from interrupted upload-batch persist as `visibility='draft'` rows (cleanup cron deferred)
   - See spec: `docs/superpowers/specs/2026-05-09-multi-item-memories-design.md`
 
-
 ### Milestone 6: Timeline
+
 - [x] 6.1 Signed URL API (cursor-based, memory_date ordering)
 - [x] 6.2 Timeline UI — Polaroid Wall (monthly sections, year badge, jump modal, month overflow page)
   - Month overflow page (`/timeline/[year]/[month]`) paginated: 24 memories per page, cursor-based, explicit "Load more" button (replaced IntersectionObserver sentinel); previously fetched up to 100 at once
@@ -143,6 +149,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - 7 E2E tests (`tests/month-overflow.spec.ts`), 3 E2E tests (`tests/timeline-year.spec.ts`)
 
 ### Milestone 7: Memory Features
+
 - [x] 7.1 ~~Share to circle (visibility toggle)~~ — **cut.** All uploads are `circle`-visible; no private memory concept within a circle. Users who want a personal-only timeline create a `solo` circle. The `private` visibility value remains in the DB enum and RLS for schema continuity but the UI never exposes it.
 - [x] 7.2 Milestones (picker + custom milestone) — free-text `milestone_label` field in upload form and `MemoryModal` edit mode; circle-type-aware quick-pick chips via `useCircleTypeConfig`; label stored and displayed with ✦ badge. `milestone_is_custom` is a dead column (chips store display text directly, not i18n keys — drop in a future migration). 7.2.1 triggers on `milestone_label IS NOT NULL`.
 - [x] 7.2.1 Milestone share card — after saving a milestone (`milestone_label IS NOT NULL`), offer a branded canvas card (Instagram Stories / WhatsApp format) with "Our Story" watermark CTA — primary acquisition channel for new parents
@@ -180,6 +187,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Tests: 4 E2E tests (`tests/media-download.spec.ts`) verifying button presence per media type
 
 ### Milestone 8: Comments & Reactions
+
 - [x] 8.1 Comments (post, read, delete own)
   - DB schema: `MemoryComment(id, memory_id, user_id, body, created_at)` with RLS — members can read/post, users can delete own (migration 001/002)
   - `GET /api/memories/[id]/comments` — verifies circle membership, returns comments with user profile
@@ -205,6 +213,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - RLS tests 38–40 (total 40): member can insert, non-member blocked, user cannot delete another's reaction
 
 ### Milestone 8.5: Localization (i18n — English + Chinese)
+
 - [x] 8.5.1 Install `@nuxtjs/i18n`, configure `en` + `zh-CN` locales (lazy-loaded JSON files)
 - [x] 8.5.2 Extract all UI strings to `locales/en.json` — replace every hardcoded string with `t('key')`
 - [x] 8.5.3 Translate `locales/zh-CN.json` (Simplified Chinese)
@@ -219,6 +228,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
 - Note: see design spec §Localization for full setup code and priority language rationale
 
 ### Milestone 9: Viewer-Role Access
+
 - [x] 9.1 Generate view-only JWT link (UI in app — "Share link" button on timeline header, owner-only)
   - `viewer_link` table: nonce-based revocation, three modes (`full`, `date_range`, `selection`), 30-day expiry, `notified_expiry_at` for future cron
   - JWT payload extended: `viewer_link_id` + `nonce`; viewer API verifies both on every request (row deleted = instant revocation)
@@ -239,19 +249,20 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - First-open splash, guest reactions with name prompt, expired-link UX
 - Note: tech-savvy family members should be invited as full members — viewer role is for anyone who won't create an account, not a grandparent-specific path
 
-### Milestone 9.5: Guest Contributor / Event QR Code *(Phase 3 — do not build in Phase 1)*
+### Milestone 9.5: Guest Contributor / Event QR Code _(Phase 3 — do not build in Phase 1)_
 
 > **Do not build this in Phase 1.** The spec classifies Guest Contributor as a Phase 3 viral/growth mechanic — it requires active users and events to generate acquisition value. Build Milestone 9 (Viewer-Role) instead. See design spec §Phase 3 build list.
 
-- [ ] 9.5.1 *(Phase 3)* Circle owner generates a guest upload token (scoped to one event, expires in 7 days)
-- [ ] 9.5.2 *(Phase 3)* Guest upload page at `/event?token=abc` — name entry + photo upload, no account required
-- [ ] 9.5.3 *(Phase 3)* Uploaded photos appear on the timeline tagged as guest contributions
-- [ ] 9.5.4 *(Phase 3)* Post-upload CTA: "Want your own family circle? Create one free →"
+- [ ] 9.5.1 _(Phase 3)_ Circle owner generates a guest upload token (scoped to one event, expires in 7 days)
+- [ ] 9.5.2 _(Phase 3)_ Guest upload page at `/event?token=abc` — name entry + photo upload, no account required
+- [ ] 9.5.3 _(Phase 3)_ Uploaded photos appear on the timeline tagged as guest contributions
+- [ ] 9.5.4 _(Phase 3)_ Post-upload CTA: "Want your own family circle? Create one free →"
 - Note: every event (wedding, birthday, reunion) becomes an acquisition moment — guests experience the product before being asked to sign up
 - Note: see design spec §Guest Contributor for full token flow
 
 ### Milestone 10: Push Notifications & On This Day
-- [ ] 10.1 Basic push (new upload, comment, reaction) — Web Push via VAPID + service worker; inline dispatch from Nitro routes; upload notifications triggered by client post-upload; batch coalescing via notification tags (30-min rolling window, silent replacement); contextual permission prompt banner on timeline; push_enabled + circle_muted toggles in circle settings *(implementation complete — pending end-to-end test)*
+
+- [ ] 10.1 Basic push (new upload, comment, reaction) — Web Push via VAPID + service worker; inline dispatch from Nitro routes; upload notifications triggered by client post-upload; batch coalescing via notification tags (30-min rolling window, silent replacement); contextual permission prompt banner on timeline; push*enabled + circle_muted toggles in circle settings *(implementation complete — pending end-to-end test)\_
   - PWA foundation: manifest.json, service worker (push + notificationclick), app icons, client plugin for SW registration
   - PushSubscription table with RLS (migration 026); subscribe/unsubscribe API routes
   - `usePushNotifications` composable (requestPermission, unsubscribe, isSupported, permissionState)
@@ -262,14 +273,14 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **E2E test plan** (manual, two browsers on localhost — Chrome allows Web Push on localhost without HTTPS):
     1. Open `http://localhost:3001/timeline` in Chrome as User A → push prompt banner should appear → click "Enable" → allow browser permission → verify `pushsubscription` table has a row for User A
     2. Open incognito/different browser as User B (same circle) → upload a photo or post a quick note
-    3. Verify User A receives push notification: *"{name} added a memory"* → click it → should open timeline with the memory
-    4. Batch coalescing: User B uploads 3 photos quickly → User A should see one notification that silently updates to *"{name} added 3 memories"* (buzzes once, updates silently)
-    5. Comment: User B comments on a memory → User A notification: *"{name} commented"* with comment text
-    6. Reaction: User B reacts with emoji → User A notification: *"{name} reacted {emoji}"*
+    3. Verify User A receives push notification: _"{name} added a memory"_ → click it → should open timeline with the memory
+    4. Batch coalescing: User B uploads 3 photos quickly → User A should see one notification that silently updates to _"{name} added 3 memories"_ (buzzes once, updates silently)
+    5. Comment: User B comments on a memory → User A notification: _"{name} commented"_ with comment text
+    6. Reaction: User B reacts with emoji → User A notification: _"{name} reacted {emoji}"_
     7. Mute: User A (if owner) goes to `/circle-settings` → toggle "Mute this circle" on → User B uploads → User A gets no notification → toggle off → User B uploads → notification appears
     8. Snooze banner: clear localStorage → refresh timeline → banner appears → click "Later" → refresh → banner stays hidden → clear `push_prompt_snoozed_at` from localStorage → banner reappears
     9. Note: Web Push requires HTTPS in production; `localhost` is an exception for dev. If testing on a non-localhost domain, HTTPS is required
-- [x] 10.2 On This Day daily cron — activates at 30+ memories AND 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+- [x] 10.2 On This Day daily cron — activates at 30+ memories AND 90+ days since first upload; below threshold substitutes weekly "A memory from your first month" notification _(implementation complete — pg_cron pending manual setup in Supabase Studio)_
   - Edge Function `send-on-this-day` runs daily at 9am UTC
   - **Above threshold:** find oldest memory whose MM-DD matches today from a past year; push to all members (no email fallback — daily cadence)
   - **Below threshold:** weekly "memory from your first month" fallback (oldest memory in circle); push if subscribed → email fallback; capped at once per 7 days via `Circle.last_first_month_memory_sent_at` (migration 034)
@@ -288,6 +299,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - **Phase 2 Capacitor migration note:** When adding native push (FCM/APNs), the 10.1 architecture stays intact. Changes needed: (1) add `platform` column to PushSubscription (`'web' | 'fcm' | 'apns'`), (2) `sendPushToCircle` branches on platform — web → `web-push`, FCM/APNs → respective APIs, (3) `usePushNotifications` detects `Capacitor.isNativePlatform()` and uses `@capacitor/push-notifications` plugin instead of PushManager, (4) deep links handled by Capacitor `appUrlOpen` listener instead of SW `notificationclick`. Web Push keeps working for browser users — both paths coexist.
 
 ### Milestone 11: PWA & Mobile Polish
+
 - [x] 11.1 PWA offline asset caching — service worker upgraded with install/activate/fetch handlers; cache-first for Nuxt build assets (`_nuxt/*`) and static files (images, fonts, icons); network-first with cache fallback for HTML pages; API/Supabase calls bypass cache; manifest enriched (description, scope, orientation, categories, maskable icons)
   - Manifest and SW registration already existed from 10.1 (push notifications); this step adds caching strategies
   - `CACHE_NAME` versioned (`our-story-v1`) — bump on breaking changes to purge old caches
@@ -311,7 +323,8 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - i18n keys in en/zh-CN/fr
 
 ### Milestone 12: Early Retention Hooks
-- [x] 12.1 Weekly + monthly digest emails — grandparent-first design, login-redirect for reactions *(implementation complete — pg_cron schedules pending manual setup in Supabase Studio)*
+
+- [x] 12.1 Weekly + monthly digest emails — grandparent-first design, login-redirect for reactions _(implementation complete — pg_cron schedules pending manual setup in Supabase Studio)_
   - Migration 028: `last_weekly_digest_sent_at` + `last_monthly_digest_sent_at` columns on Circle (idempotency)
   - Edge Function `send-digest?frequency=weekly|monthly` — single function, two cron schedules
   - Email builders in `server/utils/email.ts` (Vitest-tested, 11 unit tests) mirrored 1:1 in `supabase/functions/send-digest/digestEmail.ts` (Deno-side)
@@ -342,7 +355,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
         - User with `deletion_requested_at IS NOT NULL` → skipped
     12. Known troubleshooting: if the function reports "name resolution failed", it's a Docker hostname issue inside the Edge Function container. Try removing any `SUPABASE_URL` overrides from `.env` files; the runtime should auto-inject `http://kong:8000` for the functions container
   - See spec: `docs/superpowers/specs/2026-05-08-digest-emails-design.md`
-- [x] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3) for child age + couple/friend/travel anniversaries *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+- [x] 12.2 Milestone suggestions — triple-nudge (T-3, T+0, T+3) for child age + couple/friend/travel anniversaries _(implementation complete — pg_cron pending manual setup in Supabase Studio)_
   - Migration 031: `MilestoneNudge` tracking table (idempotency); Migration 032: `milestone_nudges_enabled` preference; Migration 033: `Circle.anniversary_date` COMMENT generalised for couple/friends/travel
   - Edge Function `send-milestone-nudges` runs daily at 9am UTC
   - Channels: push (if subscribed + not quiet hours) → email (fallback) → in-app banner (always when in window)
@@ -356,7 +369,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Tests: 17 unit (calendar math) + 11 unit (email builders) + 2 unit (api validation) + 2 RLS (owner-only SELECT on MilestoneNudge) + 7 schema-compliance
   - Manual setup remaining: schedule `send-milestone-nudges` in Supabase Studio (`0 9 * * *`)
   - See spec: `docs/superpowers/specs/2026-05-09-milestone-suggestions-design.md`
-- [x] 12.3 First-memory anniversary (30-day cron) — implemented as one send with 12.3.1 *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+- [x] 12.3 First-memory anniversary (30-day cron) — implemented as one send with 12.3.1 _(implementation complete — pg_cron pending manual setup in Supabase Studio)_
 - [x] 12.3.1 "Your first month" recap email — sent 30 days after first upload; nostalgia hook (original first memory) + month stats (memory count, milestone count, top reaction) + dual CTA (add memory / invite). One send per circle, gated by `Circle.first_month_email_sent`.
   - Edge Function `send-first-month-recap` runs daily at 9am UTC; window: `first_memory_at` 29–31 days ago
   - Recipients: all circle members (not just owner+admins) — celebration moment, sent once per circle's lifetime
@@ -368,7 +381,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - Manual setup remaining: schedule `send-first-month-recap` in Supabase Studio (`0 9 * * *`)
   - Known issue: mid-batch failure may cause duplicate sends on retry (flag set only after all recipients processed). Acceptable for Phase 1.
   - See spec: `docs/superpowers/specs/2026-05-11-first-month-recap-design.md`
-- [x] 12.4 Quiet circle nudge — 14-day inactivity → owner only, max 3 nudges per quiet period, min 14 days between sends, reset on memory upload *(implementation complete — pg_cron pending manual setup in Supabase Studio)*
+- [x] 12.4 Quiet circle nudge — 14-day inactivity → owner only, max 3 nudges per quiet period, min 14 days between sends, reset on memory upload _(implementation complete — pg_cron pending manual setup in Supabase Studio)_
   - Edge Function `send-quiet-circle-nudges` runs daily at 9am UTC
   - Channels: push if subscribed → email fallback (consistent with §12.2 pattern; spec said push-only but we extend for reach)
   - Recipients: circle owner only (never members) — spec-mandated to avoid spam
@@ -383,6 +396,7 @@ A step-by-step build order for Phase 1 (0 → 50 users). Each milestone has hard
   - See spec: `docs/superpowers/specs/2026-05-11-quiet-circle-nudge-design.md`
 
 ### Milestone 13: Pre-Launch Checklist
+
 - [ ] Auth: verify magic link on device 2 does not invalidate existing session on device 1 — test with two devices simultaneously; if it does, switch to PKCE flow (see design spec §Magic link session behavior)
 - [ ] Security: RLS tests passing + manual privacy breach tests
 - [ ] Security: HTTP headers verified (securityheaders.com)

@@ -15,28 +15,31 @@
 ## File Structure
 
 ### New files
-| File | Responsibility |
-|------|---------------|
-| `app/pages/notification-settings.vue` | Notification preferences page — circle selector + push/mute/digest controls |
-| `supabase/migrations/027_digest_monthly_default.sql` | Update email_digest_frequency CHECK constraint and default |
+
+| File                                                 | Responsibility                                                              |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| `app/pages/notification-settings.vue`                | Notification preferences page — circle selector + push/mute/digest controls |
+| `supabase/migrations/027_digest_monthly_default.sql` | Update email_digest_frequency CHECK constraint and default                  |
 
 ### Modified files
-| File | Change |
-|------|--------|
-| `app/pages/timeline/index.vue` | Add bell icon link to `/notification-settings` in header |
-| `app/pages/circle-settings.vue` | Remove notification preferences section (template + script) |
-| `locales/en.json` | Add `notificationSettings.*` keys, remove `circleSettings.notifications*` and `circleSettings.muteCircle*` keys |
-| `locales/zh-CN.json` | Same i18n changes |
-| `locales/fr.json` | Same i18n changes |
-| `supabase/tests/rls.test.sql` | No changes needed — RLS policies for NotificationPreference already tested |
-| `app/types/database.ts` | Regenerate after migration |
-| `docs/build-plan.md` | Update 10.3 status |
+
+| File                            | Change                                                                                                          |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `app/pages/timeline/index.vue`  | Add bell icon link to `/notification-settings` in header                                                        |
+| `app/pages/circle-settings.vue` | Remove notification preferences section (template + script)                                                     |
+| `locales/en.json`               | Add `notificationSettings.*` keys, remove `circleSettings.notifications*` and `circleSettings.muteCircle*` keys |
+| `locales/zh-CN.json`            | Same i18n changes                                                                                               |
+| `locales/fr.json`               | Same i18n changes                                                                                               |
+| `supabase/tests/rls.test.sql`   | No changes needed — RLS policies for NotificationPreference already tested                                      |
+| `app/types/database.ts`         | Regenerate after migration                                                                                      |
+| `docs/build-plan.md`            | Update 10.3 status                                                                                              |
 
 ---
 
 ## Task 1: Database Migration — Monthly Default + CHECK Constraint
 
 **Files:**
+
 - Create: `supabase/migrations/027_digest_monthly_default.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -80,6 +83,7 @@ git commit -m "feat(notifications): add monthly digest option and change default
 ## Task 2: i18n Keys
 
 **Files:**
+
 - Modify: `locales/en.json`, `locales/zh-CN.json`, `locales/fr.json`
 
 - [ ] **Step 1: Add notificationSettings keys and remove old circleSettings notification keys in en.json**
@@ -87,6 +91,7 @@ git commit -m "feat(notifications): add monthly digest option and change default
 Read `locales/en.json` first. Then:
 
 Remove these keys from the `"circleSettings"` object:
+
 - `"notifications"`
 - `"notificationsDesc"`
 - `"pushNotifications"`
@@ -167,6 +172,7 @@ git commit -m "feat(notifications): add i18n keys for notification settings page
 ## Task 3: Notification Settings Page
 
 **Files:**
+
 - Create: `app/pages/notification-settings.vue`
 
 - [ ] **Step 1: Create the page**
@@ -176,46 +182,55 @@ Create `app/pages/notification-settings.vue`:
 ```vue
 <template>
   <div class="min-h-screen bg-background">
-
     <!-- Header -->
-    <header class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border">
-      <div class="max-w-[1280px] mx-auto px-5 h-14 flex items-center gap-3">
+    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
         <button
-          class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1"
+          class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           @click="router.back()"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M15 18l-6-6 6-6"/>
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 18l-6-6 6-6" />
           </svg>
           {{ t('common.back') }}
         </button>
 
-        <p class="flex-1 text-sm font-semibold text-foreground text-center">{{ t('notificationSettings.title') }}</p>
+        <p class="flex-1 text-center text-sm font-semibold text-foreground">
+          {{ t('notificationSettings.title') }}
+        </p>
 
         <!-- spacer to balance the back button -->
         <div class="w-12" />
       </div>
     </header>
 
-    <main class="max-w-[1280px] mx-auto px-5 py-8">
+    <main class="mx-auto max-w-[1280px] px-5 py-8">
       <div class="max-w-lg space-y-6">
-
         <!-- Loading -->
         <div v-if="!circles.length" class="flex justify-center py-24">
-          <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+          <div
+            class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
+          />
         </div>
 
         <template v-else>
-
           <!-- Circle selector (only when 2+ circles) -->
           <div v-if="circles.length > 1" class="flex flex-wrap gap-2">
             <button
               v-for="c in circles"
               :key="c.id"
-              class="px-4 py-2 rounded-full text-sm font-medium border transition-colors"
-              :class="selectedCircleId === c.id
-                ? 'border-foreground bg-secondary text-foreground'
-                : 'border-border text-muted-foreground hover:border-foreground/30'"
+              class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+              :class="
+                selectedCircleId === c.id
+                  ? 'border-foreground bg-secondary text-foreground'
+                  : 'border-border text-muted-foreground hover:border-foreground/30'
+              "
               @click="selectedCircleId = c.id"
             >
               {{ c.name }}
@@ -230,35 +245,43 @@ Create `app/pages/notification-settings.vue`:
           <div class="h-px bg-border" />
 
           <!-- Push toggle -->
-          <label class="flex items-center justify-between gap-3 cursor-pointer">
+          <label class="flex cursor-pointer items-center justify-between gap-3">
             <div>
-              <p class="text-sm font-medium text-foreground">{{ t('notificationSettings.pushNotifications') }}</p>
-              <p class="text-xs text-muted-foreground mt-0.5">{{ t('notificationSettings.pushNotificationsDesc') }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ t('notificationSettings.pushNotifications') }}
+              </p>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                {{ t('notificationSettings.pushNotificationsDesc') }}
+              </p>
             </div>
             <input
               type="checkbox"
               :checked="pushEnabled"
-              class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+              class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
               @change="togglePush"
             />
           </label>
 
           <!-- Mute toggle -->
-          <label class="flex items-center justify-between gap-3 cursor-pointer">
+          <label class="flex cursor-pointer items-center justify-between gap-3">
             <div>
-              <p class="text-sm font-medium text-foreground">{{ t('notificationSettings.muteCircle') }}</p>
-              <p class="text-xs text-muted-foreground mt-0.5">{{ t('notificationSettings.muteCircleDesc') }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ t('notificationSettings.muteCircle') }}
+              </p>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                {{ t('notificationSettings.muteCircleDesc') }}
+              </p>
             </div>
             <input
               type="checkbox"
               :checked="circleMuted"
-              class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+              class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
               @change="toggleMute"
             />
           </label>
 
           <!-- Mute active note -->
-          <p v-if="circleMuted" class="text-xs text-muted-foreground/70 -mt-2 pl-0.5">
+          <p v-if="circleMuted" class="-mt-2 pl-0.5 text-xs text-muted-foreground/70">
             {{ t('notificationSettings.muteActiveNote') }}
           </p>
 
@@ -266,24 +289,29 @@ Create `app/pages/notification-settings.vue`:
 
           <!-- Email digest frequency -->
           <div>
-            <p class="text-sm font-medium text-foreground">{{ t('notificationSettings.emailDigest') }}</p>
-            <p class="text-xs text-muted-foreground mt-0.5 mb-3">{{ t('notificationSettings.emailDigestDesc') }}</p>
+            <p class="text-sm font-medium text-foreground">
+              {{ t('notificationSettings.emailDigest') }}
+            </p>
+            <p class="mb-3 mt-0.5 text-xs text-muted-foreground">
+              {{ t('notificationSettings.emailDigestDesc') }}
+            </p>
 
-            <div class="inline-flex rounded-lg border border-border overflow-hidden">
+            <div class="inline-flex overflow-hidden rounded-lg border border-border">
               <button
                 v-for="opt in digestOptions"
                 :key="opt.value"
                 class="px-4 py-2 text-xs font-medium transition-colors"
-                :class="digestFrequency === opt.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card text-muted-foreground hover:text-foreground'"
+                :class="
+                  digestFrequency === opt.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:text-foreground'
+                "
                 @click="setDigest(opt.value)"
               >
                 {{ opt.label }}
               </button>
             </div>
           </div>
-
         </template>
       </div>
     </main>
@@ -303,11 +331,15 @@ const circles = computed(() => circlesData.value?.circles ?? [])
 const selectedCircleId = ref('')
 
 // Auto-select first circle
-watch(circles, (list) => {
-  if (list.length && !selectedCircleId.value) {
-    selectedCircleId.value = list[0].id
-  }
-}, { immediate: true })
+watch(
+  circles,
+  (list) => {
+    if (list.length && !selectedCircleId.value) {
+      selectedCircleId.value = list[0].id
+    }
+  },
+  { immediate: true },
+)
 
 // ── Preferences ───────────────────────────────────────────
 const pushEnabled = ref(true)
@@ -333,7 +365,8 @@ async function loadPrefs() {
   if (data) {
     pushEnabled.value = data.push_enabled
     circleMuted.value = data.circle_muted
-    digestFrequency.value = (data.email_digest_frequency as 'weekly' | 'monthly' | 'off') ?? 'monthly'
+    digestFrequency.value =
+      (data.email_digest_frequency as 'weekly' | 'monthly' | 'off') ?? 'monthly'
   } else {
     // No row yet — show defaults
     pushEnabled.value = true
@@ -342,21 +375,25 @@ async function loadPrefs() {
   }
 }
 
-watch(selectedCircleId, () => { loadPrefs() }, { immediate: true })
+watch(
+  selectedCircleId,
+  () => {
+    loadPrefs()
+  },
+  { immediate: true },
+)
 
 async function savePref(fields: Record<string, any>) {
   if (!selectedCircleId.value || !user.value) return
 
-  await supabase
-    .from('notificationpreference')
-    .upsert(
-      {
-        user_id: user.value.id,
-        circle_id: selectedCircleId.value,
-        ...fields,
-      },
-      { onConflict: 'user_id,circle_id' }
-    )
+  await supabase.from('notificationpreference').upsert(
+    {
+      user_id: user.value.id,
+      circle_id: selectedCircleId.value,
+      ...fields,
+    },
+    { onConflict: 'user_id,circle_id' },
+  )
 }
 
 function togglePush() {
@@ -380,6 +417,7 @@ function setDigest(value: 'weekly' | 'monthly' | 'off') {
 
 Run: `pnpm dev`
 Navigate to `/notification-settings`. Verify:
+
 - Header with back button and title renders
 - Circle selector shows if user has multiple circles
 - Push toggle, mute toggle, email digest segmented control render
@@ -399,6 +437,7 @@ git commit -m "feat(notifications): add notification settings page"
 ## Task 4: Timeline Header — Bell Icon
 
 **Files:**
+
 - Modify: `app/pages/timeline/index.vue`
 
 - [ ] **Step 1: Add bell icon link to timeline header**
@@ -406,12 +445,12 @@ git commit -m "feat(notifications): add notification settings page"
 In `app/pages/timeline/index.vue`, find the circle settings gear icon (the `NuxtLink` to `/circle-settings` around line 32-42). Add a bell icon link **after** the gear icon link, visible to **all members** (no `v-if` guard):
 
 ```vue
-            <!-- Notification settings (all members) -->
-            <NuxtLink
-              to="/notification-settings"
-              class="p-1 text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded flex-shrink-0"
-              :title="t('notificationSettings.title')"
-            >
+<!-- Notification settings (all members) -->
+<NuxtLink
+  to="/notification-settings"
+  class="flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground"
+  :title="t('notificationSettings.title')"
+>
               <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -425,6 +464,7 @@ Place it after the gear icon `NuxtLink` and before the `<template v-if="circle?.
 
 Run: `pnpm dev`
 Navigate to `/timeline`. Verify:
+
 - Bell icon appears in the header next to the gear icon (or alone if not owner)
 - Clicking it navigates to `/notification-settings`
 - Gear icon is still owner-only, bell icon is visible to all members
@@ -441,6 +481,7 @@ git commit -m "feat(notifications): add bell icon link in timeline header"
 ## Task 5: Remove Notification Section from Circle Settings
 
 **Files:**
+
 - Modify: `app/pages/circle-settings.vue`
 
 - [ ] **Step 1: Remove the notification template section**
@@ -448,11 +489,12 @@ git commit -m "feat(notifications): add bell icon link in timeline header"
 In `app/pages/circle-settings.vue`, remove the entire notification preferences block from the template. This is the section from the `<div v-if="isOwner" class="h-px bg-border" />` divider before the notification section through the `<div class="h-px bg-border" />` divider after it (lines 276-318 approximately).
 
 Remove these lines:
-```vue
-          <div v-if="isOwner" class="h-px bg-border" />
 
-          <!-- Notification preferences — all members -->
-          <div>
+```vue
+<div v-if="isOwner" class="h-px bg-border" />
+
+<!-- Notification preferences — all members -->
+<div>
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
               {{ t('circleSettings.notifications') }}
             </h2>
@@ -467,16 +509,18 @@ Remove these lines:
                   <p class="text-sm font-medium text-foreground">{{ t('circleSettings.pushNotifications') }}</p>
                   <p class="text-xs text-muted-foreground mt-0.5">{{ t('circleSettings.pushNotificationsDesc') }}</p>
                 </div>
-                <input
-                  type="checkbox"
-                  :checked="pushEnabled"
-                  class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
-                  @change="pushEnabled = !pushEnabled; saveNotificationPref('push_enabled', pushEnabled)"
-                />
-              </label>
+<input
+  type="checkbox"
+  :checked="pushEnabled"
+  class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
+  @change="
+    pushEnabled = !pushEnabled
+    saveNotificationPref('push_enabled', pushEnabled)
+  "
+/>
 
-              <!-- Mute toggle -->
-              <label class="flex items-center justify-between gap-3 cursor-pointer">
+<!-- Mute toggle -->
+<label class="flex cursor-pointer items-center justify-between gap-3">
                 <div>
                   <p class="text-sm font-medium text-foreground">{{ t('circleSettings.muteCircle') }}</p>
                   <p class="text-xs text-muted-foreground mt-0.5">{{ t('circleSettings.muteCircleDesc') }}</p>
@@ -488,10 +532,8 @@ Remove these lines:
                   @change="circleMuted = !circleMuted; saveNotificationPref('circle_muted', circleMuted)"
                 />
               </label>
-            </div>
-          </div>
 
-          <div class="h-px bg-border" />
+<div class="h-px bg-border" />
 ```
 
 - [ ] **Step 2: Remove the notification script code**
@@ -527,25 +569,30 @@ async function saveNotificationPref(field: 'push_enabled' | 'circle_muted', valu
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
-  await supabase
-    .from('notificationpreference')
-    .upsert(
-      {
-        user_id: user.value!.id,
-        circle_id: circle.value.id,
-        [field]: value,
-      },
-      { onConflict: 'user_id,circle_id' }
-    )
+  await supabase.from('notificationpreference').upsert(
+    {
+      user_id: user.value!.id,
+      circle_id: circle.value.id,
+      [field]: value,
+    },
+    { onConflict: 'user_id,circle_id' },
+  )
 }
 
-watch(() => circle.value?.id, () => { loadNotificationPrefs() }, { immediate: true })
+watch(
+  () => circle.value?.id,
+  () => {
+    loadNotificationPrefs()
+  },
+  { immediate: true },
+)
 ```
 
 - [ ] **Step 3: Verify circle-settings still works**
 
 Run: `pnpm dev`
 Navigate to `/circle-settings`. Verify:
+
 - Page loads without errors
 - No notification section visible
 - All other sections (circle name, type, children, danger zone) still work
@@ -567,17 +614,20 @@ git commit -m "refactor(notifications): remove notification toggles from circle 
 ## Task 6: Update Build Plan + Design Spec
 
 **Files:**
+
 - Modify: `docs/build-plan.md`
 - Modify: `docs/design-spec.md`
 
 - [ ] **Step 1: Update build plan**
 
 In `docs/build-plan.md`, update the 10.3 line. Replace:
+
 ```
 - [ ] 10.3 Full notification preferences UI — quiet hours, email digest frequency, per-circle mute — dedicated settings page accessible to all members (not just owners), wired to existing NotificationPreference table
 ```
 
 With:
+
 ```
 - [ ] 10.3 Notification preferences page — dedicated `/notification-settings` page accessible to all members; per-circle push toggle, mute toggle, email digest frequency (weekly/monthly/off, default monthly); circle selector for multi-circle users; bell icon in timeline header; notification toggles removed from circle-settings *(implementation complete — pending end-to-end test)*
   - Migration 027: `email_digest_frequency` CHECK constraint updated to include `'monthly'`; default changed from `'weekly'` to `'monthly'`
@@ -589,21 +639,25 @@ With:
 In `docs/design-spec.md`, find the "Notification preferences" subsection (around line 1277). Update the email_digest_frequency line to reflect the new options:
 
 Change:
+
 ```
   - email_digest_frequency: "daily" | "weekly" | "off"
 ```
 
 To:
+
 ```
   - email_digest_frequency: "weekly" | "monthly" | "off"
 ```
 
 And update the default state line. Change:
+
 ```
 **Default state on join:** `push_enabled = true`, `email_digest_frequency = "weekly"`, `circle_muted = false`.
 ```
 
 To:
+
 ```
 **Default state on join:** `push_enabled = true`, `email_digest_frequency = "monthly"`, `circle_muted = false`.
 ```

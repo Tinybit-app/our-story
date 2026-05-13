@@ -28,7 +28,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -39,14 +39,16 @@ function mockCirclesList(page: any, role: string = 'owner', circle_type: string 
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type,
-          memberCount: 2,
-          role,
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type,
+            memberCount: 2,
+            role,
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -101,7 +103,6 @@ async function goToSettings(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Circle type picker (4.10.5)', () => {
-
   test('circle type picker is visible to owners in circle settings', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
@@ -207,5 +208,4 @@ test.describe('Circle type picker (4.10.5)', () => {
     await page.waitForTimeout(1_000)
     await expect(page.getByText('Circle type')).not.toBeVisible()
   })
-
 })

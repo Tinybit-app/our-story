@@ -32,54 +32,88 @@ export interface FirstMonthRecapEmailOpts {
   appUrl: string
   inviteUrl: string
   unsubscribeUrl: string
-  locale: "en" | "zh-CN" | "fr"
+  locale: 'en' | 'zh-CN' | 'fr'
 }
 
-export function buildFirstMonthRecapEmail(opts: FirstMonthRecapEmailOpts): { subject: string; html: string } {
+export function buildFirstMonthRecapEmail(opts: FirstMonthRecapEmailOpts): {
+  subject: string
+  html: string
+} {
   const {
-    recipientFirstName, circleName, firstMemoryUploaderName, firstMemoryNote,
-    firstMemoryDate, firstMemoryThumbnailUrl, memoryCount, milestoneCount,
-    topReactionMemoryThumbnailUrl, topReactionEmoji, topReactionCount,
-    appUrl, inviteUrl, unsubscribeUrl, locale,
+    recipientFirstName,
+    circleName,
+    firstMemoryUploaderName,
+    firstMemoryNote,
+    firstMemoryDate,
+    firstMemoryThumbnailUrl,
+    memoryCount,
+    milestoneCount,
+    topReactionMemoryThumbnailUrl,
+    topReactionEmoji,
+    topReactionCount,
+    appUrl,
+    inviteUrl,
+    unsubscribeUrl,
+    locale,
   } = opts
 
   const subject = (() => {
-    if (locale === "zh-CN") return `「${circleName}」的第一个月 💛`
-    if (locale === "fr") return `Votre premier mois avec ${circleName} 💛`
+    if (locale === 'zh-CN') return `「${circleName}」的第一个月 💛`
+    if (locale === 'fr') return `Votre premier mois avec ${circleName} 💛`
     return `Your first month with ${circleName} 💛`
   })()
 
-  const greeting = locale === "zh-CN"
-    ? `你好 ${recipientFirstName}，`
-    : locale === "fr"
-      ? `Bonjour ${recipientFirstName},`
-      : `Hi ${recipientFirstName ?? "there"},`
+  const greeting =
+    locale === 'zh-CN'
+      ? `你好 ${recipientFirstName}，`
+      : locale === 'fr'
+        ? `Bonjour ${recipientFirstName},`
+        : `Hi ${recipientFirstName ?? 'there'},`
 
   const intro = (() => {
-    if (locale === "zh-CN") return `一个月前，${firstMemoryUploaderName} 在「${circleName}」上传了你们的第一条记忆。`
-    if (locale === "fr") return `Il y a un mois, ${firstMemoryUploaderName} a ajouté votre premier souvenir à ${circleName}.`
+    if (locale === 'zh-CN')
+      return `一个月前，${firstMemoryUploaderName} 在「${circleName}」上传了你们的第一条记忆。`
+    if (locale === 'fr')
+      return `Il y a un mois, ${firstMemoryUploaderName} a ajouté votre premier souvenir à ${circleName}.`
     return `One month ago, ${firstMemoryUploaderName} added your first memory to ${circleName}.`
   })()
 
   const dateFormatted = new Date(firstMemoryDate).toLocaleDateString(
-    locale === "zh-CN" ? "zh-CN" : locale === "fr" ? "fr" : "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
+    locale === 'zh-CN' ? 'zh-CN' : locale === 'fr' ? 'fr' : 'en-US',
+    { year: 'numeric', month: 'long', day: 'numeric' },
   )
 
   const heroImg = firstMemoryThumbnailUrl
     ? `<img src="${firstMemoryThumbnailUrl}" style="width:100%;border-radius:12px;display:block;margin:0 0 8px;" alt="" />`
-    : ""
+    : ''
 
   const heroNote = firstMemoryNote
     ? `<p style="font-size:14px;color:#444;font-style:italic;margin:0 0 4px;line-height:1.5;">"${firstMemoryNote}"</p>`
-    : ""
+    : ''
 
   const heroDate = `<p style="font-size:11px;color:#888;margin:0 0 24px;">${dateFormatted}</p>`
 
   const statsLabels = (() => {
-    if (locale === "zh-CN") return { memories: "条记忆", milestones: "个里程碑", topReaction: "最受欢迎", thisMonth: "这一个月" }
-    if (locale === "fr") return { memories: "souvenirs", milestones: "jalons", topReaction: "Le plus aimé", thisMonth: "Ce mois-ci" }
-    return { memories: "memories", milestones: "milestones marked", topReaction: "Most loved", thisMonth: "This month" }
+    if (locale === 'zh-CN')
+      return {
+        memories: '条记忆',
+        milestones: '个里程碑',
+        topReaction: '最受欢迎',
+        thisMonth: '这一个月',
+      }
+    if (locale === 'fr')
+      return {
+        memories: 'souvenirs',
+        milestones: 'jalons',
+        topReaction: 'Le plus aimé',
+        thisMonth: 'Ce mois-ci',
+      }
+    return {
+      memories: 'memories',
+      milestones: 'milestones marked',
+      topReaction: 'Most loved',
+      thisMonth: 'This month',
+    }
   })()
 
   const statsBlock = `
@@ -88,19 +122,33 @@ export function buildFirstMonthRecapEmail(opts: FirstMonthRecapEmailOpts): { sub
         ${statsLabels.thisMonth}
       </p>
       <p style="font-size:16px;color:#1a1a1a;margin:0 0 8px;">📸 ${memoryCount} ${statsLabels.memories}</p>
-      ${milestoneCount > 0 ? `<p style="font-size:16px;color:#1a1a1a;margin:0 0 8px;">✨ ${milestoneCount} ${statsLabels.milestones}</p>` : ""}
-      ${topReactionMemoryThumbnailUrl && topReactionEmoji && topReactionCount
-        ? `<p style="font-size:16px;color:#1a1a1a;margin:0;">${topReactionEmoji} ${topReactionCount} ${statsLabels.topReaction}</p>`
-        : ""}
+      ${milestoneCount > 0 ? `<p style="font-size:16px;color:#1a1a1a;margin:0 0 8px;">✨ ${milestoneCount} ${statsLabels.milestones}</p>` : ''}
+      ${
+        topReactionMemoryThumbnailUrl && topReactionEmoji && topReactionCount
+          ? `<p style="font-size:16px;color:#1a1a1a;margin:0;">${topReactionEmoji} ${topReactionCount} ${statsLabels.topReaction}</p>`
+          : ''
+      }
     </div>
   `
 
-  const ctaPrimary = locale === "zh-CN" ? "添加新记忆 →" : locale === "fr" ? "Ajouter un souvenir →" : "Add another memory →"
-  const ctaSecondary = locale === "zh-CN" ? "邀请还没加入的人 →" : locale === "fr" ? "Inviter quelqu'un qui n'a pas encore rejoint →" : "Invite someone who hasn't joined yet →"
+  const ctaPrimary =
+    locale === 'zh-CN'
+      ? '添加新记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add another memory →'
+  const ctaSecondary =
+    locale === 'zh-CN'
+      ? '邀请还没加入的人 →'
+      : locale === 'fr'
+        ? "Inviter quelqu'un qui n'a pas encore rejoint →"
+        : "Invite someone who hasn't joined yet →"
 
   const unsubscribeText = (() => {
-    if (locale === "zh-CN") return `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
-    if (locale === "fr") return `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
+    if (locale === 'zh-CN')
+      return `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
+    if (locale === 'fr')
+      return `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
     return `You're receiving this because you're a member of ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Manage email preferences</a>.`
   })()
 

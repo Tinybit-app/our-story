@@ -38,12 +38,14 @@ function makePhotoMemory(reactions: any[] = []) {
     milestone_label: null,
     milestone_is_custom: false,
     created_at: '2024-06-15T00:00:00.000Z',
-    memorymedia: [{
-      id: 'media-1',
-      url: 'https://example.com/photo.jpg',
-      thumbnailUrl: 'https://example.com/photo-thumb.jpg',
-      media_type: 'image',
-    }],
+    memorymedia: [
+      {
+        id: 'media-1',
+        url: 'https://example.com/photo.jpg',
+        thumbnailUrl: 'https://example.com/photo-thumb.jpg',
+        media_type: 'image',
+      },
+    ],
     user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
     memoryreaction: reactions,
     memorycomment: [],
@@ -78,7 +80,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -89,14 +91,16 @@ function mockCircles(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -108,7 +112,7 @@ function mockTimeline(page: any, memories: any[]) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
@@ -126,16 +130,25 @@ function mockComments(page: any, memoryId: string) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Emoji reactions (8.2)', () => {
-
   test('existing reaction chip renders on PolaroidCard when hovered', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makePhotoMemory([
-      { id: 'r1', emoji: '❤️', user_id: OTHER_USER_ID, guest_name: null, user: { first_name: 'Alice', last_name: 'S' } },
-    ])])
+    await mockTimeline(page, [
+      makePhotoMemory([
+        {
+          id: 'r1',
+          emoji: '❤️',
+          user_id: OTHER_USER_ID,
+          guest_name: null,
+          user: { first_name: 'Alice', last_name: 'S' },
+        },
+      ]),
+    ])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Reaction overlay on PolaroidCard is shown on hover only (v-if="isHovered")
     const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
@@ -151,7 +164,9 @@ test.describe('Emoji reactions (8.2)', () => {
     await mockTimeline(page, [makePhotoMemory()])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Hover the card to reveal the picker button
     const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
@@ -182,13 +197,15 @@ test.describe('Emoji reactions (8.2)', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            reactions: [{
-              id: 'r-new',
-              emoji: body.emoji,
-              user_id: MY_USER_ID,
-              guest_name: null,
-              user: { first_name: 'Dao', last_name: 'Z' },
-            }],
+            reactions: [
+              {
+                id: 'r-new',
+                emoji: body.emoji,
+                user_id: MY_USER_ID,
+                guest_name: null,
+                user: { first_name: 'Dao', last_name: 'Z' },
+              },
+            ],
           }),
         })
       } else {
@@ -197,7 +214,9 @@ test.describe('Emoji reactions (8.2)', () => {
     })
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 15_000,
+    })
 
     const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
     await card.hover()
@@ -208,7 +227,10 @@ test.describe('Emoji reactions (8.2)', () => {
 
     // Click the heart emoji in the picker
     await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible({ timeout: 3_000 })
-    await page.locator('button', { hasText: '❤️' }).first().evaluate((btn: HTMLButtonElement) => btn.click())
+    await page
+      .locator('button', { hasText: '❤️' })
+      .first()
+      .evaluate((btn: HTMLButtonElement) => btn.click())
 
     await page.waitForTimeout(500)
     expect(postEmoji).toBe('❤️')
@@ -217,9 +239,17 @@ test.describe('Emoji reactions (8.2)', () => {
   test('clicking own reaction chip calls POST to toggle it off', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makePhotoMemory([
-      { id: 'r1', emoji: '❤️', user_id: MY_USER_ID, guest_name: null, user: { first_name: 'Dao', last_name: 'Z' } },
-    ])])
+    await mockTimeline(page, [
+      makePhotoMemory([
+        {
+          id: 'r1',
+          emoji: '❤️',
+          user_id: MY_USER_ID,
+          guest_name: null,
+          user: { first_name: 'Dao', last_name: 'Z' },
+        },
+      ]),
+    ])
 
     let postCalled = false
     await page.route(`**/api/memories/${MEMORY_ID}/reactions**`, async (route) => {
@@ -237,7 +267,9 @@ test.describe('Emoji reactions (8.2)', () => {
     })
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 15_000,
+    })
 
     const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
     await card.hover()
@@ -246,7 +278,9 @@ test.describe('Emoji reactions (8.2)', () => {
     await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({ timeout: 5_000 })
 
     // Click to toggle off
-    await card.locator('button', { hasText: '❤️' }).evaluate((btn: HTMLButtonElement) => btn.click())
+    await card
+      .locator('button', { hasText: '❤️' })
+      .evaluate((btn: HTMLButtonElement) => btn.click())
 
     await page.waitForTimeout(500)
     expect(postCalled).toBe(true)
@@ -255,9 +289,17 @@ test.describe('Emoji reactions (8.2)', () => {
   test('MemoryModal shows reaction chips and picker', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makePhotoMemory([
-      { id: 'r1', emoji: '😍', user_id: OTHER_USER_ID, guest_name: null, user: { first_name: 'Alice', last_name: 'S' } },
-    ])])
+    await mockTimeline(page, [
+      makePhotoMemory([
+        {
+          id: 'r1',
+          emoji: '😍',
+          user_id: OTHER_USER_ID,
+          guest_name: null,
+          user: { first_name: 'Alice', last_name: 'S' },
+        },
+      ]),
+    ])
     await mockComments(page, MEMORY_ID)
 
     let postEmoji: string | null = null
@@ -270,8 +312,20 @@ test.describe('Emoji reactions (8.2)', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             reactions: [
-              { id: 'r1', emoji: '😍', user_id: OTHER_USER_ID, guest_name: null, user: { first_name: 'Alice', last_name: 'S' } },
-              { id: 'r-new', emoji: body.emoji, user_id: MY_USER_ID, guest_name: null, user: { first_name: 'Dao', last_name: 'Z' } },
+              {
+                id: 'r1',
+                emoji: '😍',
+                user_id: OTHER_USER_ID,
+                guest_name: null,
+                user: { first_name: 'Alice', last_name: 'S' },
+              },
+              {
+                id: 'r-new',
+                emoji: body.emoji,
+                user_id: MY_USER_ID,
+                guest_name: null,
+                user: { first_name: 'Dao', last_name: 'Z' },
+              },
             ],
           }),
         })
@@ -302,12 +356,22 @@ test.describe('Emoji reactions (8.2)', () => {
   test('QuickNoteCard shows existing reaction chip', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makeQuickNoteMemory([
-      { id: 'r1', emoji: '🥹', user_id: OTHER_USER_ID, guest_name: null, user: { first_name: 'Alice', last_name: 'S' } },
-    ])])
+    await mockTimeline(page, [
+      makeQuickNoteMemory([
+        {
+          id: 'r1',
+          emoji: '🥹',
+          user_id: OTHER_USER_ID,
+          guest_name: null,
+          user: { first_name: 'Alice', last_name: 'S' },
+        },
+      ]),
+    ])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Reaction chip should appear on the QuickNoteCard
     await expect(page.getByText('🥹').first()).toBeVisible({ timeout: 5_000 })
@@ -316,9 +380,17 @@ test.describe('Emoji reactions (8.2)', () => {
   test('QuickNoteModal shows reaction chips and picker', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makeQuickNoteMemory([
-      { id: 'r1', emoji: '👏', user_id: OTHER_USER_ID, guest_name: null, user: { first_name: 'Alice', last_name: 'S' } },
-    ])])
+    await mockTimeline(page, [
+      makeQuickNoteMemory([
+        {
+          id: 'r1',
+          emoji: '👏',
+          user_id: OTHER_USER_ID,
+          guest_name: null,
+          user: { first_name: 'Alice', last_name: 'S' },
+        },
+      ]),
+    ])
 
     let postEmoji: string | null = null
     await page.route(`**/api/memories/${QN_MEMORY_ID}/reactions**`, async (route) => {
@@ -330,8 +402,20 @@ test.describe('Emoji reactions (8.2)', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             reactions: [
-              { id: 'r1', emoji: '👏', user_id: OTHER_USER_ID, guest_name: null, user: { first_name: 'Alice', last_name: 'S' } },
-              { id: 'r-new', emoji: body.emoji, user_id: MY_USER_ID, guest_name: null, user: { first_name: 'Dao', last_name: 'Z' } },
+              {
+                id: 'r1',
+                emoji: '👏',
+                user_id: OTHER_USER_ID,
+                guest_name: null,
+                user: { first_name: 'Alice', last_name: 'S' },
+              },
+              {
+                id: 'r-new',
+                emoji: body.emoji,
+                user_id: MY_USER_ID,
+                guest_name: null,
+                user: { first_name: 'Dao', last_name: 'Z' },
+              },
             ],
           }),
         })
@@ -341,7 +425,11 @@ test.describe('Emoji reactions (8.2)', () => {
     })
     await page.route(`**/api/memories/${QN_MEMORY_ID}/comments**`, async (route) => {
       if (route.request().method() !== 'GET') return route.continue()
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ comments: [] }),
+      })
     })
 
     await page.goto('/timeline')
@@ -363,5 +451,4 @@ test.describe('Emoji reactions (8.2)', () => {
     await page.waitForTimeout(500)
     expect(postEmoji).toBe('🔥')
   })
-
 })

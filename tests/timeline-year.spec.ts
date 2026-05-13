@@ -23,7 +23,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -34,14 +34,16 @@ function mockCirclesList(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -53,7 +55,12 @@ function mockProfile(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ firstName: 'Alice', lastName: 'Smith', avatarUrl: null, locale: 'en' }),
+      body: JSON.stringify({
+        firstName: 'Alice',
+        lastName: 'Smith',
+        avatarUrl: null,
+        locale: 'en',
+      }),
     })
   })
 }
@@ -79,13 +86,15 @@ function makeMemory(id: string, date: string) {
 }
 
 test.describe('Main timeline — year-at-a-time loading', () => {
-
   test('first load fetches the latest year without a year param', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockProfile(page)
 
-    const year2025Memories = [makeMemory('m-2025-1', '2025-06-15'), makeMemory('m-2025-2', '2025-03-10')]
+    const year2025Memories = [
+      makeMemory('m-2025-1', '2025-06-15'),
+      makeMemory('m-2025-2', '2025-03-10'),
+    ]
     let firstCallYear: string | null | undefined = undefined
     let callCount = 0
 
@@ -98,7 +107,12 @@ test.describe('Main timeline — year-at-a-time loading', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: year2025Memories, prevYear: null, children: [], members: [] }),
+        body: JSON.stringify({
+          memories: year2025Memories,
+          prevYear: null,
+          children: [],
+          members: [],
+        }),
       })
     })
 
@@ -111,16 +125,18 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     expect(firstCallYear).toBeNull()
   })
 
-  test('scrolling to bottom triggers previous-year fetch with correct year param', async ({ page }) => {
+  test('scrolling to bottom triggers previous-year fetch with correct year param', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockProfile(page)
 
     const year2025Memories = Array.from({ length: 3 }, (_, i) =>
-      makeMemory(`m-2025-${i}`, `2025-${String(i + 1).padStart(2, '0')}-15`)
+      makeMemory(`m-2025-${i}`, `2025-${String(i + 1).padStart(2, '0')}-15`),
     )
     const year2024Memories = Array.from({ length: 3 }, (_, i) =>
-      makeMemory(`m-2024-${i}`, `2024-${String(i + 1).padStart(2, '0')}-15`)
+      makeMemory(`m-2024-${i}`, `2024-${String(i + 1).padStart(2, '0')}-15`),
     )
 
     let secondCallYear: string | null = null
@@ -134,7 +150,12 @@ test.describe('Main timeline — year-at-a-time loading', () => {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ memories: year2025Memories, prevYear: 2024, children: [], members: [] }),
+          body: JSON.stringify({
+            memories: year2025Memories,
+            prevYear: 2024,
+            children: [],
+            members: [],
+          }),
         })
       }
       // Subsequent load — should have year=2024
@@ -142,7 +163,12 @@ test.describe('Main timeline — year-at-a-time loading', () => {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: year2024Memories, prevYear: null, children: [], members: [] }),
+        body: JSON.stringify({
+          memories: year2024Memories,
+          prevYear: null,
+          children: [],
+          members: [],
+        }),
       })
     })
 
@@ -153,10 +179,9 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for 2024 memories to be appended
-    await page.waitForFunction(
-      () => document.querySelectorAll('article').length >= 6,
-      { timeout: 10_000 }
-    )
+    await page.waitForFunction(() => document.querySelectorAll('article').length >= 6, {
+      timeout: 10_000,
+    })
 
     // Verify the second call was made with year=2024
     expect(secondCallYear).toBe('2024')
@@ -188,9 +213,10 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for the IntersectionObserver to have had a chance to fire (one animation frame)
-    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())))
+    await page.evaluate(
+      () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+    )
 
     expect(callCount).toBe(1)
   })
-
 })

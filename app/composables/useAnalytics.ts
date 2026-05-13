@@ -1,14 +1,14 @@
-import type { PostHog } from "posthog-js"
+import type { PostHog } from 'posthog-js'
 
 export type CircleType =
-  | "parents"
-  | "couple"
-  | "family"
-  | "friends"
-  | "caregiving"
-  | "travel"
-  | "solo"
-  | "custom"
+  | 'parents'
+  | 'couple'
+  | 'family'
+  | 'friends'
+  | 'caregiving'
+  | 'travel'
+  | 'solo'
+  | 'custom'
 
 /**
  * Discriminated union of every analytics event in the Phase 1 catalog.
@@ -19,29 +19,32 @@ export type CircleType =
  * Spec: docs/superpowers/specs/2026-05-11-posthog-analytics-design.md §2
  */
 export type AnalyticsEvent =
-  | { name: "user_signed_up"; props: { method: "email" } }
-  | { name: "circle_created"; props: { circle_id: string; circle_type: CircleType } }
-  | { name: "member_invited"; props: { circle_id: string; invite_method: "link" } }
-  | { name: "member_joined"; props: { circle_id: string; joined_via: "invite" } }
+  | { name: 'user_signed_up'; props: { method: 'email' } }
+  | { name: 'circle_created'; props: { circle_id: string; circle_type: CircleType } }
+  | { name: 'member_invited'; props: { circle_id: string; invite_method: 'link' } }
+  | { name: 'member_joined'; props: { circle_id: string; joined_via: 'invite' } }
   | {
-      name: "memory_uploaded"
+      name: 'memory_uploaded'
       props: {
         circle_id: string
-        memory_type: "photo" | "video" | "note" | "mixed"
-        visibility: "circle" | "private"
+        memory_type: 'photo' | 'video' | 'note' | 'mixed'
+        visibility: 'circle' | 'private'
         media_count: number
       }
     }
-  | { name: "memory_shared_to_circle"; props: { circle_id: string; memory_id: string } }
-  | { name: "comment_added"; props: { circle_id: string; memory_id: string } }
-  | { name: "reaction_added"; props: { circle_id: string; memory_id: string; emoji: string } }
-  | { name: "milestone_created"; props: { circle_id: string; milestone_type: "suggested" | "custom" } }
-  | { name: "export_requested"; props: { circle_id: string; format: "zip" } }
-  | { name: "subscription_upgraded"; props: { tier: "plus"; interval: "monthly" | "annual" } }
-  | { name: "subscription_cancelled"; props: { tier: "plus" } }
+  | { name: 'memory_shared_to_circle'; props: { circle_id: string; memory_id: string } }
+  | { name: 'comment_added'; props: { circle_id: string; memory_id: string } }
+  | { name: 'reaction_added'; props: { circle_id: string; memory_id: string; emoji: string } }
+  | {
+      name: 'milestone_created'
+      props: { circle_id: string; milestone_type: 'suggested' | 'custom' }
+    }
+  | { name: 'export_requested'; props: { circle_id: string; format: 'zip' } }
+  | { name: 'subscription_upgraded'; props: { tier: 'plus'; interval: 'monthly' | 'annual' } }
+  | { name: 'subscription_cancelled'; props: { tier: 'plus' } }
 
-type EventName = AnalyticsEvent["name"]
-type PropsFor<N extends EventName> = Extract<AnalyticsEvent, { name: N }>["props"]
+type EventName = AnalyticsEvent['name']
+type PropsFor<N extends EventName> = Extract<AnalyticsEvent, { name: N }>['props']
 
 /**
  * Pure factory — easy to unit test without Nuxt context.
@@ -77,19 +80,46 @@ export function useAnalytics() {
 // Must match the CHIPS constant in app/composables/useCircleTypeConfig.ts exactly.
 const KNOWN_MILESTONE_CHIPS = new Set<string>([
   // parents
-  "First smile", "First steps", "First word", "First birthday", "First tooth",
+  'First smile',
+  'First steps',
+  'First word',
+  'First birthday',
+  'First tooth',
   // couple
-  "First date", "Anniversary", "Engaged", "Moved in together", "Wedding day",
+  'First date',
+  'Anniversary',
+  'Engaged',
+  'Moved in together',
+  'Wedding day',
   // family
-  "Family trip", "Birthday", "Holiday", "Graduation", "Reunion",
+  'Family trip',
+  'Birthday',
+  'Holiday',
+  'Graduation',
+  'Reunion',
   // friends
-  "Trip", "Party", "Concert", "Road trip",
+  'Trip',
+  'Party',
+  'Concert',
+  'Road trip',
   // caregiving
-  "Good day", "Doctor visit", "Treatment", "Recovery", "Milestone",
+  'Good day',
+  'Doctor visit',
+  'Treatment',
+  'Recovery',
+  'Milestone',
   // travel
-  "Arrived", "Best meal", "Hidden gem", "Adventure", "Last day",
+  'Arrived',
+  'Best meal',
+  'Hidden gem',
+  'Adventure',
+  'Last day',
   // solo
-  "Achievement", "New chapter", "Goal reached", "Reflection", "Memory",
+  'Achievement',
+  'New chapter',
+  'Goal reached',
+  'Reflection',
+  'Memory',
 ])
 
 /**
@@ -97,6 +127,6 @@ const KNOWN_MILESTONE_CHIPS = new Set<string>([
  * "custom" (free-form user text). Used to avoid sending PII in analytics
  * events while still tracking which milestones came from suggestions.
  */
-export function classifyMilestone(label: string): "suggested" | "custom" {
-  return KNOWN_MILESTONE_CHIPS.has(label.trim()) ? "suggested" : "custom"
+export function classifyMilestone(label: string): 'suggested' | 'custom' {
+  return KNOWN_MILESTONE_CHIPS.has(label.trim()) ? 'suggested' : 'custom'
 }

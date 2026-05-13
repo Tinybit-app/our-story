@@ -22,11 +22,11 @@ The wedge: Google Photos is built for one person. This is built for any meaningf
 
 ## Terminology
 
-| UI (users see) | Code / DB (internal) |
-|---|---|
-| Circle | Circle |
-| Create a Circle | Create a Circle |
-| Circle members | CircleMember |
+| UI (users see)  | Code / DB (internal) |
+| --------------- | -------------------- |
+| Circle          | Circle               |
+| Create a Circle | Create a Circle      |
+| Circle members  | CircleMember         |
 
 Both UI and code/DB now use "Circle" — this is not just a UX rename.
 
@@ -40,21 +40,22 @@ Upload → Add note → Share to circle timeline → Circle reacts
 
 ## Competitive Advantage
 
-| Advantage | Why it matters |
-|---|---|
-| Circle-first, not individual-first | Google Photos, iCloud, Amazon Photos are all individual-first. This is the only app built around a shared group narrative. |
-| Storytelling over storage | Notes, milestones, reactions turn photos into memories with context. |
-| Works for any meaningful group | Families, friend groups, couples, adult siblings, travel groups — no code changes needed. |
-| Privacy as a feature | No ads, no AI training, invite-only. Real selling point for any group sharing personal moments. |
-| Inclusive UX | Magic link login, view-only mode — designed for non-technical members. |
-| Emotional lock-in | 2 years of milestones, notes, reactions, time capsules = enormous switching cost. The strongest moat. |
-| Better than FamilyAlbum (free) | FamilyAlbum stores photos. Our Story stores meaning — notes, milestones, reactions, and time capsules FamilyAlbum doesn't have. |
+| Advantage                          | Why it matters                                                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Circle-first, not individual-first | Google Photos, iCloud, Amazon Photos are all individual-first. This is the only app built around a shared group narrative.      |
+| Storytelling over storage          | Notes, milestones, reactions turn photos into memories with context.                                                            |
+| Works for any meaningful group     | Families, friend groups, couples, adult siblings, travel groups — no code changes needed.                                       |
+| Privacy as a feature               | No ads, no AI training, invite-only. Real selling point for any group sharing personal moments.                                 |
+| Inclusive UX                       | Magic link login, view-only mode — designed for non-technical members.                                                          |
+| Emotional lock-in                  | 2 years of milestones, notes, reactions, time capsules = enormous switching cost. The strongest moat.                           |
+| Better than FamilyAlbum (free)     | FamilyAlbum stores photos. Our Story stores meaning — notes, milestones, reactions, and time capsules FamilyAlbum doesn't have. |
 
 ---
 
 ## Key Features
 
 ### Phase 1 (ship these)
+
 - Shared family timeline (photos + short videos)
 - **Quick note** — text-only memory, no photo required ("First word today: 'dada'")
 - **Batch upload** with per-item EXIF date detection and review UI before uploading
@@ -68,6 +69,7 @@ Upload → Add note → Share to circle timeline → Circle reacts
 - Invite email (Resend + React Email — emotionally crafted, not transactional)
 
 ### Phase 2
+
 - Albums & collections, search, memory date override
 - **Year in Review shareable card** — free for all tiers, generated client-side (canvas API); 9:16 format for Instagram Stories; public share URL with "Create your family's story →" CTA. This is the Spotify Wrapped acquisition mechanic — ships in Phase 2 because it's lightweight and drives organic growth from day one.
 - Voice memo (audio memory, max 60 seconds, server-side Whisper transcription)
@@ -81,6 +83,7 @@ Upload → Add note → Share to circle timeline → Circle reacts
 - Audit logging (Supabase audit logs + AWS CloudTrail)
 
 ### Phase 3 (growth features)
+
 - Guest contributor / event QR code
 - Time capsule ("open on Mia's 18th birthday")
 - Collaborative memory (one event, many contributors)
@@ -103,21 +106,21 @@ Upload → Add note → Share to circle timeline → Circle reacts
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Frontend | Nuxt |
-| UI library | shadcn-vue (Radix Vue + Tailwind — accessible, you own the code) |
-| Backend | Supabase (Auth, DB, Storage, Realtime) |
-| Mobile | Capacitor (iOS + Android) |
-| Email | Resend + React Email |
-| Payments | Stripe + Customer Portal |
-| Analytics | PostHog (self-hosted, privacy-first) |
-| Error tracking | Sentry |
-| Uptime | Better Uptime (1-min checks on `/api/health`) |
-| Rate limiting | Upstash Redis |
-| CI/CD | GitHub Actions + Vercel |
-| Hosting | our-story.tinybit.app |
-| Storage (Phase 3) | S3 + CloudFront + MediaConvert |
+| Layer             | Choice                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| Frontend          | Nuxt                                                             |
+| UI library        | shadcn-vue (Radix Vue + Tailwind — accessible, you own the code) |
+| Backend           | Supabase (Auth, DB, Storage, Realtime)                           |
+| Mobile            | Capacitor (iOS + Android)                                        |
+| Email             | Resend + React Email                                             |
+| Payments          | Stripe + Customer Portal                                         |
+| Analytics         | PostHog (self-hosted, privacy-first)                             |
+| Error tracking    | Sentry                                                           |
+| Uptime            | Better Uptime (1-min checks on `/api/health`)                    |
+| Rate limiting     | Upstash Redis                                                    |
+| CI/CD             | GitHub Actions + Vercel                                          |
+| Hosting           | our-story.tinybit.app                                            |
+| Storage (Phase 3) | S3 + CloudFront + MediaConvert                                   |
 
 ---
 
@@ -165,61 +168,63 @@ Feedback (user_id nullable, message, page, app_version — in-app submissions; d
 
 ## Key Architecture Decisions
 
-| Decision | Choice | Why |
-|---|---|---|
-| Storage quota | Per account | Prevents circle-spam exploit |
-| Media access | Signed URLs (1h expiry) | RLS protects DB, not files |
-| Timeline ordering | `memory_date` (not `created_at`) | Old photos insert at correct position |
-| Timeline loading | Cursor-based pagination + virtual scroll | Stable + performant at scale |
-| Auth primary | Magic link (no password) | Zero-friction for any user |
-| Auth secondary | Google OAuth | One-tap recovery if email lost |
-| View-only access | Stateless signed JWT | No account needed, revocable — a role, not an age assumption |
-| Guest uploads | `EventUploadToken` (UUID) | Auth without an account |
-| Input validation | zod on every POST/PATCH/DELETE route | No raw client input trusted |
-| Mobile Phase 1 | PWA (mobile-responsive web) | Invite-based growth — App Store not needed for first 200 users |
-| Mobile Phase 2 | Capacitor | Reuses Nuxt, native push + camera + background upload |
-| Live Photos (MVP) | Strip to JPEG | Simple, low storage |
-| Live Photos (Phase 2) | LivePhotosKit JS | Full motion support |
-| Storage (MVP→2) | Supabase Storage | RLS just works |
-| Storage (Phase 3) | S3 + CloudFront + MediaConvert | Video at scale |
-| Search | PostgreSQL tsvector + GIN | Zero extra infra |
-| Notifications | Supabase Realtime + FCM/APNs + Resend | In-app + push + email |
-| Deduplication | pHash + Hamming distance | Robust to compression/re-saves |
-| Backup | Supabase → S3 → Glacier | 3-location, 50-year guarantee |
-| E2EE | Opt-in per circle, Phase 3 | Breaks thumbnails/dedup/search if default — honest privacy policy covers Phase 1–2 |
-| Subscription model | Per account (owner pays) | One Stripe subscription per user; owner's tier determines their circles' features |
-| Year in Review | Phase 2: shareable card (free for all tiers, canvas API). Phase 3: full slideshow/video (Pro only — blurred preview for Free/Plus) | Free card is the Spotify Wrapped acquisition mechanic; Pro video is the upsell |
+| Decision              | Choice                                                                                                                             | Why                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Storage quota         | Per account                                                                                                                        | Prevents circle-spam exploit                                                       |
+| Media access          | Signed URLs (1h expiry)                                                                                                            | RLS protects DB, not files                                                         |
+| Timeline ordering     | `memory_date` (not `created_at`)                                                                                                   | Old photos insert at correct position                                              |
+| Timeline loading      | Cursor-based pagination + virtual scroll                                                                                           | Stable + performant at scale                                                       |
+| Auth primary          | Magic link (no password)                                                                                                           | Zero-friction for any user                                                         |
+| Auth secondary        | Google OAuth                                                                                                                       | One-tap recovery if email lost                                                     |
+| View-only access      | Stateless signed JWT                                                                                                               | No account needed, revocable — a role, not an age assumption                       |
+| Guest uploads         | `EventUploadToken` (UUID)                                                                                                          | Auth without an account                                                            |
+| Input validation      | zod on every POST/PATCH/DELETE route                                                                                               | No raw client input trusted                                                        |
+| Mobile Phase 1        | PWA (mobile-responsive web)                                                                                                        | Invite-based growth — App Store not needed for first 200 users                     |
+| Mobile Phase 2        | Capacitor                                                                                                                          | Reuses Nuxt, native push + camera + background upload                              |
+| Live Photos (MVP)     | Strip to JPEG                                                                                                                      | Simple, low storage                                                                |
+| Live Photos (Phase 2) | LivePhotosKit JS                                                                                                                   | Full motion support                                                                |
+| Storage (MVP→2)       | Supabase Storage                                                                                                                   | RLS just works                                                                     |
+| Storage (Phase 3)     | S3 + CloudFront + MediaConvert                                                                                                     | Video at scale                                                                     |
+| Search                | PostgreSQL tsvector + GIN                                                                                                          | Zero extra infra                                                                   |
+| Notifications         | Supabase Realtime + FCM/APNs + Resend                                                                                              | In-app + push + email                                                              |
+| Deduplication         | pHash + Hamming distance                                                                                                           | Robust to compression/re-saves                                                     |
+| Backup                | Supabase → S3 → Glacier                                                                                                            | 3-location, 50-year guarantee                                                      |
+| E2EE                  | Opt-in per circle, Phase 3                                                                                                         | Breaks thumbnails/dedup/search if default — honest privacy policy covers Phase 1–2 |
+| Subscription model    | Per account (owner pays)                                                                                                           | One Stripe subscription per user; owner's tier determines their circles' features  |
+| Year in Review        | Phase 2: shareable card (free for all tiers, canvas API). Phase 3: full slideshow/video (Pro only — blurred preview for Free/Plus) | Free card is the Spotify Wrapped acquisition mechanic; Pro video is the upsell     |
 
 ---
 
 ## Roles
 
-| Role | Key permissions |
-|---|---|
-| Owner | Billing, delete circle, transfer ownership |
-| Admin | Invite/remove members, delete any memory |
-| Member | Upload, comment, react, delete own memories |
-| Caregiver | Upload to family timeline (always family-visible), view family timeline, react (emoji only) — no comments, no private memories, no member list, no settings |
-| Platform admin | Unlimited storage (developer account, DB `platform_role` only — never client-exposed) |
+| Role           | Key permissions                                                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner          | Billing, delete circle, transfer ownership                                                                                                                  |
+| Admin          | Invite/remove members, delete any memory                                                                                                                    |
+| Member         | Upload, comment, react, delete own memories                                                                                                                 |
+| Caregiver      | Upload to family timeline (always family-visible), view family timeline, react (emoji only) — no comments, no private memories, no member list, no settings |
+| Platform admin | Unlimited storage (developer account, DB `platform_role` only — never client-exposed)                                                                       |
 
 ---
 
 ## Pricing Tiers
 
-| Plan | Price | Storage | Key unlock |
-|---|---|---|---|
-| Free | $0 | 5 GB | 1 circle owned, 10 members, basic timeline, milestones, albums, comments, reactions |
-| Plus | $4.99/mo | 50 GB | Unlimited circles owned, 20 members, search, On This Day, notification preferences, offline upload |
-| Pro | $9.99/mo | 500 GB | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review, priority support, voice/video reactions |
+| Plan | Price    | Storage | Key unlock                                                                                                                                  |
+| ---- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free | $0       | 5 GB    | 1 circle owned, 10 members, basic timeline, milestones, albums, comments, reactions                                                         |
+| Plus | $4.99/mo | 50 GB   | Unlimited circles owned, 20 members, search, On This Day, notification preferences, offline upload                                          |
+| Pro  | $9.99/mo | 500 GB  | Unlimited circles + members, time capsule, collaborative memory, pregnancy tracker, Year in Review, priority support, voice/video reactions |
 
-**Philosophy:** Sell the story, not the storage. Feature gates drive upgrades — users pay for what they *want*, not because they hit a byte limit.
+**Philosophy:** Sell the story, not the storage. Feature gates drive upgrades — users pay for what they _want_, not because they hit a byte limit.
 
 **Subscription model:** One subscription per user account. Owner's tier determines their circles' features. Members inherit circle-level features but their private storage is governed by their own tier.
 
 ### Free trial
+
 New circles get a **14-day Pro trial** starting on first memory upload. No credit card. DB-tracked (`Circle.trial_ends_at`). 3-day warning email before expiry. No Stripe subscription created until the user actively upgrades.
 
 ### Upgrade triggers
+
 - 11th member joins → "Upgrade to Plus"
 - Time capsule attempted → "Upgrade to Pro"
 - Collaborative memory on Free/Plus → "Upgrade to Pro"
@@ -227,11 +232,13 @@ New circles get a **14-day Pro trial** starting on first memory upload. No credi
 - Year in Review → blurred preview on Free/Plus → "Unlock your year"
 
 ### Secondary revenue (Phase 3)
+
 - Physical photo books / printed timelines ($20–60 one-time)
 - Year in Review video one-time purchase ($5–10) for Free/Plus
 - Extra storage add-on (+100 GB for $2/mo)
 
 ### Realistic MRR targets
+
 - 500 Plus + 0 Pro = $2,495/mo
 - 1,000 Plus + 200 Pro = $6,980/mo
 - 3,000 Plus + 500 Pro = $19,970/mo
@@ -262,25 +269,25 @@ New circles get a **14-day Pro trial** starting on first memory upload. No credi
 
 ## Performance Targets
 
-| Metric | Target |
-|---|---|
-| Timeline first image visible | < 1.0s on 4G |
-| Timeline LCP | < 2.5s on 4G |
-| Upload feedback visible | < 200ms after tap |
-| Memory open (lightbox) | < 300ms |
-| Push → app → memory | < 2s |
+| Metric                       | Target            |
+| ---------------------------- | ----------------- |
+| Timeline first image visible | < 1.0s on 4G      |
+| Timeline LCP                 | < 2.5s on 4G      |
+| Upload feedback visible      | < 200ms after tap |
+| Memory open (lightbox)       | < 300ms           |
+| Push → app → memory          | < 2s              |
 
 ---
 
 ## Testing Strategy
 
-| Layer | Tool | Priority |
-|---|---|---|
-| RLS policies | pgTAP | Highest — privacy breach risk |
-| Upload quota + Edge Functions | Vitest | Billing correctness |
-| Stripe webhook handlers | Vitest | Subscription state |
-| Invite token flow | Vitest | Acquisition path |
-| Critical E2E paths | Playwright | Onboarding + invite activation |
+| Layer                         | Tool       | Priority                       |
+| ----------------------------- | ---------- | ------------------------------ |
+| RLS policies                  | pgTAP      | Highest — privacy breach risk  |
+| Upload quota + Edge Functions | Vitest     | Billing correctness            |
+| Stripe webhook handlers       | Vitest     | Subscription state             |
+| Invite token flow             | Vitest     | Acquisition path               |
+| Critical E2E paths            | Playwright | Onboarding + invite activation |
 
 All tests run in CI on every PR. Broken RLS tests block merge.
 
@@ -288,14 +295,14 @@ All tests run in CI on every PR. Broken RLS tests block merge.
 
 ## Growth Strategy (priority order)
 
-| # | Mechanic | Type |
-|---|---|---|
-| 1 | On This Day notifications | Retention |
-| 2 | Beautiful invite email | Acquisition |
-| 3 | Invited member activation (upload in first session) | Retention |
-| 4 | Shareable memory cards (branded) | Viral |
-| 5 | Year in Review (shareable 9:16 card for Instagram Stories) | Viral |
-| 6 | Referral program (30-day Pro trial for referrer) | Acquisition |
+| #   | Mechanic                                                   | Type        |
+| --- | ---------------------------------------------------------- | ----------- |
+| 1   | On This Day notifications                                  | Retention   |
+| 2   | Beautiful invite email                                     | Acquisition |
+| 3   | Invited member activation (upload in first session)        | Retention   |
+| 4   | Shareable memory cards (branded)                           | Viral       |
+| 5   | Year in Review (shareable 9:16 card for Instagram Stories) | Viral       |
+| 6   | Referral program (30-day Pro trial for referrer)           | Acquisition |
 
 **Rule: nail retention (#1–3) before viral (#4–6).**
 
@@ -312,6 +319,7 @@ All tests run in CI on every PR. Broken RLS tests block merge.
 **Grandparent (view-only):** Click view-only link → No account needed → Swipe through memories (not infinite scroll) → Large heart button to react without account → "Join to participate →"
 
 ### Circle type picker (onboarding step)
+
 - 👶 New parents → baby milestone templates
 - 👫 Couples → relationship milestone templates
 - 👨‍👩‍👧‍👦 Family → general family templates
@@ -339,11 +347,11 @@ No paid ads, no Product Hunt, no press until retention is proven.
 
 ## Rollout Phases
 
-| Phase | Users | Target segment | Exit criteria |
-|---|---|---|---|
-| 1 | 0 → 50 | New parents | One external circle uses it weekly for 4 consecutive weeks |
-| 2 | 50 → 200 | All families, couples, adult siblings | 20+ paying circles, churn < 5%/mo |
-| 3 | 200+ | Friend groups, travel groups, any group | Organic signups exceed invited signups, net revenue positive |
+| Phase | Users    | Target segment                          | Exit criteria                                                |
+| ----- | -------- | --------------------------------------- | ------------------------------------------------------------ |
+| 1     | 0 → 50   | New parents                             | One external circle uses it weekly for 4 consecutive weeks   |
+| 2     | 50 → 200 | All families, couples, adult siblings   | 20+ paying circles, churn < 5%/mo                            |
+| 3     | 200+     | Friend groups, travel groups, any group | Organic signups exceed invited signups, net revenue positive |
 
 ---
 

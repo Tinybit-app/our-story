@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Triggered daily at 3am UTC via pg_cron:
 // SELECT cron.schedule(
@@ -11,18 +11,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 // );
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, content-type",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, content-type',
       },
     })
   }
 
   const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
   // Find users whose deletion grace period has expired (deleted_at > 30 days ago)
@@ -33,37 +33,40 @@ Deno.serve(async (req) => {
   const warnCutoffStart = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString()
 
   const { data: warningUsers } = await supabase
-    .from("user")
-    .select("email, first_name, locale, deletion_requested_at")
-    .not("deletion_requested_at", "is", null)
-    .lt("deletion_requested_at", warnCutoffEnd)
-    .gt("deletion_requested_at", warnCutoffStart)
+    .from('user')
+    .select('email, first_name, locale, deletion_requested_at')
+    .not('deletion_requested_at', 'is', null)
+    .lt('deletion_requested_at', warnCutoffEnd)
+    .gt('deletion_requested_at', warnCutoffStart)
 
-  const resendKey = Deno.env.get("RESEND_API_KEY")
-  const appUrl = Deno.env.get("APP_URL") ?? "https://our-story.tinybit.app"
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  const appUrl = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 
   for (const u of warningUsers ?? []) {
     if (!u.email) continue
     const purgeDate = new Date(u.deletion_requested_at)
     purgeDate.setDate(purgeDate.getDate() + 30)
-    const locale = u.locale ?? "en"
-    const formatted = purgeDate.toLocaleDateString(
-      locale === "zh-CN" ? "zh-CN" : "en",
-      { year: "numeric", month: "long", day: "numeric" }
-    )
-    const isCN = locale === "zh-CN"
-    const subject = isCN ? "你的账户将在 3 天后永久删除" : "Your account will be permanently deleted in 3 days"
+    const locale = u.locale ?? 'en'
+    const formatted = purgeDate.toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    const isCN = locale === 'zh-CN'
+    const subject = isCN
+      ? '你的账户将在 3 天后永久删除'
+      : 'Your account will be permanently deleted in 3 days'
     const body = isCN
-      ? `<p>你好，${u.first_name ?? ""}，</p><p>这是你最后取消删除的机会。你的账户将于 <strong>${formatted}</strong> 永久删除，届时所有数据将无法恢复。</p><a href="${appUrl}/settings/account">取消删除 →</a>`
-      : `<p>Hi ${u.first_name ?? ""},</p><p>This is your last chance to cancel. Your account will be permanently deleted on <strong>${formatted}</strong> and all your data will be gone forever.</p><a href="${appUrl}/settings/account">Cancel deletion →</a>`
+      ? `<p>你好，${u.first_name ?? ''}，</p><p>这是你最后取消删除的机会。你的账户将于 <strong>${formatted}</strong> 永久删除，届时所有数据将无法恢复。</p><a href="${appUrl}/settings/account">取消删除 →</a>`
+      : `<p>Hi ${u.first_name ?? ''},</p><p>This is your last chance to cancel. Your account will be permanently deleted on <strong>${formatted}</strong> and all your data will be gone forever.</p><a href="${appUrl}/settings/account">Cancel deletion →</a>`
 
     if (resendKey) {
       try {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            from: "Our Story <hello@our-story.tinybit.app>",
+            from: 'Our Story <hello@our-story.tinybit.app>',
             to: u.email,
             subject,
             html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;padding:40px 24px;background:#fffdf8;color:#1a1a1a;">${body}</div>`,
@@ -78,14 +81,14 @@ Deno.serve(async (req) => {
   }
 
   const { data: expiredUsers, error: fetchError } = await supabase
-    .from("user")
-    .select("id")
-    .not("deleted_at", "is", null)
-    .lt("deleted_at", cutoff)
+    .from('user')
+    .select('id')
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', cutoff)
 
   if (fetchError) {
-    console.error("[purge-deleted-users] fetch failed:", fetchError.message)
-    return Response.json({ error: "Failed to fetch expired users" }, { status: 500 })
+    console.error('[purge-deleted-users] fetch failed:', fetchError.message)
+    return Response.json({ error: 'Failed to fetch expired users' }, { status: 500 })
   }
 
   const purged: string[] = []
@@ -96,27 +99,27 @@ Deno.serve(async (req) => {
       //    Memories detached via keepContent (owner_user_id = NULL) are skipped —
       //    their files stay in place so the circle can keep them.
       const { data: ownedMemories } = await supabase
-        .from("memory")
-        .select("id")
-        .eq("owner_user_id", user.id)
+        .from('memory')
+        .select('id')
+        .eq('owner_user_id', user.id)
 
       const ownedMemoryIds = (ownedMemories ?? []).map((m: { id: string }) => m.id)
 
       if (ownedMemoryIds.length > 0) {
         const { data: media } = await supabase
-          .from("memorymedia")
-          .select("storage_path")
-          .in("memory_id", ownedMemoryIds)
+          .from('memorymedia')
+          .select('storage_path')
+          .in('memory_id', ownedMemoryIds)
 
         for (const obj of media ?? []) {
           await supabase.storage
-            .from("memories-private")
+            .from('memories-private')
             .remove([(obj as { storage_path: string }).storage_path])
         }
       }
 
       // 2. Hard delete User row (cascades to CircleMember, Memory where owner_user_id = user.id, AccountStorage, etc.)
-      await supabase.from("user").delete().eq("id", user.id)
+      await supabase.from('user').delete().eq('id', user.id)
 
       // 3. Delete the auth.users entry
       await supabase.auth.admin.deleteUser(user.id)
@@ -129,13 +132,13 @@ Deno.serve(async (req) => {
 
   // ── Hard-purge circles whose 30-day window has expired ─────
   const { data: expiredCircles, error: circleFetchError } = await supabase
-    .from("circle")
-    .select("id")
-    .not("deleted_at", "is", null)
-    .lt("deleted_at", cutoff)
+    .from('circle')
+    .select('id')
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', cutoff)
 
   if (circleFetchError) {
-    console.error("[purge-deleted-users] circle fetch failed:", circleFetchError.message)
+    console.error('[purge-deleted-users] circle fetch failed:', circleFetchError.message)
   }
 
   const purgedCircles: string[] = []
@@ -144,34 +147,34 @@ Deno.serve(async (req) => {
     try {
       // 1. Fetch all memory IDs for this circle
       const { data: memories } = await supabase
-        .from("memory")
-        .select("id")
-        .eq("circle_id", circle.id)
+        .from('memory')
+        .select('id')
+        .eq('circle_id', circle.id)
 
       const memoryIds = (memories ?? []).map((m: { id: string }) => m.id)
 
       // 2. Delete storage objects
       if (memoryIds.length > 0) {
         const { data: media } = await supabase
-          .from("memorymedia")
-          .select("storage_path")
-          .in("memory_id", memoryIds)
+          .from('memorymedia')
+          .select('storage_path')
+          .in('memory_id', memoryIds)
 
         for (const obj of media ?? []) {
           await supabase.storage
-            .from("memories-private")
+            .from('memories-private')
             .remove([(obj as { storage_path: string }).storage_path])
         }
 
         // 3. Delete memory rows (cascades to memorymedia, memorycomment, memoryreaction)
-        await supabase.from("memory").delete().in("id", memoryIds)
+        await supabase.from('memory').delete().in('id', memoryIds)
       }
 
       // 4. Delete CircleMember rows
-      await supabase.from("circlemember").delete().eq("circle_id", circle.id)
+      await supabase.from('circlemember').delete().eq('circle_id', circle.id)
 
       // 5. Delete the circle itself
-      await supabase.from("circle").delete().eq("id", circle.id)
+      await supabase.from('circle').delete().eq('id', circle.id)
 
       purgedCircles.push(circle.id)
     } catch (err) {

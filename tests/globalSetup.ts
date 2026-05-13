@@ -24,9 +24,11 @@ if (fs.existsSync(envPath)) {
 //   SUPABASE_KEY=<anon key>                 (or NUXT_PUBLIC_SUPABASE_KEY)
 //   SUPABASE_SERVICE_ROLE_KEY=<service role key>
 // Values for local dev are printed by `supabase status`.
-const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NUXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ?? process.env.NUXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.SUPABASE_KEY ?? process.env.NUXT_PUBLIC_SUPABASE_KEY ?? ''
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NUXT_SUPABASE_SECRET_KEY ?? ''
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NUXT_SUPABASE_SECRET_KEY ?? ''
 
 // Cookie name: sb-{hostname.split('.')[0]}-auth-token
 // For http://127.0.0.1:54321, hostname = '127.0.0.1', split('.')[0] = '127'
@@ -59,7 +61,9 @@ export default async function globalSetup(_config: FullConfig) {
   })
 
   if (!createRes.ok && createRes.status !== 422) {
-    throw new Error(`Failed to create E2E test user (${createRes.status}): ${await createRes.text()}`)
+    throw new Error(
+      `Failed to create E2E test user (${createRes.status}): ${await createRes.text()}`,
+    )
   }
 
   // Sign in via password grant to get a real session
@@ -73,7 +77,9 @@ export default async function globalSetup(_config: FullConfig) {
   })
 
   if (!tokenRes.ok) {
-    throw new Error(`Failed to sign in E2E test user (${tokenRes.status}): ${await tokenRes.text()}`)
+    throw new Error(
+      `Failed to sign in E2E test user (${tokenRes.status}): ${await tokenRes.text()}`,
+    )
   }
 
   const session = await tokenRes.json()

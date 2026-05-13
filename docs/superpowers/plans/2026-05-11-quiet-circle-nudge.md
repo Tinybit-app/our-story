@@ -15,11 +15,13 @@
 ## File Structure
 
 ### New
+
 - `unit/quietCircleNudgeEmail.test.ts` — TDD tests
 - `supabase/functions/send-quiet-circle-nudges/index.ts` — Edge Function
 - `supabase/functions/send-quiet-circle-nudges/quietCircleNudgeEmail.ts` — Deno mirror
 
 ### Modified
+
 - `server/utils/email.ts` — append `buildQuietCircleNudgeEmail`
 - `docs/build-plan.md` — mark 12.4 complete
 - `docs/design-spec.md` — cross-reference Hook 4
@@ -29,6 +31,7 @@
 ## Task 1: Email builder (TDD)
 
 **Files:**
+
 - Create: `unit/quietCircleNudgeEmail.test.ts`
 - Modify: `server/utils/email.ts`
 
@@ -37,76 +40,84 @@
 Create `unit/quietCircleNudgeEmail.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest"
-import { buildQuietCircleNudgeEmail } from "../server/utils/email"
+import { describe, it, expect } from 'vitest'
+import { buildQuietCircleNudgeEmail } from '../server/utils/email'
 
 const baseOpts = {
-  recipientFirstName: "Dao",
-  circleName: "The Smiths",
+  recipientFirstName: 'Dao',
+  circleName: 'The Smiths',
   nudgeCount: 1 as 1 | 2 | 3,
   daysSinceLastMemory: 15,
-  appUrl: "https://our-story.tinybit.app/timeline?circle=c1",
-  unsubscribeUrl: "https://our-story.tinybit.app/notification-settings",
-  locale: "en" as const,
+  appUrl: 'https://our-story.tinybit.app/timeline?circle=c1',
+  unsubscribeUrl: 'https://our-story.tinybit.app/notification-settings',
+  locale: 'en' as const,
 }
 
-describe("buildQuietCircleNudgeEmail — subject", () => {
-  it("count=1 mentions circle name and days", () => {
+describe('buildQuietCircleNudgeEmail — subject', () => {
+  it('count=1 mentions circle name and days', () => {
     const { subject } = buildQuietCircleNudgeEmail(baseOpts)
-    expect(subject).toContain("The Smiths")
+    expect(subject).toContain('The Smiths')
     expect(subject).toMatch(/quiet|days|15/i)
   })
 
   it("count=2 mentions 'a while'", () => {
     const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, nudgeCount: 2 })
-    expect(subject).toContain("The Smiths")
+    expect(subject).toContain('The Smiths')
     expect(subject.toLowerCase()).toMatch(/while|since/)
   })
 
   it("count=3 says 'last reminder'", () => {
     const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, nudgeCount: 3 })
     expect(subject.toLowerCase()).toMatch(/last reminder|final/)
-    expect(subject).toContain("The Smiths")
+    expect(subject).toContain('The Smiths')
   })
 
-  it("renders zh-CN subject with Chinese characters", () => {
-    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, locale: "zh-CN" })
+  it('renders zh-CN subject with Chinese characters', () => {
+    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, locale: 'zh-CN' })
     expect(subject).toMatch(/[一-鿿]/)
   })
 
-  it("renders fr subject (not English)", () => {
-    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, locale: "fr" })
+  it('renders fr subject (not English)', () => {
+    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, locale: 'fr' })
     expect(subject.toLowerCase()).not.toMatch(/^the smiths has been/)
   })
 })
 
-describe("buildQuietCircleNudgeEmail — body", () => {
-  it("count=1 has gentle tone", () => {
+describe('buildQuietCircleNudgeEmail — body', () => {
+  it('count=1 has gentle tone', () => {
     const { html } = buildQuietCircleNudgeEmail(baseOpts)
-    expect(html).toContain("Dao")
-    expect(html).toContain("15")
+    expect(html).toContain('Dao')
+    expect(html).toContain('15')
     // Gentle tone keyword check
     expect(html.toLowerCase()).toMatch(/quick note|keeps the story|even a/i)
   })
 
-  it("count=2 mentions photos piling up or similar firmer tone", () => {
-    const { html } = buildQuietCircleNudgeEmail({ ...baseOpts, nudgeCount: 2, daysSinceLastMemory: 30 })
+  it('count=2 mentions photos piling up or similar firmer tone', () => {
+    const { html } = buildQuietCircleNudgeEmail({
+      ...baseOpts,
+      nudgeCount: 2,
+      daysSinceLastMemory: 30,
+    })
     expect(html.toLowerCase()).toMatch(/pile up|phones|while/)
   })
 
   it("count=3 explicitly says it's the last nudge", () => {
-    const { html } = buildQuietCircleNudgeEmail({ ...baseOpts, nudgeCount: 3, daysSinceLastMemory: 45 })
+    const { html } = buildQuietCircleNudgeEmail({
+      ...baseOpts,
+      nudgeCount: 3,
+      daysSinceLastMemory: 45,
+    })
     expect(html.toLowerCase()).toMatch(/last nudge|won't (ask|badger)|here when you/)
   })
 
-  it("includes appUrl as CTA", () => {
+  it('includes appUrl as CTA', () => {
     const { html } = buildQuietCircleNudgeEmail(baseOpts)
-    expect(html).toContain("https://our-story.tinybit.app/timeline?circle=c1")
+    expect(html).toContain('https://our-story.tinybit.app/timeline?circle=c1')
   })
 
-  it("includes unsubscribe link", () => {
+  it('includes unsubscribe link', () => {
     const { html } = buildQuietCircleNudgeEmail(baseOpts)
-    expect(html).toContain("/notification-settings")
+    expect(html).toContain('/notification-settings')
   })
 })
 ```
@@ -132,20 +143,32 @@ export interface QuietCircleNudgeEmailOpts {
   daysSinceLastMemory: number
   appUrl: string
   unsubscribeUrl: string
-  locale: "en" | "zh-CN" | "fr"
+  locale: 'en' | 'zh-CN' | 'fr'
 }
 
-export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): { subject: string; html: string } {
-  const { recipientFirstName, circleName, nudgeCount, daysSinceLastMemory, appUrl, unsubscribeUrl, locale } = opts
+export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
+  subject: string
+  html: string
+} {
+  const {
+    recipientFirstName,
+    circleName,
+    nudgeCount,
+    daysSinceLastMemory,
+    appUrl,
+    unsubscribeUrl,
+    locale,
+  } = opts
 
   const subject = (() => {
-    if (locale === "zh-CN") {
+    if (locale === 'zh-CN') {
       if (nudgeCount === 1) return `「${circleName}」已经 ${daysSinceLastMemory} 天没有新动态了`
       if (nudgeCount === 2) return `「${circleName}」已经有一段时间没人上传了`
       return `最后一次提醒 — 「${circleName}」`
     }
-    if (locale === "fr") {
-      if (nudgeCount === 1) return `${circleName} est silencieux depuis ${daysSinceLastMemory} jours`
+    if (locale === 'fr') {
+      if (nudgeCount === 1)
+        return `${circleName} est silencieux depuis ${daysSinceLastMemory} jours`
       if (nudgeCount === 2) return `Cela fait un moment que personne n'a ajouté à ${circleName}`
       return `Dernier rappel — ${circleName}`
     }
@@ -154,39 +177,47 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): { s
     return `One last reminder — ${circleName}`
   })()
 
-  const greeting = locale === "zh-CN"
-    ? `你好 ${recipientFirstName}，`
-    : locale === "fr"
-      ? `Bonjour ${recipientFirstName},`
-      : `Hi ${recipientFirstName ?? "there"},`
+  const greeting =
+    locale === 'zh-CN'
+      ? `你好 ${recipientFirstName}，`
+      : locale === 'fr'
+        ? `Bonjour ${recipientFirstName},`
+        : `Hi ${recipientFirstName ?? 'there'},`
 
   const intro = (() => {
-    if (locale === "zh-CN") return `已经 ${daysSinceLastMemory} 天没有人在「${circleName}」添加新记忆了。`
-    if (locale === "fr") return `Cela fait ${daysSinceLastMemory} jours que personne n'a ajouté de souvenir à ${circleName}.`
+    if (locale === 'zh-CN')
+      return `已经 ${daysSinceLastMemory} 天没有人在「${circleName}」添加新记忆了。`
+    if (locale === 'fr')
+      return `Cela fait ${daysSinceLastMemory} jours que personne n'a ajouté de souvenir à ${circleName}.`
     return `It's been ${daysSinceLastMemory} days since anyone added a memory to ${circleName}.`
   })()
 
   const tone = (() => {
-    if (locale === "zh-CN") {
+    if (locale === 'zh-CN') {
       if (nudgeCount === 1) return `哪怕只是一条短短的文字记录，也能让故事活下去。`
       if (nudgeCount === 2) return `照片堆积在手机里。当你把它们放到这里，故事才真正存在。`
       return `这是最后一次提醒 — 我们不想打扰你。无论你是继续记录还是暂停一下，这个圈子随时为你保留着。`
     }
-    if (locale === "fr") {
+    if (locale === 'fr') {
       if (nudgeCount === 1) return `Même une petite note garde l'histoire vivante.`
-      if (nudgeCount === 2) return `Les photos s'accumulent sur les téléphones. L'histoire vit ici quand vous les ajoutez.`
+      if (nudgeCount === 2)
+        return `Les photos s'accumulent sur les téléphones. L'histoire vit ici quand vous les ajoutez.`
       return `C'est le dernier rappel — nous ne voulons pas vous embêter. Que vous continuiez à construire ou que vous fassiez une pause, ce cercle vous attendra.`
     }
     if (nudgeCount === 1) return `Even a quick note keeps the story alive.`
-    if (nudgeCount === 2) return `Photos pile up on phones. The story lives here when you put them in.`
+    if (nudgeCount === 2)
+      return `Photos pile up on phones. The story lives here when you put them in.`
     return `This is the last nudge — we don't want to badger you. Whether you keep building or pause, this circle is here when you're ready.`
   })()
 
-  const cta = locale === "zh-CN" ? "添加记忆 →" : locale === "fr" ? "Ajouter un souvenir →" : "Add a memory →"
+  const cta =
+    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
 
   const unsubscribe = (() => {
-    if (locale === "zh-CN") return `你收到此邮件是因为你是「${circleName}」的创建者。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
-    if (locale === "fr") return `Vous recevez ceci car vous êtes le propriétaire de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
+    if (locale === 'zh-CN')
+      return `你收到此邮件是因为你是「${circleName}」的创建者。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
+    if (locale === 'fr')
+      return `Vous recevez ceci car vous êtes le propriétaire de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
     return `You're receiving this because you're the owner of ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Manage email preferences</a>.`
   })()
 
@@ -220,17 +251,20 @@ git commit -m "feat(quiet-nudge): email builder for quiet-circle nudge (locale-a
 ## Task 2: Edge Function + Deno mirror
 
 **Files:**
+
 - Create: `supabase/functions/send-quiet-circle-nudges/quietCircleNudgeEmail.ts`
 - Create: `supabase/functions/send-quiet-circle-nudges/index.ts`
 
 - [ ] **Step 1: Create Deno mirror of email builder**
 
 Read `server/utils/email.ts` and find:
+
 1. The `layout()` helper (near top of file)
 2. The `primaryButton()` helper (near top of file)
 3. The `// Quiet Circle nudge email (12.4)` section with `QuietCircleNudgeEmailOpts` and `buildQuietCircleNudgeEmail`
 
 Create `supabase/functions/send-quiet-circle-nudges/quietCircleNudgeEmail.ts` with:
+
 - `layout()` (private, not exported)
 - `primaryButton()` (private, not exported)
 - `QuietCircleNudgeEmailOpts` interface (exported)
@@ -243,9 +277,9 @@ Verbatim copies. Reference pattern: `supabase/functions/send-first-month-recap/f
 Create `supabase/functions/send-quiet-circle-nudges/index.ts`:
 
 ```ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { buildQuietCircleNudgeEmail } from "./quietCircleNudgeEmail.ts"
-import webpush from "https://esm.sh/web-push@3.6.7"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { buildQuietCircleNudgeEmail } from './quietCircleNudgeEmail.ts'
+import webpush from 'https://esm.sh/web-push@3.6.7'
 
 // Triggered daily by pg_cron at 9am UTC.
 //
@@ -258,28 +292,28 @@ import webpush from "https://esm.sh/web-push@3.6.7"
 //   )$$
 // );
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://our-story.tinybit.app"
-const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY") ?? ""
-const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY") ?? ""
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:hello@our-story.tinybit.app"
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
+const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
+const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
+const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, content-type",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, content-type',
       },
     })
   }
 
   const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
   const now = Date.now()
@@ -288,17 +322,17 @@ Deno.serve(async (req) => {
 
   // Find candidate circles
   const { data: circles, error: circlesErr } = await supabase
-    .from("circle")
-    .select("id, name, last_memory_at, quiet_nudge_count")
-    .is("deleted_at", null)
-    .not("first_memory_at", "is", null)
-    .lt("last_memory_at", quietSince)
-    .lt("quiet_nudge_count", 3)
+    .from('circle')
+    .select('id, name, last_memory_at, quiet_nudge_count')
+    .is('deleted_at', null)
+    .not('first_memory_at', 'is', null)
+    .lt('last_memory_at', quietSince)
+    .lt('quiet_nudge_count', 3)
     .or(`quiet_nudge_last_sent_at.is.null,quiet_nudge_last_sent_at.lt.${lastSentBefore}`)
 
   if (circlesErr) {
-    console.error("[send-quiet-circle-nudges] circles query failed:", circlesErr.message)
-    return Response.json({ error: "circles query failed" }, { status: 500 })
+    console.error('[send-quiet-circle-nudges] circles query failed:', circlesErr.message)
+    return Response.json({ error: 'circles query failed' }, { status: 500 })
   }
 
   let sent = 0
@@ -309,10 +343,10 @@ Deno.serve(async (req) => {
     try {
       // 1. Find the owner
       const { data: ownerRow } = await supabase
-        .from("circlemember")
+        .from('circlemember')
         .select(`user_id, user!inner(id, email, first_name, locale, deletion_requested_at)`)
-        .eq("circle_id", c.id)
-        .eq("role", "owner")
+        .eq('circle_id', c.id)
+        .eq('role', 'owner')
         .maybeSingle()
       const owner = (ownerRow as any)?.user
       if (!owner || owner.deletion_requested_at || !owner.email) {
@@ -323,10 +357,12 @@ Deno.serve(async (req) => {
 
       // 2. Check NotificationPreference
       const { data: prefs } = await supabase
-        .from("notificationpreference")
-        .select("circle_muted, push_enabled, email_digest_frequency, quiet_hours_start, quiet_hours_end")
-        .eq("user_id", userId)
-        .eq("circle_id", c.id)
+        .from('notificationpreference')
+        .select(
+          'circle_muted, push_enabled, email_digest_frequency, quiet_hours_start, quiet_hours_end',
+        )
+        .eq('user_id', userId)
+        .eq('circle_id', c.id)
         .maybeSingle()
       if (prefs?.circle_muted) {
         skipped++
@@ -336,7 +372,7 @@ Deno.serve(async (req) => {
       // Calculate post-increment nudge count + days
       const nudgeCount = ((c.quiet_nudge_count ?? 0) + 1) as 1 | 2 | 3
       const daysSinceLastMemory = Math.floor(
-        (now - new Date(c.last_memory_at).getTime()) / (24 * 60 * 60 * 1000)
+        (now - new Date(c.last_memory_at).getTime()) / (24 * 60 * 60 * 1000),
       )
 
       const pushEnabled = prefs?.push_enabled !== false
@@ -347,11 +383,11 @@ Deno.serve(async (req) => {
       // 3. Try push first
       if (pushEnabled && !inQuiet) {
         const { data: subs } = await supabase
-          .from("pushsubscription")
-          .select("id, endpoint, p256dh, auth")
-          .eq("user_id", userId)
+          .from('pushsubscription')
+          .select('id, endpoint, p256dh, auth')
+          .eq('user_id', userId)
         if ((subs ?? []).length > 0 && VAPID_PUBLIC && VAPID_PRIVATE) {
-          const { title, body } = pushTextForCount(nudgeCount, owner.locale ?? "en")
+          const { title, body } = pushTextForCount(nudgeCount, owner.locale ?? 'en')
           const payload = JSON.stringify({
             title,
             body,
@@ -363,11 +399,11 @@ Deno.serve(async (req) => {
             try {
               await webpush.sendNotification(
                 { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-                payload
+                payload,
               )
             } catch (err: any) {
               if (err?.statusCode === 410 || err?.statusCode === 404) {
-                await supabase.from("pushsubscription").delete().eq("id", s.id)
+                await supabase.from('pushsubscription').delete().eq('id', s.id)
               }
             }
           }
@@ -377,18 +413,18 @@ Deno.serve(async (req) => {
 
       // 4. Fall back to email
       if (!delivered) {
-        if (prefs?.email_digest_frequency === "off") {
+        if (prefs?.email_digest_frequency === 'off') {
           skipped++
           continue
         }
         const { subject, html } = buildQuietCircleNudgeEmail({
-          recipientFirstName: owner.first_name ?? "",
+          recipientFirstName: owner.first_name ?? '',
           circleName: c.name,
           nudgeCount,
           daysSinceLastMemory,
           appUrl: `${APP_URL}/timeline?circle=${c.id}`,
           unsubscribeUrl: `${APP_URL}/notification-settings`,
-          locale: (owner.locale ?? "en") as "en" | "zh-CN" | "fr",
+          locale: (owner.locale ?? 'en') as 'en' | 'zh-CN' | 'fr',
         })
         await sendEmail(owner.email, subject, html)
         delivered = true
@@ -396,12 +432,12 @@ Deno.serve(async (req) => {
 
       // 5. Update counters
       await supabase
-        .from("circle")
+        .from('circle')
         .update({
           quiet_nudge_count: nudgeCount,
           quiet_nudge_last_sent_at: new Date().toISOString(),
         })
-        .eq("id", c.id)
+        .eq('id', c.id)
 
       sent++
     } catch (err) {
@@ -416,46 +452,56 @@ Deno.serve(async (req) => {
 function isInQuietHours(start: string | null | undefined, end: string | null | undefined): boolean {
   if (!start || !end) return false
   const now = new Date()
-  const hhmm = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`
+  const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
   if (start <= end) return hhmm >= start && hhmm < end
   return hhmm >= start || hhmm < end
 }
 
 function pushTextForCount(count: 1 | 2 | 3, locale: string): { title: string; body: string } {
-  if (locale === "zh-CN") {
-    if (count === 1) return { title: "你的故事有点安静了 🕰", body: "添加一条记忆让它继续吧 →" }
-    if (count === 2) return { title: "圈子在等你", body: "已经有一阵子了 — 这周添加点什么？" }
-    return { title: "最后一次提醒", body: "我们不会再打扰你了 — 添加一条记忆？" }
+  if (locale === 'zh-CN') {
+    if (count === 1) return { title: '你的故事有点安静了 🕰', body: '添加一条记忆让它继续吧 →' }
+    if (count === 2) return { title: '圈子在等你', body: '已经有一阵子了 — 这周添加点什么？' }
+    return { title: '最后一次提醒', body: '我们不会再打扰你了 — 添加一条记忆？' }
   }
-  if (locale === "fr") {
-    if (count === 1) return { title: "Votre histoire est silencieuse 🕰", body: "Ajoutez un souvenir pour la garder vivante →" }
-    if (count === 2) return { title: "Votre cercle attend", body: "Cela fait un moment — ajoutez quelque chose cette semaine ?" }
-    return { title: "Dernier rappel", body: "On ne vous embêtera plus — ajoutez un souvenir ?" }
+  if (locale === 'fr') {
+    if (count === 1)
+      return {
+        title: 'Votre histoire est silencieuse 🕰',
+        body: 'Ajoutez un souvenir pour la garder vivante →',
+      }
+    if (count === 2)
+      return {
+        title: 'Votre cercle attend',
+        body: 'Cela fait un moment — ajoutez quelque chose cette semaine ?',
+      }
+    return { title: 'Dernier rappel', body: 'On ne vous embêtera plus — ajoutez un souvenir ?' }
   }
-  if (count === 1) return { title: "Your story has been quiet 🕰", body: "Add a memory to keep it alive →" }
-  if (count === 2) return { title: "Your circle is waiting", body: "It's been a while — add something this week?" }
-  return { title: "One last reminder", body: "We won't ask again — add a memory?" }
+  if (count === 1)
+    return { title: 'Your story has been quiet 🕰', body: 'Add a memory to keep it alive →' }
+  if (count === 2)
+    return { title: 'Your circle is waiting', body: "It's been a while — add something this week?" }
+  return { title: 'One last reminder', body: "We won't ask again — add a memory?" }
 }
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  const resendKey = Deno.env.get("RESEND_API_KEY")
+  const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] quiet-nudge to ${to}: ${subject}`)
     return
   }
   try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: "Our Story <hello@our-story.tinybit.app>",
+        from: 'Our Story <hello@our-story.tinybit.app>',
         to,
         subject,
         html,
       }),
     })
   } catch (err) {
-    console.error("[send-quiet-circle-nudges] Resend send failed:", err)
+    console.error('[send-quiet-circle-nudges] Resend send failed:', err)
   }
 }
 ```
@@ -474,6 +520,7 @@ git commit -m "feat(quiet-nudge): send-quiet-circle-nudges Edge Function with De
 ## Task 3: Docs
 
 **Files:**
+
 - Modify: `docs/build-plan.md`
 - Modify: `docs/design-spec.md`
 

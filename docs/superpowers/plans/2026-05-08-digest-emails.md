@@ -15,16 +15,19 @@
 ## File Structure
 
 ### New
+
 - `supabase/migrations/028_circle_digest_tracking.sql` — `last_weekly_digest_sent_at`, `last_monthly_digest_sent_at`
 - `supabase/functions/send-digest/index.ts` — cron-invoked Edge Function
 - `supabase/functions/send-digest/digestEmail.ts` — Deno-shareable template logic (mirrored from `server/utils/email.ts` builders)
 - `unit/digestEmail.test.ts` — Vitest tests for builders
 
 ### Modified
+
 - `server/utils/email.ts` — add `buildWeeklyDigestEmail()` and `buildMonthlyDigestEmail()`. Pure functions, identical signature to existing builders, three locales each.
 - `unit/schema-compliance.test.ts` — verify migration 028 columns
 
 ### Why two copies of the email builder?
+
 Nitro server code imports from `npm` packages and uses `useRuntimeConfig()`; Deno Edge Function code can't import from Nitro. The pure template builder is duplicated in `supabase/functions/send-digest/digestEmail.ts` so the Edge Function can call it standalone. Both files contain identical pure functions — Vitest tests run against the Nitro version; the Deno copy is a 1:1 mirror committed alongside. Drift risk is low (these change rarely) and the alternative (extracting to a shared package) is heavy for ~150 lines.
 
 ---
@@ -32,6 +35,7 @@ Nitro server code imports from `npm` packages and uses `useRuntimeConfig()`; Den
 ## Task 1: Migration — Circle digest tracking columns
 
 **Files:**
+
 - Create: `supabase/migrations/028_circle_digest_tracking.sql`
 - Modify: `unit/schema-compliance.test.ts`
 
@@ -76,15 +80,15 @@ Expected: completes without errors; `pnpm db:test` still passes.
 In `unit/schema-compliance.test.ts`, append:
 
 ```ts
-describe("Step 12.1 — Circle digest tracking", () => {
-  const m028 = sql("028_circle_digest_tracking.sql")
+describe('Step 12.1 — Circle digest tracking', () => {
+  const m028 = sql('028_circle_digest_tracking.sql')
 
-  it("adds last_weekly_digest_sent_at column", () => {
-    expect(m028).toContain("last_weekly_digest_sent_at TIMESTAMPTZ")
+  it('adds last_weekly_digest_sent_at column', () => {
+    expect(m028).toContain('last_weekly_digest_sent_at TIMESTAMPTZ')
   })
 
-  it("adds last_monthly_digest_sent_at column", () => {
-    expect(m028).toContain("last_monthly_digest_sent_at TIMESTAMPTZ")
+  it('adds last_monthly_digest_sent_at column', () => {
+    expect(m028).toContain('last_monthly_digest_sent_at TIMESTAMPTZ')
   })
 })
 ```
@@ -110,6 +114,7 @@ git commit -m "feat(digest): add Circle digest tracking columns"
 ## Task 2: Email template builders (testable side)
 
 **Files:**
+
 - Modify: `server/utils/email.ts`
 - Create: `unit/digestEmail.test.ts`
 
@@ -118,99 +123,123 @@ git commit -m "feat(digest): add Circle digest tracking columns"
 Create `unit/digestEmail.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest"
-import { buildWeeklyDigestEmail, buildMonthlyDigestEmail } from "../server/utils/email"
+import { describe, it, expect } from 'vitest'
+import { buildWeeklyDigestEmail, buildMonthlyDigestEmail } from '../server/utils/email'
 
 const baseOpts = {
-  recipientFirstName: "Dao",
-  circleName: "The Smiths",
+  recipientFirstName: 'Dao',
+  circleName: 'The Smiths',
   childName: null,
   childAge: null,
   memories: [
-    { id: "m1", note: null, milestoneLabel: null, thumbnailUrl: "https://example.com/1.jpg", isVideo: false },
+    {
+      id: 'm1',
+      note: null,
+      milestoneLabel: null,
+      thumbnailUrl: 'https://example.com/1.jpg',
+      isVideo: false,
+    },
   ],
   totalCount: 1,
-  appUrl: "https://our-story.tinybit.app/timeline?circle=c1",
-  unsubscribeUrl: "https://our-story.tinybit.app/notification-settings",
-  locale: "en" as const,
+  appUrl: 'https://our-story.tinybit.app/timeline?circle=c1',
+  unsubscribeUrl: 'https://our-story.tinybit.app/notification-settings',
+  locale: 'en' as const,
 }
 
-describe("buildWeeklyDigestEmail — subject line", () => {
-  it("uses circle name when no child", () => {
+describe('buildWeeklyDigestEmail — subject line', () => {
+  it('uses circle name when no child', () => {
     const { subject } = buildWeeklyDigestEmail({ ...baseOpts, totalCount: 5 })
-    expect(subject).toContain("The Smiths")
-    expect(subject).toContain("5")
+    expect(subject).toContain('The Smiths')
+    expect(subject).toContain('5')
     expect(subject).toMatch(/week/i)
   })
 
-  it("uses child name when child exists", () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, childName: "Mia", totalCount: 3 })
-    expect(subject).toContain("Mia")
-    expect(subject).toContain("3")
+  it('uses child name when child exists', () => {
+    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, childName: 'Mia', totalCount: 3 })
+    expect(subject).toContain('Mia')
+    expect(subject).toContain('3')
   })
 
-  it("singularises 1 memory", () => {
+  it('singularises 1 memory', () => {
     const { subject } = buildWeeklyDigestEmail({ ...baseOpts, totalCount: 1 })
     expect(subject).toMatch(/1 (new )?memory\b/i)
   })
 
-  it("renders zh-CN", () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: "zh-CN", totalCount: 4 })
-    expect(subject).toMatch(/[一-鿿]/)  // contains Chinese chars
+  it('renders zh-CN', () => {
+    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: 'zh-CN', totalCount: 4 })
+    expect(subject).toMatch(/[一-鿿]/) // contains Chinese chars
   })
 
-  it("renders fr", () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: "fr", totalCount: 4 })
-    expect(subject.toLowerCase()).not.toMatch(/^the smiths added/)  // not English
+  it('renders fr', () => {
+    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: 'fr', totalCount: 4 })
+    expect(subject.toLowerCase()).not.toMatch(/^the smiths added/) // not English
   })
 })
 
-describe("buildMonthlyDigestEmail — subject line", () => {
-  it("uses month name when no child", () => {
+describe('buildMonthlyDigestEmail — subject line', () => {
+  it('uses month name when no child', () => {
     const { subject } = buildMonthlyDigestEmail({ ...baseOpts, totalCount: 12 })
-    expect(subject).toContain("The Smiths")
-    expect(subject).toMatch(/[A-Z][a-z]+/)  // some month name capitalised
+    expect(subject).toContain('The Smiths')
+    expect(subject).toMatch(/[A-Z][a-z]+/) // some month name capitalised
   })
 
-  it("uses child name when child exists", () => {
-    const { subject } = buildMonthlyDigestEmail({ ...baseOpts, childName: "Mia", totalCount: 12 })
-    expect(subject).toContain("Mia")
+  it('uses child name when child exists', () => {
+    const { subject } = buildMonthlyDigestEmail({ ...baseOpts, childName: 'Mia', totalCount: 12 })
+    expect(subject).toContain('Mia')
   })
 })
 
-describe("digest body — content", () => {
-  it("renders all 3 memory thumbnails as deep links", () => {
+describe('digest body — content', () => {
+  it('renders all 3 memory thumbnails as deep links', () => {
     const { html } = buildWeeklyDigestEmail({
       ...baseOpts,
       memories: [
-        { id: "m1", note: null, milestoneLabel: null, thumbnailUrl: "https://example.com/1.jpg", isVideo: false },
-        { id: "m2", note: null, milestoneLabel: null, thumbnailUrl: "https://example.com/2.jpg", isVideo: false },
-        { id: "m3", note: null, milestoneLabel: null, thumbnailUrl: "https://example.com/3.jpg", isVideo: false },
+        {
+          id: 'm1',
+          note: null,
+          milestoneLabel: null,
+          thumbnailUrl: 'https://example.com/1.jpg',
+          isVideo: false,
+        },
+        {
+          id: 'm2',
+          note: null,
+          milestoneLabel: null,
+          thumbnailUrl: 'https://example.com/2.jpg',
+          isVideo: false,
+        },
+        {
+          id: 'm3',
+          note: null,
+          milestoneLabel: null,
+          thumbnailUrl: 'https://example.com/3.jpg',
+          isVideo: false,
+        },
       ],
       totalCount: 3,
     })
-    expect(html).toContain("https://example.com/1.jpg")
-    expect(html).toContain("https://example.com/2.jpg")
-    expect(html).toContain("https://example.com/3.jpg")
-    expect(html).toContain("circle=c1")
+    expect(html).toContain('https://example.com/1.jpg')
+    expect(html).toContain('https://example.com/2.jpg')
+    expect(html).toContain('https://example.com/3.jpg')
+    expect(html).toContain('circle=c1')
   })
 
-  it("includes child name and age when set", () => {
+  it('includes child name and age when set', () => {
     const { html } = buildWeeklyDigestEmail({
       ...baseOpts,
-      childName: "Mia",
-      childAge: "8 months",
+      childName: 'Mia',
+      childAge: '8 months',
     })
-    expect(html).toContain("Mia")
-    expect(html).toContain("8 months")
+    expect(html).toContain('Mia')
+    expect(html).toContain('8 months')
   })
 
-  it("contains unsubscribe link to /notification-settings", () => {
+  it('contains unsubscribe link to /notification-settings', () => {
     const { html } = buildWeeklyDigestEmail(baseOpts)
-    expect(html).toContain("/notification-settings")
+    expect(html).toContain('/notification-settings')
   })
 
-  it("contains main CTA linking to circle timeline", () => {
+  it('contains main CTA linking to circle timeline', () => {
     const { html } = buildWeeklyDigestEmail(baseOpts)
     expect(html).toContain('href="https://our-story.tinybit.app/timeline?circle=c1"')
   })
@@ -246,51 +275,68 @@ export interface DigestEmailOpts {
   childAge: string | null
   memories: DigestMemoryItem[]
   totalCount: number
-  appUrl: string         // /timeline?circle=<id>
+  appUrl: string // /timeline?circle=<id>
   unsubscribeUrl: string // /notification-settings
-  locale: "en" | "zh-CN" | "fr"
+  locale: 'en' | 'zh-CN' | 'fr'
 }
 
-function digestBody(opts: DigestEmailOpts, periodLabel: { en: string; zh: string; fr: string }): string {
-  const { recipientFirstName, circleName, childName, childAge, memories, totalCount, appUrl, unsubscribeUrl, locale } = opts
+function digestBody(
+  opts: DigestEmailOpts,
+  periodLabel: { en: string; zh: string; fr: string },
+): string {
+  const {
+    recipientFirstName,
+    circleName,
+    childName,
+    childAge,
+    memories,
+    totalCount,
+    appUrl,
+    unsubscribeUrl,
+    locale,
+  } = opts
 
   const greetings = {
-    en: `Hi ${recipientFirstName ?? "there"},`,
-    "zh-CN": `你好 ${recipientFirstName ?? ""}，`,
-    fr: `Bonjour ${recipientFirstName ?? ""},`,
+    en: `Hi ${recipientFirstName ?? 'there'},`,
+    'zh-CN': `你好 ${recipientFirstName ?? ''}，`,
+    fr: `Bonjour ${recipientFirstName ?? ''},`,
   }
   const intro = {
-    en: `${circleName} shared ${totalCount} new memor${totalCount === 1 ? "y" : "ies"} ${periodLabel.en}.`,
-    "zh-CN": `${circleName}${periodLabel.zh}分享了 ${totalCount} 条新回忆。`,
-    fr: `${circleName} a partagé ${totalCount} nouveau${totalCount === 1 ? "" : "x"} souvenir${totalCount === 1 ? "" : "s"} ${periodLabel.fr}.`,
+    en: `${circleName} shared ${totalCount} new memor${totalCount === 1 ? 'y' : 'ies'} ${periodLabel.en}.`,
+    'zh-CN': `${circleName}${periodLabel.zh}分享了 ${totalCount} 条新回忆。`,
+    fr: `${circleName} a partagé ${totalCount} nouveau${totalCount === 1 ? '' : 'x'} souvenir${totalCount === 1 ? '' : 's'} ${periodLabel.fr}.`,
   }
   const cta = {
-    en: "Open Our Story to react ❤️",
-    "zh-CN": "打开 Our Story 表达喜欢 ❤️",
-    fr: "Ouvrir Our Story pour réagir ❤️",
+    en: 'Open Our Story to react ❤️',
+    'zh-CN': '打开 Our Story 表达喜欢 ❤️',
+    fr: 'Ouvrir Our Story pour réagir ❤️',
   }
   const unsubscribe = {
     en: `You're receiving this because you're a member of ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Manage email preferences</a>.`,
-    "zh-CN": `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`,
+    'zh-CN': `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`,
     fr: `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`,
   }
 
   const heroMemory = memories[0]
   const restMemories = memories.slice(1, 6)
 
-  const childLine = childName && childAge
-    ? `<p style="font-size:13px;color:#888;margin:0 0 16px;text-align:center;">${childName} · ${childAge}</p>`
-    : ""
+  const childLine =
+    childName && childAge
+      ? `<p style="font-size:13px;color:#888;margin:0 0 16px;text-align:center;">${childName} · ${childAge}</p>`
+      : ''
 
   const heroImg = heroMemory
     ? `<a href="${appUrl}&memory=${heroMemory.id}" style="display:block;margin:0 0 24px;"><img src="${heroMemory.thumbnailUrl}" style="width:100%;border-radius:12px;display:block;" alt="" /></a>`
-    : ""
+    : ''
 
   const grid = restMemories.length
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:0 0 24px;"><tr>${restMemories.map(m =>
-        `<td style="padding:2px;width:33.33%;"><a href="${appUrl}&memory=${m.id}"><img src="${m.thumbnailUrl}" style="width:100%;border-radius:6px;display:block;" alt="" /></a></td>`
-      ).join("")}</tr></table>`
-    : ""
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:0 0 24px;"><tr>${restMemories
+        .map(
+          (m) =>
+            `<td style="padding:2px;width:33.33%;"><a href="${appUrl}&memory=${m.id}"><img src="${m.thumbnailUrl}" style="width:100%;border-radius:6px;display:block;" alt="" /></a></td>`,
+        )
+        .join('')}</tr></table>`
+    : ''
 
   return `
     <p style="font-size:15px;color:#333;margin:0 0 16px;">${greetings[locale]}</p>
@@ -307,22 +353,22 @@ export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string
   const { circleName, childName, totalCount, locale } = opts
 
   const subject = (() => {
-    if (locale === "zh-CN") {
+    if (locale === 'zh-CN') {
       return childName
         ? `${childName}本周 — ${totalCount} 条新回忆`
         : `${circleName}本周新增 ${totalCount} 条回忆`
     }
-    if (locale === "fr") {
+    if (locale === 'fr') {
       return childName
-        ? `${childName} cette semaine — ${totalCount} nouveau${totalCount === 1 ? "" : "x"} souvenir${totalCount === 1 ? "" : "s"}`
-        : `${circleName} a ajouté ${totalCount} souvenir${totalCount === 1 ? "" : "s"} cette semaine`
+        ? `${childName} cette semaine — ${totalCount} nouveau${totalCount === 1 ? '' : 'x'} souvenir${totalCount === 1 ? '' : 's'}`
+        : `${circleName} a ajouté ${totalCount} souvenir${totalCount === 1 ? '' : 's'} cette semaine`
     }
     return childName
-      ? `${childName} this week — ${totalCount} new memor${totalCount === 1 ? "y" : "ies"}`
-      : `${circleName} added ${totalCount} memor${totalCount === 1 ? "y" : "ies"} this week`
+      ? `${childName} this week — ${totalCount} new memor${totalCount === 1 ? 'y' : 'ies'}`
+      : `${circleName} added ${totalCount} memor${totalCount === 1 ? 'y' : 'ies'} this week`
   })()
 
-  const periodLabel = { en: "this week", zh: "本周", fr: "cette semaine" }
+  const periodLabel = { en: 'this week', zh: '本周', fr: 'cette semaine' }
   return { subject, html: layout(digestBody(opts, periodLabel)) }
 }
 
@@ -331,29 +377,29 @@ export function buildMonthlyDigestEmail(opts: DigestEmailOpts): { subject: strin
 
   // Use the previous month name (the digest covers the trailing 30 days but is sent on the 1st)
   const lastMonth = new Date()
-  lastMonth.setDate(0)  // sets to last day of previous month
+  lastMonth.setDate(0) // sets to last day of previous month
   const monthName = lastMonth.toLocaleString(
-    locale === "zh-CN" ? "zh-CN" : locale === "fr" ? "fr" : "en",
-    { month: "long" }
+    locale === 'zh-CN' ? 'zh-CN' : locale === 'fr' ? 'fr' : 'en',
+    { month: 'long' },
   )
 
   const subject = (() => {
-    if (locale === "zh-CN") {
+    if (locale === 'zh-CN') {
       return childName
         ? `${childName}的${monthName} — ${totalCount} 条回忆`
         : `${circleName}的${monthName}回忆`
     }
-    if (locale === "fr") {
+    if (locale === 'fr') {
       return childName
-        ? `${monthName} de ${childName} — ${totalCount} souvenir${totalCount === 1 ? "" : "s"}`
+        ? `${monthName} de ${childName} — ${totalCount} souvenir${totalCount === 1 ? '' : 's'}`
         : `Les souvenirs de ${monthName} — ${circleName}`
     }
     return childName
-      ? `${childName}'s ${monthName} — ${totalCount} memor${totalCount === 1 ? "y" : "ies"}`
+      ? `${childName}'s ${monthName} — ${totalCount} memor${totalCount === 1 ? 'y' : 'ies'}`
       : `${circleName}'s memories from ${monthName}`
   })()
 
-  const periodLabel = { en: "this month", zh: "本月", fr: "ce mois-ci" }
+  const periodLabel = { en: 'this month', zh: '本月', fr: 'ce mois-ci' }
   return { subject, html: layout(digestBody(opts, periodLabel)) }
 }
 ```
@@ -380,6 +426,7 @@ git commit -m "feat(digest): add weekly/monthly digest email builders"
 ## Task 3: Edge Function — `send-digest`
 
 **Files:**
+
 - Create: `supabase/functions/send-digest/index.ts`
 - Create: `supabase/functions/send-digest/digestEmail.ts`
 
@@ -423,7 +470,7 @@ export interface DigestEmailOpts {
   totalCount: number
   appUrl: string
   unsubscribeUrl: string
-  locale: "en" | "zh-CN" | "fr"
+  locale: 'en' | 'zh-CN' | 'fr'
 }
 
 // PASTE the exact bodies of digestBody, buildWeeklyDigestEmail, buildMonthlyDigestEmail
@@ -437,51 +484,58 @@ export interface DigestEmailOpts {
 Create `supabase/functions/send-digest/index.ts`:
 
 ```ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { buildWeeklyDigestEmail, buildMonthlyDigestEmail, type DigestEmailOpts } from "./digestEmail.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import {
+  buildWeeklyDigestEmail,
+  buildMonthlyDigestEmail,
+  type DigestEmailOpts,
+} from './digestEmail.ts'
 
 // Triggered by pg_cron — see migration 028 for schedule definitions.
 // curl -X POST '<project-url>/functions/v1/send-digest?frequency=weekly' \
 //   -H 'Authorization: Bearer <service-role-key>'
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://our-story.tinybit.app"
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, content-type",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, content-type',
       },
     })
   }
 
   const url = new URL(req.url)
-  const frequency = url.searchParams.get("frequency")
-  if (frequency !== "weekly" && frequency !== "monthly") {
+  const frequency = url.searchParams.get('frequency')
+  if (frequency !== 'weekly' && frequency !== 'monthly') {
     return Response.json({ error: "frequency must be 'weekly' or 'monthly'" }, { status: 400 })
   }
 
   const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
-  const periodDays = frequency === "weekly" ? 7 : 30
-  const idempotencyDays = frequency === "weekly" ? 6 : 25
-  const idempotencyCutoff = new Date(Date.now() - idempotencyDays * 24 * 60 * 60 * 1000).toISOString()
+  const periodDays = frequency === 'weekly' ? 7 : 30
+  const idempotencyDays = frequency === 'weekly' ? 6 : 25
+  const idempotencyCutoff = new Date(
+    Date.now() - idempotencyDays * 24 * 60 * 60 * 1000,
+  ).toISOString()
   const periodStart = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString()
-  const tracker = frequency === "weekly" ? "last_weekly_digest_sent_at" : "last_monthly_digest_sent_at"
+  const tracker =
+    frequency === 'weekly' ? 'last_weekly_digest_sent_at' : 'last_monthly_digest_sent_at'
 
   // Find candidate circles (not soft-deleted, not sent recently)
   const { data: circles, error: circlesErr } = await supabase
-    .from("circle")
+    .from('circle')
     .select(`id, name, ${tracker}`)
-    .is("deleted_at", null)
+    .is('deleted_at', null)
 
   if (circlesErr) {
-    console.error("[send-digest] circles query failed:", circlesErr.message)
-    return Response.json({ error: "circles query failed" }, { status: 500 })
+    console.error('[send-digest] circles query failed:', circlesErr.message)
+    return Response.json({ error: 'circles query failed' }, { status: 500 })
   }
 
   let sent = 0
@@ -500,11 +554,11 @@ Deno.serve(async (req) => {
       // (Spec mentions "best photo by reaction count" — that's a Phase 2 refinement;
       // for Phase 1, recency works fine and avoids needing a custom RPC.)
       const { data: memories } = await supabase
-        .from("memory")
-        .select("id, note, milestone_label, memorymedia(storage_path, media_type)")
-        .eq("circle_id", c.id)
-        .gte("created_at", periodStart)
-        .order("created_at", { ascending: false })
+        .from('memory')
+        .select('id, note, milestone_label, memorymedia(storage_path, media_type)')
+        .eq('circle_id', c.id)
+        .gte('created_at', periodStart)
+        .order('created_at', { ascending: false })
         .limit(6)
       const mems = memories ?? []
 
@@ -514,30 +568,32 @@ Deno.serve(async (req) => {
       }
 
       // Sign thumbnail URLs (7-day TTL — matches typical email open window)
-      const memoryItems = await Promise.all(mems.map(async (m: any) => {
-        const media = m.memorymedia?.[0] ?? null
-        let thumbnailUrl = ""
-        if (media?.storage_path) {
-          const { data: signed } = await supabase.storage
-            .from("memories-private")
-            .createSignedUrl(media.storage_path, 7 * 24 * 60 * 60)
-          thumbnailUrl = signed?.signedUrl ?? ""
-        }
-        return {
-          id: m.id,
-          note: m.note ?? null,
-          milestoneLabel: m.milestone_label ?? null,
-          thumbnailUrl,
-          isVideo: media?.media_type === "video",
-        }
-      }))
+      const memoryItems = await Promise.all(
+        mems.map(async (m: any) => {
+          const media = m.memorymedia?.[0] ?? null
+          let thumbnailUrl = ''
+          if (media?.storage_path) {
+            const { data: signed } = await supabase.storage
+              .from('memories-private')
+              .createSignedUrl(media.storage_path, 7 * 24 * 60 * 60)
+            thumbnailUrl = signed?.signedUrl ?? ''
+          }
+          return {
+            id: m.id,
+            note: m.note ?? null,
+            milestoneLabel: m.milestone_label ?? null,
+            thumbnailUrl,
+            isVideo: media?.media_type === 'video',
+          }
+        }),
+      )
 
       // Optional: child name + age for the digest period midpoint
       const { data: children } = await supabase
-        .from("childprofile")
-        .select("name, date_of_birth")
-        .eq("circle_id", c.id)
-        .order("created_at", { ascending: true })
+        .from('childprofile')
+        .select('name, date_of_birth')
+        .eq('circle_id', c.id)
+        .order('created_at', { ascending: true })
         .limit(1)
       const child = children?.[0] ?? null
       const periodMidpoint = new Date(Date.now() - (periodDays / 2) * 24 * 60 * 60 * 1000)
@@ -545,21 +601,25 @@ Deno.serve(async (req) => {
 
       // Recipients — joined to NotificationPreference, filtered by frequency match
       const { data: recipients } = await supabase
-        .from("circlemember")
-        .select(`
+        .from('circlemember')
+        .select(
+          `
           user_id,
           user!inner(id, email, first_name, locale, deletion_requested_at),
           notificationpreference(circle_muted, email_digest_frequency)
-        `)
-        .eq("circle_id", c.id)
+        `,
+        )
+        .eq('circle_id', c.id)
 
       const eligible = (recipients ?? []).filter((row: any) => {
         const u = row.user
         if (!u || u.deletion_requested_at) return false
         if (!u.email) return false
-        const np = Array.isArray(row.notificationpreference) ? row.notificationpreference[0] : row.notificationpreference
+        const np = Array.isArray(row.notificationpreference)
+          ? row.notificationpreference[0]
+          : row.notificationpreference
         if (np?.circle_muted) return false
-        const userFrequency = np?.email_digest_frequency ?? "monthly"
+        const userFrequency = np?.email_digest_frequency ?? 'monthly'
         return userFrequency === frequency
       })
 
@@ -572,7 +632,7 @@ Deno.serve(async (req) => {
       for (const row of eligible) {
         const u = (row as any).user
         const opts: DigestEmailOpts = {
-          recipientFirstName: u.first_name ?? "",
+          recipientFirstName: u.first_name ?? '',
           circleName: c.name,
           childName: child?.name ?? null,
           childAge,
@@ -580,17 +640,19 @@ Deno.serve(async (req) => {
           totalCount: memoryItems.length,
           appUrl: `${APP_URL}/timeline?circle=${c.id}`,
           unsubscribeUrl: `${APP_URL}/notification-settings`,
-          locale: (u.locale as "en" | "zh-CN" | "fr") ?? "en",
+          locale: (u.locale as 'en' | 'zh-CN' | 'fr') ?? 'en',
         }
-        const { subject, html } = frequency === "weekly"
-          ? buildWeeklyDigestEmail(opts)
-          : buildMonthlyDigestEmail(opts)
+        const { subject, html } =
+          frequency === 'weekly' ? buildWeeklyDigestEmail(opts) : buildMonthlyDigestEmail(opts)
 
         await sendEmail(u.email, subject, html)
       }
 
       // Idempotency: mark sent
-      await supabase.from("circle").update({ [tracker]: new Date().toISOString() }).eq("id", c.id)
+      await supabase
+        .from('circle')
+        .update({ [tracker]: new Date().toISOString() })
+        .eq('id', c.id)
       sent++
     } catch (err) {
       console.error(`[send-digest] failed for circle ${c.id}:`, err)
@@ -605,17 +667,17 @@ Deno.serve(async (req) => {
 // ─────────────────────────────────────────────────────────────
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  const resendKey = Deno.env.get("RESEND_API_KEY")
+  const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] digest email to ${to}: ${subject}`)
     return
   }
   try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: "Our Story <hello@our-story.tinybit.app>",
+        from: 'Our Story <hello@our-story.tinybit.app>',
         to,
         subject,
         html,
@@ -630,12 +692,13 @@ function computeAge(dob: string, at: Date): string {
   // Mirrors useBabyAge composable's logic (basic version — months/years only)
   const birth = new Date(dob)
   const months = (at.getFullYear() - birth.getFullYear()) * 12 + (at.getMonth() - birth.getMonth())
-  if (months < 1) return "newborn"
-  if (months < 12) return `${months} month${months === 1 ? "" : "s"}`
+  if (months < 1) return 'newborn'
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'}`
   const years = Math.floor(months / 12)
   const remMonths = months % 12
-  if (years < 2 && remMonths > 0) return `${years} year, ${remMonths} month${remMonths === 1 ? "" : "s"}`
-  return `${years} year${years === 1 ? "" : "s"}`
+  if (years < 2 && remMonths > 0)
+    return `${years} year, ${remMonths} month${remMonths === 1 ? '' : 's'}`
+  return `${years} year${years === 1 ? '' : 's'}`
 }
 ```
 
@@ -669,6 +732,7 @@ git commit -m "feat(digest): send-digest Edge Function with frequency routing"
 ## Task 4: Build plan + design spec docs
 
 **Files:**
+
 - Modify: `docs/build-plan.md`
 - Modify: `docs/design-spec.md`
 

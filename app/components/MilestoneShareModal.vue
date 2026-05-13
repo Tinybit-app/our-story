@@ -1,55 +1,68 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+    <div
+      class="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
+    >
       <!-- Backdrop -->
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
 
       <!-- Sheet -->
-      <div class="relative bg-background w-full sm:max-w-sm rounded-t-[24px] sm:rounded-[24px] shadow-2xl overflow-hidden">
+      <div
+        class="relative w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl sm:max-w-sm sm:rounded-[24px]"
+      >
         <!-- Accent stripe -->
         <div class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60" />
 
-        <div class="px-5 pt-4 pb-5">
+        <div class="px-5 pb-5 pt-4">
           <!-- Header -->
-          <div class="flex items-start justify-between gap-2 mb-4">
+          <div class="mb-4 flex items-start justify-between gap-2">
             <div>
-              <p class="text-[10px] font-bold tracking-[.18em] text-accent uppercase mb-0.5">
+              <p class="mb-0.5 text-[10px] font-bold uppercase tracking-[.18em] text-accent">
                 ✦ {{ t('milestone.shareLabel') }}
               </p>
-              <h2 class="text-sm font-semibold text-foreground leading-snug">
+              <h2 class="text-sm font-semibold leading-snug text-foreground">
                 {{ t('milestone.shareTitle') }}
               </h2>
-              <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                 {{ t('milestone.shareSubtitle') }}
               </p>
             </div>
             <button
               v-if="onDemand"
-              class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors mt-0.5"
+              class="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               :aria-label="t('modal.cancel')"
               @click="emit('close')"
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M18 6 6 18M6 6l12 12"/>
+              <svg
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           <!-- Card preview -->
-          <div class="flex justify-center mb-4">
+          <div class="mb-4 flex justify-center">
             <div
-              class="relative rounded-[12px] overflow-hidden bg-secondary shadow-lg flex-shrink-0"
+              class="relative flex-shrink-0 overflow-hidden rounded-[12px] bg-secondary shadow-lg"
               :style="previewStyle"
             >
               <!-- Canvas renders the card -->
-              <canvas ref="previewCanvas" class="block w-full h-full" />
+              <canvas ref="previewCanvas" class="block h-full w-full" />
 
               <!-- Generating overlay -->
               <div
                 v-if="generating"
                 class="absolute inset-0 flex items-center justify-center bg-black/20"
               >
-                <div class="w-7 h-7 rounded-full border-2 border-white/60 border-t-white animate-spin" />
+                <div
+                  class="h-7 w-7 animate-spin rounded-full border-2 border-white/60 border-t-white"
+                />
               </div>
 
               <!-- Error state -->
@@ -57,26 +70,42 @@
                 v-if="drawError"
                 class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 p-4 text-center"
               >
-                <svg class="w-6 h-6 text-white/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <svg
+                  class="h-6 w-6 text-white/60"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                  />
                 </svg>
-                <p class="text-[11px] text-white/70 leading-snug">{{ t('milestone.corsError') }}</p>
+                <p class="text-[11px] leading-snug text-white/70">{{ t('milestone.corsError') }}</p>
               </div>
             </div>
           </div>
 
           <!-- Format toggle -->
-          <div class="flex rounded-[10px] bg-secondary border border-border p-0.5 mb-3.5">
+          <div class="mb-3.5 flex rounded-[10px] border border-border bg-secondary p-0.5">
             <button
-              class="flex-1 text-[11px] font-medium py-1.5 rounded-[8px] transition-colors"
-              :class="format === '9:16' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+              class="flex-1 rounded-[8px] py-1.5 text-[11px] font-medium transition-colors"
+              :class="
+                format === '9:16'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
               @click="setFormat('9:16')"
             >
               {{ t('milestone.formatStories') }}
             </button>
             <button
-              class="flex-1 text-[11px] font-medium py-1.5 rounded-[8px] transition-colors"
-              :class="format === '1:1' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+              class="flex-1 rounded-[8px] py-1.5 text-[11px] font-medium transition-colors"
+              :class="
+                format === '1:1'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
               @click="setFormat('1:1')"
             >
               {{ t('milestone.formatSquare') }}
@@ -87,11 +116,17 @@
           <div class="space-y-2">
             <!-- Primary: native share or download -->
             <button
-              class="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+              class="flex w-full items-center justify-center gap-2 rounded-[12px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
               :disabled="generating || !!drawError"
               @click="shareOrDownload"
             >
-              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <svg
+                class="h-4 w-4 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
                 <path d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
                 <rect x="8" y="10" width="12" height="12" rx="2" />
               </svg>
@@ -102,12 +137,21 @@
             <div class="flex gap-2">
               <!-- Copy to clipboard -->
               <button
-                class="flex-1 flex items-center justify-center gap-1.5 bg-secondary border border-border text-foreground rounded-[12px] py-2.5 text-sm font-medium hover:bg-border disabled:opacity-50 transition-colors"
+                class="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-border bg-secondary py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-border disabled:opacity-50"
                 :disabled="generating || !!drawError"
                 @click="copyImage"
               >
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path v-if="!copied" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6" />
+                <svg
+                  class="h-4 w-4 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    v-if="!copied"
+                    d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6"
+                  />
                   <path v-else d="M20 6 9 17l-5-5" />
                 </svg>
                 {{ copied ? t('milestone.copied') : t('milestone.copyImage') }}
@@ -115,11 +159,17 @@
 
               <!-- Download -->
               <button
-                class="flex-1 flex items-center justify-center gap-1.5 bg-secondary border border-border text-foreground rounded-[12px] py-2.5 text-sm font-medium hover:bg-border disabled:opacity-50 transition-colors"
+                class="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-border bg-secondary py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-border disabled:opacity-50"
                 :disabled="generating || !!drawError"
                 @click="downloadImage"
               >
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg
+                  class="h-4 w-4 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
@@ -132,7 +182,7 @@
           <!-- Skip — only shown when this is a prompt (upload flow), not when opened on demand -->
           <button
             v-if="!onDemand"
-            class="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors mt-3 py-1"
+            class="mt-3 w-full py-1 text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
             @click="emit('close')"
           >
             {{ t('milestone.skip') }}
@@ -167,7 +217,7 @@ const copied = ref(false)
 const PREVIEW_W = 162
 const previewStyle = computed(() => {
   if (format.value === '9:16') {
-    return `width: ${PREVIEW_W}px; height: ${Math.round(PREVIEW_W * 16 / 9)}px`
+    return `width: ${PREVIEW_W}px; height: ${Math.round((PREVIEW_W * 16) / 9)}px`
   }
   return `width: 230px; height: 230px`
 })
@@ -197,7 +247,10 @@ async function drawCard(
   // Cover-fit photo
   const imgAspect = img.naturalWidth / img.naturalHeight
   const canvasAspect = targetW / targetH
-  let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight
+  let sx = 0,
+    sy = 0,
+    sw = img.naturalWidth,
+    sh = img.naturalHeight
   if (imgAspect > canvasAspect) {
     sw = sh * canvasAspect
     sx = (img.naturalWidth - sw) / 2
@@ -219,7 +272,8 @@ async function drawCard(
   ctx.textBaseline = 'middle'
 
   // --- Milestone label (italic serif) ---
-  const labelSize = format.value === '9:16' ? Math.round(targetW * 0.072) : Math.round(targetW * 0.060)
+  const labelSize =
+    format.value === '9:16' ? Math.round(targetW * 0.072) : Math.round(targetW * 0.06)
   ctx.font = `italic bold ${labelSize}px Georgia, "Times New Roman", serif`
   ctx.fillStyle = 'rgba(255,255,255,0.97)'
 
@@ -228,7 +282,7 @@ async function drawCard(
   const labelLineH = labelSize * 1.25
 
   // Start text block at 58% from top for 9:16, 50% for 1:1
-  const textBlockStart = format.value === '9:16' ? targetH * 0.58 : targetH * 0.50
+  const textBlockStart = format.value === '9:16' ? targetH * 0.58 : targetH * 0.5
   let y = textBlockStart
 
   for (const line of labelLines) {
@@ -238,7 +292,8 @@ async function drawCard(
   y += labelSize * 0.45
 
   // --- Date ---
-  const dateSize = format.value === '9:16' ? Math.round(targetW * 0.035) : Math.round(targetW * 0.030)
+  const dateSize =
+    format.value === '9:16' ? Math.round(targetW * 0.035) : Math.round(targetW * 0.03)
   const dateLabel = new Date(props.memoryDate).toLocaleDateString(locale.value, {
     month: 'long',
     day: 'numeric',
@@ -262,7 +317,8 @@ async function drawCard(
 
   // --- Wordmark ---
   const brandY = format.value === '9:16' ? targetH * 0.915 : targetH * 0.893
-  const brandSize = format.value === '9:16' ? Math.round(targetW * 0.030) : Math.round(targetW * 0.026)
+  const brandSize =
+    format.value === '9:16' ? Math.round(targetW * 0.03) : Math.round(targetW * 0.026)
   ctx.font = `bold ${brandSize}px Georgia, "Times New Roman", serif`
   ctx.fillStyle = 'rgba(255,255,255,0.45)'
   ctx.fillText('Our Story', targetW / 2, brandY)
@@ -298,7 +354,7 @@ async function renderPreview() {
 
   const dpr = Math.min(window.devicePixelRatio || 1, 3)
   const cssW = format.value === '9:16' ? PREVIEW_W : 230
-  const cssH = format.value === '9:16' ? Math.round(PREVIEW_W * 16 / 9) : 230
+  const cssH = format.value === '9:16' ? Math.round((PREVIEW_W * 16) / 9) : 230
 
   try {
     await drawCard(canvas, cssW * dpr, cssH * dpr)
@@ -372,7 +428,9 @@ async function copyImage() {
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
     copied.value = true
-    setTimeout(() => { copied.value = false }, 2500)
+    setTimeout(() => {
+      copied.value = false
+    }, 2500)
   } catch {
     // Clipboard API blocked — fall back to download
     const url = URL.createObjectURL(blob)

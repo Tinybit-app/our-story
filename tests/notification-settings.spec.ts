@@ -50,12 +50,14 @@ const PHOTO_MEMORY = {
   milestone_label: null,
   milestone_is_custom: false,
   created_at: '2024-06-15T00:00:00.000Z',
-  memorymedia: [{
-    id: 'media-1',
-    url: 'https://example.com/photo.jpg',
-    thumbnailUrl: 'https://example.com/photo-thumb.jpg',
-    media_type: 'image',
-  }],
+  memorymedia: [
+    {
+      id: 'media-1',
+      url: 'https://example.com/photo.jpg',
+      thumbnailUrl: 'https://example.com/photo-thumb.jpg',
+      media_type: 'image',
+    },
+  ],
   user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
   memoryreaction: [],
   memorycomment: [],
@@ -71,7 +73,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -92,7 +94,7 @@ function mockTimeline(page: any, memories: any[]) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
@@ -128,7 +130,6 @@ function mockNotificationPrefs(page: any, prefs: Record<string, any> | null = nu
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Notification settings (10.3)', () => {
-
   test('page loads and renders all 3 controls', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
@@ -168,7 +169,9 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
 
     // Both circle name pills should render
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page.getByRole('button', { name: 'Weekend Crew' })).toBeVisible()
   })
 
@@ -203,7 +206,7 @@ test.describe('Notification settings (10.3)', () => {
 
     // The mute active note should be visible because circle_muted is true
     await expect(
-      page.getByText('Push notifications and email digests from this circle are paused.')
+      page.getByText('Push notifications and email digests from this circle are paused.'),
     ).toBeVisible({ timeout: 5_000 })
   })
 
@@ -222,7 +225,7 @@ test.describe('Notification settings (10.3)', () => {
 
     // Mute note must NOT be present
     await expect(
-      page.getByText('Push notifications and email digests from this circle are paused.')
+      page.getByText('Push notifications and email digests from this circle are paused.'),
     ).not.toBeAttached()
   })
 
@@ -257,8 +260,9 @@ test.describe('Notification settings (10.3)', () => {
     // response listener BEFORE the click so we don't race past the PATCH.
     const pushCheckbox = page.locator('input[type="checkbox"]').first()
     await Promise.all([
-      page.waitForResponse(r =>
-        r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH'
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH',
       ),
       pushCheckbox.click(),
     ])
@@ -297,8 +301,9 @@ test.describe('Notification settings (10.3)', () => {
     // before click — see push test for rationale.
     const muteCheckbox = page.locator('input[type="checkbox"]').nth(1)
     await Promise.all([
-      page.waitForResponse(r =>
-        r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH'
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH',
       ),
       muteCheckbox.click(),
     ])
@@ -336,8 +341,9 @@ test.describe('Notification settings (10.3)', () => {
     // Click the "Weekly" button (currently on "Monthly"). Listener before
     // click — see push test for rationale.
     await Promise.all([
-      page.waitForResponse(r =>
-        r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH'
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH',
       ),
       page.getByRole('button', { name: /weekly/i }).click(),
     ])
@@ -351,17 +357,18 @@ test.describe('Notification settings (10.3)', () => {
     await mockTimeline(page, [PHOTO_MEMORY])
     // Suppress any Supabase calls from other parts of the timeline
     await page.route('**/rest/v1/**', (route: any) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
     )
 
     await page.goto('/timeline')
 
     // Wait for the timeline to be ready (circle name in header)
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // There should be an anchor/NuxtLink pointing to /notification-settings
     const bellLink = page.locator('a[href="/notification-settings"]')
     await expect(bellLink).toBeAttached({ timeout: 5_000 })
   })
-
 })

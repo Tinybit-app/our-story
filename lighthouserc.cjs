@@ -29,7 +29,7 @@ module.exports = {
         // Core Web Vitals
         'largest-contentful-paint': ['warn', { maxNumericValue: 2500 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-        'interactive': ['warn', { maxNumericValue: 3500 }],
+        interactive: ['warn', { maxNumericValue: 3500 }],
       },
     },
     upload: {

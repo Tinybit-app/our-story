@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import type { DialogContentEmits, DialogContentProps } from "reka-ui"
-import type { HTMLAttributes } from "vue"
-import type { SheetVariants } from "."
-import { reactiveOmit } from "@vueuse/core"
-import { X } from "lucide-vue-next"
+import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
+import type { SheetVariants } from '.'
+import { reactiveOmit } from '@vueuse/core'
+import { X } from 'lucide-vue-next'
 import {
   DialogClose,
   DialogContent,
   DialogOverlay,
   DialogPortal,
   useForwardPropsEmits,
-} from "reka-ui"
-import { cn } from "@/lib/utils"
-import { sheetVariants } from "."
+} from 'reka-ui'
+import { cn } from '@/lib/utils'
+import { sheetVariants } from '.'
 
 interface SheetContentProps extends DialogContentProps {
-  class?: HTMLAttributes["class"]
-  side?: SheetVariants["side"]
+  class?: HTMLAttributes['class']
+  side?: SheetVariants['side']
 }
 
 defineOptions({
@@ -27,7 +27,7 @@ const props = defineProps<SheetContentProps>()
 
 const emits = defineEmits<DialogContentEmits>()
 
-const delegatedProps = reactiveOmit(props, "class", "side")
+const delegatedProps = reactiveOmit(props, 'class', 'side')
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
@@ -44,9 +44,9 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       <slot />
 
       <DialogClose
-        class="absolute right-2 top-2 p-2 rounded-full opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
+        class="absolute right-2 top-2 rounded-full p-2 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
       >
-        <X class="w-5 h-5 text-muted-foreground" />
+        <X class="h-5 w-5 text-muted-foreground" />
       </DialogClose>
     </DialogContent>
   </DialogPortal>

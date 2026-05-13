@@ -69,6 +69,7 @@ CREATE INDEX idx_push_subscription_user ON PushSubscription(user_id);
 ```
 
 RLS policies:
+
 - SELECT: `auth.uid() = user_id`
 - INSERT: `auth.uid() = user_id`
 - DELETE: `auth.uid() = user_id`
@@ -78,6 +79,7 @@ One user can have multiple subscriptions (multiple devices/browsers). Keyed on `
 ### VAPID keys
 
 Generated once via `web-push generate-vapid-keys`, stored as env vars:
+
 - `VAPID_PUBLIC_KEY` — also exposed via `runtimeConfig.public.vapidPublicKey` (client needs it for `PushManager.subscribe()`)
 - `VAPID_PRIVATE_KEY` — server-only
 - `VAPID_SUBJECT` — `mailto:` contact email, server-only
@@ -85,12 +87,14 @@ Generated once via `web-push generate-vapid-keys`, stored as env vars:
 ### API routes
 
 **`POST /api/push/subscribe`**
+
 - Body: `{ endpoint: string, keys: { p256dh: string, auth: string } }`
 - Auth required
 - Upserts subscription (ON CONFLICT on endpoint → update keys)
 - Returns 200
 
 **`DELETE /api/push/subscribe`**
+
 - Body: `{ endpoint: string }`
 - Auth required
 - Deletes the subscription row matching endpoint + user_id
@@ -101,14 +105,16 @@ Generated once via `web-push generate-vapid-keys`, stored as env vars:
 ```ts
 // app/composables/usePushNotifications.ts
 export function usePushNotifications() {
-  const isSupported = computed(() =>
-    'serviceWorker' in navigator && 'PushManager' in window
-  )
+  const isSupported = computed(() => 'serviceWorker' in navigator && 'PushManager' in window)
 
   const permissionState = ref<PermissionState>('default')
 
-  async function requestPermission(): Promise<boolean> { /* ... */ }
-  async function unsubscribe(): Promise<void> { /* ... */ }
+  async function requestPermission(): Promise<boolean> {
+    /* ... */
+  }
+  async function unsubscribe(): Promise<void> {
+    /* ... */
+  }
 
   return { isSupported, permissionState, requestPermission, unsubscribe }
 }
@@ -163,12 +169,12 @@ To determine whether a notification is the "first" in a window (should buzz) or 
 
 ### Trigger points
 
-| Event | Where dispatched | Title template | Body | Tag |
-|-------|-----------------|----------------|------|-----|
-| Upload (photo/video) | `POST /api/push/notify` (client calls after upload) | "{name} added a memory" / "{name} added N memories" | note or "shared a photo/video" | `upload-{circleId}-{userId}` |
-| Quick note | `POST /api/memories/quick-note` (inline) | "{name} added a note" / "{name} added N memories" | note text truncated | `upload-{circleId}-{userId}` |
-| Comment | `POST /api/memories/[id]/comments` (inline) | "{name} commented" | comment text truncated | `comment-{circleId}-{userId}` |
-| Reaction | `POST /api/memories/[id]/reactions` (inline) | "{name} reacted {emoji}" | — | `reaction-{circleId}-{userId}` |
+| Event                | Where dispatched                                    | Title template                                      | Body                           | Tag                            |
+| -------------------- | --------------------------------------------------- | --------------------------------------------------- | ------------------------------ | ------------------------------ |
+| Upload (photo/video) | `POST /api/push/notify` (client calls after upload) | "{name} added a memory" / "{name} added N memories" | note or "shared a photo/video" | `upload-{circleId}-{userId}`   |
+| Quick note           | `POST /api/memories/quick-note` (inline)            | "{name} added a note" / "{name} added N memories"   | note text truncated            | `upload-{circleId}-{userId}`   |
+| Comment              | `POST /api/memories/[id]/comments` (inline)         | "{name} commented"                                  | comment text truncated         | `comment-{circleId}-{userId}`  |
+| Reaction             | `POST /api/memories/[id]/reactions` (inline)        | "{name} reacted {emoji}"                            | —                              | `reaction-{circleId}-{userId}` |
 
 Uploads and quick notes share the same tag prefix (`upload-`) so they coalesce together.
 
@@ -200,8 +206,8 @@ self.addEventListener('push', (event) => {
       icon: '/icon-192.png',
       tag: data.tag,
       renotify: data.renotify,
-      data: { url: data.data.url }
-    })
+      data: { url: data.data.url },
+    }),
   )
 })
 ```
@@ -213,7 +219,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const url = event.notification.data?.url || '/timeline'
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
+    clients.matchAll({ type: 'window' }).then((windowClients) => {
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin)) {
           client.focus()
@@ -222,12 +228,13 @@ self.addEventListener('notificationclick', (event) => {
         }
       }
       clients.openWindow(url)
-    })
+    }),
   )
 })
 ```
 
 **Deep link targets:**
+
 - All notification types link to: `/timeline?circle={circleId}&memory={memoryId}`
 - Opens the timeline with the memory expanded in the existing modal/detail view
 - No new routes needed
@@ -237,6 +244,7 @@ self.addEventListener('notificationclick', (event) => {
 ### When to show
 
 Not on first load. Contextually triggered:
+
 - **Condition:** User opens the app and there are new memories since their last visit (from other members)
 - **UI:** Dismissable banner at the top of the timeline
 - **Copy:** "Stay in the loop — get notified when your circle shares new memories"
@@ -262,6 +270,7 @@ Auto-creates the `NotificationPreference` row on first toggle if it doesn't exis
 ### Deferred to 10.3
 
 Full notification preferences UI:
+
 - Quiet hours (start/end time pickers)
 - Email digest frequency (daily/weekly/off)
 - Per-circle mute (already done in 10.1, but as part of a dedicated preferences page)

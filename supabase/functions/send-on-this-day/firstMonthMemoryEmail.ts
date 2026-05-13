@@ -25,53 +25,71 @@ export interface FirstMonthMemoryEmailOpts {
   memoryThumbnailUrl: string | null
   appUrl: string
   unsubscribeUrl: string
-  locale: "en" | "zh-CN" | "fr"
+  locale: 'en' | 'zh-CN' | 'fr'
 }
 
-export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): { subject: string; html: string } {
+export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
+  subject: string
+  html: string
+} {
   const {
-    recipientFirstName, circleName, uploaderName, memoryNote, memoryDate,
-    memoryThumbnailUrl, appUrl, unsubscribeUrl, locale,
+    recipientFirstName,
+    circleName,
+    uploaderName,
+    memoryNote,
+    memoryDate,
+    memoryThumbnailUrl,
+    appUrl,
+    unsubscribeUrl,
+    locale,
   } = opts
 
   const subject = (() => {
-    if (locale === "zh-CN") return `「${circleName}」最初的一段回忆`
-    if (locale === "fr") return `Un souvenir de vos premiers jours avec ${circleName}`
+    if (locale === 'zh-CN') return `「${circleName}」最初的一段回忆`
+    if (locale === 'fr') return `Un souvenir de vos premiers jours avec ${circleName}`
     return `A memory from your first month with ${circleName}`
   })()
 
-  const greeting = locale === "zh-CN"
-    ? `你好 ${recipientFirstName}，`
-    : locale === "fr"
-      ? `Bonjour ${recipientFirstName},`
-      : `Hi ${recipientFirstName ?? "there"},`
+  const greeting =
+    locale === 'zh-CN'
+      ? `你好 ${recipientFirstName}，`
+      : locale === 'fr'
+        ? `Bonjour ${recipientFirstName},`
+        : `Hi ${recipientFirstName ?? 'there'},`
 
   const intro = (() => {
-    if (locale === "zh-CN") return `这是你们圈子最早期的一段回忆。`
-    if (locale === "fr") return `Voici un souvenir des tout débuts de votre cercle.`
+    if (locale === 'zh-CN') return `这是你们圈子最早期的一段回忆。`
+    if (locale === 'fr') return `Voici un souvenir des tout débuts de votre cercle.`
     return `Here's a memory from your circle's earliest days.`
   })()
 
   const dateFormatted = new Date(memoryDate).toLocaleDateString(
-    locale === "zh-CN" ? "zh-CN" : locale === "fr" ? "fr" : "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
+    locale === 'zh-CN' ? 'zh-CN' : locale === 'fr' ? 'fr' : 'en-US',
+    { year: 'numeric', month: 'long', day: 'numeric' },
   )
 
   const heroImg = memoryThumbnailUrl
     ? `<img src="${memoryThumbnailUrl}" style="width:100%;border-radius:12px;display:block;margin:0 0 8px;" alt="" />`
-    : ""
+    : ''
 
   const heroNote = memoryNote
     ? `<p style="font-size:14px;color:#444;font-style:italic;margin:0 0 4px;line-height:1.5;">"${memoryNote}"</p>`
-    : ""
+    : ''
 
   const heroByline = `<p style="font-size:12px;color:#888;margin:0 0 24px;">${uploaderName} · ${dateFormatted}</p>`
 
-  const cta = locale === "zh-CN" ? "在 Our Story 中打开 →" : locale === "fr" ? "Ouvrir dans Our Story →" : "Open in Our Story →"
+  const cta =
+    locale === 'zh-CN'
+      ? '在 Our Story 中打开 →'
+      : locale === 'fr'
+        ? 'Ouvrir dans Our Story →'
+        : 'Open in Our Story →'
 
   const unsubscribe = (() => {
-    if (locale === "zh-CN") return `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
-    if (locale === "fr") return `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
+    if (locale === 'zh-CN')
+      return `你收到此邮件是因为你是「${circleName}」的成员。<a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">管理邮件偏好</a>。`
+    if (locale === 'fr')
+      return `Vous recevez ceci car vous êtes membre de ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Gérer les préférences email</a>.`
     return `You're receiving this because you're a member of ${circleName}. <a href="${unsubscribeUrl}" style="color:#888;text-decoration:underline;">Manage email preferences</a>.`
   })()
 

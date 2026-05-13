@@ -1,26 +1,24 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header
-      class="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border"
-    >
-      <div class="max-w-[1280px] mx-auto px-5 py-3.5 flex items-center gap-3">
+    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <!-- Circle name / member count -->
-        <div class="flex-1 min-w-0">
+        <div class="min-w-0 flex-1">
           <p
-            class="text-[9px] font-bold tracking-[0.18em] text-accent uppercase leading-none mb-1.5 select-none"
+            class="mb-1.5 select-none text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-accent"
           >
             Our Story
           </p>
-          <div class="flex items-center gap-1.5 min-w-0">
+          <div class="flex min-w-0 items-center gap-1.5">
             <!-- Circle name — clickable when user has multiple circles -->
             <button
-              class="text-sm font-semibold text-foreground leading-none truncate flex items-center gap-1 hover:opacity-70 transition-opacity"
+              class="flex items-center gap-1 truncate text-sm font-semibold leading-none text-foreground transition-opacity hover:opacity-70"
               @click="circleSwitcherOpen = true"
             >
-              {{ circle?.name ?? "…" }}
+              {{ circle?.name ?? '…' }}
               <svg
-                class="w-3 h-3 text-muted-foreground flex-shrink-0"
+                class="h-3 w-3 flex-shrink-0 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2.5"
@@ -33,36 +31,48 @@
             <NuxtLink
               v-if="circle?.role === 'owner'"
               to="/circle-settings"
-              class="p-1 text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded flex-shrink-0"
+              class="flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground"
               :title="t('nav.circleSettings')"
             >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              <svg
+                class="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
               </svg>
             </NuxtLink>
             <!-- Notification settings (all members) -->
             <NuxtLink
               to="/notification-settings"
-              class="p-1 text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded flex-shrink-0"
+              class="flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground"
               :title="t('notificationSettings.title')"
             >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <svg
+                class="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </NuxtLink>
             <template v-if="circle?.memberCount">
-              <span class="text-border text-xs leading-none flex-shrink-0"
-                >/</span
-              >
+              <span class="flex-shrink-0 text-xs leading-none text-border">/</span>
               <NuxtLink
                 to="/members"
-                class="group inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors leading-none flex-shrink-0 whitespace-nowrap"
+                class="group inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground transition-colors hover:text-foreground"
               >
                 {{ t('nav.members', circle.memberCount) }}
                 <svg
-                  class="w-2.5 h-2.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150"
+                  class="h-2.5 w-2.5 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2.5"
@@ -76,7 +86,7 @@
           <!-- Anniversary display: "Year N together · Since [date]" -->
           <p
             v-if="anniversaryDisplay"
-            class="text-[10px] text-muted-foreground/70 leading-none mt-1 select-none"
+            class="mt-1 select-none text-[10px] leading-none text-muted-foreground/70"
           >
             {{ anniversaryDisplay }}
           </p>
@@ -85,12 +95,12 @@
         <!-- Year pill -->
         <button
           v-if="currentYear"
-          class="flex-shrink-0 flex items-center gap-1 h-7 px-3 rounded-full border border-border text-[11px] font-semibold text-foreground hover:bg-secondary transition-colors"
+          class="flex h-7 flex-shrink-0 items-center gap-1 rounded-full border border-border px-3 text-[11px] font-semibold text-foreground transition-colors hover:bg-secondary"
           @click="openJump"
         >
           {{ currentYear }}
           <svg
-            class="w-3 h-3 text-muted-foreground"
+            class="h-3 w-3 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             stroke-width="2.5"
@@ -103,11 +113,11 @@
         <!-- Add memory -->
         <button
           v-if="circleId"
-          class="flex-shrink-0 flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 active:scale-95 transition-all"
+          class="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-full bg-primary pl-2.5 pr-3 text-[11px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
           @click="addMemorySheetOpen = true"
         >
           <svg
-            class="w-3.5 h-3.5 flex-shrink-0"
+            class="h-3.5 w-3.5 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -125,12 +135,18 @@
         <button
           v-if="circle?.role === 'owner'"
           type="button"
-          class="flex-shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+          class="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
           @click="openShareSheet"
         >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          <svg
+            class="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
           <span>{{ t('viewerLink.shareButton') }}</span>
         </button>
@@ -141,17 +157,11 @@
         <!-- Avatar + dropdown -->
         <div ref="menuRef" class="relative flex-shrink-0">
           <button
-            class="w-8 h-8 rounded-full overflow-hidden ring-2 ring-border hover:ring-ring transition-all flex items-center justify-center bg-secondary"
+            class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-ring"
             @click="menuOpen = !menuOpen"
           >
-            <img
-              v-if="userAvatarUrl"
-              :src="userAvatarUrl"
-              class="w-full h-full object-cover"
-            />
-            <span v-else class="text-[10px] font-bold text-foreground">{{
-              userInitials
-            }}</span>
+            <img v-if="userAvatarUrl" :src="userAvatarUrl" class="h-full w-full object-cover" />
+            <span v-else class="text-[10px] font-bold text-foreground">{{ userInitials }}</span>
           </button>
 
           <!-- Dropdown -->
@@ -165,14 +175,14 @@
           >
             <div
               v-if="menuOpen"
-              class="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-[14px] shadow-xl overflow-hidden origin-top-right"
+              class="absolute right-0 top-full mt-2 w-56 origin-top-right overflow-hidden rounded-[14px] border border-border bg-card shadow-xl"
             >
               <!-- User identity -->
-              <div class="px-4 py-3 border-b border-border">
-                <p class="text-sm font-semibold text-foreground truncate">
+              <div class="border-b border-border px-4 py-3">
+                <p class="truncate text-sm font-semibold text-foreground">
                   {{ userDisplayName }}
                 </p>
-                <p class="text-xs text-muted-foreground truncate mt-0.5">
+                <p class="mt-0.5 truncate text-xs text-muted-foreground">
                   {{ authUser?.email }}
                 </p>
               </div>
@@ -181,11 +191,11 @@
               <div class="py-1">
                 <NuxtLink
                   to="/settings/account"
-                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary"
                   @click="menuOpen = false"
                 >
                   <svg
-                    class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0"
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
@@ -199,11 +209,14 @@
 
                 <button
                   v-if="canInvite"
-                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
-                  @click="menuOpen = false; inviteOpen = true"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary"
+                  @click="
+                    menuOpen = false
+                    inviteOpen = true
+                  "
                 >
                   <svg
-                    class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0"
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
@@ -219,12 +232,12 @@
 
                 <!-- Theme toggle -->
                 <button
-                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary"
                   @click="toggleTheme"
                 >
                   <svg
                     v-if="isDark"
-                    class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0"
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
@@ -237,7 +250,7 @@
                   </svg>
                   <svg
                     v-else
-                    class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0"
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
@@ -248,13 +261,13 @@
                   {{ isDark ? t('nav.lightMode') : t('nav.darkMode') }}
                 </button>
 
-                <div class="h-px bg-border mx-3" />
+                <div class="mx-3 h-px bg-border" />
                 <button
-                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-secondary transition-colors text-left"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-destructive transition-colors hover:bg-secondary"
                   @click="doLogout"
                 >
                   <svg
-                    class="w-3.5 h-3.5 flex-shrink-0"
+                    class="h-3.5 w-3.5 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
@@ -274,7 +287,7 @@
     </header>
 
     <!-- Feed -->
-    <main class="max-w-[1280px] mx-auto px-5 py-6">
+    <main class="mx-auto max-w-[1280px] px-5 py-6">
       <PushPromptBanner />
       <InstallPromptBanner />
       <MilestoneBanner
@@ -305,22 +318,16 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div
-        v-if="jumpOpen"
-        class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-20"
-      >
+      <div v-if="jumpOpen" class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-20">
+        <div class="absolute inset-0 bg-black/45 backdrop-blur-sm" @click="jumpOpen = false" />
         <div
-          class="absolute inset-0 bg-black/45 backdrop-blur-sm"
-          @click="jumpOpen = false"
-        />
-        <div
-          class="relative bg-card border border-border rounded-2xl p-5 w-full max-w-lg shadow-2xl"
+          class="relative w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl"
           @click.stop
         >
-          <div class="flex items-center justify-between mb-4">
+          <div class="mb-4 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-foreground">{{ t('nav.jumpTo') }}</h2>
             <button
-              class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground"
+              class="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
               @click="jumpOpen = false"
             >
               <svg
@@ -336,17 +343,10 @@
             </button>
           </div>
 
-          <div
-            v-for="info in yearInfos"
-            :key="info.year"
-            class="mb-4 last:mb-0"
-          >
-            <div
-              class="grid gap-1.5"
-              style="grid-template-columns: 44px repeat(12, 1fr)"
-            >
+          <div v-for="info in yearInfos" :key="info.year" class="mb-4 last:mb-0">
+            <div class="grid gap-1.5" style="grid-template-columns: 44px repeat(12, 1fr)">
               <button
-                class="text-xs font-bold text-foreground hover:text-accent transition-colors text-left py-1"
+                class="py-1 text-left text-xs font-bold text-foreground transition-colors hover:text-accent"
                 @click="jumpToYear(info.year)"
               >
                 {{ info.year }}
@@ -357,13 +357,13 @@
                 class="h-7 rounded text-[10px] font-medium transition-colors"
                 :class="
                   info.months.includes(m)
-                    ? 'bg-secondary text-muted-foreground hover:bg-accent hover:text-background cursor-pointer'
-                    : 'bg-transparent text-transparent cursor-default pointer-events-none'
+                    ? 'cursor-pointer bg-secondary text-muted-foreground hover:bg-accent hover:text-background'
+                    : 'pointer-events-none cursor-default bg-transparent text-transparent'
                 "
                 :disabled="!info.months.includes(m)"
                 @click="jumpToMonth(info.year, m)"
               >
-                {{ info.months.includes(m) ? monthAbbr(m) : "" }}
+                {{ info.months.includes(m) ? monthAbbr(m) : '' }}
               </button>
             </div>
           </div>
@@ -382,22 +382,19 @@
     >
       <div
         v-if="inviteOpen"
-        class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
+        class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
         <!-- Backdrop -->
-        <div
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          @click="closeInvite"
-        />
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
 
         <!-- Sheet -->
         <div
-          class="relative w-full max-w-sm bg-card border border-border rounded-[20px] p-6 shadow-2xl"
+          class="relative w-full max-w-sm rounded-[20px] border border-border bg-card p-6 shadow-2xl"
         >
-          <h2 class="font-display text-lg font-bold text-foreground mb-1">
+          <h2 class="mb-1 font-display text-lg font-bold text-foreground">
             {{ t('nav.inviteSomeone') }}
           </h2>
-          <p class="text-xs text-muted-foreground mb-5">
+          <p class="mb-5 text-xs text-muted-foreground">
             {{ t('nav.inviteDesc', { circle: circle?.name ?? 'your circle' }) }}
           </p>
 
@@ -408,23 +405,20 @@
               placeholder="their@email.com"
               required
               :disabled="inviteSending"
-              class="w-full bg-background border border-border rounded-[10px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-3 disabled:opacity-50"
+              class="mb-3 w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             />
 
-            <p v-if="inviteError" class="text-xs text-destructive mb-3">
+            <p v-if="inviteError" class="mb-3 text-xs text-destructive">
               {{ inviteError }}
             </p>
-            <p
-              v-if="inviteSentTo"
-              class="text-xs text-green-600 dark:text-green-400 mb-3"
-            >
+            <p v-if="inviteSentTo" class="mb-3 text-xs text-green-600 dark:text-green-400">
               {{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
             </p>
 
             <div class="flex gap-2">
               <button
                 type="button"
-                class="flex-1 py-3 rounded-[10px] text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors"
+                class="flex-1 rounded-[10px] border border-border py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                 @click="closeInvite"
               >
                 {{ t('nav.cancel') }}
@@ -432,7 +426,7 @@
               <button
                 type="submit"
                 :disabled="inviteSending || !inviteEmail"
-                class="flex-1 py-3 rounded-[10px] text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+                class="flex-1 rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               >
                 {{ inviteSending ? t('nav.sending') : t('nav.sendInvite') }}
               </button>
@@ -482,52 +476,78 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="circleSwitcherOpen" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="circleSwitcherOpen = false" />
-        <div class="relative w-full max-w-sm bg-card border border-border rounded-[20px] shadow-2xl overflow-hidden">
-
+      <div
+        v-if="circleSwitcherOpen"
+        class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
+      >
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="circleSwitcherOpen = false"
+        />
+        <div
+          class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl"
+        >
           <!-- Header -->
-          <div class="px-5 pt-5 pb-3 border-b border-border">
-            <p class="text-xs font-bold tracking-widest uppercase text-muted-foreground">{{ t('nav.yourCircles') }}</p>
+          <div class="border-b border-border px-5 pb-3 pt-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              {{ t('nav.yourCircles') }}
+            </p>
           </div>
 
           <!-- Circle list -->
           <ul class="px-3 py-2">
             <li v-for="c in allCircles" :key="c.id">
               <button
-                class="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left"
+                class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
                 :class="c.id === circleId ? 'bg-secondary' : 'hover:bg-secondary/60'"
                 @click="switchCircle(c.id)"
               >
-                <div class="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0 text-xs font-bold text-foreground">
+                <div
+                  class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-secondary text-xs font-bold text-foreground"
+                >
                   {{ c.name?.[0]?.toUpperCase() ?? '?' }}
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-foreground truncate">{{ c.name }}</p>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-medium text-foreground">{{ c.name }}</p>
                   <p class="text-[11px] text-muted-foreground">{{ roleLabel(c.role) }}</p>
                 </div>
-                <svg v-if="c.id === circleId" class="w-4 h-4 text-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  v-if="c.id === circleId"
+                  class="h-4 w-4 flex-shrink-0 text-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
             </li>
           </ul>
 
           <!-- Create new circle -->
-          <div class="px-3 pb-3 pt-1 border-t border-border mt-1">
+          <div class="mt-1 border-t border-border px-3 pb-3 pt-1">
             <button
-              class="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/60 transition-colors text-left"
+              class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-secondary/60"
               @click="startNewCircle"
             >
-              <div class="w-8 h-8 rounded-lg border border-dashed border-border flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <div
+                class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-dashed border-border"
+              >
+                <svg
+                  class="h-4 w-4 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
               </div>
               <p class="text-sm font-medium text-foreground">{{ t('nav.createNewCircle') }}</p>
             </button>
           </div>
-
         </div>
       </div>
     </Transition>
@@ -550,24 +570,35 @@
       :open="shareSheetOpen"
       :circle-id="circleId ?? ''"
       @close="shareSheetOpen = false"
-      @create="createSheetOpen = true; editingLink = null"
+      @create="
+        createSheetOpen = true
+        editingLink = null
+      "
       @renew="renewViewerLink"
-      @edit="(link) => { editingLink = { id: link.id, memoryIds: link.memoryIds ?? [], label: link.label }; createSheetOpen = true }"
+      @edit="
+        (link) => {
+          editingLink = { id: link.id, memoryIds: link.memoryIds ?? [], label: link.label }
+          createSheetOpen = true
+        }
+      "
     />
     <CreateLinkSheet
       :open="createSheetOpen"
       :circle-id="circleId ?? ''"
       :edit-link="editingLink"
-      @close="createSheetOpen = false; editingLink = null"
+      @close="
+        createSheetOpen = false
+        editingLink = null
+      "
       @created="onLinkCreated"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Memory } from "~/composables/useTimeline";
-import { useAnalytics } from "~/composables/useAnalytics"
-import { useOnboardingIntent } from "~/composables/useOnboardingIntent"
+import type { Memory } from '~/composables/useTimeline'
+import { useAnalytics } from '~/composables/useAnalytics'
+import { useOnboardingIntent } from '~/composables/useOnboardingIntent'
 
 // ── i18n ───────────────────────────────────────────────────
 const { t, locale, setLocale } = useI18n()
@@ -575,173 +606,172 @@ const { track } = useAnalytics()
 
 // Locale-aware month abbreviation using Intl (auto-adapts to zh-CN)
 function monthAbbr(month: number): string {
-  return new Intl.DateTimeFormat(locale.value, { month: 'short' }).format(new Date(2000, month - 1, 1))
+  return new Intl.DateTimeFormat(locale.value, { month: 'short' }).format(
+    new Date(2000, month - 1, 1),
+  )
 }
 
 // ── Memory modal ───────────────────────────────────────────
-const selectedIndex = ref<number | null>(null);
-const selectedRect = ref<DOMRect | null>(null);
-const selectedTilt = ref(0);
+const selectedIndex = ref<number | null>(null)
+const selectedRect = ref<DOMRect | null>(null)
+const selectedTilt = ref(0)
 
 function onOpenMemory({
   memory,
   tilt,
   rect,
 }: {
-  memory: Memory;
-  tilt: number;
-  rect: DOMRect | null;
+  memory: Memory
+  tilt: number
+  rect: DOMRect | null
 }) {
-  selectedRect.value = rect;
-  selectedTilt.value = tilt;
-  selectedIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id);
+  selectedRect.value = rect
+  selectedTilt.value = tilt
+  selectedIndex.value = memoriesFlat.value.findIndex((m) => m.id === memory.id)
 }
 
-function onMemoryUpdate(patch: Pick<Memory, "id"> & Partial<Memory>) {
-  const i = memoriesFlat.value.findIndex((m) => m.id === patch.id);
-  if (i !== -1)
-    memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory;
+function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
+  const i = memoriesFlat.value.findIndex((m) => m.id === patch.id)
+  if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
 }
 
-function onReactionUpdate({
-  memoryId,
-  reactions,
-}: {
-  memoryId: string;
-  reactions: any[];
-}) {
-  const i = memoriesFlat.value.findIndex((m) => m.id === memoryId);
+function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions: any[] }) {
+  const i = memoriesFlat.value.findIndex((m) => m.id === memoryId)
   if (i !== -1)
     memoriesFlat.value[i] = {
       ...memoriesFlat.value[i],
       memoryreaction: reactions,
-    } as Memory;
+    } as Memory
 }
 
-const supabase = useSupabaseClient();
-const authUser = useSupabaseUser();
-const router = useRouter();
+const supabase = useSupabaseClient()
+const authUser = useSupabaseUser()
+const router = useRouter()
 
 // ── User identity ──────────────────────────────────────────
 const { data: profile } = await useFetch<{
-  firstName: string | null;
-  lastName: string | null;
-  avatarUrl: string | null;
-  locale: string | null;
-}>("/api/profile");
+  firstName: string | null
+  lastName: string | null
+  avatarUrl: string | null
+  locale: string | null
+}>('/api/profile')
 
 // Apply saved locale from DB profile
 if (profile.value?.locale) {
   setLocale(profile.value.locale as 'en' | 'zh-CN')
 }
 
-const userAvatarUrl = computed(() => profile.value?.avatarUrl ?? null);
+const userAvatarUrl = computed(() => profile.value?.avatarUrl ?? null)
 
 const userDisplayName = computed(() => {
-  const parts = [profile.value?.firstName, profile.value?.lastName].filter(
-    Boolean,
-  );
-  return parts.length
-    ? parts.join(" ")
-    : (authUser.value?.email?.split("@")[0] ?? "You");
-});
+  const parts = [profile.value?.firstName, profile.value?.lastName].filter(Boolean)
+  return parts.length ? parts.join(' ') : (authUser.value?.email?.split('@')[0] ?? 'You')
+})
 
 const userInitials = computed(() => {
-  const first = profile.value?.firstName?.[0] ?? "";
-  const last = profile.value?.lastName?.[0] ?? "";
-  return (
-    (first + last).toUpperCase() ||
-    userDisplayName.value.slice(0, 2).toUpperCase()
-  );
-});
+  const first = profile.value?.firstName?.[0] ?? ''
+  const last = profile.value?.lastName?.[0] ?? ''
+  return (first + last).toUpperCase() || userDisplayName.value.slice(0, 2).toUpperCase()
+})
 
 // ── Dropdown ───────────────────────────────────────────────
-const menuOpen = ref(false);
-const menuRef = ref<HTMLElement>();
-const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>();
+const menuOpen = ref(false)
+const menuRef = ref<HTMLElement>()
+const uploadRef = ref<{ open: () => void; isOpen: ComputedRef<boolean> }>()
 
 // ── Add memory sheet ───────────────────────────────────────
-const addMemorySheetOpen = ref(false);
-const quickNoteOpen = ref(false);
-const prefillMilestoneLabel = ref<string | undefined>(undefined);
+const addMemorySheetOpen = ref(false)
+const quickNoteOpen = ref(false)
+const prefillMilestoneLabel = ref<string | undefined>(undefined)
 
 function onChoosePhoto() {
-  addMemorySheetOpen.value = false;
-  nextTick(() => uploadRef.value?.open());
+  addMemorySheetOpen.value = false
+  nextTick(() => uploadRef.value?.open())
 }
 
 function onMilestoneAdd(labelSuggestion: string) {
-  prefillMilestoneLabel.value = labelSuggestion;
-  nextTick(() => uploadRef.value?.open());
+  prefillMilestoneLabel.value = labelSuggestion
+  nextTick(() => uploadRef.value?.open())
 }
 
 function onChooseQuickNote() {
-  addMemorySheetOpen.value = false;
-  quickNoteOpen.value = true;
+  addMemorySheetOpen.value = false
+  quickNoteOpen.value = true
 }
 
 function onQuickNoteSaved() {
-  quickNoteOpen.value = false;
-  fetchTimeline();
+  quickNoteOpen.value = false
+  fetchTimeline()
 }
 onClickOutside(menuRef, () => {
-  menuOpen.value = false;
-});
+  menuOpen.value = false
+})
 
 // ── Theme ──────────────────────────────────────────────────
-const colorMode = useColorMode();
-const prefersDark = usePreferredDark();
+const colorMode = useColorMode()
+const prefersDark = usePreferredDark()
 const isDark = computed(() =>
-  colorMode.preference === "system"
-    ? prefersDark.value
-    : colorMode.preference === "dark",
-);
+  colorMode.preference === 'system' ? prefersDark.value : colorMode.preference === 'dark',
+)
 function toggleTheme() {
-  colorMode.preference = isDark.value ? "light" : "dark";
-  menuOpen.value = false;
+  colorMode.preference = isDark.value ? 'light' : 'dark'
+  menuOpen.value = false
 }
 
 // ── Auth ───────────────────────────────────────────────────
 async function doLogout() {
-  const { clear } = useUserState();
-  await supabase.auth.signOut();
-  clear();
-  router.replace("/login");
+  const { clear } = useUserState()
+  await supabase.auth.signOut()
+  clear()
+  router.replace('/login')
 }
 
 // ── Data ───────────────────────────────────────────────────
-const route = useRoute();
-const { data: circlesData } = await useFetch<{ circles: any[] }>(
-  "/api/circles",
-);
-const allCircles = computed(() => circlesData.value?.circles ?? []);
+const route = useRoute()
+const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
+const allCircles = computed(() => circlesData.value?.circles ?? [])
 
 // Active circle: prefer ?circle=<id> URL param, fallback to first
 const circle = computed(() => {
-  const paramId = route.query.circle as string | undefined;
+  const paramId = route.query.circle as string | undefined
   if (paramId) {
-    const found = allCircles.value.find((c: any) => c.id === paramId);
-    if (found) return found;
+    const found = allCircles.value.find((c: any) => c.id === paramId)
+    if (found) return found
   }
-  return allCircles.value[0] ?? null;
-});
-const circleId = computed<string | null>(() => circle.value?.id ?? null);
+  return allCircles.value[0] ?? null
+})
+const circleId = computed<string | null>(() => circle.value?.id ?? null)
 
 // Anniversary display — available to all circle types
 const anniversaryDisplay = computed(() => {
   const c = circle.value
   if (!c?.anniversary_date) return null
-  return computeAnniversaryDisplay(c.anniversary_date, new Date(), locale.value, c.circle_type, c.name)
+  return computeAnniversaryDisplay(
+    c.anniversary_date,
+    new Date(),
+    locale.value,
+    c.circle_type,
+    c.name,
+  )
 })
 
-interface ChildProfile { id: string; name: string; date_of_birth: string }
-interface CircleMember { userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }
+interface ChildProfile {
+  id: string
+  name: string
+  date_of_birth: string
+}
+interface CircleMember {
+  userId: string
+  firstName: string | null
+  lastName: string | null
+  avatarUrl: string | null
+}
 
-const memoriesFlat = ref<Memory[]>([]);
-const prevYear = ref<number | null>(null);
-const children = ref<ChildProfile[]>([]);
-const members = ref<CircleMember[]>([]);
-const loading = ref(false);
+const memoriesFlat = ref<Memory[]>([])
+const prevYear = ref<number | null>(null)
+const children = ref<ChildProfile[]>([])
+const members = ref<CircleMember[]>([])
+const loading = ref(false)
 
 interface UpcomingMilestone {
   scopeType: 'child' | 'couple' | 'trip'
@@ -752,171 +782,167 @@ interface UpcomingMilestone {
   milestoneLabelSuggestion: string
 }
 
-const upcomingMilestone = ref<UpcomingMilestone | null>(null);
-const milestoneNudgesEnabled = ref(true);
+const upcomingMilestone = ref<UpcomingMilestone | null>(null)
+const milestoneNudgesEnabled = ref(true)
 
 async function fetchTimeline(year?: number) {
-  if (loading.value || !circleId.value) return;
-  loading.value = true;
+  if (loading.value || !circleId.value) return
+  loading.value = true
   try {
     const data = await $fetch<{
-      memories: Memory[];
-      prevYear: number | null;
-      children: ChildProfile[];
-      members: CircleMember[];
-      upcomingMilestone?: UpcomingMilestone | null;
-      milestoneNudgesEnabledForActiveCircle?: boolean;
-    }>("/api/timeline", {
+      memories: Memory[]
+      prevYear: number | null
+      children: ChildProfile[]
+      members: CircleMember[]
+      upcomingMilestone?: UpcomingMilestone | null
+      milestoneNudgesEnabledForActiveCircle?: boolean
+    }>('/api/timeline', {
       query: { circleId: circleId.value, ...(year ? { year } : {}) },
-    });
-    memoriesFlat.value = year
-      ? [...memoriesFlat.value, ...data.memories]
-      : data.memories;
-    prevYear.value = data.prevYear;
+    })
+    memoriesFlat.value = year ? [...memoriesFlat.value, ...data.memories] : data.memories
+    prevYear.value = data.prevYear
     if (!year) {
-      children.value = data.children ?? [];
-      members.value = data.members ?? [];
-      upcomingMilestone.value = data.upcomingMilestone ?? null;
-      milestoneNudgesEnabled.value = data.milestoneNudgesEnabledForActiveCircle ?? true;
+      children.value = data.children ?? []
+      members.value = data.members ?? []
+      upcomingMilestone.value = data.upcomingMilestone ?? null
+      milestoneNudgesEnabled.value = data.milestoneNudgesEnabledForActiveCircle ?? true
     }
   } catch (err) {
-    console.error("[timeline] fetch error:", err);
+    console.error('[timeline] fetch error:', err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function onUploaded() {
-  fetchTimeline();
+  fetchTimeline()
 }
 
-onMounted(() => fetchTimeline());
+onMounted(() => fetchTimeline())
 
-const { monthGroups, yearInfos } = useTimeline(memoriesFlat);
+const { monthGroups, yearInfos } = useTimeline(memoriesFlat)
 
 // ── Year badge ─────────────────────────────────────────────
-const currentYear = ref<number | null>(null);
-const timelinePolaroidRef = ref<{ scrollToYear: (y: number) => void }>();
+const currentYear = ref<number | null>(null)
+const timelinePolaroidRef = ref<{ scrollToYear: (y: number) => void }>()
 
 function onYearChange(year: number) {
-  currentYear.value = year;
+  currentYear.value = year
 }
 
 watch(
   monthGroups,
   (groups) => {
     if (groups.length && !currentYear.value) {
-      currentYear.value = groups[0]?.year ?? null;
+      currentYear.value = groups[0]?.year ?? null
     }
   },
   { immediate: true },
-);
+)
 
 // ── Jump modal ─────────────────────────────────────────────
-const jumpOpen = ref(false);
+const jumpOpen = ref(false)
 
 function openJump() {
-  jumpOpen.value = true;
-  menuOpen.value = false;
+  jumpOpen.value = true
+  menuOpen.value = false
 }
 
 function jumpToYear(year: number) {
-  jumpOpen.value = false;
-  nextTick(() => timelinePolaroidRef.value?.scrollToYear(year));
+  jumpOpen.value = false
+  nextTick(() => timelinePolaroidRef.value?.scrollToYear(year))
 }
 
 function jumpToMonth(year: number, month: number) {
-  jumpOpen.value = false;
+  jumpOpen.value = false
   // Wait for the modal leave transition (100ms) to complete before scrolling
   setTimeout(() => {
-    const el = document.getElementById(`month-${year}-${month}`);
+    const el = document.getElementById(`month-${year}-${month}`)
     if (el)
       window.scrollTo({
         top: el.getBoundingClientRect().top + window.scrollY - 120,
-        behavior: "smooth",
-      });
-  }, 120);
+        behavior: 'smooth',
+      })
+  }, 120)
 }
 
 // ── Circle switcher ────────────────────────────────────────
-const circleSwitcherOpen = ref(false);
+const circleSwitcherOpen = ref(false)
 
 function roleLabel(role: string): string {
-  if (role === "owner") return t("members.roleOwner");
-  if (role === "admin") return t("members.roleAdmin");
-  return t("members.roleMember");
+  if (role === 'owner') return t('members.roleOwner')
+  if (role === 'admin') return t('members.roleAdmin')
+  return t('members.roleMember')
 }
 
 function switchCircle(id: string) {
-  circleSwitcherOpen.value = false;
-  memoriesFlat.value = [];
-  prevYear.value = null;
+  circleSwitcherOpen.value = false
+  memoriesFlat.value = []
+  prevYear.value = null
   // Only put ?circle= in the URL when it's not the default first circle,
   // so single-circle users see a clean /timeline URL.
-  const isDefault = allCircles.value[0]?.id === id;
-  router.push({ query: isDefault ? {} : { circle: id } });
+  const isDefault = allCircles.value[0]?.id === id
+  router.push({ query: isDefault ? {} : { circle: id } })
 }
 
 function startNewCircle() {
-  circleSwitcherOpen.value = false;
-  useOnboardingIntent().value = true;
-  router.push("/onboarding");
+  circleSwitcherOpen.value = false
+  useOnboardingIntent().value = true
+  router.push('/onboarding')
 }
 
 // Reload timeline when the active circle changes
 watch(circleId, (newId, oldId) => {
   if (newId && newId !== oldId) {
-    memoriesFlat.value = [];
-    prevYear.value = null;
-    currentYear.value = null;
-    fetchTimeline();
+    memoriesFlat.value = []
+    prevYear.value = null
+    currentYear.value = null
+    fetchTimeline()
   }
-});
+})
 
 // ── Invite ─────────────────────────────────────────────────
 const canInvite = computed(() => {
-  const role = circle.value?.role;
-  return role === "owner" || role === "admin";
-});
+  const role = circle.value?.role
+  return role === 'owner' || role === 'admin'
+})
 
-const inviteOpen = ref(false);
-const inviteEmail = ref("");
-const inviteSending = ref(false);
-const inviteError = ref("");
-const inviteSentTo = ref("");
+const inviteOpen = ref(false)
+const inviteEmail = ref('')
+const inviteSending = ref(false)
+const inviteError = ref('')
+const inviteSentTo = ref('')
 
 function closeInvite() {
-  inviteOpen.value = false;
-  inviteEmail.value = "";
-  inviteError.value = "";
-  inviteSentTo.value = "";
+  inviteOpen.value = false
+  inviteEmail.value = ''
+  inviteError.value = ''
+  inviteSentTo.value = ''
 }
 
 async function sendInvite() {
-  if (!circleId.value || !inviteEmail.value) return;
-  inviteSending.value = true;
-  inviteError.value = "";
-  inviteSentTo.value = "";
+  if (!circleId.value || !inviteEmail.value) return
+  inviteSending.value = true
+  inviteError.value = ''
+  inviteSentTo.value = ''
   try {
-    await $fetch("/api/circles/invite", {
-      method: "POST",
+    await $fetch('/api/circles/invite', {
+      method: 'POST',
       body: { circleId: circleId.value, email: inviteEmail.value },
-    });
-    track("member_invited", {
+    })
+    track('member_invited', {
       circle_id: circleId.value,
-      invite_method: "link",
-    });
-    inviteSentTo.value = inviteEmail.value;
-    inviteEmail.value = "";
+      invite_method: 'link',
+    })
+    inviteSentTo.value = inviteEmail.value
+    inviteEmail.value = ''
   } catch (err: any) {
-    const msg = err?.data?.message ?? "";
-    if (msg.includes("already been sent"))
-      inviteError.value = t('nav.inviteAlreadySent')
-    else if (msg.includes("Max 10"))
-      inviteError.value = t('nav.inviteMaxPending')
+    const msg = err?.data?.message ?? ''
+    if (msg.includes('already been sent')) inviteError.value = t('nav.inviteAlreadySent')
+    else if (msg.includes('Max 10')) inviteError.value = t('nav.inviteMaxPending')
     else inviteError.value = t('nav.inviteFailed')
   } finally {
-    inviteSending.value = false;
+    inviteSending.value = false
   }
 }
 

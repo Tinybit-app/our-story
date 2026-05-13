@@ -12,19 +12,20 @@
 
 ## File Map
 
-| File | Change |
-|------|--------|
+| File                         | Change                                                         |
+| ---------------------------- | -------------------------------------------------------------- |
 | `app/assets/css/globals.css` | Replace default shadcn tokens with warm palette (light + dark) |
-| `tailwind.config.ts` | Add `font-display` serif stack, update `--radius` to `0.75rem` |
-| `app/app.vue` | Add `useColorScheme` to auto-apply `.dark` class |
-| `app/pages/login.vue` | Full rewrite — editorial layout per approved design |
-| `tests/login.spec.ts` | Playwright smoke test |
+| `tailwind.config.ts`         | Add `font-display` serif stack, update `--radius` to `0.75rem` |
+| `app/app.vue`                | Add `useColorScheme` to auto-apply `.dark` class               |
+| `app/pages/login.vue`        | Full rewrite — editorial layout per approved design            |
+| `tests/login.spec.ts`        | Playwright smoke test                                          |
 
 ---
 
 ## Task 1: Set global theme tokens (applies to all pages)
 
 **Files:**
+
 - Modify: `app/assets/css/globals.css`
 - Modify: `tailwind.config.ts`
 
@@ -40,47 +41,47 @@ Replace the entire file contents with:
 @layer base {
   :root {
     /* Warm & nostalgic — light mode */
-    --background: 33 20% 94%;        /* #f4f1ee warm cream */
-    --foreground: 20 16% 14%;        /* #2c2420 dark espresso */
-    --card: 0 0% 100%;               /* #ffffff white lift */
+    --background: 33 20% 94%; /* #f4f1ee warm cream */
+    --foreground: 20 16% 14%; /* #2c2420 dark espresso */
+    --card: 0 0% 100%; /* #ffffff white lift */
     --card-foreground: 20 16% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 16% 14%;
-    --primary: 20 16% 14%;           /* #2c2420 dark espresso */
-    --primary-foreground: 33 20% 94%;/* #f4f1ee cream */
-    --secondary: 33 14% 88%;         /* #e8e4df warm border */
+    --primary: 20 16% 14%; /* #2c2420 dark espresso */
+    --primary-foreground: 33 20% 94%; /* #f4f1ee cream */
+    --secondary: 33 14% 88%; /* #e8e4df warm border */
     --secondary-foreground: 20 16% 14%;
     --muted: 33 14% 88%;
-    --muted-foreground: 26 10% 49%;  /* #8a7f74 warm stone */
-    --accent: 33 40% 65%;            /* #c8a882 warm amber */
+    --muted-foreground: 26 10% 49%; /* #8a7f74 warm stone */
+    --accent: 33 40% 65%; /* #c8a882 warm amber */
     --accent-foreground: 20 16% 14%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 30 14% 88%;            /* #e8e4df */
+    --border: 30 14% 88%; /* #e8e4df */
     --input: 30 14% 88%;
-    --ring: 33 40% 65%;              /* #c8a882 amber focus ring */
-    --radius: 0.75rem;               /* 12px base */
+    --ring: 33 40% 65%; /* #c8a882 amber focus ring */
+    --radius: 0.75rem; /* 12px base */
   }
 
   .dark {
     /* Warm & nostalgic — dark mode */
-    --background: 25 15% 9%;         /* #1a1512 dark espresso brown */
-    --foreground: 33 30% 92%;        /* #f0ebe4 warm off-white */
-    --card: 20 16% 14%;              /* #2c2420 lifted dark brown */
+    --background: 25 15% 9%; /* #1a1512 dark espresso brown */
+    --foreground: 33 30% 92%; /* #f0ebe4 warm off-white */
+    --card: 20 16% 14%; /* #2c2420 lifted dark brown */
     --card-foreground: 33 30% 92%;
     --popover: 20 16% 14%;
     --popover-foreground: 33 30% 92%;
-    --primary: 33 40% 65%;           /* #c8a882 amber — CTA in dark mode */
+    --primary: 33 40% 65%; /* #c8a882 amber — CTA in dark mode */
     --primary-foreground: 25 15% 9%;
-    --secondary: 22 8% 22%;          /* #3d3530 dark border */
+    --secondary: 22 8% 22%; /* #3d3530 dark border */
     --secondary-foreground: 33 30% 92%;
     --muted: 22 8% 22%;
-    --muted-foreground: 26 10% 49%;  /* #8a7f74 warm stone (shared) */
-    --accent: 33 40% 65%;            /* #c8a882 amber (shared) */
+    --muted-foreground: 26 10% 49%; /* #8a7f74 warm stone (shared) */
+    --accent: 33 40% 65%; /* #c8a882 amber (shared) */
     --accent-foreground: 25 15% 9%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
-    --border: 22 8% 22%;             /* #3d3530 */
+    --border: 22 8% 22%; /* #3d3530 */
     --input: 22 8% 22%;
     --ring: 33 40% 65%;
     --radius: 0.75rem;
@@ -127,6 +128,7 @@ git commit -m "update theme tokens to warm & nostalgic palette"
 ## Task 2: Auto dark mode detection
 
 **Files:**
+
 - Modify: `app/app.vue`
 
 - [ ] **Step 1: Add color scheme watcher to `app.vue`**
@@ -173,6 +175,7 @@ git commit -m "auto-apply dark mode class from system preference"
 ## Task 3: Rewrite login page
 
 **Files:**
+
 - Modify: `app/pages/login.vue`
 
 - [ ] **Step 1: Create `GoogleIcon` component**
@@ -182,10 +185,22 @@ Create `app/components/GoogleIcon.vue`:
 ```vue
 <template>
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    <path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+    />
   </svg>
 </template>
 ```
@@ -194,37 +209,32 @@ Create `app/components/GoogleIcon.vue`:
 
 ```vue
 <template>
-  <div class="min-h-screen bg-background flex items-center justify-center px-6">
+  <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-
       <!-- Wordmark -->
-      <p class="text-xs font-bold tracking-widest text-foreground mb-4 uppercase">
-        Our Story
-      </p>
+      <p class="mb-4 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
 
       <!-- Headline -->
-      <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
+      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
         Every moment worth keeping, in one place.
       </h1>
-      <p class="text-sm text-muted-foreground mb-8">
-        For you, your family, your friends.
-      </p>
+      <p class="mb-8 text-sm text-muted-foreground">For you, your family, your friends.</p>
 
       <!-- Google -->
       <button
         type="button"
-        class="w-full flex items-center gap-3 bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm font-medium text-foreground shadow-sm hover:bg-secondary transition-colors mb-2.5"
+        class="mb-2.5 flex w-full items-center gap-3 rounded-[12px] border border-border bg-card px-4 py-3.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary"
         @click="signInWithGoogle"
       >
-        <GoogleIcon class="w-[18px] h-[18px] shrink-0" />
+        <GoogleIcon class="h-[18px] w-[18px] shrink-0" />
         Continue with Google
       </button>
 
       <!-- Divider -->
-      <div class="flex items-center gap-3 my-1.5 text-xs text-muted-foreground">
-        <div class="flex-1 h-px bg-border" />
+      <div class="my-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+        <div class="h-px flex-1 bg-border" />
         or
-        <div class="flex-1 h-px bg-border" />
+        <div class="h-px flex-1 bg-border" />
       </div>
 
       <!-- Email form -->
@@ -234,27 +244,26 @@ Create `app/components/GoogleIcon.vue`:
           type="email"
           placeholder="your@email.com"
           required
-          class="w-full bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-2.5"
+          class="mb-2.5 w-full rounded-[12px] border border-border bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+          class="w-full rounded-[12px] bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {{ loading ? 'Sending…' : 'Continue with email' }}
         </button>
       </form>
 
       <!-- Success state -->
-      <p v-if="sent" class="mt-4 text-sm text-center text-accent font-medium">
+      <p v-if="sent" class="mt-4 text-center text-sm font-medium text-accent">
         Check your inbox — we sent you a sign-in link.
       </p>
 
       <!-- Footer note -->
-      <p v-else class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
+      <p v-else class="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
         We'll send you a sign-in link — no password needed.
       </p>
-
     </div>
   </div>
 </template>
@@ -293,10 +302,22 @@ Create `app/components/GoogleIcon.vue`:
 ```vue
 <template>
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    <path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+    />
   </svg>
 </template>
 ```
@@ -308,6 +329,7 @@ pnpm dev
 ```
 
 Open `http://localhost:3000/login`. Verify:
+
 - Background is warm cream (light) or dark espresso brown (dark)
 - "OUR STORY" wordmark appears in small caps tracking
 - Headline uses serif font (Georgia)
@@ -327,6 +349,7 @@ git commit -m "redesign login page — warm editorial layout with dark mode"
 ## Task 4: Playwright smoke test
 
 **Files:**
+
 - Create: `tests/login.spec.ts`
 
 - [ ] **Step 1: Create the test file**
@@ -353,7 +376,7 @@ test.describe('Login page', () => {
 
   test('shows success message after valid email submission', async ({ page }) => {
     // Intercept the Supabase OTP request so we don't need real credentials
-    await page.route('**/auth/v1/otp**', route => route.fulfill({ status: 200, body: '{}' }))
+    await page.route('**/auth/v1/otp**', (route) => route.fulfill({ status: 200, body: '{}' }))
 
     await page.getByPlaceholder('your@email.com').fill('test@example.com')
     await page.getByRole('button', { name: /continue with email/i }).click()

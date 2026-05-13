@@ -42,8 +42,8 @@ describe('useTimeline', () => {
   it('caps each month at 12 memories and sets hasMore = true when exceeded', () => {
     const memories = ref<Memory[]>(
       Array.from({ length: 15 }, (_, i) =>
-        makeMemory(`id-${i}`, `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`)
-      )
+        makeMemory(`id-${i}`, `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`),
+      ),
     )
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value).toHaveLength(1)
@@ -54,8 +54,8 @@ describe('useTimeline', () => {
   it('sets hasMore = false when month has exactly 12 memories (all visible)', () => {
     const memories = ref<Memory[]>(
       Array.from({ length: 12 }, (_, i) =>
-        makeMemory(`id-${i}`, `2025-07-${String(i + 1).padStart(2, '0')}T10:00:00Z`)
-      )
+        makeMemory(`id-${i}`, `2025-07-${String(i + 1).padStart(2, '0')}T10:00:00Z`),
+      ),
     )
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value[0].memories).toHaveLength(12)
@@ -114,7 +114,10 @@ describe('useTimeline', () => {
 describe('useTimeline — detached memories (former member)', () => {
   it('includes detached memories (owner_user_id = null) in month groups', () => {
     const memories = ref<Memory[]>([
-      makeMemory('1', '2025-05-01T10:00:00Z', { owner_user_id: null, former_owner_name: 'Sarah Kim' }),
+      makeMemory('1', '2025-05-01T10:00:00Z', {
+        owner_user_id: null,
+        former_owner_name: 'Sarah Kim',
+      }),
       makeMemory('2', '2025-05-10T10:00:00Z'),
     ])
     const { monthGroups } = useTimeline(memories)

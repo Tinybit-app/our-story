@@ -13,11 +13,13 @@
 ## File Structure
 
 **Create:**
+
 - `locales/en.json` — all English strings, grouped by namespace
 - `locales/zh-CN.json` — all Chinese Simplified strings
 - `supabase/migrations/006_locale.sql` — update locale check constraint from `'zh-Hans'` → `'zh-CN'`
 
 **Modify:**
+
 - `nuxt.config.ts` — add `@nuxtjs/i18n` to modules, add `i18n` config block
 - `server/api/profile.get.ts` — include `locale` in response
 - `server/api/profile.patch.ts` — accept optional `locale` field
@@ -37,6 +39,7 @@
 ## Task 1: Install and configure @nuxtjs/i18n
 
 **Files:**
+
 - Modify: `package.json` (via pnpm)
 - Modify: `nuxt.config.ts`
 
@@ -83,11 +86,13 @@ i18n: {
 - [ ] **Step 3: Create empty locale files**
 
 Create `locales/en.json`:
+
 ```json
 {}
 ```
 
 Create `locales/zh-CN.json`:
+
 ```json
 {}
 ```
@@ -114,6 +119,7 @@ git commit -m "feat: install and configure @nuxtjs/i18n with no-prefix strategy"
 **Background:** The `User` table already has a `locale TEXT CHECK (locale IN ('en', 'zh-Hans'))` column (from `001_initial_schema.sql`). The check constraint uses `'zh-Hans'` but the i18n module uses `'zh-CN'`. This task updates the constraint and threads `locale` through the profile API.
 
 **Files:**
+
 - Create: `supabase/migrations/006_locale.sql`
 - Modify: `server/api/profile.get.ts`
 - Modify: `server/api/profile.patch.ts`
@@ -148,7 +154,7 @@ Expected: migration applies without error.
 Replace the entire file:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
@@ -157,14 +163,14 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const { data, error } = await supabase
-    .from("user")
-    .select("first_name, last_name, avatar_url, locale")
-    .eq("id", user.sub)
+    .from('user')
+    .select('first_name, last_name, avatar_url, locale')
+    .eq('id', user.sub)
     .maybeSingle()
 
   if (error) {
-    console.error("[profile] query failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to load profile." })
+    console.error('[profile] query failed:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to load profile.' })
   }
 
   return {
@@ -181,13 +187,22 @@ export default defineEventHandler(async (event) => {
 Replace the schema and update call:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const schema = z.object({
-  firstName: z.string().min(1).max(100).transform((s) => s.trim()).optional(),
-  lastName: z.string().max(100).transform((s) => s.trim()).optional(),
-  locale: z.enum(["en", "zh-CN"]).optional(),
+  firstName: z
+    .string()
+    .min(1)
+    .max(100)
+    .transform((s) => s.trim())
+    .optional(),
+  lastName: z
+    .string()
+    .max(100)
+    .transform((s) => s.trim())
+    .optional(),
+  locale: z.enum(['en', 'zh-CN']).optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -197,7 +212,7 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid profile data." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid profile data.' })
   const { firstName, lastName, locale } = result.data
 
   // Build update payload — only include fields that were provided
@@ -208,14 +223,11 @@ export default defineEventHandler(async (event) => {
 
   if (Object.keys(patch).length === 0) return { ok: true }
 
-  const { error } = await supabase
-    .from("user")
-    .update(patch)
-    .eq("id", user.sub)
+  const { error } = await supabase.from('user').update(patch).eq('id', user.sub)
 
   if (error) {
-    console.error("[profile] update failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to save profile. Please try again." })
+    console.error('[profile] update failed:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to save profile. Please try again.' })
   }
 
   return { ok: true }
@@ -242,6 +254,7 @@ git commit -m "feat(i18n): add locale to profile API, update DB constraint to zh
 ## Task 3: Create locale files with all strings
 
 **Files:**
+
 - Modify: `locales/en.json`
 - Modify: `locales/zh-CN.json`
 
@@ -283,13 +296,13 @@ git commit -m "feat(i18n): add locale to profile API, update DB constraint to zh
     "skipForNow": "Skip for now"
   },
   "circleType": {
-    "parents":    { "label": "New parents",   "description": "Baby milestones & growth" },
-    "couple":     { "label": "Couple",         "description": "Relationship milestones" },
-    "family":     { "label": "Family",         "description": "General family memories" },
-    "friends":    { "label": "Friend group",   "description": "Trips, reunions, moments" },
-    "caregiving": { "label": "Caregiving",     "description": "Health & life events" },
-    "travel":     { "label": "Travel group",   "description": "Adventures together" },
-    "solo":       { "label": "Just me",        "description": "Personal timeline" }
+    "parents": { "label": "New parents", "description": "Baby milestones & growth" },
+    "couple": { "label": "Couple", "description": "Relationship milestones" },
+    "family": { "label": "Family", "description": "General family memories" },
+    "friends": { "label": "Friend group", "description": "Trips, reunions, moments" },
+    "caregiving": { "label": "Caregiving", "description": "Health & life events" },
+    "travel": { "label": "Travel group", "description": "Adventures together" },
+    "solo": { "label": "Just me", "description": "Personal timeline" }
   },
   "nav": {
     "addMemory": "Add memory",
@@ -390,13 +403,13 @@ git commit -m "feat(i18n): add locale to profile API, update DB constraint to zh
     "skipForNow": "暂时跳过"
   },
   "circleType": {
-    "parents":    { "label": "新手父母",   "description": "宝宝成长里程碑" },
-    "couple":     { "label": "情侣",       "description": "感情里程碑" },
-    "family":     { "label": "家庭",       "description": "家庭回忆" },
-    "friends":    { "label": "朋友圈",     "description": "旅行、聚会、精彩时刻" },
-    "caregiving": { "label": "照护日记",   "description": "健康与生活事件" },
-    "travel":     { "label": "旅行团",     "description": "一起探险" },
-    "solo":       { "label": "只有我",     "description": "个人时间线" }
+    "parents": { "label": "新手父母", "description": "宝宝成长里程碑" },
+    "couple": { "label": "情侣", "description": "感情里程碑" },
+    "family": { "label": "家庭", "description": "家庭回忆" },
+    "friends": { "label": "朋友圈", "description": "旅行、聚会、精彩时刻" },
+    "caregiving": { "label": "照护日记", "description": "健康与生活事件" },
+    "travel": { "label": "旅行团", "description": "一起探险" },
+    "solo": { "label": "只有我", "description": "个人时间线" }
   },
   "nav": {
     "addMemory": "添加记忆",
@@ -482,6 +495,7 @@ git commit -m "feat: add English and Chinese Simplified locale files"
 ## Task 4: Localize login.vue
 
 **Files:**
+
 - Modify: `app/pages/login.vue:1-78`
 
 - [ ] **Step 1: Add useI18n and replace all hardcoded strings in the template**
@@ -498,33 +512,35 @@ const { t } = useI18n()
 
 Replace template strings:
 
-| Original | Replacement |
-|---|---|
-| `Every moment worth keeping, in one place.` | `{{ t('login.tagline') }}` |
-| `For you, your family, your friends.` | `{{ t('login.subtitle') }}` |
-| `Continue with Google` (button text) | `{{ t('login.continueWithGoogle') }}` |
-| `{{ loading ? 'Sending…' : 'Continue with email' }}` | `{{ loading ? t('login.sending') : t('login.continueWithEmail') }}` |
-| `Check your inbox` | `{{ t('login.checkInbox') }}` |
-| `We sent a sign-in link to ...` | `{{ t('login.sentLink', { email }) }}` |
-| `Try a different way` | `{{ t('login.tryDifferent') }}` |
-| `We'll send you a sign-in link — no password needed.` | `{{ t('login.noPassword') }}` |
+| Original                                              | Replacement                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------------- |
+| `Every moment worth keeping, in one place.`           | `{{ t('login.tagline') }}`                                          |
+| `For you, your family, your friends.`                 | `{{ t('login.subtitle') }}`                                         |
+| `Continue with Google` (button text)                  | `{{ t('login.continueWithGoogle') }}`                               |
+| `{{ loading ? 'Sending…' : 'Continue with email' }}`  | `{{ loading ? t('login.sending') : t('login.continueWithEmail') }}` |
+| `Check your inbox`                                    | `{{ t('login.checkInbox') }}`                                       |
+| `We sent a sign-in link to ...`                       | `{{ t('login.sentLink', { email }) }}`                              |
+| `Try a different way`                                 | `{{ t('login.tryDifferent') }}`                                     |
+| `We'll send you a sign-in link — no password needed.` | `{{ t('login.noPassword') }}`                                       |
 
 Full updated template section (success state):
+
 ```html
-<div v-if="sent" class="mt-6 rounded-[12px] bg-card border border-border px-5 py-4 text-center">
-  <p class="text-sm font-semibold text-foreground mb-1">{{ t('login.checkInbox') }}</p>
-  <p class="text-xs text-muted-foreground leading-relaxed">
-    {{ t('login.sentLink', { email }) }}
-  </p>
+<div v-if="sent" class="mt-6 rounded-[12px] border border-border bg-card px-5 py-4 text-center">
+  <p class="mb-1 text-sm font-semibold text-foreground">{{ t('login.checkInbox') }}</p>
+  <p class="text-xs leading-relaxed text-muted-foreground">{{ t('login.sentLink', { email }) }}</p>
   <button
     type="button"
-    class="mt-3 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+    class="mt-3 text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
     @click="sent = false; authError = null"
   >
     {{ t('login.tryDifferent') }}
   </button>
 </div>
-<p v-else-if="!authError" class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
+<p
+  v-else-if="!authError"
+  class="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground"
+>
   {{ t('login.noPassword') }}
 </p>
 ```
@@ -532,10 +548,12 @@ Full updated template section (success state):
 - [ ] **Step 2: Verify**
 
 Start dev server, navigate to `/login`. Confirm all English strings render. Then in browser devtools console run:
+
 ```js
 document.cookie = 'i18n_locale=zh-CN; path=/'
 location.reload()
 ```
+
 Confirm page shows Chinese strings (e.g. "每一个值得珍藏的时刻，都在这里。"). Reset: `document.cookie = 'i18n_locale=en; path=/'`.
 
 - [ ] **Step 3: Commit**
@@ -550,6 +568,7 @@ git commit -m "feat(i18n): localize login page"
 ## Task 5: Localize onboarding pages
 
 **Files:**
+
 - Modify: `app/pages/onboarding/index.vue`
 - Modify: `app/pages/onboarding/name.vue`
 - Modify: `app/pages/onboarding/profile.vue`
@@ -567,19 +586,49 @@ const { t } = useI18n()
 ```
 
 Replace `circleTypes` array definition with a computed that uses translations:
+
 ```ts
 const circleTypes = computed(() => [
-  { value: 'parents',    label: t('circleType.parents.label'),    description: t('circleType.parents.description') },
-  { value: 'couple',     label: t('circleType.couple.label'),     description: t('circleType.couple.description') },
-  { value: 'family',     label: t('circleType.family.label'),     description: t('circleType.family.description') },
-  { value: 'friends',    label: t('circleType.friends.label'),    description: t('circleType.friends.description') },
-  { value: 'caregiving', label: t('circleType.caregiving.label'), description: t('circleType.caregiving.description') },
-  { value: 'travel',     label: t('circleType.travel.label'),     description: t('circleType.travel.description') },
-  { value: 'solo',       label: t('circleType.solo.label'),       description: t('circleType.solo.description') },
+  {
+    value: 'parents',
+    label: t('circleType.parents.label'),
+    description: t('circleType.parents.description'),
+  },
+  {
+    value: 'couple',
+    label: t('circleType.couple.label'),
+    description: t('circleType.couple.description'),
+  },
+  {
+    value: 'family',
+    label: t('circleType.family.label'),
+    description: t('circleType.family.description'),
+  },
+  {
+    value: 'friends',
+    label: t('circleType.friends.label'),
+    description: t('circleType.friends.description'),
+  },
+  {
+    value: 'caregiving',
+    label: t('circleType.caregiving.label'),
+    description: t('circleType.caregiving.description'),
+  },
+  {
+    value: 'travel',
+    label: t('circleType.travel.label'),
+    description: t('circleType.travel.description'),
+  },
+  {
+    value: 'solo',
+    label: t('circleType.solo.label'),
+    description: t('circleType.solo.description'),
+  },
 ])
 ```
 
 Replace template strings:
+
 ```html
 <h1 ...>{{ t('onboarding.whoIsThis') }}</h1>
 <p ...>{{ t('onboarding.personalise') }}</p>
@@ -648,6 +697,7 @@ git commit -m "feat(i18n): localize onboarding pages"
 ## Task 6: Add language toggle + localize index.vue (with DB persistence)
 
 **Files:**
+
 - Modify: `app/pages/index.vue`
 
 The profile is already fetched via `useFetch('/api/profile')` on this page. Load the saved locale from it on mount, and persist when toggling.
@@ -655,11 +705,13 @@ The profile is already fetched via `useFetch('/api/profile')` on this page. Load
 - [ ] **Step 1: Add useI18n and locale init from profile**
 
 Add at the top of `<script setup>` (after the existing `const { t, locale, setLocale } = useI18n()` line — or add it fresh):
+
 ```ts
 const { t, locale, setLocale } = useI18n()
 ```
 
 After the existing `const { data: profile } = await useFetch('/api/profile')` line, apply the saved locale immediately:
+
 ```ts
 // Apply saved locale from DB profile (profile is already fetched above)
 if (profile.value?.locale) {
@@ -670,6 +722,7 @@ if (profile.value?.locale) {
 - [ ] **Step 2: Add toggleLocale function (persists to DB)**
 
 Add after `toggleTheme()`:
+
 ```ts
 async function toggleLocale() {
   const next = locale.value === 'en' ? 'zh-CN' : 'en'
@@ -687,12 +740,20 @@ In the dropdown `<div class="py-1">`, add after the theme toggle button and befo
 ```html
 <!-- Language toggle -->
 <button
-  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors text-left"
+  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary"
   @click="toggleLocale"
 >
-  <svg class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10"/>
-    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  <svg
+    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 24 24"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path
+      d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+    />
   </svg>
   {{ locale === 'en' ? '中文' : 'English' }}
 </button>
@@ -701,34 +762,35 @@ In the dropdown `<div class="py-1">`, add after the theme toggle button and befo
 - [ ] **Step 4: Replace hardcoded strings in template**
 
 Header:
+
 ```html
-<span>{{ t('nav.addMemory') }}</span>
-{{ t('nav.members', circle.memberCount) }}
+<span>{{ t('nav.addMemory') }}</span> {{ t('nav.members', circle.memberCount) }}
 ```
 
 Dropdown:
+
 ```html
-{{ t('nav.profileSettings') }}
-{{ t('nav.inviteMember') }}
-{{ isDark ? t('nav.lightMode') : t('nav.darkMode') }}
-{{ t('nav.logOut') }}
+{{ t('nav.profileSettings') }} {{ t('nav.inviteMember') }} {{ isDark ? t('nav.lightMode') :
+t('nav.darkMode') }} {{ t('nav.logOut') }}
 ```
 
 Jump modal:
+
 ```html
 <h2 ...>{{ t('nav.jumpTo') }}</h2>
 ```
 
 Invite dialog:
+
 ```html
 <h2 ...>{{ t('nav.inviteSomeone') }}</h2>
 <p ...>{{ t('nav.inviteDesc', { circle: circle?.name ?? 'your circle' }) }}</p>
-{{ t('nav.cancel') }}
-{{ inviteSending ? t('nav.sending') : t('nav.sendInvite') }}
-{{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
+{{ t('nav.cancel') }} {{ inviteSending ? t('nav.sending') : t('nav.sendInvite') }} {{
+t('nav.inviteSentTo', { email: inviteSentTo }) }}
 ```
 
 Update `sendInvite()` error messages:
+
 ```ts
 if (msg.includes('already been sent')) inviteError.value = t('nav.inviteAlreadySent')
 else if (msg.includes('Max 10')) inviteError.value = t('nav.inviteMaxPending')
@@ -755,11 +817,13 @@ git commit -m "feat(i18n): add language toggle with DB persistence, localize mai
 ## Task 7: Localize UploadMemory.vue
 
 **Files:**
+
 - Modify: `app/components/UploadMemory.vue`
 
 - [ ] **Step 1: Add useI18n to script setup**
 
 In the `<script setup>` block (after the `defineProps` and `defineExpose` lines):
+
 ```ts
 const { t } = useI18n()
 ```
@@ -767,6 +831,7 @@ const { t } = useI18n()
 - [ ] **Step 2: Replace hardcoded strings in template**
 
 Header:
+
 ```html
 <!-- h2 title -->
 {{ items.length === 1 ? t('upload.addMemory') : t('upload.addMemories', items.length) }}
@@ -776,11 +841,13 @@ Header:
 ```
 
 Batch group date row:
+
 ```html
 {{ t('upload.applyToAll') }}
 ```
 
 Single item labels:
+
 ```html
 <label ...>{{ t('upload.note') }}</label>
 <label ...>{{ t('upload.milestone') }}</label>
@@ -788,14 +855,19 @@ Single item labels:
 ```
 
 Footer buttons:
+
 ```html
 <!-- Cancel -->
 {{ t('upload.cancel') }}
 
 <!-- Upload button -->
-<span v-if="isUploading">{{ t('upload.uploading', { done: doneCount, total: items.length }) }}</span>
+<span v-if="isUploading"
+  >{{ t('upload.uploading', { done: doneCount, total: items.length }) }}</span
+>
 <span v-else-if="allDone">{{ t('upload.allUploaded') }}</span>
-<span v-else>{{ items.length === 1 ? t('upload.upload') : t('upload.uploadN', items.length) }}</span>
+<span v-else
+  >{{ items.length === 1 ? t('upload.upload') : t('upload.uploadN', items.length) }}</span
+>
 ```
 
 - [ ] **Step 3: Verify**
@@ -814,6 +886,7 @@ git commit -m "feat(i18n): localize UploadMemory component"
 ## Task 8: Localize TimelinePolaroid.vue and PolaroidCard.vue
 
 **Files:**
+
 - Modify: `app/components/TimelinePolaroid.vue`
 - Modify: `app/components/PolaroidCard.vue`
 
@@ -822,6 +895,7 @@ git commit -m "feat(i18n): localize UploadMemory component"
 Add `const { t } = useI18n()` to `<script setup>`.
 
 Replace strings in template:
+
 ```html
 <!-- Empty state -->
 <p ...>{{ t('timeline.emptyTitle') }}</p>
@@ -834,17 +908,23 @@ Replace strings in template:
 <span ...>{{ group.label }} &middot; {{ t('timeline.memories', group.totalCount) }}</span>
 
 <!-- See more card -->
-<span>+{{ group.totalCount - group.memories.length }} {{ t('timeline.memories', group.totalCount - group.memories.length).replace(/^\d+ /, '') }}</span>
+<span
+  >+{{ group.totalCount - group.memories.length }} {{ t('timeline.memories', group.totalCount -
+  group.memories.length).replace(/^\d+ /, '') }}</span
+>
 ```
 
 Wait — the "See more" card currently shows `+{{ n }} more` and `Open {{ group.label }} →`. For the memory count word, use `t('timeline.memories', n)` which renders as "5 memories" (including the number). Since we need just the word, do this inline:
+
 ```html
 <span class="leading-snug">+{{ group.totalCount - group.memories.length }} more</span>
 <span class="leading-snug">Open {{ group.label }} →</span>
 ```
+
 Leave "more" and "Open ... →" as-is for now (they contain dynamic content and are less prominent — can be addressed in a follow-up if needed).
 
 Update the `yearSummary` function to use `t()`:
+
 ```ts
 function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
   const totalMemories = yearSection.months.reduce((sum, g) => sum + g.totalCount, 0)
@@ -858,6 +938,7 @@ function yearSummary(yearSection: { year: number; months: MonthGroup[] }): strin
 Add `const { t } = useI18n()` to `<script setup>`.
 
 Replace strings in template:
+
 ```html
 <!-- Caption fallback -->
 :class="captionText ? 'text-foreground' : 'text-muted-foreground/40 italic'"
@@ -883,11 +964,13 @@ git commit -m "feat(i18n): localize TimelinePolaroid and PolaroidCard components
 ## Task 9: Localize MemoryModal.vue
 
 **Files:**
+
 - Modify: `app/components/MemoryModal.vue`
 
 - [ ] **Step 1: Add useI18n to script setup**
 
 After the existing `const PRESET_EMOJIS = [...]` block:
+
 ```ts
 const { t } = useI18n()
 ```
@@ -895,6 +978,7 @@ const { t } = useI18n()
 - [ ] **Step 2: Replace hardcoded strings in template**
 
 Tab bar:
+
 ```html
 <!-- Caption tab button -->
 {{ t('modal.tabCaption') }}
@@ -904,6 +988,7 @@ Tab bar:
 ```
 
 Caption tab — edit mode labels:
+
 ```html
 <label ...>{{ t('modal.milestone') }}</label>
 <label ...>{{ t('modal.note') }}</label>
@@ -911,24 +996,26 @@ Caption tab — edit mode labels:
 <textarea ... :placeholder="t('modal.notePlaceholder')" ... />
 
 <!-- Cancel / Save buttons -->
-{{ t('modal.cancel') }}
-{{ saving ? t('modal.saving') : t('modal.save') }}
+{{ t('modal.cancel') }} {{ saving ? t('modal.saving') : t('modal.save') }}
 ```
 
 Caption tab — view mode empty state:
+
 ```html
-<p v-else class="text-[13px] text-muted-foreground/50 italic mb-2">
+<p v-else class="mb-2 text-[13px] italic text-muted-foreground/50">
   {{ isOwner ? t('modal.noNoteOwner') : t('modal.noNote') }}
 </p>
 ```
 
 Comments tab — input:
+
 ```html
 <textarea ... :placeholder="t('modal.addComment')" ... />
-<button ... >{{ submitting ? '…' : t('modal.post') }}</button>
+<button ...>{{ submitting ? '…' : t('modal.post') }}</button>
 ```
 
 Comments tab — empty state and view older:
+
 ```html
 <p v-else ...>{{ t('modal.noComments') }}</p>
 
@@ -953,6 +1040,7 @@ git commit -m "feat(i18n): localize MemoryModal component"
 ## Self-Review
 
 **Spec coverage check:**
+
 - ✅ `@nuxtjs/i18n` installed and configured with `no_prefix` strategy
 - ✅ DB migration updating `locale` check constraint from `'zh-Hans'` → `'zh-CN'`
 - ✅ Profile GET returns `locale`; Profile PATCH accepts optional `locale`
@@ -973,6 +1061,7 @@ git commit -m "feat(i18n): localize MemoryModal component"
 **Type consistency:** `t()` is from `useI18n()` in every file. Plural calls `t('key', n)` use numeric `n` consistently throughout.
 
 **Not in scope (follow-up):**
+
 - `app/pages/member/[userId].vue` header (uses same nav component pattern; strings minimal)
 - "more" / "Open ... →" text in the "See more" card (contains dynamic circle name, low priority)
 - Email templates (server-side, separate concern)

@@ -20,27 +20,27 @@ const CIRCLE_2 = {
 
 test.describe('Multi-circle support', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/api/auth/membership**', route =>
+    await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-      })
+      }),
     )
-    await page.route('**/api/circles**', route =>
+    await page.route('**/api/circles**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ circles: [CIRCLE_1, CIRCLE_2] }),
-      })
+      }),
     )
     // Return empty timeline so we don't need real DB data
-    await page.route('**/api/timeline**', route =>
+    await page.route('**/api/timeline**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ memories: [], nextCursor: null }),
-      })
+      }),
     )
   })
 

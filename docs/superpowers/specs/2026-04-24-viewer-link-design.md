@@ -53,6 +53,7 @@ CREATE INDEX ON viewer_link (id, nonce);  -- viewer API lookup path
 ```
 
 **Default labels (auto-generated, owner can edit):**
+
 - `full` → "Full timeline"
 - `date_range` → "Jan 2024 – Jun 2024" (formatted via `Intl.DateTimeFormat`, locale-aware)
 - `selection` → "5 memories" (count of selected IDs)
@@ -75,12 +76,12 @@ CREATE INDEX ON viewer_link (id, nonce);  -- viewer API lookup path
 
 ## RLS Policies
 
-| Policy | Table | Who | Operation |
-|---|---|---|---|
-| Owner can manage own viewer links | `viewer_link` | Circle owner | SELECT, INSERT, DELETE |
-| Members blocked | `viewer_link` | Circle members | all — denied |
-| Admins blocked | `viewer_link` | Circle admins | all — denied |
-| Cross-circle blocked | `viewer_link` | Any user | cannot access another circle's links |
+| Policy                            | Table         | Who            | Operation                            |
+| --------------------------------- | ------------- | -------------- | ------------------------------------ |
+| Owner can manage own viewer links | `viewer_link` | Circle owner   | SELECT, INSERT, DELETE               |
+| Members blocked                   | `viewer_link` | Circle members | all — denied                         |
+| Admins blocked                    | `viewer_link` | Circle admins  | all — denied                         |
+| Cross-circle blocked              | `viewer_link` | Any user       | cannot access another circle's links |
 
 Viewer API uses service role (existing pattern in `viewer/timeline.get.ts`) — bypasses RLS.
 
@@ -94,6 +95,7 @@ Viewer API uses service role (existing pattern in `viewer/timeline.get.ts`) — 
 Returns all viewer links for the circle, ordered by `created_at DESC`.
 
 Response per link:
+
 ```ts
 {
   id: string
@@ -111,6 +113,7 @@ Response per link:
 Creates a new viewer link. Owner-only.
 
 Request body:
+
 ```ts
 {
   mode: 'full' | 'date_range' | 'selection'
@@ -162,12 +165,14 @@ i18n key: `viewerLink.shareButton`
 Bottom sheet. Two states:
 
 **Empty state (no links):**
+
 - Headline: `t('viewerLink.emptyHeadline')` — "Share your circle"
 - Body: `t('viewerLink.emptyBody')` — "Create a viewer link — anyone with it can browse your memories without an account."
 - CTA: `t('viewerLink.createLink')` — "Create a link"
 
 **List state (one or more links):**
 Each link renders as a card:
+
 - Label (bold)
 - Mode badge: `t('viewerLink.modeFull')` / `t('viewerLink.modeDateRange')` / `t('viewerLink.modeSelection')` — with date range or count suffix where applicable
 - Created date (locale-aware `Intl.DateTimeFormat`)
@@ -211,6 +216,7 @@ Slides over `ShareLinksSheet`. Steps:
 ### Link label + mode banner
 
 Slim banner below the circle name:
+
 - `full` mode: no banner (or optional subtle pill — omit for now)
 - `date_range`: `t('viewerLink.dateRangeBanner', { from, to })` — "Memories from Jan 2024 – Jun 2024"
 - `selection`: `t('viewerLink.selectionBanner', { count, from, to })` — "5 selected memories · Mar 2024 – Dec 2024"
@@ -261,6 +267,7 @@ Requires adding `notified_expiry_at TIMESTAMPTZ` column to `viewer_link`.
 ## Migration
 
 One new migration file. Contents:
+
 1. `CREATE TABLE viewer_link` (schema above)
 2. Add `notified_expiry_at TIMESTAMPTZ` column
 3. RLS policies (owner-only SELECT/INSERT/DELETE)

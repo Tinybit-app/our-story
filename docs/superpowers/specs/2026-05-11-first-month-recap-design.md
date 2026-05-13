@@ -149,6 +149,7 @@ None. The `first_memory_at` (timestamptz) and `first_month_email_sent` (bool, de
 ## 6. Testing
 
 ### Unit tests (`unit/firstMonthRecapEmail.test.ts`)
+
 - Subject line generation × en/zh-CN/fr (3 cases)
 - Body content for `topReactionMemoryId = null` (no reactions section)
 - Body content with reactions section
@@ -156,12 +157,15 @@ None. The `first_memory_at` (timestamptz) and `first_month_email_sent` (bool, de
 - Memory count + milestone count rendering
 
 ### No new RLS tests
+
 - The Edge Function uses service role; no new tables.
 
 ### No new schema-compliance tests
+
 - No new migrations.
 
 ### Manual verification
+
 1. Set a circle's `first_memory_at` to exactly 30 days ago in Supabase Studio
 2. Set `first_month_email_sent = false`
 3. Trigger: `curl -X POST $SUPABASE_URL/functions/v1/send-first-month-recap -H "Authorization: Bearer $SERVICE_ROLE_KEY"`

@@ -15,41 +15,44 @@
 ## File Structure
 
 ### New files
-| File | Responsibility |
-|------|---------------|
-| `public/manifest.json` | PWA web app manifest |
-| `public/sw.js` | Service worker — push event + notification click handlers |
-| `public/icon-192.png` | App icon 192x192 for manifest + notifications |
-| `public/icon-512.png` | App icon 512x512 for manifest |
-| `app/plugins/service-worker.client.ts` | Registers service worker on app mount |
-| `app/composables/usePushNotifications.ts` | Client-side push subscription management |
-| `app/components/PushPromptBanner.vue` | Contextual banner prompting user to enable push |
-| `supabase/migrations/026_push_subscriptions.sql` | PushSubscription table + RLS policies |
-| `server/api/push/subscribe.post.ts` | Store push subscription |
-| `server/api/push/subscribe.delete.ts` | Remove push subscription |
-| `server/api/push/notify.post.ts` | Dispatch push for uploads (called by client) |
-| `server/utils/pushNotify.ts` | Core push dispatch utility |
-| `unit/pushNotify.test.ts` | Unit tests for push notification logic |
+
+| File                                             | Responsibility                                            |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| `public/manifest.json`                           | PWA web app manifest                                      |
+| `public/sw.js`                                   | Service worker — push event + notification click handlers |
+| `public/icon-192.png`                            | App icon 192x192 for manifest + notifications             |
+| `public/icon-512.png`                            | App icon 512x512 for manifest                             |
+| `app/plugins/service-worker.client.ts`           | Registers service worker on app mount                     |
+| `app/composables/usePushNotifications.ts`        | Client-side push subscription management                  |
+| `app/components/PushPromptBanner.vue`            | Contextual banner prompting user to enable push           |
+| `supabase/migrations/026_push_subscriptions.sql` | PushSubscription table + RLS policies                     |
+| `server/api/push/subscribe.post.ts`              | Store push subscription                                   |
+| `server/api/push/subscribe.delete.ts`            | Remove push subscription                                  |
+| `server/api/push/notify.post.ts`                 | Dispatch push for uploads (called by client)              |
+| `server/utils/pushNotify.ts`                     | Core push dispatch utility                                |
+| `unit/pushNotify.test.ts`                        | Unit tests for push notification logic                    |
 
 ### Modified files
-| File | Change |
-|------|--------|
-| `nuxt.config.ts` | Add manifest link to `app.head`, add VAPID public key to `runtimeConfig.public`, add VAPID private key + subject to `runtimeConfig` |
-| `app/components/UploadMemory.vue` | Call `POST /api/push/notify` after successful upload |
-| `server/api/memories/[id]/comments.post.ts` | Call `sendPushToCircle()` after comment insert |
-| `server/api/memories/[id]/reactions.post.ts` | Call `sendPushToCircle()` after reaction insert (only for new reactions, not removals) |
-| `server/api/memories/quick-note.post.ts` | Call `sendPushToCircle()` after quick note insert |
-| `app/pages/timeline/index.vue` | Add `PushPromptBanner` component |
-| `app/pages/circle-settings.vue` | Add push on/off + mute toggles |
-| `app/types/database.ts` | Regenerate to include PushSubscription table |
-| `supabase/tests/rls.test.sql` | Add RLS tests for PushSubscription |
-| `docs/build-plan.md` | Update 10.1 description, add 10.3 |
+
+| File                                         | Change                                                                                                                              |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `nuxt.config.ts`                             | Add manifest link to `app.head`, add VAPID public key to `runtimeConfig.public`, add VAPID private key + subject to `runtimeConfig` |
+| `app/components/UploadMemory.vue`            | Call `POST /api/push/notify` after successful upload                                                                                |
+| `server/api/memories/[id]/comments.post.ts`  | Call `sendPushToCircle()` after comment insert                                                                                      |
+| `server/api/memories/[id]/reactions.post.ts` | Call `sendPushToCircle()` after reaction insert (only for new reactions, not removals)                                              |
+| `server/api/memories/quick-note.post.ts`     | Call `sendPushToCircle()` after quick note insert                                                                                   |
+| `app/pages/timeline/index.vue`               | Add `PushPromptBanner` component                                                                                                    |
+| `app/pages/circle-settings.vue`              | Add push on/off + mute toggles                                                                                                      |
+| `app/types/database.ts`                      | Regenerate to include PushSubscription table                                                                                        |
+| `supabase/tests/rls.test.sql`                | Add RLS tests for PushSubscription                                                                                                  |
+| `docs/build-plan.md`                         | Update 10.1 description, add 10.3                                                                                                   |
 
 ---
 
 ## Task 1: Database Migration — PushSubscription Table
 
 **Files:**
+
 - Create: `supabase/migrations/026_push_subscriptions.sql`
 - Modify: `supabase/tests/rls.test.sql`
 
@@ -154,6 +157,7 @@ git commit -m "feat(push): add PushSubscription table with RLS"
 ## Task 2: PWA Foundation — Manifest + Service Worker
 
 **Files:**
+
 - Create: `public/manifest.json`, `public/sw.js`, `public/icon-192.png`, `public/icon-512.png`, `app/plugins/service-worker.client.ts`
 - Modify: `nuxt.config.ts`
 
@@ -199,7 +203,7 @@ self.addEventListener('push', (event) => {
       tag: data.tag,
       renotify: data.renotify !== false,
       data: { url: data.data?.url || '/timeline' },
-    })
+    }),
   )
 })
 
@@ -217,7 +221,7 @@ self.addEventListener('notificationclick', (event) => {
         }
       }
       return clients.openWindow(url)
-    })
+    }),
   )
 })
 ```
@@ -290,6 +294,7 @@ git commit -m "feat(push): add PWA manifest, service worker, and VAPID config"
 ## Task 3: Push Subscription API Routes
 
 **Files:**
+
 - Create: `server/api/push/subscribe.post.ts`, `server/api/push/subscribe.delete.ts`
 
 - [ ] **Step 1: Create the subscribe endpoint**
@@ -297,8 +302,8 @@ git commit -m "feat(push): add PWA manifest, service worker, and VAPID config"
 Create `server/api/push/subscribe.post.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const bodySchema = z.object({
   endpoint: z.string().url(),
@@ -315,21 +320,21 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid subscription data." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid subscription data.' })
 
   const { endpoint, keys } = result.data
 
   // Upsert: if endpoint already exists, update the keys (browser may regenerate)
   const { error } = await supabase
-    .from("pushsubscription")
+    .from('pushsubscription')
     .upsert(
       { user_id: user.sub, endpoint, p256dh: keys.p256dh, auth: keys.auth },
-      { onConflict: "endpoint" }
+      { onConflict: 'endpoint' },
     )
 
   if (error) {
-    console.error("[push/subscribe] upsert error:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to save subscription." })
+    console.error('[push/subscribe] upsert error:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to save subscription.' })
   }
 
   return { ok: true }
@@ -341,8 +346,8 @@ export default defineEventHandler(async (event) => {
 Create `server/api/push/subscribe.delete.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const bodySchema = z.object({
   endpoint: z.string().url(),
@@ -355,17 +360,17 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request.' })
 
   const { error } = await supabase
-    .from("pushsubscription")
+    .from('pushsubscription')
     .delete()
-    .eq("endpoint", result.data.endpoint)
-    .eq("user_id", user.sub)
+    .eq('endpoint', result.data.endpoint)
+    .eq('user_id', user.sub)
 
   if (error) {
-    console.error("[push/unsubscribe] delete error:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to remove subscription." })
+    console.error('[push/unsubscribe] delete error:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to remove subscription.' })
   }
 
   return { ok: true }
@@ -376,9 +381,11 @@ export default defineEventHandler(async (event) => {
 
 Run: `pnpm dev`
 Test with curl (expect 401 since no auth):
+
 ```bash
 curl -X POST http://localhost:3000/api/push/subscribe -H "Content-Type: application/json" -d '{}'
 ```
+
 Expected: 401 Unauthorized
 
 - [ ] **Step 4: Commit**
@@ -393,6 +400,7 @@ git commit -m "feat(push): add subscribe/unsubscribe API routes"
 ## Task 4: Client Composable — usePushNotifications
 
 **Files:**
+
 - Create: `app/composables/usePushNotifications.ts`
 
 - [ ] **Step 1: Create the composable**
@@ -403,15 +411,16 @@ Create `app/composables/usePushNotifications.ts`:
 export function usePushNotifications() {
   const config = useRuntimeConfig()
 
-  const isSupported = computed(() =>
-    import.meta.client &&
-    'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window
+  const isSupported = computed(
+    () =>
+      import.meta.client &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window,
   )
 
   const permissionState = ref<NotificationPermission>(
-    import.meta.client && 'Notification' in window ? Notification.permission : 'default'
+    import.meta.client && 'Notification' in window ? Notification.permission : 'default',
   )
 
   async function requestPermission(): Promise<boolean> {
@@ -502,6 +511,7 @@ git commit -m "feat(push): add usePushNotifications composable"
 ## Task 5: Push Dispatch Utility
 
 **Files:**
+
 - Create: `server/utils/pushNotify.ts`, `unit/pushNotify.test.ts`
 
 - [ ] **Step 1: Write the unit tests**
@@ -509,99 +519,99 @@ git commit -m "feat(push): add usePushNotifications composable"
 Create `unit/pushNotify.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest"
-import { buildPushPayload } from "../server/utils/pushNotify"
+import { describe, it, expect } from 'vitest'
+import { buildPushPayload } from '../server/utils/pushNotify'
 
-describe("buildPushPayload", () => {
-  it("builds upload payload with note (singular)", () => {
+describe('buildPushPayload', () => {
+  it('builds upload payload with note (singular)', () => {
     const payload = buildPushPayload({
-      type: "upload",
-      actorName: "Emma",
-      circleId: "circle-1",
-      actorUserId: "user-1",
-      memoryId: "mem-1",
-      bodyText: "First steps at the park",
+      type: 'upload',
+      actorName: 'Emma',
+      circleId: 'circle-1',
+      actorUserId: 'user-1',
+      memoryId: 'mem-1',
+      bodyText: 'First steps at the park',
       recentUploadCount: 1,
     })
-    expect(payload.title).toBe("Emma added a memory")
-    expect(payload.body).toBe("First steps at the park")
-    expect(payload.tag).toBe("upload-circle-1-user-1")
+    expect(payload.title).toBe('Emma added a memory')
+    expect(payload.body).toBe('First steps at the park')
+    expect(payload.tag).toBe('upload-circle-1-user-1')
     expect(payload.renotify).toBe(true)
-    expect(payload.data.url).toBe("/timeline?circle=circle-1&memory=mem-1")
+    expect(payload.data.url).toBe('/timeline?circle=circle-1&memory=mem-1')
   })
 
-  it("builds upload payload (plural, silent)", () => {
+  it('builds upload payload (plural, silent)', () => {
     const payload = buildPushPayload({
-      type: "upload",
-      actorName: "Emma",
-      circleId: "circle-1",
-      actorUserId: "user-1",
-      memoryId: "mem-3",
+      type: 'upload',
+      actorName: 'Emma',
+      circleId: 'circle-1',
+      actorUserId: 'user-1',
+      memoryId: 'mem-3',
       bodyText: null,
       recentUploadCount: 5,
     })
-    expect(payload.title).toBe("Emma added 5 memories")
+    expect(payload.title).toBe('Emma added 5 memories')
     expect(payload.body).toBe("Check out what's new")
-    expect(payload.tag).toBe("upload-circle-1-user-1")
+    expect(payload.tag).toBe('upload-circle-1-user-1')
     expect(payload.renotify).toBe(false)
   })
 
-  it("builds upload payload without note (singular)", () => {
+  it('builds upload payload without note (singular)', () => {
     const payload = buildPushPayload({
-      type: "upload",
-      actorName: "Dad",
-      circleId: "c-2",
-      actorUserId: "u-2",
-      memoryId: "m-2",
+      type: 'upload',
+      actorName: 'Dad',
+      circleId: 'c-2',
+      actorUserId: 'u-2',
+      memoryId: 'm-2',
       bodyText: null,
       recentUploadCount: 1,
     })
-    expect(payload.title).toBe("Dad added a memory")
-    expect(payload.body).toBe("Shared a new memory")
+    expect(payload.title).toBe('Dad added a memory')
+    expect(payload.body).toBe('Shared a new memory')
   })
 
-  it("builds comment payload", () => {
+  it('builds comment payload', () => {
     const payload = buildPushPayload({
-      type: "comment",
-      actorName: "Mom",
-      circleId: "c-1",
-      actorUserId: "u-1",
-      memoryId: "m-1",
-      bodyText: "This is so cute!",
+      type: 'comment',
+      actorName: 'Mom',
+      circleId: 'c-1',
+      actorUserId: 'u-1',
+      memoryId: 'm-1',
+      bodyText: 'This is so cute!',
     })
-    expect(payload.title).toBe("Mom commented")
-    expect(payload.body).toBe("This is so cute!")
-    expect(payload.tag).toBe("comment-c-1-u-1")
+    expect(payload.title).toBe('Mom commented')
+    expect(payload.body).toBe('This is so cute!')
+    expect(payload.tag).toBe('comment-c-1-u-1')
     expect(payload.renotify).toBe(true)
   })
 
-  it("builds reaction payload", () => {
+  it('builds reaction payload', () => {
     const payload = buildPushPayload({
-      type: "reaction",
-      actorName: "Dad",
-      circleId: "c-1",
-      actorUserId: "u-1",
-      memoryId: "m-1",
-      emoji: "❤️",
+      type: 'reaction',
+      actorName: 'Dad',
+      circleId: 'c-1',
+      actorUserId: 'u-1',
+      memoryId: 'm-1',
+      emoji: '❤️',
     })
-    expect(payload.title).toBe("Dad reacted ❤️")
-    expect(payload.body).toBe("")
-    expect(payload.tag).toBe("reaction-c-1-u-1")
+    expect(payload.title).toBe('Dad reacted ❤️')
+    expect(payload.body).toBe('')
+    expect(payload.tag).toBe('reaction-c-1-u-1')
     expect(payload.renotify).toBe(true)
   })
 
-  it("truncates long body text to 100 chars", () => {
-    const longText = "A".repeat(150)
+  it('truncates long body text to 100 chars', () => {
+    const longText = 'A'.repeat(150)
     const payload = buildPushPayload({
-      type: "comment",
-      actorName: "Mom",
-      circleId: "c-1",
-      actorUserId: "u-1",
-      memoryId: "m-1",
+      type: 'comment',
+      actorName: 'Mom',
+      circleId: 'c-1',
+      actorUserId: 'u-1',
+      memoryId: 'm-1',
       bodyText: longText,
     })
     expect(payload.body.length).toBeLessThanOrEqual(103)
-    expect(payload.body.endsWith("…")).toBe(true)
+    expect(payload.body.endsWith('…')).toBe(true)
   })
 })
 ```
@@ -616,14 +626,14 @@ Expected: FAIL — `buildPushPayload` is not defined.
 Create `server/utils/pushNotify.ts`:
 
 ```ts
-import webpush from "web-push"
+import webpush from 'web-push'
 
 // ─────────────────────────────────────────────────────────────
 // Payload builder (exported for unit tests)
 // ─────────────────────────────────────────────────────────────
 
 interface PushPayloadInput {
-  type: "upload" | "comment" | "reaction"
+  type: 'upload' | 'comment' | 'reaction'
   actorName: string
   circleId: string
   actorUserId: string
@@ -652,26 +662,25 @@ export function buildPushPayload(input: PushPayloadInput): PushPayload {
   let renotify = true
 
   switch (type) {
-    case "upload": {
+    case 'upload': {
       const count = input.recentUploadCount ?? 1
       renotify = count <= 1
-      title = count > 1
-        ? `${actorName} added ${count} memories`
-        : `${actorName} added a memory`
-      body = count > 1
-        ? "Check out what's new"
-        : input.bodyText
-          ? truncate(input.bodyText, 100)
-          : "Shared a new memory"
+      title = count > 1 ? `${actorName} added ${count} memories` : `${actorName} added a memory`
+      body =
+        count > 1
+          ? "Check out what's new"
+          : input.bodyText
+            ? truncate(input.bodyText, 100)
+            : 'Shared a new memory'
       break
     }
-    case "comment":
+    case 'comment':
       title = `${actorName} commented`
-      body = input.bodyText ? truncate(input.bodyText, 100) : ""
+      body = input.bodyText ? truncate(input.bodyText, 100) : ''
       break
-    case "reaction":
-      title = `${actorName} reacted ${input.emoji ?? ""}`
-      body = ""
+    case 'reaction':
+      title = `${actorName} reacted ${input.emoji ?? ''}`
+      body = ''
       break
   }
 
@@ -679,7 +688,7 @@ export function buildPushPayload(input: PushPayloadInput): PushPayload {
 }
 
 function truncate(text: string, max: number): string {
-  return text.length > max ? text.slice(0, max) + "…" : text
+  return text.length > max ? text.slice(0, max) + '…' : text
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -690,22 +699,22 @@ export async function sendPushToCircle(
   supabase: any,
   circleId: string,
   excludeUserId: string,
-  payload: PushPayload
+  payload: PushPayload,
 ): Promise<void> {
   const config = useRuntimeConfig()
 
   webpush.setVapidDetails(
     config.vapidSubject as string,
     config.public.vapidPublicKey as string,
-    config.vapidPrivateKey as string
+    config.vapidPrivateKey as string,
   )
 
   // 1. Get all circle members except the actor
   const { data: members } = await supabase
-    .from("circlemember")
-    .select("user_id")
-    .eq("circle_id", circleId)
-    .neq("user_id", excludeUserId)
+    .from('circlemember')
+    .select('user_id')
+    .eq('circle_id', circleId)
+    .neq('user_id', excludeUserId)
 
   if (!members?.length) return
 
@@ -713,10 +722,10 @@ export async function sendPushToCircle(
 
   // 2. Check notification preferences — skip muted or push-disabled
   const { data: prefs } = await supabase
-    .from("notificationpreference")
-    .select("user_id, push_enabled, circle_muted, quiet_hours_start, quiet_hours_end")
-    .eq("circle_id", circleId)
-    .in("user_id", memberIds)
+    .from('notificationpreference')
+    .select('user_id, push_enabled, circle_muted, quiet_hours_start, quiet_hours_end')
+    .eq('circle_id', circleId)
+    .in('user_id', memberIds)
 
   const prefsMap = new Map<string, any>()
   for (const p of prefs ?? []) {
@@ -739,9 +748,9 @@ export async function sendPushToCircle(
 
   // 3. Get push subscriptions for eligible users
   const { data: subscriptions } = await supabase
-    .from("pushsubscription")
-    .select("id, endpoint, p256dh, auth")
-    .in("user_id", eligibleUserIds)
+    .from('pushsubscription')
+    .select('id, endpoint, p256dh, auth')
+    .in('user_id', eligibleUserIds)
 
   if (!subscriptions?.length) return
 
@@ -755,14 +764,14 @@ export async function sendPushToCircle(
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         },
-        pushPayload
+        pushPayload,
       )
       .catch(async (err) => {
         if (err.statusCode === 410 || err.statusCode === 404) {
           // Subscription expired — clean up
-          await supabase.from("pushsubscription").delete().eq("id", sub.id)
+          await supabase.from('pushsubscription').delete().eq('id', sub.id)
         } else {
-          console.error("[push] send failed:", err.message)
+          console.error('[push] send failed:', err.message)
         }
       })
   }
@@ -770,7 +779,7 @@ export async function sendPushToCircle(
 
 function isWithinQuietHours(start: string, end: string): boolean {
   const now = new Date()
-  const hhmm = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`
+  const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
 
   // Handle overnight ranges (e.g., 22:00 – 08:00)
   if (start <= end) {
@@ -797,6 +806,7 @@ git commit -m "feat(push): add push dispatch utility with payload builder"
 ## Task 6: Notify API Route (Upload Trigger)
 
 **Files:**
+
 - Create: `server/api/push/notify.post.ts`
 
 - [ ] **Step 1: Create the notify endpoint**
@@ -804,9 +814,9 @@ git commit -m "feat(push): add push dispatch utility with payload builder"
 Create `server/api/push/notify.post.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
-import { buildPushPayload, sendPushToCircle } from "~/server/utils/pushNotify"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
+import { buildPushPayload, sendPushToCircle } from '~/server/utils/pushNotify'
 
 const bodySchema = z.object({
   memoryId: z.uuid(),
@@ -819,14 +829,14 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request.' })
   const { memoryId } = result.data
 
   // Verify the memory exists and the caller is the owner
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, circle_id, owner_user_id, note, created_at")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, circle_id, owner_user_id, note, created_at')
+    .eq('id', memoryId)
     .maybeSingle()
 
   if (!memory) throw createError({ statusCode: 404 })
@@ -834,24 +844,24 @@ export default defineEventHandler(async (event) => {
 
   // Get actor name
   const { data: actor } = await supabase
-    .from("user")
-    .select("first_name")
-    .eq("id", user.sub)
+    .from('user')
+    .select('first_name')
+    .eq('id', user.sub)
     .single()
 
-  const actorName = actor?.first_name ?? "Someone"
+  const actorName = actor?.first_name ?? 'Someone'
 
   // Count recent uploads by this user in this circle (last 30 minutes) for coalescing
   const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
   const { count } = await supabase
-    .from("memory")
-    .select("id", { count: "exact", head: true })
-    .eq("circle_id", memory.circle_id)
-    .eq("owner_user_id", user.sub)
-    .gte("created_at", thirtyMinAgo)
+    .from('memory')
+    .select('id', { count: 'exact', head: true })
+    .eq('circle_id', memory.circle_id)
+    .eq('owner_user_id', user.sub)
+    .gte('created_at', thirtyMinAgo)
 
   const payload = buildPushPayload({
-    type: "upload",
+    type: 'upload',
     actorName,
     circleId: memory.circle_id,
     actorUserId: user.sub,
@@ -862,7 +872,7 @@ export default defineEventHandler(async (event) => {
 
   // Fire-and-forget — don't block the response
   sendPushToCircle(supabase, memory.circle_id, user.sub, payload).catch((err) =>
-    console.error("[push/notify] dispatch error:", err)
+    console.error('[push/notify] dispatch error:', err),
   )
 
   return { ok: true }
@@ -881,6 +891,7 @@ git commit -m "feat(push): add upload notification endpoint"
 ## Task 7: Wire Push Into Existing Routes
 
 **Files:**
+
 - Modify: `server/api/memories/[id]/comments.post.ts`
 - Modify: `server/api/memories/[id]/reactions.post.ts`
 - Modify: `server/api/memories/quick-note.post.ts`
@@ -891,31 +902,27 @@ git commit -m "feat(push): add upload notification endpoint"
 In `server/api/memories/[id]/comments.post.ts`, add the import at the top:
 
 ```ts
-import { buildPushPayload, sendPushToCircle } from "~/server/utils/pushNotify"
+import { buildPushPayload, sendPushToCircle } from '~/server/utils/pushNotify'
 ```
 
 After the comment insert succeeds and before the fresh comments query (after line 43), add:
 
 ```ts
-  // Push notification (fire-and-forget)
-  const { data: actor } = await supabase
-    .from("user")
-    .select("first_name")
-    .eq("id", user.sub)
-    .single()
+// Push notification (fire-and-forget)
+const { data: actor } = await supabase.from('user').select('first_name').eq('id', user.sub).single()
 
-  const payload = buildPushPayload({
-    type: "comment",
-    actorName: actor?.first_name ?? "Someone",
-    circleId: memory.circle_id,
-    actorUserId: user.sub,
-    memoryId,
-    bodyText: body,
-  })
+const payload = buildPushPayload({
+  type: 'comment',
+  actorName: actor?.first_name ?? 'Someone',
+  circleId: memory.circle_id,
+  actorUserId: user.sub,
+  memoryId,
+  bodyText: body,
+})
 
-  sendPushToCircle(supabase, memory.circle_id, user.sub, payload).catch((err) =>
-    console.error("[push] comment notify error:", err)
-  )
+sendPushToCircle(supabase, memory.circle_id, user.sub, payload).catch((err) =>
+  console.error('[push] comment notify error:', err),
+)
 ```
 
 - [ ] **Step 2: Add push to reactions route**
@@ -923,31 +930,27 @@ After the comment insert succeeds and before the fresh comments query (after lin
 In `server/api/memories/[id]/reactions.post.ts`, add the import at the top:
 
 ```ts
-import { buildPushPayload, sendPushToCircle } from "~/server/utils/pushNotify"
+import { buildPushPayload, sendPushToCircle } from '~/server/utils/pushNotify'
 ```
 
 Inside the `else` block after a new reaction is inserted (after line 56), add:
 
 ```ts
-    // Push notification for new reaction (fire-and-forget)
-    const { data: actor } = await supabase
-      .from("user")
-      .select("first_name")
-      .eq("id", user.sub)
-      .single()
+// Push notification for new reaction (fire-and-forget)
+const { data: actor } = await supabase.from('user').select('first_name').eq('id', user.sub).single()
 
-    const reactionPayload = buildPushPayload({
-      type: "reaction",
-      actorName: actor?.first_name ?? "Someone",
-      circleId: memory.circle_id,
-      actorUserId: user.sub,
-      memoryId,
-      emoji,
-    })
+const reactionPayload = buildPushPayload({
+  type: 'reaction',
+  actorName: actor?.first_name ?? 'Someone',
+  circleId: memory.circle_id,
+  actorUserId: user.sub,
+  memoryId,
+  emoji,
+})
 
-    sendPushToCircle(supabase, memory.circle_id, user.sub, reactionPayload).catch((err) =>
-      console.error("[push] reaction notify error:", err)
-    )
+sendPushToCircle(supabase, memory.circle_id, user.sub, reactionPayload).catch((err) =>
+  console.error('[push] reaction notify error:', err),
+)
 ```
 
 - [ ] **Step 3: Add push to quick-note route**
@@ -955,41 +958,37 @@ Inside the `else` block after a new reaction is inserted (after line 56), add:
 In `server/api/memories/quick-note.post.ts`, add the import at the top:
 
 ```ts
-import { buildPushPayload, sendPushToCircle } from "~/server/utils/pushNotify"
+import { buildPushPayload, sendPushToCircle } from '~/server/utils/pushNotify'
 ```
 
 After the memory is created and children/members are tagged (before the final return at line 66), add:
 
 ```ts
-  // Push notification (fire-and-forget)
-  const { data: actor } = await supabase
-    .from("user")
-    .select("first_name")
-    .eq("id", user.sub)
-    .single()
+// Push notification (fire-and-forget)
+const { data: actor } = await supabase.from('user').select('first_name').eq('id', user.sub).single()
 
-  // Count recent uploads for coalescing
-  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
-  const { count: recentCount } = await supabase
-    .from("memory")
-    .select("id", { count: "exact", head: true })
-    .eq("circle_id", circleId)
-    .eq("owner_user_id", user.sub)
-    .gte("created_at", thirtyMinAgo)
+// Count recent uploads for coalescing
+const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+const { count: recentCount } = await supabase
+  .from('memory')
+  .select('id', { count: 'exact', head: true })
+  .eq('circle_id', circleId)
+  .eq('owner_user_id', user.sub)
+  .gte('created_at', thirtyMinAgo)
 
-  const payload = buildPushPayload({
-    type: "upload",
-    actorName: actor?.first_name ?? "Someone",
-    circleId,
-    actorUserId: user.sub,
-    memoryId: memory.id,
-    bodyText: note,
-    recentUploadCount: recentCount ?? 1,
-  })
+const payload = buildPushPayload({
+  type: 'upload',
+  actorName: actor?.first_name ?? 'Someone',
+  circleId,
+  actorUserId: user.sub,
+  memoryId: memory.id,
+  bodyText: note,
+  recentUploadCount: recentCount ?? 1,
+})
 
-  sendPushToCircle(supabase, circleId, user.sub, payload).catch((err) =>
-    console.error("[push] quick-note notify error:", err)
-  )
+sendPushToCircle(supabase, circleId, user.sub, payload).catch((err) =>
+  console.error('[push] quick-note notify error:', err),
+)
 ```
 
 - [ ] **Step 4: Add push trigger to UploadMemory.vue**
@@ -997,11 +996,11 @@ After the memory is created and children/members are tagged (before the final re
 In `app/components/UploadMemory.vue`, inside the `xhr.onload` handler, after the `Promise.allSettled` block for tagging children/members (around line 849), add a push notification call:
 
 ```ts
-          // Trigger push notification (fire-and-forget)
-          $fetch('/api/push/notify', {
-            method: 'POST',
-            body: { memoryId: result.memoryId },
-          }).catch(() => {}) // silent — push failure should never affect upload UX
+// Trigger push notification (fire-and-forget)
+$fetch('/api/push/notify', {
+  method: 'POST',
+  body: { memoryId: result.memoryId },
+}).catch(() => {}) // silent — push failure should never affect upload UX
 ```
 
 - [ ] **Step 5: Run all unit tests**
@@ -1021,6 +1020,7 @@ git commit -m "feat(push): wire notifications into upload, comment, and reaction
 ## Task 8: Push Prompt Banner
 
 **Files:**
+
 - Create: `app/components/PushPromptBanner.vue`
 - Modify: `app/pages/timeline/index.vue`
 
@@ -1032,29 +1032,37 @@ Create `app/components/PushPromptBanner.vue`:
 <template>
   <div
     v-if="shouldShow"
-    class="mx-5 mb-4 rounded-xl border border-border bg-card px-4 py-3 flex items-start gap-3"
+    class="mx-5 mb-4 flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3"
   >
-    <div class="flex-shrink-0 mt-0.5">
-      <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-        <path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+    <div class="mt-0.5 flex-shrink-0">
+      <svg
+        class="h-5 w-5 text-muted-foreground"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+        />
       </svg>
     </div>
-    <div class="flex-1 min-w-0">
-      <p class="text-sm font-medium text-foreground leading-snug">
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-medium leading-snug text-foreground">
         {{ t('push.promptTitle') }}
       </p>
-      <p class="text-xs text-muted-foreground mt-0.5">
+      <p class="mt-0.5 text-xs text-muted-foreground">
         {{ t('push.promptBody') }}
       </p>
-      <div class="flex items-center gap-2 mt-3">
+      <div class="mt-3 flex items-center gap-2">
         <button
-          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+          class="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           @click="enable"
         >
           {{ t('push.enable') }}
         </button>
         <button
-          class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          class="rounded-lg px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           @click="snooze"
         >
           {{ t('push.later') }}
@@ -1062,11 +1070,11 @@ Create `app/components/PushPromptBanner.vue`:
       </div>
     </div>
     <button
-      class="flex-shrink-0 p-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+      class="flex-shrink-0 p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
       @click="snooze"
     >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M6 18L18 6M6 6l12 12"/>
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
   </div>
@@ -1131,6 +1139,7 @@ Add to `locales/en.json` under a new `"push"` key:
 Add equivalent keys to `locales/zh-CN.json` and `locales/fr.json`:
 
 `zh-CN.json`:
+
 ```json
 {
   "push": {
@@ -1143,6 +1152,7 @@ Add equivalent keys to `locales/zh-CN.json` and `locales/fr.json`:
 ```
 
 `fr.json`:
+
 ```json
 {
   "push": {
@@ -1179,6 +1189,7 @@ git commit -m "feat(push): add push permission prompt banner on timeline"
 ## Task 9: Notification Settings in Circle Settings
 
 **Files:**
+
 - Modify: `app/pages/circle-settings.vue`
 
 - [ ] **Step 1: Add i18n keys for notification settings**
@@ -1201,6 +1212,7 @@ Add to `locales/en.json` under `"circleSettings"`:
 Add equivalent keys to `locales/zh-CN.json` and `locales/fr.json`:
 
 `zh-CN.json`:
+
 ```json
 {
   "circleSettings": {
@@ -1215,6 +1227,7 @@ Add equivalent keys to `locales/zh-CN.json` and `locales/fr.json`:
 ```
 
 `fr.json`:
+
 ```json
 {
   "circleSettings": {
@@ -1263,26 +1276,30 @@ async function saveNotificationPref(field: 'push_enabled' | 'circle_muted', valu
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
-  await supabase
-    .from('notificationpreference')
-    .upsert(
-      {
-        user_id: user.value!.id,
-        circle_id: circle.value.id,
-        [field]: value,
-      },
-      { onConflict: 'user_id,circle_id' }
-    )
+  await supabase.from('notificationpreference').upsert(
+    {
+      user_id: user.value!.id,
+      circle_id: circle.value.id,
+      [field]: value,
+    },
+    { onConflict: 'user_id,circle_id' },
+  )
 }
 
-watch(() => circle.value?.id, () => { loadNotificationPrefs() }, { immediate: true })
+watch(
+  () => circle.value?.id,
+  () => {
+    loadNotificationPrefs()
+  },
+  { immediate: true },
+)
 ```
 
 Add to the `<template>` section (before the danger zone divider):
 
 ```vue
-          <!-- Notification preferences — all members -->
-          <div>
+<!-- Notification preferences — all members -->
+<div>
             <h2 class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
               {{ t('circleSettings.notifications') }}
             </h2>
@@ -1297,16 +1314,18 @@ Add to the `<template>` section (before the danger zone divider):
                   <p class="text-sm font-medium text-foreground">{{ t('circleSettings.pushNotifications') }}</p>
                   <p class="text-xs text-muted-foreground mt-0.5">{{ t('circleSettings.pushNotificationsDesc') }}</p>
                 </div>
-                <input
-                  type="checkbox"
-                  :checked="pushEnabled"
-                  class="w-5 h-5 rounded border-border accent-primary cursor-pointer"
-                  @change="pushEnabled = !pushEnabled; saveNotificationPref('push_enabled', pushEnabled)"
-                />
-              </label>
+<input
+  type="checkbox"
+  :checked="pushEnabled"
+  class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
+  @change="
+    pushEnabled = !pushEnabled
+    saveNotificationPref('push_enabled', pushEnabled)
+  "
+/>
 
-              <!-- Mute toggle -->
-              <label class="flex items-center justify-between gap-3 cursor-pointer">
+<!-- Mute toggle -->
+<label class="flex cursor-pointer items-center justify-between gap-3">
                 <div>
                   <p class="text-sm font-medium text-foreground">{{ t('circleSettings.muteCircle') }}</p>
                   <p class="text-xs text-muted-foreground mt-0.5">{{ t('circleSettings.muteCircleDesc') }}</p>
@@ -1318,10 +1337,8 @@ Add to the `<template>` section (before the danger zone divider):
                   @change="circleMuted = !circleMuted; saveNotificationPref('circle_muted', circleMuted)"
                 />
               </label>
-            </div>
-          </div>
 
-          <div class="h-px bg-border" />
+<div class="h-px bg-border" />
 ```
 
 - [ ] **Step 3: Verify in dev**
@@ -1341,6 +1358,7 @@ git commit -m "feat(push): add notification toggles in circle settings"
 ## Task 10: Update Build Plan + Final Verification
 
 **Files:**
+
 - Modify: `docs/build-plan.md`
 
 - [ ] **Step 1: Update build plan progress tracker**
@@ -1348,16 +1366,19 @@ git commit -m "feat(push): add notification toggles in circle settings"
 In `docs/build-plan.md`, update the Milestone 10 section:
 
 Replace:
+
 ```
 - [ ] 10.1 Basic push (new upload, comment, reaction) — default push_enabled = true on join; prompt to configure on first notification received
 ```
 
 With:
+
 ```
 - [ ] 10.1 Basic push (new upload, comment, reaction) — Web Push via VAPID + service worker; inline dispatch from Nitro routes; upload notifications triggered by client post-upload; batch coalescing via notification tags; contextual permission prompt; push_enabled + circle_muted toggles in circle settings
 ```
 
 Add after the 10.2 line:
+
 ```
 - [ ] 10.3 Full notification preferences UI — quiet hours, email digest frequency, per-circle mute — dedicated settings page wired to existing NotificationPreference table
 ```

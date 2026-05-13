@@ -12,23 +12,24 @@
 
 ## File Map
 
-| File | Change |
-|---|---|
-| `server/api/timeline.get.ts` | Add `year` param + year branch + `getLatestYear`/`getPrevYear` helpers; isolate `authorId` into its own early-return branch |
-| `unit/api-validation.test.ts` | Add `year` param validation tests |
-| `app/pages/timeline/[year]/[month].vue` | Replace IntersectionObserver sentinel with explicit "Load more" button |
-| `locales/en.json` | Add `timeline.loadMore` |
-| `locales/zh-CN.json` | Add `timeline.loadMore` |
-| `locales/fr.json` | Add `timeline.loadMore` |
-| `tests/month-overflow.spec.ts` | Replace scroll-trigger test with button-click test |
-| `app/pages/timeline/index.vue` | Replace `nextCursor` ref with `prevYear`; refactor `fetchTimeline(cursor?)` to `fetchTimeline(year?)` |
-| `tests/timeline-year.spec.ts` | New E2E test: year-at-a-time loads + prev-year trigger |
+| File                                    | Change                                                                                                                      |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `server/api/timeline.get.ts`            | Add `year` param + year branch + `getLatestYear`/`getPrevYear` helpers; isolate `authorId` into its own early-return branch |
+| `unit/api-validation.test.ts`           | Add `year` param validation tests                                                                                           |
+| `app/pages/timeline/[year]/[month].vue` | Replace IntersectionObserver sentinel with explicit "Load more" button                                                      |
+| `locales/en.json`                       | Add `timeline.loadMore`                                                                                                     |
+| `locales/zh-CN.json`                    | Add `timeline.loadMore`                                                                                                     |
+| `locales/fr.json`                       | Add `timeline.loadMore`                                                                                                     |
+| `tests/month-overflow.spec.ts`          | Replace scroll-trigger test with button-click test                                                                          |
+| `app/pages/timeline/index.vue`          | Replace `nextCursor` ref with `prevYear`; refactor `fetchTimeline(cursor?)` to `fetchTimeline(year?)`                       |
+| `tests/timeline-year.spec.ts`           | New E2E test: year-at-a-time loads + prev-year trigger                                                                      |
 
 ---
 
 ## Task 1: API — Year param + year-based fetch branch
 
 **Files:**
+
 - Modify: `server/api/timeline.get.ts`
 - Modify: `unit/api-validation.test.ts`
 
@@ -44,7 +45,10 @@ const timelineQuerySchemaV3 = z.object({
   circleId: z.string().uuid(),
   cursor: z.string().optional(),
   authorId: z.string().uuid().optional(),
-  yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+  yearMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .optional(),
   year: z.coerce.number().int().min(2000).max(2100).optional(),
 })
 
@@ -95,8 +99,8 @@ Expected: `year param validation` suite FAIL — `timelineQuerySchemaV3` not yet
 Replace the entire file with:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const YEAR_LIMIT = 156 // 13 months × 12 memories/month (safety cap)
 
@@ -104,7 +108,10 @@ const querySchema = z.object({
   circleId: z.string().uuid(),
   cursor: z.string().optional(),
   authorId: z.string().uuid().optional(),
-  yearMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+  yearMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .optional(),
   year: z.coerce.number().int().min(2000).max(2100).optional(),
 })
 
@@ -125,51 +132,56 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = querySchema.safeParse(getQuery(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "circleId is required" })
+  if (!result.success) throw createError({ statusCode: 400, message: 'circleId is required' })
   const { circleId, cursor, authorId, yearMonth, year } = result.data
 
   // Verify the requesting user belongs to this circle
   const { data: membership } = await supabase
-    .from("circlemember")
-    .select("id")
-    .eq("user_id", user.sub)
-    .eq("circle_id", circleId)
+    .from('circlemember')
+    .select('id')
+    .eq('user_id', user.sub)
+    .eq('circle_id', circleId)
     .maybeSingle()
 
   if (!membership) throw createError({ statusCode: 403 })
 
   // Fetch child profiles for baby age stamp display + upload picker
   const { data: childProfiles, error: childError } = await (supabase as any)
-    .from("childprofile")
-    .select("id, name, date_of_birth")
-    .eq("circle_id", circleId)
-    .order("date_of_birth", { ascending: true })
+    .from('childprofile')
+    .select('id, name, date_of_birth')
+    .eq('circle_id', circleId)
+    .order('date_of_birth', { ascending: true })
 
-  if (childError) console.error("[timeline] childprofile query failed:", childError.message)
+  if (childError) console.error('[timeline] childprofile query failed:', childError.message)
 
-  const children: Array<{ id: string; name: string; date_of_birth: string }> =
-    childProfiles ?? []
+  const children: Array<{ id: string; name: string; date_of_birth: string }> = childProfiles ?? []
 
   // Fetch circle members for the people picker in the upload form.
   const { data: memberRows, error: memberError } = await supabase
-    .from("circlemember")
-    .select("user_id")
-    .eq("circle_id", circleId)
-    .order("created_at")
+    .from('circlemember')
+    .select('user_id')
+    .eq('circle_id', circleId)
+    .order('created_at')
 
-  if (memberError) console.error("[timeline] members query failed:", memberError.message)
+  if (memberError) console.error('[timeline] members query failed:', memberError.message)
 
   const memberUserIds = (memberRows ?? []).map((m: any) => m.user_id as string)
 
-  let members: Array<{ userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }> = []
+  let members: Array<{
+    userId: string
+    firstName: string | null
+    lastName: string | null
+    avatarUrl: string | null
+  }> = []
 
   if (memberUserIds.length > 0) {
     const { data: profileRows, error: profileError } = await supabase
-      .from("user")
-      .select("id, first_name, last_name, avatar_url")
-      .in("id", memberUserIds)
+      .from('user')
+      .select('id, first_name, last_name, avatar_url')
+      .in('id', memberUserIds)
 
-    if (profileError) console.error("[timeline] member profiles query failed:", profileError.message)
+    if (profileError)
+      console.error('[timeline] member profiles query failed:', profileError.message)
 
     const profileMap = new Map((profileRows ?? []).map((p: any) => [p.id, p]))
     members = memberUserIds.map((uid) => {
@@ -186,13 +198,13 @@ export default defineEventHandler(async (event) => {
   // Base query shared across branches
   const baseQuery = () =>
     (supabase as any)
-      .from("memory")
+      .from('memory')
       .select(MEMORY_SELECT)
-      .eq("circle_id", circleId)
+      .eq('circle_id', circleId)
       .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
-      .order("memory_date", { ascending: false })
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
+      .order('memory_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
 
   // ── Branch 1: Month overflow (cursor-paginated) ────────────
   if (yearMonth) {
@@ -202,23 +214,26 @@ export default defineEventHandler(async (event) => {
     const monthNum = Number(parts[1])
     const from = new Date(Date.UTC(yearNum, monthNum - 1, 1)).toISOString()
     const to = new Date(Date.UTC(yearNum, monthNum, 1)).toISOString()
-    let q = baseQuery().gte("memory_date", from).lt("memory_date", to).limit(PAGE_SIZE + 1)
+    let q = baseQuery()
+      .gte('memory_date', from)
+      .lt('memory_date', to)
+      .limit(PAGE_SIZE + 1)
 
     if (cursor) {
-      const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(",")
+      const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(',')
       q = q.or(
         [
           `memory_date.lt.${cursorDate}`,
           `and(memory_date.eq.${cursorDate},created_at.lt.${cursorCreatedAt})`,
           `and(memory_date.eq.${cursorDate},created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
-        ].join(",")
+        ].join(','),
       )
     }
 
     const { data: memories, error } = await q
     if (error) {
-      console.error("[timeline] month query failed:", error.message)
-      throw createError({ statusCode: 500, message: "Failed to load timeline." })
+      console.error('[timeline] month query failed:', error.message)
+      throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
     }
 
     const raw = memories ?? []
@@ -232,23 +247,23 @@ export default defineEventHandler(async (event) => {
 
   // ── Branch 2: Member page (cursor-based, authorId filter) ──
   if (authorId) {
-    let q = baseQuery().eq("owner_user_id", authorId).limit(20)
+    let q = baseQuery().eq('owner_user_id', authorId).limit(20)
 
     if (cursor) {
-      const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(",")
+      const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(',')
       q = q.or(
         [
           `memory_date.lt.${cursorDate}`,
           `and(memory_date.eq.${cursorDate},created_at.lt.${cursorCreatedAt})`,
           `and(memory_date.eq.${cursorDate},created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
-        ].join(",")
+        ].join(','),
       )
     }
 
     const { data: memories, error } = await q
     if (error) {
-      console.error("[timeline] author query failed:", error.message)
-      throw createError({ statusCode: 500, message: "Failed to load timeline." })
+      console.error('[timeline] author query failed:', error.message)
+      throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
     }
 
     const withUrls = await attachSignedUrls(supabase, memories ?? [])
@@ -258,7 +273,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // ── Branch 3: Main timeline (year-at-a-time) ───────────────
-  const targetYear = year ?? await getLatestYear(supabase, circleId, user.sub)
+  const targetYear = year ?? (await getLatestYear(supabase, circleId, user.sub))
 
   if (!targetYear) {
     return { memories: [], prevYear: null, children, members }
@@ -268,13 +283,13 @@ export default defineEventHandler(async (event) => {
   const to = new Date(Date.UTC(targetYear + 1, 0, 1)).toISOString()
 
   const { data: memories, error } = await baseQuery()
-    .gte("memory_date", from)
-    .lt("memory_date", to)
+    .gte('memory_date', from)
+    .lt('memory_date', to)
     .limit(YEAR_LIMIT)
 
   if (error) {
-    console.error("[timeline] year query failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to load timeline." })
+    console.error('[timeline] year query failed:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
   }
 
   const prevYear = await getPrevYear(supabase, circleId, user.sub, targetYear)
@@ -284,27 +299,36 @@ export default defineEventHandler(async (event) => {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-async function getLatestYear(supabase: any, circleId: string, userId: string): Promise<number | null> {
+async function getLatestYear(
+  supabase: any,
+  circleId: string,
+  userId: string,
+): Promise<number | null> {
   const { data } = await supabase
-    .from("memory")
-    .select("memory_date")
-    .eq("circle_id", circleId)
+    .from('memory')
+    .select('memory_date')
+    .eq('circle_id', circleId)
     .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`)
-    .order("memory_date", { ascending: false })
+    .order('memory_date', { ascending: false })
     .limit(1)
     .maybeSingle()
   return data ? new Date(data.memory_date).getUTCFullYear() : null
 }
 
-async function getPrevYear(supabase: any, circleId: string, userId: string, currentYear: number): Promise<number | null> {
+async function getPrevYear(
+  supabase: any,
+  circleId: string,
+  userId: string,
+  currentYear: number,
+): Promise<number | null> {
   const before = new Date(Date.UTC(currentYear, 0, 1)).toISOString()
   const { data } = await supabase
-    .from("memory")
-    .select("memory_date")
-    .eq("circle_id", circleId)
+    .from('memory')
+    .select('memory_date')
+    .eq('circle_id', circleId)
     .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`)
-    .lt("memory_date", before)
-    .order("memory_date", { ascending: false })
+    .lt('memory_date', before)
+    .order('memory_date', { ascending: false })
     .limit(1)
     .maybeSingle()
   return data ? new Date(data.memory_date).getUTCFullYear() : null
@@ -318,25 +342,30 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
           const { storage_path, ...safeMedia } = media
           if (!storage_path) return { ...safeMedia, url: null, thumbnailUrl: null }
 
-          const isVideo = media.media_type === "video"
+          const isVideo = media.media_type === 'video'
 
           const [fullResult, thumbResult] = await Promise.allSettled([
-            supabase.storage.from("memories-private").createSignedUrl(storage_path, 3600),
+            supabase.storage.from('memories-private').createSignedUrl(storage_path, 3600),
             isVideo
               ? Promise.resolve({ data: null })
-              : supabase.storage.from("memories-private").createSignedUrl(storage_path, 86400, {
-                  transform: { width: 800, format: "webp" as "origin", quality: 85 },
+              : supabase.storage.from('memories-private').createSignedUrl(storage_path, 86400, {
+                  transform: { width: 800, format: 'webp' as 'origin', quality: 85 },
                 }),
           ])
 
-          const url = fullResult.status === "fulfilled" ? (fullResult.value.data?.signedUrl ?? null) : null
-          const thumbnailUrl = isVideo ? url : (thumbResult.status === "fulfilled" ? (thumbResult.value.data?.signedUrl ?? url) : url)
+          const url =
+            fullResult.status === 'fulfilled' ? (fullResult.value.data?.signedUrl ?? null) : null
+          const thumbnailUrl = isVideo
+            ? url
+            : thumbResult.status === 'fulfilled'
+              ? (thumbResult.value.data?.signedUrl ?? url)
+              : url
 
           return { ...safeMedia, url, thumbnailUrl }
-        })
+        }),
       )
       return { ...memory, memorymedia: mediaWithUrls }
-    })
+    }),
   )
 }
 ```
@@ -362,6 +391,7 @@ git commit -m "feat(api): add year-based timeline fetch with prevYear pagination
 ## Task 2: Month overflow — Replace IntersectionObserver with "Load more" button
 
 **Files:**
+
 - Modify: `locales/en.json`
 - Modify: `locales/zh-CN.json`
 - Modify: `locales/fr.json`
@@ -405,27 +435,32 @@ Replace the entire `<script setup>` section and the sentinel/spinner in the temp
 **Template change** — replace the sentinel + loading spinner block at the bottom of the `v-else` div:
 
 Old:
+
 ```html
-        <!-- Infinite scroll sentinel + load-more spinner -->
-        <div ref="loadMoreEl" class="h-8 mt-4" />
-        <div v-if="loadingMore" class="flex justify-center py-4">
-          <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-        </div>
+<!-- Infinite scroll sentinel + load-more spinner -->
+<div ref="loadMoreEl" class="mt-4 h-8" />
+<div v-if="loadingMore" class="flex justify-center py-4">
+  <div class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+</div>
 ```
 
 New:
+
 ```html
-        <!-- Load more button -->
-        <div v-if="nextCursor" class="flex justify-center mt-8">
-          <button
-            :disabled="loadingMore"
-            class="flex items-center gap-2 h-9 px-5 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            @click="fetchPage(nextCursor!)"
-          >
-            <div v-if="loadingMore" class="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            {{ t('timeline.loadMore') }}
-          </button>
-        </div>
+<!-- Load more button -->
+<div v-if="nextCursor" class="mt-8 flex justify-center">
+  <button
+    :disabled="loadingMore"
+    class="flex h-9 items-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+    @click="fetchPage(nextCursor!)"
+  >
+    <div
+      v-if="loadingMore"
+      class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+    />
+    {{ t('timeline.loadMore') }}
+  </button>
+</div>
 ```
 
 **Script change** — remove the `useIntersectionObserver` import, remove `loadMoreEl` ref, remove the observer setup. Replace entire `<script setup>` with:
@@ -524,93 +559,105 @@ onMounted(() => fetchPage())
 Replace the final test (the scroll-trigger test) with a button-click test. Replace the entire test starting at line 200:
 
 ```ts
-  // ── Load-more pagination ─────────────────────────────────────────────────────
+// ── Load-more pagination ─────────────────────────────────────────────────────
 
-  test('clicking "Load more" button loads the next page and appends memories', async ({ page }) => {
-    await mockMembership(page)
-    await mockCirclesList(page)
+test('clicking "Load more" button loads the next page and appends memories', async ({ page }) => {
+  await mockMembership(page)
+  await mockCirclesList(page)
 
-    // Generate 24 stub memories for the first page
-    const page1Memories = Array.from({ length: 24 }, (_, i) => ({
-      id: `memory-${String(i).padStart(3, '0')}`,
-      owner_user_id: '00000000-dead-beef-0000-000000000001',
-      circle_id: CIRCLE_ID,
-      note: null,
-      milestone_label: null,
-      memory_date: `2024-06-${String(15 - Math.floor(i / 2)).padStart(2, '0')}`,
-      visibility: 'circle',
-      former_owner_name: null,
-      former_owner_user_id: null,
-      memorymedia: [],
-      memoryreaction: [],
-      memorycomment: [],
-      memory_children: [],
-      memory_members: [],
-      user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
-    }))
+  // Generate 24 stub memories for the first page
+  const page1Memories = Array.from({ length: 24 }, (_, i) => ({
+    id: `memory-${String(i).padStart(3, '0')}`,
+    owner_user_id: '00000000-dead-beef-0000-000000000001',
+    circle_id: CIRCLE_ID,
+    note: null,
+    milestone_label: null,
+    memory_date: `2024-06-${String(15 - Math.floor(i / 2)).padStart(2, '0')}`,
+    visibility: 'circle',
+    former_owner_name: null,
+    former_owner_user_id: null,
+    memorymedia: [],
+    memoryreaction: [],
+    memorycomment: [],
+    memory_children: [],
+    memory_members: [],
+    user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
+  }))
 
-    // 3 extra memories for the second page
-    const page2Memories = Array.from({ length: 3 }, (_, i) => ({
-      id: `memory-extra-${i}`,
-      owner_user_id: '00000000-dead-beef-0000-000000000001',
-      circle_id: CIRCLE_ID,
-      note: `Extra note ${i}`,
-      milestone_label: null,
-      memory_date: '2024-06-01',
-      visibility: 'circle',
-      former_owner_name: null,
-      former_owner_user_id: null,
-      memorymedia: [],
-      memoryreaction: [],
-      memorycomment: [],
-      memory_children: [],
-      memory_members: [],
-      user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
-    }))
+  // 3 extra memories for the second page
+  const page2Memories = Array.from({ length: 3 }, (_, i) => ({
+    id: `memory-extra-${i}`,
+    owner_user_id: '00000000-dead-beef-0000-000000000001',
+    circle_id: CIRCLE_ID,
+    note: `Extra note ${i}`,
+    milestone_label: null,
+    memory_date: '2024-06-01',
+    visibility: 'circle',
+    former_owner_name: null,
+    former_owner_user_id: null,
+    memorymedia: [],
+    memoryreaction: [],
+    memorycomment: [],
+    memory_children: [],
+    memory_members: [],
+    user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
+  }))
 
-    let page2Fetched = false
+  let page2Fetched = false
 
-    await page.route('**/api/timeline**', (route) => {
-      const url = new URL(route.request().url())
-      const cursor = url.searchParams.get('cursor')
-      if (cursor === 'cursor-page-2') {
-        page2Fetched = true
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ memories: page2Memories, nextCursor: null, children: [], members: [] }),
-        })
-      }
-      // First page — returns a cursor so the Load more button appears
+  await page.route('**/api/timeline**', (route) => {
+    const url = new URL(route.request().url())
+    const cursor = url.searchParams.get('cursor')
+    if (cursor === 'cursor-page-2') {
+      page2Fetched = true
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: page1Memories, nextCursor: 'cursor-page-2', children: [], members: [] }),
+        body: JSON.stringify({
+          memories: page2Memories,
+          nextCursor: null,
+          children: [],
+          members: [],
+        }),
       })
+    }
+    // First page — returns a cursor so the Load more button appears
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        memories: page1Memories,
+        nextCursor: 'cursor-page-2',
+        children: [],
+        members: [],
+      }),
     })
-
-    await page.goto('/timeline/2024/06')
-
-    // Wait for first page to render — count label shows 24
-    await expect(page.getByText(/24 memories/i)).toBeVisible({ timeout: 10_000 })
-
-    // "Load more" button should be visible (nextCursor is set)
-    const loadMoreBtn = page.getByRole('button', { name: /load more/i })
-    await expect(loadMoreBtn).toBeVisible({ timeout: 5_000 })
-
-    // Click it
-    await loadMoreBtn.click()
-
-    // Wait for second-page memories to append
-    await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, { timeout: 10_000 })
-
-    // Verify second-page memories were appended
-    expect(page2Fetched).toBe(true)
-    await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
-
-    // "Load more" button gone — nextCursor is now null
-    await expect(loadMoreBtn).not.toBeVisible({ timeout: 3_000 })
   })
+
+  await page.goto('/timeline/2024/06')
+
+  // Wait for first page to render — count label shows 24
+  await expect(page.getByText(/24 memories/i)).toBeVisible({ timeout: 10_000 })
+
+  // "Load more" button should be visible (nextCursor is set)
+  const loadMoreBtn = page.getByRole('button', { name: /load more/i })
+  await expect(loadMoreBtn).toBeVisible({ timeout: 5_000 })
+
+  // Click it
+  await loadMoreBtn.click()
+
+  // Wait for second-page memories to append
+  await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, {
+    timeout: 10_000,
+  })
+
+  // Verify second-page memories were appended
+  expect(page2Fetched).toBe(true)
+  await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
+
+  // "Load more" button gone — nextCursor is now null
+  await expect(loadMoreBtn).not.toBeVisible({ timeout: 3_000 })
+})
 ```
 
 - [ ] **Step 2.4: Run E2E tests for the month overflow page**
@@ -634,6 +681,7 @@ git commit -m "feat(timeline): replace infinite scroll with Load more button on 
 ## Task 3: Main timeline — Year-at-a-time fetch
 
 **Files:**
+
 - Modify: `app/pages/timeline/index.vue`
 
 - [ ] **Step 3.1: Replace `nextCursor` with `prevYear` and update `fetchTimeline` in `app/pages/timeline/index.vue`**
@@ -641,37 +689,34 @@ git commit -m "feat(timeline): replace infinite scroll with Load more button on 
 **Change 1:** Replace the data refs and `fetchTimeline` function. Find the block:
 
 ```ts
-const memoriesFlat = ref<Memory[]>([]);
-const nextCursor = ref<string | null>(null);
-const children = ref<ChildProfile[]>([]);
-const members = ref<CircleMember[]>([]);
-const loading = ref(false);
-
+const memoriesFlat = ref<Memory[]>([])
+const nextCursor = ref<string | null>(null)
+const children = ref<ChildProfile[]>([])
+const members = ref<CircleMember[]>([])
+const loading = ref(false)
 
 async function fetchTimeline(cursor?: string) {
-  if (loading.value || !circleId.value) return;
-  loading.value = true;
+  if (loading.value || !circleId.value) return
+  loading.value = true
   try {
     const data = await $fetch<{
-      memories: Memory[];
-      nextCursor: string | null;
-      children: ChildProfile[];
-      members: CircleMember[];
-    }>("/api/timeline", {
+      memories: Memory[]
+      nextCursor: string | null
+      children: ChildProfile[]
+      members: CircleMember[]
+    }>('/api/timeline', {
       query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
-    });
-    memoriesFlat.value = cursor
-      ? [...memoriesFlat.value, ...data.memories]
-      : data.memories;
-    nextCursor.value = data.nextCursor;
+    })
+    memoriesFlat.value = cursor ? [...memoriesFlat.value, ...data.memories] : data.memories
+    nextCursor.value = data.nextCursor
     if (!cursor) {
-      children.value = data.children ?? [];
-      members.value = data.members ?? [];
+      children.value = data.children ?? []
+      members.value = data.members ?? []
     }
   } catch (err) {
-    console.error("[timeline] fetch error:", err);
+    console.error('[timeline] fetch error:', err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 ```
@@ -679,36 +724,34 @@ async function fetchTimeline(cursor?: string) {
 Replace with:
 
 ```ts
-const memoriesFlat = ref<Memory[]>([]);
-const prevYear = ref<number | null>(null);
-const children = ref<ChildProfile[]>([]);
-const members = ref<CircleMember[]>([]);
-const loading = ref(false);
+const memoriesFlat = ref<Memory[]>([])
+const prevYear = ref<number | null>(null)
+const children = ref<ChildProfile[]>([])
+const members = ref<CircleMember[]>([])
+const loading = ref(false)
 
 async function fetchTimeline(year?: number) {
-  if (loading.value || !circleId.value) return;
-  loading.value = true;
+  if (loading.value || !circleId.value) return
+  loading.value = true
   try {
     const data = await $fetch<{
-      memories: Memory[];
-      prevYear: number | null;
-      children: ChildProfile[];
-      members: CircleMember[];
-    }>("/api/timeline", {
+      memories: Memory[]
+      prevYear: number | null
+      children: ChildProfile[]
+      members: CircleMember[]
+    }>('/api/timeline', {
       query: { circleId: circleId.value, ...(year ? { year } : {}) },
-    });
-    memoriesFlat.value = year
-      ? [...memoriesFlat.value, ...data.memories]
-      : data.memories;
-    prevYear.value = data.prevYear;
+    })
+    memoriesFlat.value = year ? [...memoriesFlat.value, ...data.memories] : data.memories
+    prevYear.value = data.prevYear
     if (!year) {
-      children.value = data.children ?? [];
-      members.value = data.members ?? [];
+      children.value = data.children ?? []
+      members.value = data.members ?? []
     }
   } catch (err) {
-    console.error("[timeline] fetch error:", err);
+    console.error('[timeline] fetch error:', err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 ```
@@ -716,33 +759,33 @@ async function fetchTimeline(year?: number) {
 **Change 2:** Update the `TimelinePolaroid` props in the template. Find:
 
 ```html
-      <TimelinePolaroid
-        ref="timelinePolaroidRef"
-        :month-groups="monthGroups"
-        :loading="loading"
-        :has-next-page="!!nextCursor"
-        :circle-type="circle?.circle_type ?? null"
-        @load-more="fetchTimeline(nextCursor ?? undefined)"
-        @year-change="onYearChange"
-        @open-memory="onOpenMemory"
-        @reaction-update="onReactionUpdate"
-      />
+<TimelinePolaroid
+  ref="timelinePolaroidRef"
+  :month-groups="monthGroups"
+  :loading="loading"
+  :has-next-page="!!nextCursor"
+  :circle-type="circle?.circle_type ?? null"
+  @load-more="fetchTimeline(nextCursor ?? undefined)"
+  @year-change="onYearChange"
+  @open-memory="onOpenMemory"
+  @reaction-update="onReactionUpdate"
+/>
 ```
 
 Replace with:
 
 ```html
-      <TimelinePolaroid
-        ref="timelinePolaroidRef"
-        :month-groups="monthGroups"
-        :loading="loading"
-        :has-next-page="!!prevYear"
-        :circle-type="circle?.circle_type ?? null"
-        @load-more="fetchTimeline(prevYear ?? undefined)"
-        @year-change="onYearChange"
-        @open-memory="onOpenMemory"
-        @reaction-update="onReactionUpdate"
-      />
+<TimelinePolaroid
+  ref="timelinePolaroidRef"
+  :month-groups="monthGroups"
+  :loading="loading"
+  :has-next-page="!!prevYear"
+  :circle-type="circle?.circle_type ?? null"
+  @load-more="fetchTimeline(prevYear ?? undefined)"
+  @year-change="onYearChange"
+  @open-memory="onOpenMemory"
+  @reaction-update="onReactionUpdate"
+/>
 ```
 
 **Change 3:** Update `switchCircle` to reset `prevYear` instead of `nextCursor`. Find:
@@ -768,12 +811,12 @@ function switchCircle(id: string) {
 ```ts
 watch(circleId, (newId, oldId) => {
   if (newId && newId !== oldId) {
-    memoriesFlat.value = [];
-    nextCursor.value = null;
-    currentYear.value = null;
-    fetchTimeline();
+    memoriesFlat.value = []
+    nextCursor.value = null
+    currentYear.value = null
+    fetchTimeline()
   }
-});
+})
 ```
 
 Replace with:
@@ -781,12 +824,12 @@ Replace with:
 ```ts
 watch(circleId, (newId, oldId) => {
   if (newId && newId !== oldId) {
-    memoriesFlat.value = [];
-    prevYear.value = null;
-    currentYear.value = null;
-    fetchTimeline();
+    memoriesFlat.value = []
+    prevYear.value = null
+    currentYear.value = null
+    fetchTimeline()
   }
-});
+})
 ```
 
 - [ ] **Step 3.2: Run unit tests to check nothing broken**
@@ -810,6 +853,7 @@ git commit -m "feat(timeline): load one year at a time on main timeline page"
 ## Task 4: E2E tests for year-at-a-time main timeline
 
 **Files:**
+
 - Create: `tests/timeline-year.spec.ts`
 
 - [ ] **Step 4.1: Write the E2E test file**
@@ -843,7 +887,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -854,14 +898,16 @@ function mockCirclesList(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -873,7 +919,12 @@ function mockProfile(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ firstName: 'Alice', lastName: 'Smith', avatarUrl: null, locale: 'en' }),
+      body: JSON.stringify({
+        firstName: 'Alice',
+        lastName: 'Smith',
+        avatarUrl: null,
+        locale: 'en',
+      }),
     })
   })
 }
@@ -899,13 +950,15 @@ function makeMemory(id: string, date: string) {
 }
 
 test.describe('Main timeline — year-at-a-time loading', () => {
-
   test('first load fetches the latest year without a year param', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockProfile(page)
 
-    const year2025Memories = [makeMemory('m-2025-1', '2025-06-15'), makeMemory('m-2025-2', '2025-03-10')]
+    const year2025Memories = [
+      makeMemory('m-2025-1', '2025-06-15'),
+      makeMemory('m-2025-2', '2025-03-10'),
+    ]
     let capturedYear: string | null = null
 
     await page.route('**/api/timeline**', (route) => {
@@ -914,7 +967,12 @@ test.describe('Main timeline — year-at-a-time loading', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: year2025Memories, prevYear: 2024, children: [], members: [] }),
+        body: JSON.stringify({
+          memories: year2025Memories,
+          prevYear: 2024,
+          children: [],
+          members: [],
+        }),
       })
     })
 
@@ -927,16 +985,18 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     expect(capturedYear).toBeNull()
   })
 
-  test('scrolling to bottom triggers previous-year fetch with correct year param', async ({ page }) => {
+  test('scrolling to bottom triggers previous-year fetch with correct year param', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockProfile(page)
 
     const year2025Memories = Array.from({ length: 3 }, (_, i) =>
-      makeMemory(`m-2025-${i}`, `2025-0${i + 1}-15`)
+      makeMemory(`m-2025-${i}`, `2025-0${i + 1}-15`),
     )
     const year2024Memories = Array.from({ length: 3 }, (_, i) =>
-      makeMemory(`m-2024-${i}`, `2024-0${i + 1}-15`)
+      makeMemory(`m-2024-${i}`, `2024-0${i + 1}-15`),
     )
 
     let secondCallYear: string | null = null
@@ -950,7 +1010,12 @@ test.describe('Main timeline — year-at-a-time loading', () => {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ memories: year2025Memories, prevYear: 2024, children: [], members: [] }),
+          body: JSON.stringify({
+            memories: year2025Memories,
+            prevYear: 2024,
+            children: [],
+            members: [],
+          }),
         })
       }
       // Subsequent load — should have year=2024
@@ -958,7 +1023,12 @@ test.describe('Main timeline — year-at-a-time loading', () => {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: year2024Memories, prevYear: null, children: [], members: [] }),
+        body: JSON.stringify({
+          memories: year2024Memories,
+          prevYear: null,
+          children: [],
+          members: [],
+        }),
       })
     })
 
@@ -969,10 +1039,9 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for 2024 memories to be appended
-    await page.waitForFunction(
-      () => document.querySelectorAll('article').length >= 6,
-      { timeout: 10_000 }
-    )
+    await page.waitForFunction(() => document.querySelectorAll('article').length >= 6, {
+      timeout: 10_000,
+    })
 
     // Verify the second call was made with year=2024
     expect(secondCallYear).toBe('2024')
@@ -1007,7 +1076,6 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await page.waitForTimeout(500)
     expect(callCount).toBe(1)
   })
-
 })
 ```
 
@@ -1041,26 +1109,27 @@ git commit -m "test(e2e): add year-at-a-time timeline loading tests"
 
 **Spec coverage:**
 
-| Requirement | Task |
-|---|---|
-| Main timeline loads 1 year at a time | Task 1 (API), Task 3 (frontend) |
-| Auto-detect latest year on first load | Task 1 (`getLatestYear` helper) |
-| `prevYear` field instead of `nextCursor` for main timeline | Task 1, Task 3 |
-| Month overflow uses explicit "Load more" button | Task 2 |
-| Month overflow retains cursor pagination | Task 2 (unchanged `nextCursor` in monthOverflow branch) |
-| `authorId` (member page) backward compat maintained | Task 1 (separate authorId branch) |
-| Performance: YEAR_LIMIT=156 cap | Task 1 (`YEAR_LIMIT` constant) |
-| Performance: prevYear via single LIMIT-1 query | Task 1 (`getPrevYear` helper) |
-| Performance: latestYear via single LIMIT-1 query | Task 1 (`getLatestYear` helper) |
-| Performance: no signed URL waste (slice before sign) | Task 1 (year branch uses `.limit(YEAR_LIMIT)` server-side; monthOverflow branch uses `raw.slice(0, PAGE_SIZE)` before `attachSignedUrls`) |
-| i18n: `timeline.loadMore` in all 3 locales | Task 2 |
-| Unit tests: `year` param validation | Task 1 |
-| E2E tests: year-at-a-time flow | Task 4 |
-| E2E tests: month overflow button click | Task 2 |
+| Requirement                                                | Task                                                                                                                                      |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Main timeline loads 1 year at a time                       | Task 1 (API), Task 3 (frontend)                                                                                                           |
+| Auto-detect latest year on first load                      | Task 1 (`getLatestYear` helper)                                                                                                           |
+| `prevYear` field instead of `nextCursor` for main timeline | Task 1, Task 3                                                                                                                            |
+| Month overflow uses explicit "Load more" button            | Task 2                                                                                                                                    |
+| Month overflow retains cursor pagination                   | Task 2 (unchanged `nextCursor` in monthOverflow branch)                                                                                   |
+| `authorId` (member page) backward compat maintained        | Task 1 (separate authorId branch)                                                                                                         |
+| Performance: YEAR_LIMIT=156 cap                            | Task 1 (`YEAR_LIMIT` constant)                                                                                                            |
+| Performance: prevYear via single LIMIT-1 query             | Task 1 (`getPrevYear` helper)                                                                                                             |
+| Performance: latestYear via single LIMIT-1 query           | Task 1 (`getLatestYear` helper)                                                                                                           |
+| Performance: no signed URL waste (slice before sign)       | Task 1 (year branch uses `.limit(YEAR_LIMIT)` server-side; monthOverflow branch uses `raw.slice(0, PAGE_SIZE)` before `attachSignedUrls`) |
+| i18n: `timeline.loadMore` in all 3 locales                 | Task 2                                                                                                                                    |
+| Unit tests: `year` param validation                        | Task 1                                                                                                                                    |
+| E2E tests: year-at-a-time flow                             | Task 4                                                                                                                                    |
+| E2E tests: month overflow button click                     | Task 2                                                                                                                                    |
 
 **Placeholder scan:** None found.
 
 **Type consistency:**
+
 - `prevYear: number | null` used consistently in API return and `index.vue`
 - `fetchTimeline(year?: number)` — `year` is `number | undefined` (never string)
 - `TimelinePolaroid` props `hasNextPage` and `loadMore` semantics unchanged

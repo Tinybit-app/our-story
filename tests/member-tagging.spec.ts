@@ -28,7 +28,7 @@ const MEMBER = { userId: 'user-2', firstName: 'Sarah', lastName: 'Lee', avatarUr
 function makeMemory(
   id: string,
   opts: {
-    memoryMembers?: typeof MEMBER[]
+    memoryMembers?: (typeof MEMBER)[]
   } = {},
 ) {
   const { memoryMembers = [] } = opts
@@ -50,7 +50,12 @@ function makeMemory(
     memory_children: [],
     memory_members: memoryMembers.map((m) => ({
       user_id: m.userId,
-      user: { id: m.userId, first_name: m.firstName, last_name: m.lastName, avatar_url: m.avatarUrl },
+      user: {
+        id: m.userId,
+        first_name: m.firstName,
+        last_name: m.lastName,
+        avatar_url: m.avatarUrl,
+      },
     })),
   }
 }
@@ -61,7 +66,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -72,13 +77,15 @@ function mockCircles(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+          },
+        ],
       }),
     })
   })
@@ -87,7 +94,7 @@ function mockCircles(page: any) {
 function mockTimeline(
   page: any,
   memories: ReturnType<typeof makeMemory>[],
-  circleMembers: typeof MEMBER[] = [],
+  circleMembers: (typeof MEMBER)[] = [],
 ) {
   return page.route('**/api/timeline**', (route: any) => {
     route.fulfill({
@@ -111,7 +118,6 @@ function mockTimeline(
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Member tagging (4.10.6)', () => {
-
   test('avatar bubble appears on polaroid card when a member is tagged', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
@@ -129,7 +135,9 @@ test.describe('Member tagging (4.10.6)', () => {
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 10_000,
+    })
     // "SL" initials should not be present
     await expect(page.getByText('SL')).not.toBeVisible()
   })
@@ -140,7 +148,9 @@ test.describe('Member tagging (4.10.6)', () => {
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Trigger upload form with a fake file
     const fileInput = page.locator('input[type="file"]').first()
@@ -185,7 +195,9 @@ test.describe('Member tagging (4.10.6)', () => {
     })
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Open upload form
     const fileInput = page.locator('input[type="file"]').first()
@@ -225,10 +237,11 @@ test.describe('Member tagging (4.10.6)', () => {
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+      timeout: 10_000,
+    })
     // No member avatars or "with" label
     await expect(page.getByText('SL')).not.toBeVisible()
     await expect(page.getByText('with')).not.toBeVisible()
   })
-
 })

@@ -11,63 +11,52 @@
 
     <button
       v-if="!hideTrigger"
-      class="flex items-center gap-2 bg-primary text-primary-foreground rounded-[12px] px-4 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+      class="flex items-center gap-2 rounded-[12px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       @click="fileInput?.click()"
     >
-      <svg
-        class="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        viewBox="0 0 24 24"
-      >
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <path d="M12 5v14M5 12h14" />
       </svg>
-      {{ t("nav.addMemory") }}
+      {{ t('nav.addMemory') }}
     </button>
 
     <Teleport to="body">
       <div
         v-if="items.length > 0"
-        class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+        class="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       >
         <!-- Backdrop -->
-        <div
-          class="absolute inset-0 bg-black/50"
-          @click="!isUploading && cancel()"
-        />
+        <div class="absolute inset-0 bg-black/50" @click="!isUploading && cancel()" />
 
         <!-- Sheet -->
         <div
-          class="relative bg-background w-full sm:max-w-lg sm:rounded-[20px] rounded-t-2xl shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[85vh]"
+          class="relative flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-background shadow-2xl sm:max-h-[85vh] sm:max-w-lg sm:rounded-[20px]"
         >
           <!-- Header -->
           <div
-            class="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0"
+            class="flex flex-shrink-0 items-center justify-between border-b border-border px-5 py-4"
           >
             <div>
               <h2 class="text-sm font-semibold text-foreground">
                 {{
-                  items.length === 1
-                    ? t("upload.addMemory")
-                    : t("upload.addMemories", items.length)
+                  items.length === 1 ? t('upload.addMemory') : t('upload.addMemories', items.length)
                 }}
               </h2>
               <button
-                class="text-xs text-muted-foreground hover:text-foreground transition-colors mt-0.5"
+                class="mt-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                 :disabled="isUploading"
                 @click="fileInput?.click()"
               >
-                {{ t("upload.addMore") }}
+                {{ t('upload.addMore') }}
               </button>
             </div>
             <button
-              class="w-7 h-7 rounded-full bg-secondary hover:bg-border transition-colors flex items-center justify-center disabled:opacity-40"
+              class="flex h-7 w-7 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-border disabled:opacity-40"
               :disabled="isUploading"
               @click="cancel"
             >
               <svg
-                class="w-3.5 h-3.5 text-muted-foreground"
+                class="h-3.5 w-3.5 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2.5"
@@ -79,19 +68,30 @@
           </div>
 
           <!-- Post as one / separately toggle (only when 2+ items) -->
-          <div v-if="items.length >= 2" class="flex gap-1 mx-4 mt-3 mb-1 p-1 bg-secondary rounded-[12px] flex-shrink-0">
+          <div
+            v-if="items.length >= 2"
+            class="mx-4 mb-1 mt-3 flex flex-shrink-0 gap-1 rounded-[12px] bg-secondary p-1"
+          >
             <button
               type="button"
-              class="flex-1 py-2 rounded-[10px] text-xs font-semibold transition-colors"
-              :class="!groupAsOne ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+              class="flex-1 rounded-[10px] py-2 text-xs font-semibold transition-colors"
+              :class="
+                !groupAsOne
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
               @click="groupAsOne = false"
             >
               {{ t('upload.postSeparately') }}
             </button>
             <button
               type="button"
-              class="flex-1 py-2 rounded-[10px] text-xs font-semibold transition-colors"
-              :class="groupAsOne ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+              class="flex-1 rounded-[10px] py-2 text-xs font-semibold transition-colors"
+              :class="
+                groupAsOne
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
               @click="groupAsOne = true"
             >
               {{ t('upload.postAsOne') }}
@@ -101,24 +101,20 @@
           <!-- Batch people picker — shown when NOT groupAsOne (separate mode) -->
           <div
             v-if="
-              items.length > 1 &&
-              !groupAsOne &&
-              (props.members?.length || props.children?.length)
+              items.length > 1 && !groupAsOne && (props.members?.length || props.children?.length)
             "
-            class="px-5 py-2.5 border-b border-border flex-shrink-0"
+            class="flex-shrink-0 border-b border-border px-5 py-2.5"
           >
-            <div class="flex items-center justify-between mb-1.5">
-              <p
-                class="text-[10px] font-semibold text-muted-foreground uppercase tracking-[.12em]"
-              >
-                {{ t("upload.tagPeople") }}
+            <div class="mb-1.5 flex items-center justify-between">
+              <p class="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
+                {{ t('upload.tagPeople') }}
               </p>
               <button
                 type="button"
-                class="text-[10px] font-medium text-accent hover:opacity-70 transition-opacity"
+                class="text-[10px] font-medium text-accent transition-opacity hover:opacity-70"
                 @click="applyGroupPeople"
               >
-                {{ t("upload.applyToAll") }}
+                {{ t('upload.applyToAll') }}
               </button>
             </div>
             <div class="flex flex-wrap gap-1.5">
@@ -127,21 +123,21 @@
                 v-for="member in props.members"
                 :key="member.userId"
                 type="button"
-                class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                class="inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-medium transition-colors"
                 :class="
                   groupMemberIds.includes(member.userId)
-                    ? 'bg-accent/15 border-accent/40 text-foreground'
-                    : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+                    ? 'border-accent/40 bg-accent/15 text-foreground'
+                    : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                 "
                 @click="toggleGroupMember(member.userId)"
               >
                 <span
-                  class="w-4 h-4 rounded-full overflow-hidden bg-border flex-shrink-0 flex items-center justify-center text-[7px] font-bold"
+                  class="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-border text-[7px] font-bold"
                 >
                   <img
                     v-if="member.avatarUrl"
                     :src="member.avatarUrl"
-                    class="w-full h-full object-cover"
+                    class="h-full w-full object-cover"
                   />
                   <span v-else>{{ memberInitials(member) }}</span>
                 </span>
@@ -152,11 +148,11 @@
                 v-for="child in props.children"
                 :key="child.id"
                 type="button"
-                class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                class="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
                 :class="
                   groupChildIds.includes(child.id)
-                    ? 'bg-accent/15 border-accent/40 text-foreground'
-                    : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+                    ? 'border-accent/40 bg-accent/15 text-foreground'
+                    : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                 "
                 @click="toggleGroupChild(child.id)"
               >
@@ -168,75 +164,66 @@
           <!-- Group date (batch only, separate mode) -->
           <div
             v-if="items.length > 1 && !groupAsOne"
-            class="px-5 py-3 border-b border-border flex-shrink-0 flex items-center gap-2"
+            class="flex flex-shrink-0 items-center gap-2 border-b border-border px-5 py-3"
           >
             <input
               v-model="groupDate"
               type="date"
-              class="flex-1 bg-card border border-border rounded-[10px] px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              class="flex-1 rounded-[10px] border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <button
-              class="flex-shrink-0 bg-secondary hover:bg-border transition-colors text-foreground text-xs font-medium px-3 py-1.5 rounded-[10px]"
+              class="flex-shrink-0 rounded-[10px] bg-secondary px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-border"
               @click="applyGroupDate"
             >
-              {{ t("upload.applyToAll") }}
+              {{ t('upload.applyToAll') }}
             </button>
           </div>
 
           <!-- Scrollable content -->
-          <div class="scroll-styled overflow-y-auto flex-1 px-5 py-4">
+          <div class="scroll-styled flex-1 overflow-y-auto px-5 py-4">
             <!-- Single item -->
             <template v-if="items.length === 1">
               <div
-                class="w-full rounded-[14px] overflow-hidden bg-secondary mb-4 relative"
+                class="relative mb-4 w-full overflow-hidden rounded-[14px] bg-secondary"
                 style="aspect-ratio: 4/5"
               >
                 <img
                   v-if="!firstItem.isVideo"
                   :src="firstItem.previewUrl"
-                  class="w-full h-full object-cover"
+                  class="h-full w-full object-cover"
                 />
                 <video
                   v-else
                   :src="firstItem.previewUrl"
-                  class="w-full h-full object-cover"
+                  class="h-full w-full object-cover"
                   muted
                   playsinline
                 />
                 <div
                   v-if="firstItem.isVideo"
-                  class="absolute bottom-2 left-2 bg-black/50 rounded px-1.5 py-0.5"
+                  class="absolute bottom-2 left-2 rounded bg-black/50 px-1.5 py-0.5"
                 >
-                  <span
-                    class="text-white text-[9px] font-semibold tracking-wide"
-                    >VIDEO</span
-                  >
+                  <span class="text-[9px] font-semibold tracking-wide text-white">VIDEO</span>
                 </div>
                 <div
                   v-if="firstItem.uploading"
-                  class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2"
+                  class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50"
                 >
-                  <p class="text-white text-lg font-bold">
-                    {{ firstItem.progress }}%
-                  </p>
-                  <div
-                    class="w-24 bg-white/30 rounded-full h-1 overflow-hidden"
-                  >
+                  <p class="text-lg font-bold text-white">{{ firstItem.progress }}%</p>
+                  <div class="h-1 w-24 overflow-hidden rounded-full bg-white/30">
                     <div
-                      class="bg-white h-1 rounded-full transition-all duration-150"
+                      class="h-1 rounded-full bg-white transition-all duration-150"
                       :style="{ width: `${firstItem.progress}%` }"
                     />
                   </div>
                 </div>
                 <div
                   v-if="firstItem.done"
-                  class="absolute inset-0 bg-black/30 flex items-center justify-center"
+                  class="absolute inset-0 flex items-center justify-center bg-black/30"
                 >
-                  <div
-                    class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"
-                  >
+                  <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
                     <svg
-                      class="w-6 h-6 text-white"
+                      class="h-6 w-6 text-white"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2.5"
@@ -249,31 +236,22 @@
               </div>
 
               <!-- Date + people picker: immediately below the image so they're always visible -->
-              <div class="flex items-center justify-between mb-3">
-                <label class="text-sm text-muted-foreground">{{
-                  t("upload.whenWas")
-                }}</label>
+              <div class="mb-3 flex items-center justify-between">
+                <label class="text-sm text-muted-foreground">{{ t('upload.whenWas') }}</label>
                 <input
                   v-model="firstItem.date"
                   type="date"
-                  class="bg-card border border-border rounded-[10px] px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  class="rounded-[10px] border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <!-- Combined people picker: members + children -->
-              <div
-                v-if="props.members?.length || props.children?.length"
-                class="mb-3"
-              >
+              <div v-if="props.members?.length || props.children?.length" class="mb-3">
                 <p
-                  class="text-[10px] font-semibold uppercase tracking-[.12em] mb-1.5"
-                  :class="
-                    props.circleType === 'parents'
-                      ? 'text-accent'
-                      : 'text-muted-foreground'
-                  "
+                  class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em]"
+                  :class="props.circleType === 'parents' ? 'text-accent' : 'text-muted-foreground'"
                 >
-                  {{ t("upload.whoIsIn") }}
+                  {{ t('upload.whoIsIn') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
                   <!-- Member chips -->
@@ -281,21 +259,21 @@
                     v-for="member in props.members"
                     :key="member.userId"
                     type="button"
-                    class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                    class="inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-medium transition-colors"
                     :class="
                       firstItem.selectedMemberIds.includes(member.userId)
-                        ? 'bg-accent/15 border-accent/40 text-foreground'
-                        : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                        ? 'border-accent/40 bg-accent/15 text-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
                     "
                     @click="toggleMember(firstItem, member.userId)"
                   >
                     <span
-                      class="w-4 h-4 rounded-full overflow-hidden bg-border flex-shrink-0 flex items-center justify-center text-[7px] font-bold"
+                      class="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-border text-[7px] font-bold"
                     >
                       <img
                         v-if="member.avatarUrl"
                         :src="member.avatarUrl"
-                        class="w-full h-full object-cover"
+                        class="h-full w-full object-cover"
                       />
                       <span v-else>{{ memberInitials(member) }}</span>
                     </span>
@@ -306,11 +284,11 @@
                     v-for="child in props.children"
                     :key="child.id"
                     type="button"
-                    class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                    class="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
                     :class="
                       firstItem.selectedChildIds.includes(child.id)
-                        ? 'bg-accent/15 border-accent/40 text-foreground'
-                        : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                        ? 'border-accent/40 bg-accent/15 text-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
                     "
                     @click="toggleChild(firstItem, child.id)"
                   >
@@ -320,16 +298,12 @@
               </div>
 
               <div class="mb-3">
-                <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-xs text-muted-foreground">{{
-                    t("upload.note")
-                  }}</label>
+                <div class="mb-1 flex items-baseline justify-between">
+                  <label class="text-xs text-muted-foreground">{{ t('upload.note') }}</label>
                   <span
                     class="text-[11px]"
                     :class="
-                      firstItem.note.length >= 500
-                        ? 'text-destructive'
-                        : 'text-muted-foreground'
+                      firstItem.note.length >= 500 ? 'text-destructive' : 'text-muted-foreground'
                     "
                     >{{ firstItem.note.length }} / 500</span
                   >
@@ -339,15 +313,13 @@
                   :placeholder="t('upload.notePlaceholder')"
                   rows="2"
                   maxlength="500"
-                  class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  class="w-full resize-none rounded-[12px] border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div class="mb-3">
-                <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-xs text-muted-foreground">{{
-                    t("upload.milestone")
-                  }}</label>
+                <div class="mb-1 flex items-baseline justify-between">
+                  <label class="text-xs text-muted-foreground">{{ t('upload.milestone') }}</label>
                   <span
                     class="text-[11px]"
                     :class="
@@ -363,21 +335,18 @@
                   type="text"
                   :placeholder="typeConfig.milestonePlaceholder"
                   maxlength="40"
-                  class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  class="w-full rounded-[12px] border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 <!-- Milestone chips — quick-pick suggestions -->
                 <div
-                  v-if="
-                    typeConfig.milestoneChips.length > 0 &&
-                    !firstItem.milestoneLabel
-                  "
-                  class="flex flex-wrap gap-1.5 mt-2"
+                  v-if="typeConfig.milestoneChips.length > 0 && !firstItem.milestoneLabel"
+                  class="mt-2 flex flex-wrap gap-1.5"
                 >
                   <button
                     v-for="chip in typeConfig.milestoneChips"
                     :key="chip"
                     type="button"
-                    class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-secondary hover:bg-border text-muted-foreground hover:text-foreground transition-colors border border-border"
+                    class="rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-border hover:text-foreground"
                     @click="firstItem.milestoneLabel = chip"
                   >
                     {{ chip }}
@@ -385,10 +354,7 @@
                 </div>
               </div>
 
-              <p
-                v-if="firstItem.error"
-                class="mt-1 text-sm text-destructive text-center"
-              >
+              <p v-if="firstItem.error" class="mt-1 text-center text-sm text-destructive">
                 {{ firstItem.error }}
               </p>
             </template>
@@ -399,19 +365,19 @@
                 <div
                   v-for="item in items"
                   :key="item.id"
-                  class="bg-card border border-border rounded-[14px] overflow-hidden"
+                  class="overflow-hidden rounded-[14px] border border-border bg-card"
                 >
                   <!-- Thumbnail -->
                   <div class="relative bg-secondary" style="aspect-ratio: 1">
                     <img
                       v-if="!item.isVideo"
                       :src="item.previewUrl"
-                      class="w-full h-full object-cover"
+                      class="h-full w-full object-cover"
                     />
                     <video
                       v-else
                       :src="item.previewUrl"
-                      class="w-full h-full object-cover"
+                      class="h-full w-full object-cover"
                       muted
                       playsinline
                     />
@@ -419,27 +385,20 @@
                     <!-- Video badge -->
                     <div
                       v-if="item.isVideo"
-                      class="absolute bottom-1.5 left-1.5 bg-black/50 rounded px-1.5 py-0.5"
+                      class="absolute bottom-1.5 left-1.5 rounded bg-black/50 px-1.5 py-0.5"
                     >
-                      <span
-                        class="text-white text-[9px] font-semibold tracking-wide"
-                        >VIDEO</span
-                      >
+                      <span class="text-[9px] font-semibold tracking-wide text-white">VIDEO</span>
                     </div>
 
                     <!-- Uploading overlay -->
                     <div
                       v-if="item.uploading"
-                      class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5"
+                      class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50"
                     >
-                      <p class="text-white text-sm font-bold">
-                        {{ item.progress }}%
-                      </p>
-                      <div
-                        class="w-14 bg-white/30 rounded-full h-0.5 overflow-hidden"
-                      >
+                      <p class="text-sm font-bold text-white">{{ item.progress }}%</p>
+                      <div class="h-0.5 w-14 overflow-hidden rounded-full bg-white/30">
                         <div
-                          class="bg-white h-0.5 rounded-full transition-all duration-150"
+                          class="h-0.5 rounded-full bg-white transition-all duration-150"
                           :style="{ width: `${item.progress}%` }"
                         />
                       </div>
@@ -448,13 +407,13 @@
                     <!-- Done overlay -->
                     <div
                       v-else-if="item.done"
-                      class="absolute inset-0 bg-black/30 flex items-center justify-center"
+                      class="absolute inset-0 flex items-center justify-center bg-black/30"
                     >
                       <div
-                        class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-white/20"
                       >
                         <svg
-                          class="w-5 h-5 text-white"
+                          class="h-5 w-5 text-white"
                           fill="none"
                           stroke="currentColor"
                           stroke-width="2.5"
@@ -468,11 +427,11 @@
                     <!-- Remove button -->
                     <button
                       v-else-if="!item.uploading"
-                      class="absolute top-1.5 right-1.5 w-5 h-5 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+                      class="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 transition-colors hover:bg-black/70"
                       @click="removeItem(item.id)"
                     >
                       <svg
-                        class="w-2.5 h-2.5 text-white"
+                        class="h-2.5 w-2.5 text-white"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="3"
@@ -484,7 +443,7 @@
                   </div>
 
                   <!-- Date + note + milestone + error -->
-                  <div class="px-3 py-2 space-y-1.5">
+                  <div class="space-y-1.5 px-3 py-2">
                     <input
                       v-model="item.date"
                       type="date"
@@ -495,7 +454,7 @@
                       :placeholder="t('upload.noteShort')"
                       rows="1"
                       maxlength="500"
-                      class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none leading-snug"
+                      class="w-full resize-none bg-transparent text-base leading-snug text-foreground placeholder:text-muted-foreground focus:outline-none"
                       style="max-height: 48px; overflow-y: auto"
                     />
                     <input
@@ -514,10 +473,10 @@
                         v-for="member in props.members"
                         :key="member.userId"
                         type="button"
-                        class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[7px] font-bold overflow-hidden transition-all border"
+                        class="flex h-5 w-5 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border text-[7px] font-bold transition-all"
                         :class="
                           item.selectedMemberIds.includes(member.userId)
-                            ? 'ring-2 ring-accent ring-offset-1 ring-offset-card border-accent bg-border'
+                            ? 'border-accent bg-border ring-2 ring-accent ring-offset-1 ring-offset-card'
                             : 'border-border bg-border opacity-50 hover:opacity-80'
                         "
                         :title="member.firstName ?? member.userId"
@@ -526,31 +485,26 @@
                         <img
                           v-if="member.avatarUrl"
                           :src="member.avatarUrl"
-                          class="w-full h-full object-cover"
+                          class="h-full w-full object-cover"
                         />
-                        <span v-else class="text-foreground">{{
-                          memberInitials(member)
-                        }}</span>
+                        <span v-else class="text-foreground">{{ memberInitials(member) }}</span>
                       </button>
                       <button
                         v-for="child in props.children"
                         :key="child.id"
                         type="button"
-                        class="px-1.5 py-0.5 rounded-full text-[9px] font-medium transition-colors border"
+                        class="rounded-full border px-1.5 py-0.5 text-[9px] font-medium transition-colors"
                         :class="
                           item.selectedChildIds.includes(child.id)
-                            ? 'bg-accent/15 border-accent/40 text-foreground'
-                            : 'bg-secondary border-border text-muted-foreground hover:text-foreground opacity-50 hover:opacity-80'
+                            ? 'border-accent/40 bg-accent/15 text-foreground'
+                            : 'border-border bg-secondary text-muted-foreground opacity-50 hover:text-foreground hover:opacity-80'
                         "
                         @click="toggleChild(item, child.id)"
                       >
                         {{ child.name }}
                       </button>
                     </div>
-                    <p
-                      v-if="item.error"
-                      class="text-[11px] text-destructive leading-tight"
-                    >
+                    <p v-if="item.error" class="text-[11px] leading-tight text-destructive">
                       {{ item.error }}
                     </p>
                   </div>
@@ -561,45 +515,42 @@
             <!-- "Post as one memory" mode -->
             <template v-else>
               <!-- Shared date -->
-              <div class="flex items-center justify-between mb-3">
-                <label class="text-sm text-muted-foreground">{{
-                  t("upload.whenWas")
-                }}</label>
+              <div class="mb-3 flex items-center justify-between">
+                <label class="text-sm text-muted-foreground">{{ t('upload.whenWas') }}</label>
                 <input
                   v-model="groupDate"
                   type="date"
-                  class="bg-card border border-border rounded-[10px] px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  class="rounded-[10px] border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <!-- Shared people picker -->
-              <div
-                v-if="props.members?.length || props.children?.length"
-                class="mb-3"
-              >
-                <p class="text-[10px] font-semibold uppercase tracking-[.12em] mb-1.5 text-muted-foreground">
-                  {{ t("upload.whoIsIn") }}
+              <div v-if="props.members?.length || props.children?.length" class="mb-3">
+                <p
+                  class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
+                >
+                  {{ t('upload.whoIsIn') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
                   <button
                     v-for="member in props.members"
                     :key="member.userId"
                     type="button"
-                    class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                    class="inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-medium transition-colors"
                     :class="
                       groupMemberIds.includes(member.userId)
-                        ? 'bg-accent/15 border-accent/40 text-foreground'
-                        : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                        ? 'border-accent/40 bg-accent/15 text-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
                     "
                     @click="toggleGroupMember(member.userId)"
                   >
                     <span
-                      class="w-4 h-4 rounded-full overflow-hidden bg-border flex-shrink-0 flex items-center justify-center text-[7px] font-bold"
+                      class="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-border text-[7px] font-bold"
                     >
                       <img
                         v-if="member.avatarUrl"
                         :src="member.avatarUrl"
-                        class="w-full h-full object-cover"
+                        class="h-full w-full object-cover"
                       />
                       <span v-else>{{ memberInitials(member) }}</span>
                     </span>
@@ -609,11 +560,11 @@
                     v-for="child in props.children"
                     :key="child.id"
                     type="button"
-                    class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
+                    class="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
                     :class="
                       groupChildIds.includes(child.id)
-                        ? 'bg-accent/15 border-accent/40 text-foreground'
-                        : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                        ? 'border-accent/40 bg-accent/15 text-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
                     "
                     @click="toggleGroupChild(child.id)"
                   >
@@ -624,17 +575,11 @@
 
               <!-- Shared note -->
               <div class="mb-3">
-                <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-xs text-muted-foreground">{{
-                    t("upload.note")
-                  }}</label>
+                <div class="mb-1 flex items-baseline justify-between">
+                  <label class="text-xs text-muted-foreground">{{ t('upload.note') }}</label>
                   <span
                     class="text-[11px]"
-                    :class="
-                      groupNote.length >= 500
-                        ? 'text-destructive'
-                        : 'text-muted-foreground'
-                    "
+                    :class="groupNote.length >= 500 ? 'text-destructive' : 'text-muted-foreground'"
                     >{{ groupNote.length }} / 500</span
                   >
                 </div>
@@ -643,16 +588,14 @@
                   :placeholder="t('upload.notePlaceholder')"
                   rows="2"
                   maxlength="500"
-                  class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  class="w-full resize-none rounded-[12px] border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <!-- Shared milestone -->
               <div class="mb-4">
-                <div class="flex items-baseline justify-between mb-1">
-                  <label class="text-xs text-muted-foreground">{{
-                    t("upload.milestone")
-                  }}</label>
+                <div class="mb-1 flex items-baseline justify-between">
+                  <label class="text-xs text-muted-foreground">{{ t('upload.milestone') }}</label>
                   <span
                     class="text-[11px]"
                     :class="
@@ -668,27 +611,27 @@
                   type="text"
                   :placeholder="typeConfig.milestonePlaceholder"
                   maxlength="40"
-                  class="w-full bg-card border border-border rounded-[12px] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  class="w-full rounded-[12px] border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <!-- Photo/video grid with cover selector -->
-              <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="mb-4 grid grid-cols-2 gap-3">
                 <div
                   v-for="item in items"
                   :key="item.id"
-                  class="relative bg-secondary rounded-[12px] overflow-hidden"
+                  class="relative overflow-hidden rounded-[12px] bg-secondary"
                   style="aspect-ratio: 1"
                 >
                   <img
                     v-if="!item.isVideo"
                     :src="item.previewUrl"
-                    class="w-full h-full object-cover"
+                    class="h-full w-full object-cover"
                   />
                   <video
                     v-else
                     :src="item.previewUrl"
-                    class="w-full h-full object-cover"
+                    class="h-full w-full object-cover"
                     muted
                     playsinline
                   />
@@ -696,20 +639,20 @@
                   <!-- Video badge -->
                   <div
                     v-if="item.isVideo"
-                    class="absolute bottom-1.5 left-1.5 bg-black/50 rounded px-1.5 py-0.5"
+                    class="absolute bottom-1.5 left-1.5 rounded bg-black/50 px-1.5 py-0.5"
                   >
-                    <span class="text-white text-[9px] font-semibold tracking-wide">VIDEO</span>
+                    <span class="text-[9px] font-semibold tracking-wide text-white">VIDEO</span>
                   </div>
 
                   <!-- Uploading overlay -->
                   <div
                     v-if="item.uploading"
-                    class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5"
+                    class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50"
                   >
-                    <p class="text-white text-sm font-bold">{{ item.progress }}%</p>
-                    <div class="w-14 bg-white/30 rounded-full h-0.5 overflow-hidden">
+                    <p class="text-sm font-bold text-white">{{ item.progress }}%</p>
+                    <div class="h-0.5 w-14 overflow-hidden rounded-full bg-white/30">
                       <div
-                        class="bg-white h-0.5 rounded-full transition-all duration-150"
+                        class="h-0.5 rounded-full bg-white transition-all duration-150"
                         :style="{ width: `${item.progress}%` }"
                       />
                     </div>
@@ -719,14 +662,14 @@
                   <template v-else-if="!item.done">
                     <div
                       v-if="effectiveCoverTempId === item.tempId"
-                      class="absolute top-1.5 left-1.5 bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-[9px] font-semibold"
+                      class="absolute left-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground"
                     >
                       {{ t('upload.coverLabel') }}
                     </div>
                     <button
                       v-else
                       type="button"
-                      class="absolute top-1.5 left-1.5 bg-black/50 hover:bg-black/70 text-white rounded px-1.5 py-0.5 text-[9px] font-medium transition-colors"
+                      class="absolute left-1.5 top-1.5 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white transition-colors hover:bg-black/70"
                       @click="coverItemTempId = item.tempId"
                     >
                       {{ t('upload.setAsCover') }}
@@ -736,10 +679,16 @@
                   <!-- Done overlay -->
                   <div
                     v-if="item.done"
-                    class="absolute inset-0 bg-black/30 flex items-center justify-center"
+                    class="absolute inset-0 flex items-center justify-center bg-black/30"
                   >
-                    <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                      <svg
+                        class="h-5 w-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M20 6 9 17l-5-5" />
                       </svg>
                     </div>
@@ -748,24 +697,24 @@
                   <!-- Error badge -->
                   <div
                     v-if="item.error"
-                    class="absolute bottom-1.5 left-1.5 right-1.5 bg-destructive/90 rounded px-1.5 py-0.5"
+                    class="absolute bottom-1.5 left-1.5 right-1.5 rounded bg-destructive/90 px-1.5 py-0.5"
                   >
-                    <p class="text-white text-[9px] leading-tight">{{ item.error }}</p>
+                    <p class="text-[9px] leading-tight text-white">{{ item.error }}</p>
                   </div>
                 </div>
               </div>
 
               <!-- Text slides list -->
-              <div v-if="textSlides.length > 0" class="space-y-2 mb-3">
+              <div v-if="textSlides.length > 0" class="mb-3 space-y-2">
                 <div
                   v-for="slide in textSlides"
                   :key="slide.tempId"
-                  class="flex items-start gap-2 bg-card border border-border rounded-[12px] px-3 py-2.5"
+                  class="flex items-start gap-2 rounded-[12px] border border-border bg-card px-3 py-2.5"
                 >
-                  <p class="flex-1 text-sm text-foreground leading-snug">{{ slide.textContent }}</p>
+                  <p class="flex-1 text-sm leading-snug text-foreground">{{ slide.textContent }}</p>
                   <button
                     type="button"
-                    class="flex-shrink-0 text-[11px] text-muted-foreground hover:text-destructive transition-colors mt-0.5"
+                    class="mt-0.5 flex-shrink-0 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
                     @click="removeTextSlide(slide.tempId)"
                   >
                     {{ t('upload.removeTextSlide') }}
@@ -777,32 +726,32 @@
               <div v-if="!showAddTextDialog">
                 <button
                   type="button"
-                  class="w-full py-2.5 rounded-[12px] border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                  class="w-full rounded-[12px] border border-dashed border-border py-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
                   @click="showAddTextDialog = true"
                 >
                   + {{ t('upload.addTextSlide') }}
                 </button>
               </div>
-              <div v-else class="bg-card border border-border rounded-[12px] p-3">
+              <div v-else class="rounded-[12px] border border-border bg-card p-3">
                 <textarea
                   v-model="newTextContent"
                   :placeholder="t('upload.notePlaceholder')"
                   rows="3"
                   maxlength="500"
-                  class="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
+                  class="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                   autofocus
                 />
-                <div class="flex justify-end gap-2 mt-2">
+                <div class="mt-2 flex justify-end gap-2">
                   <button
                     type="button"
-                    class="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
+                    class="px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                     @click="cancelAddTextSlide"
                   >
                     {{ t('upload.cancel') }}
                   </button>
                   <button
                     type="button"
-                    class="text-xs bg-primary text-primary-foreground rounded-[8px] px-3 py-1.5 font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+                    class="rounded-[8px] bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                     :disabled="!newTextContent.trim()"
                     @click="confirmAddTextSlide"
                   >
@@ -816,35 +765,31 @@
           <!-- Global error -->
           <p
             v-if="globalError"
-            class="px-5 pb-1 text-sm text-destructive text-center flex-shrink-0"
+            class="flex-shrink-0 px-5 pb-1 text-center text-sm text-destructive"
           >
             {{ globalError }}
           </p>
 
           <!-- Footer -->
-          <div
-            class="px-5 py-4 border-t border-border flex gap-2.5 flex-shrink-0"
-          >
+          <div class="flex flex-shrink-0 gap-2.5 border-t border-border px-5 py-4">
             <button
-              class="flex-1 border border-border bg-card rounded-[12px] py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-40"
+              class="flex-1 rounded-[12px] border border-border bg-card py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
               :disabled="isUploading"
               @click="cancel"
             >
-              {{ t("upload.cancel") }}
+              {{ t('upload.cancel') }}
             </button>
             <button
-              class="flex-1 bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+              class="flex-1 rounded-[12px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               :disabled="isUploading || allDone"
               @click="uploadAll"
             >
               <span v-if="isUploading">{{
-                t("upload.uploading", { done: doneCount, total: items.length })
+                t('upload.uploading', { done: doneCount, total: items.length })
               }}</span>
-              <span v-else-if="allDone">{{ t("upload.allUploaded") }}</span>
+              <span v-else-if="allDone">{{ t('upload.allUploaded') }}</span>
               <span v-else>{{
-                items.length === 1
-                  ? t("upload.upload")
-                  : t("upload.uploadN", items.length)
+                items.length === 1 ? t('upload.upload') : t('upload.uploadN', items.length)
               }}</span>
             </button>
           </div>
@@ -865,201 +810,193 @@
 </template>
 
 <script setup lang="ts">
-import exifr from "exifr";
-import { computeBabyAge } from "~/composables/useBabyAge";
-import { useAnalytics, classifyMilestone } from "~/composables/useAnalytics";
-const { t } = useI18n();
+import exifr from 'exifr'
+import { computeBabyAge } from '~/composables/useBabyAge'
+import { useAnalytics, classifyMilestone } from '~/composables/useAnalytics'
+const { t } = useI18n()
 
 interface ChildProfile {
-  id: string;
-  name: string;
-  date_of_birth: string;
+  id: string
+  name: string
+  date_of_birth: string
 }
 interface CircleMember {
-  userId: string;
-  firstName: string | null;
-  lastName: string | null;
-  avatarUrl: string | null;
+  userId: string
+  firstName: string | null
+  lastName: string | null
+  avatarUrl: string | null
 }
 
 interface UploadItem {
-  id: string;
-  tempId: string;
-  file: File;
-  previewUrl: string;
-  isVideo: boolean;
-  date: string;
-  note: string;
-  milestoneLabel: string;
-  selectedChildIds: string[];
-  selectedMemberIds: string[];
-  uploading: boolean;
-  progress: number;
-  done: boolean;
-  error: string;
+  id: string
+  tempId: string
+  file: File
+  previewUrl: string
+  isVideo: boolean
+  date: string
+  note: string
+  milestoneLabel: string
+  selectedChildIds: string[]
+  selectedMemberIds: string[]
+  uploading: boolean
+  progress: number
+  done: boolean
+  error: string
 }
 
 const props = defineProps<{
-  circleId: string;
-  circleType?: string | null;
-  hideTrigger?: boolean;
-  children?: ChildProfile[];
-  members?: CircleMember[];
-  prefillMilestoneLabel?: string;
-}>();
-const typeConfig = computed(() => useCircleTypeConfig(props.circleType, t));
+  circleId: string
+  circleType?: string | null
+  hideTrigger?: boolean
+  children?: ChildProfile[]
+  members?: CircleMember[]
+  prefillMilestoneLabel?: string
+}>()
+const typeConfig = computed(() => useCircleTypeConfig(props.circleType, t))
 
-const isOpen = computed(() => items.value.length > 0);
-defineExpose({ open: () => fileInput.value?.click(), isOpen });
-const emit = defineEmits<{ uploaded: [] }>();
+const isOpen = computed(() => items.value.length > 0)
+defineExpose({ open: () => fileInput.value?.click(), isOpen })
+const emit = defineEmits<{ uploaded: [] }>()
 
-const supabase = useSupabaseClient();
-const config = useRuntimeConfig();
-const { track } = useAnalytics();
+const supabase = useSupabaseClient()
+const config = useRuntimeConfig()
+const { track } = useAnalytics()
 
 interface ShareCardData {
-  photoUrl: string;
-  milestoneLabel: string;
-  memoryDate: string;
-  childAges: Array<{ name: string; age: string }>;
+  photoUrl: string
+  milestoneLabel: string
+  memoryDate: string
+  childAges: Array<{ name: string; age: string }>
 }
 
-const fileInput = ref<HTMLInputElement>();
-const items = ref<UploadItem[]>([]);
-const groupDate = ref(today());
-const groupChildIds = ref<string[]>([]);
-const groupMemberIds = ref<string[]>([]);
-const globalError = ref("");
-const pendingShareCard = ref<ShareCardData | null>(null);
+const fileInput = ref<HTMLInputElement>()
+const items = ref<UploadItem[]>([])
+const groupDate = ref(today())
+const groupChildIds = ref<string[]>([])
+const groupMemberIds = ref<string[]>([])
+const globalError = ref('')
+const pendingShareCard = ref<ShareCardData | null>(null)
 
 // "Post as one memory" state
-const groupAsOne = ref(false);
-const groupNote = ref('');
-const groupMilestoneLabel = ref('');
-const textSlides = ref<Array<{ tempId: string; textContent: string }>>([]);
-const coverItemTempId = ref<string | null>(null);
-const showAddTextDialog = ref(false);
-const newTextContent = ref('');
+const groupAsOne = ref(false)
+const groupNote = ref('')
+const groupMilestoneLabel = ref('')
+const textSlides = ref<Array<{ tempId: string; textContent: string }>>([])
+const coverItemTempId = ref<string | null>(null)
+const showAddTextDialog = ref(false)
+const newTextContent = ref('')
 
 // Resolve effective cover: the explicitly chosen one, or else the first item
 const effectiveCoverTempId = computed(() => {
-  if (coverItemTempId.value) return coverItemTempId.value;
-  return items.value[0]?.tempId ?? null;
-});
+  if (coverItemTempId.value) return coverItemTempId.value
+  return items.value[0]?.tempId ?? null
+})
 
 function memberInitials(member: CircleMember): string {
-  return (
-    (
-      (member.firstName?.[0] ?? "") + (member.lastName?.[0] ?? "")
-    ).toUpperCase() || "?"
-  );
+  return ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?'
 }
 
 function toggleChild(item: UploadItem, childId: string) {
-  const idx = item.selectedChildIds.indexOf(childId);
+  const idx = item.selectedChildIds.indexOf(childId)
   item.selectedChildIds =
     idx === -1
       ? [...item.selectedChildIds, childId]
-      : item.selectedChildIds.filter((id) => id !== childId);
+      : item.selectedChildIds.filter((id) => id !== childId)
 }
 
 function toggleGroupChild(childId: string) {
-  const idx = groupChildIds.value.indexOf(childId);
+  const idx = groupChildIds.value.indexOf(childId)
   groupChildIds.value =
     idx === -1
       ? [...groupChildIds.value, childId]
-      : groupChildIds.value.filter((id) => id !== childId);
+      : groupChildIds.value.filter((id) => id !== childId)
 }
 
 function toggleMember(item: UploadItem, userId: string) {
-  const idx = item.selectedMemberIds.indexOf(userId);
+  const idx = item.selectedMemberIds.indexOf(userId)
   item.selectedMemberIds =
     idx === -1
       ? [...item.selectedMemberIds, userId]
-      : item.selectedMemberIds.filter((id) => id !== userId);
+      : item.selectedMemberIds.filter((id) => id !== userId)
 }
 
 function toggleGroupMember(userId: string) {
-  const idx = groupMemberIds.value.indexOf(userId);
+  const idx = groupMemberIds.value.indexOf(userId)
   groupMemberIds.value =
     idx === -1
       ? [...groupMemberIds.value, userId]
-      : groupMemberIds.value.filter((id) => id !== userId);
+      : groupMemberIds.value.filter((id) => id !== userId)
 }
 
 function removeTextSlide(tempId: string) {
-  textSlides.value = textSlides.value.filter((s) => s.tempId !== tempId);
+  textSlides.value = textSlides.value.filter((s) => s.tempId !== tempId)
 }
 
 function cancelAddTextSlide() {
-  showAddTextDialog.value = false;
-  newTextContent.value = '';
+  showAddTextDialog.value = false
+  newTextContent.value = ''
 }
 
 function confirmAddTextSlide() {
-  if (!newTextContent.value.trim()) return;
-  textSlides.value.push({ tempId: crypto.randomUUID(), textContent: newTextContent.value.trim() });
-  newTextContent.value = '';
-  showAddTextDialog.value = false;
+  if (!newTextContent.value.trim()) return
+  textSlides.value.push({ tempId: crypto.randomUUID(), textContent: newTextContent.value.trim() })
+  newTextContent.value = ''
+  showAddTextDialog.value = false
 }
 
-const isUploading = computed(() => items.value.some((i) => i.uploading));
-const allDone = computed(
-  () => items.value.length > 0 && items.value.every((i) => i.done),
-);
-const doneCount = computed(() => items.value.filter((i) => i.done).length);
+const isUploading = computed(() => items.value.some((i) => i.uploading))
+const allDone = computed(() => items.value.length > 0 && items.value.every((i) => i.done))
+const doneCount = computed(() => items.value.filter((i) => i.done).length)
 // Safe – only accessed inside v-if="items.length === 1" in the template
-const firstItem = computed(() => items.value[0] as UploadItem);
+const firstItem = computed(() => items.value[0] as UploadItem)
 
-const MAX_PHOTO_BYTES = 50 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 50 * 1024 * 1024
+const MAX_VIDEO_BYTES = 500 * 1024 * 1024
 
 function today(): string {
-  return dateFromTimestamp(Date.now());
+  return dateFromTimestamp(Date.now())
 }
 
 function dateFromTimestamp(ts: number): string {
-  const d = new Date(ts);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  const d = new Date(ts)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 async function extractExifDate(file: File): Promise<string> {
   // 1. Try EXIF — reliable for JPEGs and HEICs from a camera
   try {
-    const exif = await exifr.parse(file);
-    const raw = exif?.DateTimeOriginal ?? exif?.CreateDate ?? exif?.DateTime;
+    const exif = await exifr.parse(file)
+    const raw = exif?.DateTimeOriginal ?? exif?.CreateDate ?? exif?.DateTime
     if (raw) {
-      const d = raw instanceof Date ? raw : new Date(String(raw));
-      if (!isNaN(d.getTime())) return dateFromTimestamp(d.getTime());
+      const d = raw instanceof Date ? raw : new Date(String(raw))
+      if (!isNaN(d.getTime())) return dateFromTimestamp(d.getTime())
     }
   } catch {}
 
   // 2. Fall back to file.lastModified — usually correct for photos saved from a camera roll
-  if (file.lastModified) return dateFromTimestamp(file.lastModified);
+  if (file.lastModified) return dateFromTimestamp(file.lastModified)
 
   // 3. Last resort: today
-  return today();
+  return today()
 }
 
 async function onFilesSelected(e: Event) {
-  const files = Array.from((e.target as HTMLInputElement).files ?? []);
-  if (!files.length) return;
-  globalError.value = "";
+  const files = Array.from((e.target as HTMLInputElement).files ?? [])
+  if (!files.length) return
+  globalError.value = ''
 
-  const newItems: UploadItem[] = [];
+  const newItems: UploadItem[] = []
   for (const file of files) {
-    const isVideo = file.type.startsWith("video/");
-    const maxSize = isVideo ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
+    const isVideo = file.type.startsWith('video/')
+    const maxSize = isVideo ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES
     if (file.size > maxSize) {
-      globalError.value = isVideo
-        ? t("upload.errorVideoSize")
-        : t("upload.errorPhotoSize");
-      continue;
+      globalError.value = isVideo ? t('upload.errorVideoSize') : t('upload.errorPhotoSize')
+      continue
     }
-    const date = isVideo ? today() : await extractExifDate(file);
+    const date = isVideo ? today() : await extractExifDate(file)
     newItems.push({
       id: Math.random().toString(36).slice(2),
       tempId: crypto.randomUUID(),
@@ -1067,104 +1004,98 @@ async function onFilesSelected(e: Event) {
       previewUrl: URL.createObjectURL(file),
       isVideo,
       date,
-      note: "",
-      milestoneLabel: props.prefillMilestoneLabel ?? "",
+      note: '',
+      milestoneLabel: props.prefillMilestoneLabel ?? '',
       selectedChildIds: [],
       selectedMemberIds: [],
       uploading: false,
       progress: 0,
       done: false,
-      error: "",
-    });
+      error: '',
+    })
   }
 
   // Prefill group milestone label when first batch of items is added
   if (items.value.length === 0 && newItems.length > 0 && props.prefillMilestoneLabel) {
-    groupMilestoneLabel.value = props.prefillMilestoneLabel;
+    groupMilestoneLabel.value = props.prefillMilestoneLabel
   }
 
-  items.value = [...items.value, ...newItems];
-  if (fileInput.value) fileInput.value.value = "";
+  items.value = [...items.value, ...newItems]
+  if (fileInput.value) fileInput.value.value = ''
 }
 
 function applyGroupDate() {
-  if (!groupDate.value) return;
+  if (!groupDate.value) return
   items.value.forEach((item) => {
-    item.date = groupDate.value;
-  });
+    item.date = groupDate.value
+  })
 }
 
 function applyGroupPeople() {
   items.value.forEach((item) => {
-    item.selectedChildIds = [...groupChildIds.value];
-    item.selectedMemberIds = [...groupMemberIds.value];
-  });
+    item.selectedChildIds = [...groupChildIds.value]
+    item.selectedMemberIds = [...groupMemberIds.value]
+  })
 }
 
 function removeItem(id: string) {
-  const item = items.value.find((i) => i.id === id);
-  if (item) URL.revokeObjectURL(item.previewUrl);
-  items.value = items.value.filter((i) => i.id !== id);
+  const item = items.value.find((i) => i.id === id)
+  if (item) URL.revokeObjectURL(item.previewUrl)
+  items.value = items.value.filter((i) => i.id !== id)
 }
 
 async function uploadItem(item: UploadItem): Promise<void> {
-  item.uploading = true;
-  item.progress = 0;
-  item.error = "";
+  item.uploading = true
+  item.progress = 0
+  item.error = ''
 
   const {
     data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  } = await supabase.auth.getSession()
+  const token = session?.access_token
   if (!token) {
-    item.error = t("upload.errorSession");
-    item.uploading = false;
-    return;
+    item.error = t('upload.errorSession')
+    item.uploading = false
+    return
   }
 
-  const formData = new FormData();
-  formData.append("file", item.file);
-  formData.append("circleId", props.circleId);
-  formData.append("note", item.note);
-  if (item.milestoneLabel.trim())
-    formData.append("milestoneLabel", item.milestoneLabel.trim());
-  formData.append("memoryDate", `${item.date}T00:00:00Z`);
+  const formData = new FormData()
+  formData.append('file', item.file)
+  formData.append('circleId', props.circleId)
+  formData.append('note', item.note)
+  if (item.milestoneLabel.trim()) formData.append('milestoneLabel', item.milestoneLabel.trim())
+  formData.append('memoryDate', `${item.date}T00:00:00Z`)
 
   return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${config.public.supabaseUrl}/functions/v1/upload-media`);
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${config.public.supabaseUrl}/functions/v1/upload-media`)
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable)
-        item.progress = Math.round((e.loaded / e.total) * 100);
-    };
+      if (e.lengthComputable) item.progress = Math.round((e.loaded / e.total) * 100)
+    }
 
     xhr.onload = async () => {
-      item.uploading = false;
-      const result = JSON.parse(xhr.responseText);
+      item.uploading = false
+      const result = JSON.parse(xhr.responseText)
       if (xhr.status === 200) {
-        item.done = true;
+        item.done = true
         // Tag children and members in parallel (fire-and-forget errors so upload still completes)
         if (result.memoryId) {
           await Promise.allSettled([
             item.selectedChildIds.length > 0
               ? $fetch(`/api/memories/${result.memoryId}/children`, {
-                  method: "POST",
+                  method: 'POST',
                   body: { childIds: item.selectedChildIds },
-                }).catch((err) =>
-                  console.error("[upload] failed to tag children:", err),
-                )
+                }).catch((err) => console.error('[upload] failed to tag children:', err))
               : Promise.resolve(),
             item.selectedMemberIds.length > 0
               ? $fetch(`/api/memories/${result.memoryId}/members`, {
-                  method: "POST",
+                  method: 'POST',
                   body: { userIds: item.selectedMemberIds },
-                }).catch((err) =>
-                  console.error("[upload] failed to tag members:", err),
-                )
+                }).catch((err) => console.error('[upload] failed to tag members:', err))
               : Promise.resolve(),
-          ]);
+          ])
 
           // Trigger push notification (fire-and-forget)
           $fetch('/api/push/notify', {
@@ -1172,79 +1103,23 @@ async function uploadItem(item: UploadItem): Promise<void> {
             body: { memoryId: result.memoryId },
           }).catch(() => {}) // silent — push failure should never affect upload UX
 
-          track("memory_uploaded", {
+          track('memory_uploaded', {
             circle_id: props.circleId,
-            memory_type: item.isVideo ? "video" : "photo",
-            visibility: "circle",
+            memory_type: item.isVideo ? 'video' : 'photo',
+            visibility: 'circle',
             media_count: 1,
           })
-          track("memory_shared_to_circle", {
+          track('memory_shared_to_circle', {
             circle_id: props.circleId,
             memory_id: result.memoryId,
           })
           if (item.milestoneLabel.trim()) {
-            track("milestone_created", {
+            track('milestone_created', {
               circle_id: props.circleId,
               milestone_type: classifyMilestone(item.milestoneLabel),
             })
           }
         }
-      } else {
-        item.error =
-          result.error === "storage_full"
-            ? t("upload.errorStorageFull")
-            : result.error === "file_too_large"
-              ? item.isVideo
-                ? t("upload.errorVideoTooLarge")
-                : t("upload.errorPhotoTooLarge")
-              : t("upload.errorFailed");
-      }
-      resolve();
-    };
-
-    xhr.onerror = () => {
-      item.uploading = false;
-      item.error = t("upload.errorFailed");
-      resolve();
-    };
-
-    xhr.send(formData);
-  });
-}
-
-async function uploadItemDeferred(item: UploadItem): Promise<{ memoryId: string; mediaId: string } | null> {
-  item.uploading = true;
-  item.progress = 0;
-  item.error = '';
-
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) {
-    item.uploading = false;
-    item.error = t('upload.errorSession');
-    return null;
-  }
-
-  const formData = new FormData();
-  formData.append('file', item.file);
-  formData.append('circleId', props.circleId);
-  formData.append('memoryDate', `${groupDate.value}T00:00:00Z`);
-
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${config.public.supabaseUrl}/functions/v1/upload-media?defer=true`);
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) item.progress = Math.round((e.loaded / e.total) * 100);
-    };
-
-    xhr.onload = () => {
-      item.uploading = false;
-      const result = JSON.parse(xhr.responseText);
-      if (xhr.status === 200 && result.memoryId && result.mediaId) {
-        item.done = true;
-        resolve({ memoryId: result.memoryId, mediaId: result.mediaId });
       } else {
         item.error =
           result.error === 'storage_full'
@@ -1253,50 +1128,109 @@ async function uploadItemDeferred(item: UploadItem): Promise<{ memoryId: string;
               ? item.isVideo
                 ? t('upload.errorVideoTooLarge')
                 : t('upload.errorPhotoTooLarge')
-              : t('upload.errorFailed');
-        resolve(null);
+              : t('upload.errorFailed')
       }
-    };
+      resolve()
+    }
 
     xhr.onerror = () => {
-      item.uploading = false;
-      item.error = t('upload.errorFailed');
-      resolve(null);
-    };
+      item.uploading = false
+      item.error = t('upload.errorFailed')
+      resolve()
+    }
 
-    xhr.send(formData);
-  });
+    xhr.send(formData)
+  })
+}
+
+async function uploadItemDeferred(
+  item: UploadItem,
+): Promise<{ memoryId: string; mediaId: string } | null> {
+  item.uploading = true
+  item.progress = 0
+  item.error = ''
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const token = session?.access_token
+  if (!token) {
+    item.uploading = false
+    item.error = t('upload.errorSession')
+    return null
+  }
+
+  const formData = new FormData()
+  formData.append('file', item.file)
+  formData.append('circleId', props.circleId)
+  formData.append('memoryDate', `${groupDate.value}T00:00:00Z`)
+
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${config.public.supabaseUrl}/functions/v1/upload-media?defer=true`)
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) item.progress = Math.round((e.loaded / e.total) * 100)
+    }
+
+    xhr.onload = () => {
+      item.uploading = false
+      const result = JSON.parse(xhr.responseText)
+      if (xhr.status === 200 && result.memoryId && result.mediaId) {
+        item.done = true
+        resolve({ memoryId: result.memoryId, mediaId: result.mediaId })
+      } else {
+        item.error =
+          result.error === 'storage_full'
+            ? t('upload.errorStorageFull')
+            : result.error === 'file_too_large'
+              ? item.isVideo
+                ? t('upload.errorVideoTooLarge')
+                : t('upload.errorPhotoTooLarge')
+              : t('upload.errorFailed')
+        resolve(null)
+      }
+    }
+
+    xhr.onerror = () => {
+      item.uploading = false
+      item.error = t('upload.errorFailed')
+      resolve(null)
+    }
+
+    xhr.send(formData)
+  })
 }
 
 async function uploadAsOneMemory() {
-  globalError.value = '';
+  globalError.value = ''
 
   // 1. Upload all media files in parallel with defer=true
-  const draftResults = await Promise.all(items.value.map((item) => uploadItemDeferred(item)));
+  const draftResults = await Promise.all(items.value.map((item) => uploadItemDeferred(item)))
 
   // If any upload failed, abort
   if (draftResults.some((r) => !r)) {
-    globalError.value = t('upload.errorFailed');
-    return;
+    globalError.value = t('upload.errorFailed')
+    return
   }
 
   // 2. Build the items array: drafts (in selection order) + text slides at the end
   const orderedItems: Array<
-    | { type: 'draft'; draftMemoryId: string }
-    | { type: 'text'; textContent: string }
-  > = [];
+    { type: 'draft'; draftMemoryId: string } | { type: 'text'; textContent: string }
+  > = []
   for (let i = 0; i < items.value.length; i++) {
-    orderedItems.push({ type: 'draft', draftMemoryId: draftResults[i]!.memoryId });
+    orderedItems.push({ type: 'draft', draftMemoryId: draftResults[i]!.memoryId })
   }
   for (const ts of textSlides.value) {
-    orderedItems.push({ type: 'text', textContent: ts.textContent });
+    orderedItems.push({ type: 'text', textContent: ts.textContent })
   }
 
   // 3. Resolve cover index
-  let coverIdx: number | null = null;
+  let coverIdx: number | null = null
   if (coverItemTempId.value) {
-    const idx = items.value.findIndex((it) => it.tempId === coverItemTempId.value);
-    if (idx >= 0) coverIdx = idx;
+    const idx = items.value.findIndex((it) => it.tempId === coverItemTempId.value)
+    if (idx >= 0) coverIdx = idx
   }
 
   // 4. Call upload-batch
@@ -1313,112 +1247,112 @@ async function uploadAsOneMemory() {
         coverIndex: coverIdx,
         items: orderedItems,
       },
-    });
+    })
 
-    const mediaTypes = new Set<"photo" | "video" | "note">()
+    const mediaTypes = new Set<'photo' | 'video' | 'note'>()
     for (const it of items.value) {
-      mediaTypes.add(it.isVideo ? "video" : "photo")
+      mediaTypes.add(it.isVideo ? 'video' : 'photo')
     }
-    if (textSlides.value.length > 0) mediaTypes.add("note")
+    if (textSlides.value.length > 0) mediaTypes.add('note')
 
-    const singleType = mediaTypes.values().next().value as "photo" | "video" | "note" | undefined
-    const memoryType: "photo" | "video" | "note" | "mixed" =
-      mediaTypes.size > 1 ? "mixed" : (singleType ?? "photo")
+    const singleType = mediaTypes.values().next().value as 'photo' | 'video' | 'note' | undefined
+    const memoryType: 'photo' | 'video' | 'note' | 'mixed' =
+      mediaTypes.size > 1 ? 'mixed' : (singleType ?? 'photo')
 
     const mediaCount = items.value.length + textSlides.value.length
 
-    track("memory_uploaded", {
+    track('memory_uploaded', {
       circle_id: props.circleId,
       memory_type: memoryType,
-      visibility: "circle",
+      visibility: 'circle',
       media_count: mediaCount,
     })
-    track("memory_shared_to_circle", {
+    track('memory_shared_to_circle', {
       circle_id: props.circleId,
       memory_id: batchResult.memoryId,
     })
     if (groupMilestoneLabel.value.trim()) {
-      track("milestone_created", {
+      track('milestone_created', {
         circle_id: props.circleId,
         milestone_type: classifyMilestone(groupMilestoneLabel.value),
       })
     }
 
-    emit('uploaded');
-    cancel();
+    emit('uploaded')
+    cancel()
   } catch (err) {
-    globalError.value = t('upload.errorFailed');
+    globalError.value = t('upload.errorFailed')
   }
 }
 
 async function uploadAll() {
-  globalError.value = "";
+  globalError.value = ''
 
   // "Post as one memory" path
   if (groupAsOne.value && items.value.length >= 2) {
-    return uploadAsOneMemory();
+    return uploadAsOneMemory()
   }
 
   // Default: upload each as a separate memory
-  const pending = items.value.filter((i) => !i.done && !i.uploading);
+  const pending = items.value.filter((i) => !i.done && !i.uploading)
   for (const item of pending) {
-    await uploadItem(item);
+    await uploadItem(item)
   }
 }
 
 // Auto-close with a brief checkmark moment after all uploads succeed.
 // For a single upload with a milestone label, show the share card prompt first.
 watch(allDone, (done) => {
-  if (!done) return;
+  if (!done) return
 
   // In "post as one" mode, uploadAsOneMemory() calls cancel() directly — don't double-fire
-  if (groupAsOne.value) return;
+  if (groupAsOne.value) return
 
-  emit("uploaded");
+  emit('uploaded')
 
-  const item = items.value[0];
+  const item = items.value[0]
   if (items.value.length === 1 && item?.milestoneLabel.trim()) {
     const childAges = item.selectedChildIds
       .map((id) => props.children?.find((c) => c.id === id))
       .filter(Boolean)
       .map((child) => {
-        const age = computeBabyAge(child!.date_of_birth, `${item.date}T00:00:00Z`);
-        return age ? { name: child!.name, age } : null;
+        const age = computeBabyAge(child!.date_of_birth, `${item.date}T00:00:00Z`)
+        return age ? { name: child!.name, age } : null
       })
-      .filter(Boolean) as Array<{ name: string; age: string }>;
+      .filter(Boolean) as Array<{ name: string; age: string }>
 
     pendingShareCard.value = {
       photoUrl: item.previewUrl,
       milestoneLabel: item.milestoneLabel.trim(),
       memoryDate: `${item.date}T00:00:00Z`,
       childAges,
-    };
+    }
     // The upload sheet stays open behind the share modal; cancel() is called after share dismissed
   } else {
-    setTimeout(() => cancel(), 1000);
+    setTimeout(() => cancel(), 1000)
   }
-});
+})
 
 function onShareCardClose() {
-  pendingShareCard.value = null;
-  cancel();
+  pendingShareCard.value = null
+  cancel()
 }
 
 function cancel() {
-  items.value.forEach((i) => URL.revokeObjectURL(i.previewUrl));
-  items.value = [];
-  groupDate.value = today();
-  groupChildIds.value = [];
-  groupMemberIds.value = [];
-  globalError.value = "";
+  items.value.forEach((i) => URL.revokeObjectURL(i.previewUrl))
+  items.value = []
+  groupDate.value = today()
+  groupChildIds.value = []
+  groupMemberIds.value = []
+  globalError.value = ''
   // Reset "post as one" state
-  groupAsOne.value = false;
-  groupNote.value = '';
-  groupMilestoneLabel.value = '';
-  textSlides.value = [];
-  coverItemTempId.value = null;
-  showAddTextDialog.value = false;
-  newTextContent.value = '';
-  if (fileInput.value) fileInput.value.value = "";
+  groupAsOne.value = false
+  groupNote.value = ''
+  groupMilestoneLabel.value = ''
+  textSlides.value = []
+  coverItemTempId.value = null
+  showAddTextDialog.value = false
+  newTextContent.value = ''
+  if (fileInput.value) fileInput.value.value = ''
 }
 </script>

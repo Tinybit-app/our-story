@@ -1,25 +1,36 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+    <div
+      class="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
+    >
       <!-- Backdrop -->
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
 
       <!-- Sheet -->
-      <div class="relative bg-background w-full sm:max-w-sm rounded-t-[24px] sm:rounded-[24px] shadow-2xl overflow-hidden">
+      <div
+        class="relative w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl sm:max-w-sm sm:rounded-[24px]"
+      >
         <!-- Accent stripe -->
         <div class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60" />
 
-        <div class="px-5 pt-4 pb-5">
+        <div class="px-5 pb-5 pt-4">
           <!-- Header -->
-          <div class="flex items-center justify-between mb-4">
+          <div class="mb-4 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-foreground">{{ t('quickNote.title') }}</h2>
             <button
-              class="w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              class="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               :aria-label="t('modal.cancel')"
               @click="emit('close')"
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M18 6 6 18M6 6l12 12"/>
+              <svg
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -31,7 +42,7 @@
             :placeholder="t('quickNote.notePlaceholder')"
             rows="4"
             maxlength="500"
-            class="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-2 focus:ring-ring mb-3"
+            class="mb-3 w-full resize-none rounded-xl border border-border bg-secondary px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
           />
 
           <!-- Milestone -->
@@ -40,26 +51,30 @@
             type="text"
             :placeholder="t('quickNote.milestonePlaceholder')"
             maxlength="40"
-            class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring mb-3"
+            class="mb-3 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring"
           />
 
           <!-- Date -->
           <div class="mb-3">
-            <p class="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground mb-1.5">
+            <p
+              class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
+            >
               {{ t('quickNote.whenWas') }}
             </p>
             <input
               v-model="memoryDate"
               type="date"
               :max="todayStr"
-              class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              class="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               :style="{ colorScheme: isDark ? 'dark' : 'light' }"
             />
           </div>
 
           <!-- People picker -->
           <div v-if="members?.length || children?.length" class="mb-4">
-            <p class="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground mb-1.5">
+            <p
+              class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
+            >
               {{ t('quickNote.whoIsIn') }}
             </p>
             <div class="flex flex-wrap gap-1.5">
@@ -68,15 +83,25 @@
                 v-for="member in members"
                 :key="member.userId"
                 type="button"
-                class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
-                :class="selectedMemberIds.includes(member.userId)
-                  ? 'bg-accent/15 border-accent/40 text-foreground'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'"
+                class="inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-medium transition-colors"
+                :class="
+                  selectedMemberIds.includes(member.userId)
+                    ? 'border-accent/40 bg-accent/15 text-foreground'
+                    : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                "
                 @click="toggleMember(member.userId)"
               >
-                <span class="w-4 h-4 rounded-full overflow-hidden bg-border flex-shrink-0 flex items-center justify-center text-[7px] font-bold">
-                  <img v-if="member.avatarUrl" :src="member.avatarUrl" class="w-full h-full object-cover" />
-                  <span v-else>{{ (member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '') }}</span>
+                <span
+                  class="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-border text-[7px] font-bold"
+                >
+                  <img
+                    v-if="member.avatarUrl"
+                    :src="member.avatarUrl"
+                    class="h-full w-full object-cover"
+                  />
+                  <span v-else>{{
+                    (member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')
+                  }}</span>
                 </span>
                 {{ member.firstName ?? member.userId.slice(0, 6) }}
               </button>
@@ -85,10 +110,12 @@
                 v-for="child in children"
                 :key="child.id"
                 type="button"
-                class="px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors border"
-                :class="selectedChildIds.includes(child.id)
-                  ? 'bg-accent/15 border-accent/40 text-foreground'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'"
+                class="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
+                :class="
+                  selectedChildIds.includes(child.id)
+                    ? 'border-accent/40 bg-accent/15 text-foreground'
+                    : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                "
                 @click="toggleChild(child.id)"
               >
                 {{ child.name }}
@@ -97,11 +124,11 @@
           </div>
 
           <!-- Error -->
-          <p v-if="error" class="text-xs text-destructive mb-3">{{ error }}</p>
+          <p v-if="error" class="mb-3 text-xs text-destructive">{{ error }}</p>
 
           <!-- Save -->
           <button
-            class="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+            class="flex w-full items-center justify-center gap-2 rounded-[12px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
             :disabled="saving || !note.trim()"
             @click="save"
           >
@@ -114,18 +141,23 @@
 </template>
 
 <script setup lang="ts">
-import { useAnalytics, classifyMilestone } from "~/composables/useAnalytics"
+import { useAnalytics, classifyMilestone } from '~/composables/useAnalytics'
 
 const { t } = useI18n()
 const { track } = useAnalytics()
 const colorMode = useColorMode()
 const isDark = computed(() =>
-  colorMode.preference === 'system' ? colorMode.value === 'dark' : colorMode.preference === 'dark'
+  colorMode.preference === 'system' ? colorMode.value === 'dark' : colorMode.preference === 'dark',
 )
 
 const props = defineProps<{
   circleId: string
-  members?: Array<{ userId: string; firstName: string | null; lastName: string | null; avatarUrl: string | null }>
+  members?: Array<{
+    userId: string
+    firstName: string | null
+    lastName: string | null
+    avatarUrl: string | null
+  }>
   children?: Array<{ id: string; name: string }>
 }>()
 
@@ -183,18 +215,18 @@ async function save() {
         memberIds: [...selectedMemberIds.value],
       },
     })
-    track("memory_uploaded", {
+    track('memory_uploaded', {
       circle_id: props.circleId,
-      memory_type: "note",
-      visibility: "circle",
+      memory_type: 'note',
+      visibility: 'circle',
       media_count: 1,
     })
-    track("memory_shared_to_circle", {
+    track('memory_shared_to_circle', {
       circle_id: props.circleId,
       memory_id: result.memoryId,
     })
     if (milestoneLabel.value.trim()) {
-      track("milestone_created", {
+      track('milestone_created', {
         circle_id: props.circleId,
         milestone_type: classifyMilestone(milestoneLabel.value),
       })

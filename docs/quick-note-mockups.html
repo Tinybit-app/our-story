@@ -1,768 +1,888 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick Note Cards — Mockups</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
-  <style>
-    /* ── App design tokens ─────────────────────────────────── */
-    :root {
-      --bg:        hsl(33, 20%, 94%);
-      --fg:        hsl(20, 16%, 14%);
-      --card:      #ffffff;
-      --accent:    hsl(33, 40%, 65%);
-      --muted:     hsl(26, 10%, 49%);
-      --border:    hsl(30, 14%, 88%);
-      --secondary: hsl(33, 14%, 88%);
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick Note Cards — Mockups</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── App design tokens ─────────────────────────────────── */
+      :root {
+        --bg: hsl(33, 20%, 94%);
+        --fg: hsl(20, 16%, 14%);
+        --card: #ffffff;
+        --accent: hsl(33, 40%, 65%);
+        --muted: hsl(26, 10%, 49%);
+        --border: hsl(30, 14%, 88%);
+        --secondary: hsl(33, 14%, 88%);
+      }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      min-height: 100vh;
-      padding: 60px 56px 80px;
-    }
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        min-height: 100vh;
+        padding: 60px 56px 80px;
+      }
 
-    /* ── Page header ──────────────────────────────────────── */
-    .page-header {
-      margin-bottom: 64px;
-    }
-    .page-header .eyebrow {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-    .page-header h1 {
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: -.02em;
-      color: var(--fg);
-      margin-bottom: 6px;
-    }
-    .page-header p {
-      font-size: 13px;
-      color: var(--muted);
-    }
+      /* ── Page header ──────────────────────────────────────── */
+      .page-header {
+        margin-bottom: 64px;
+      }
+      .page-header .eyebrow {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+      .page-header h1 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--fg);
+        margin-bottom: 6px;
+      }
+      .page-header p {
+        font-size: 13px;
+        color: var(--muted);
+      }
 
-    /* ── Section ──────────────────────────────────────────── */
-    .section {
-      margin-bottom: 80px;
-    }
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 36px;
-    }
-    .section-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    .section-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+      /* ── Section ──────────────────────────────────────────── */
+      .section {
+        margin-bottom: 80px;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 36px;
+      }
+      .section-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
 
-    /* ── Cards row ────────────────────────────────────────── */
-    .cards-row {
-      display: flex;
-      gap: 48px;
-      align-items: flex-end;
-      flex-wrap: wrap;
-    }
-    .cards-row.top-align { align-items: flex-start; }
+      /* ── Cards row ────────────────────────────────────────── */
+      .cards-row {
+        display: flex;
+        gap: 48px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .cards-row.top-align {
+        align-items: flex-start;
+      }
 
-    /* ── Option wrapper ───────────────────────────────────── */
-    .option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-    .option-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--fg);
-      letter-spacing: .03em;
-    }
-    .option-desc {
-      font-size: 10.5px;
-      color: var(--muted);
-      text-align: center;
-      line-height: 1.5;
-      max-width: 180px;
-    }
-    .option-tags {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .tag {
-      font-size: 8.5px;
-      font-weight: 600;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      background: var(--border);
-      padding: 2px 7px;
-      border-radius: 99px;
-    }
+      /* ── Option wrapper ───────────────────────────────────── */
+      .option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .option-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--fg);
+        letter-spacing: 0.03em;
+      }
+      .option-desc {
+        font-size: 10.5px;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.5;
+        max-width: 180px;
+      }
+      .option-tags {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .tag {
+        font-size: 8.5px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--border);
+        padding: 2px 7px;
+        border-radius: 99px;
+      }
 
-    /* ── Context preview ──────────────────────────────────── */
-    .context-row {
-      display: flex;
-      gap: 24px;
-      align-items: flex-end;
-      padding: 24px 28px;
-      background: var(--secondary);
-      border-radius: 12px;
-      margin-bottom: 40px;
-    }
-    .context-label {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 20px;
-    }
+      /* ── Context preview ──────────────────────────────────── */
+      .context-row {
+        display: flex;
+        gap: 24px;
+        align-items: flex-end;
+        padding: 24px 28px;
+        background: var(--secondary);
+        border-radius: 12px;
+        margin-bottom: 40px;
+      }
+      .context-label {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
 
-    /* ── Photo polaroid (for context) ────────────────────── */
-    .polaroid-photo {
-      position: relative;
-      background: var(--card);
-      width: 210px;
-      flex-shrink: 0;
-      padding: 8px;
-      padding-bottom: 14px;
-      box-shadow: 0 4px 16px rgba(44,36,32,.14), 0 1px 3px rgba(44,36,32,.08);
-      transform: rotate(-1.5deg);
-    }
-    .polaroid-photo .pin {
-      position: absolute;
-      top: -7px; left: 50%;
-      transform: translateX(-50%);
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      background: #d64040;
-      box-shadow: 0 2px 6px rgba(214,64,64,.4);
-      opacity: .85;
-    }
-    .polaroid-photo .photo-area {
-      width: 100%;
-      aspect-ratio: 1;
-      overflow: hidden;
-      position: relative;
-    }
-    .polaroid-photo .photo-placeholder {
-      width: 100%; height: 100%;
-      background: linear-gradient(135deg, hsl(200,30%,82%) 0%, hsl(210,25%,70%) 100%);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .polaroid-photo .caption { padding: 10px 4px 0; text-align: center; }
-    .polaroid-photo .caption-text {
-      font-size: 12px; line-height: 1.4;
-      min-height: 2em; color: var(--fg);
-    }
-    .polaroid-photo .caption-meta { font-size: 10px; color: var(--muted); margin-top: 4px; }
+      /* ── Photo polaroid (for context) ────────────────────── */
+      .polaroid-photo {
+        position: relative;
+        background: var(--card);
+        width: 210px;
+        flex-shrink: 0;
+        padding: 8px;
+        padding-bottom: 14px;
+        box-shadow:
+          0 4px 16px rgba(44, 36, 32, 0.14),
+          0 1px 3px rgba(44, 36, 32, 0.08);
+        transform: rotate(-1.5deg);
+      }
+      .polaroid-photo .pin {
+        position: absolute;
+        top: -7px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d64040;
+        box-shadow: 0 2px 6px rgba(214, 64, 64, 0.4);
+        opacity: 0.85;
+      }
+      .polaroid-photo .photo-area {
+        width: 100%;
+        aspect-ratio: 1;
+        overflow: hidden;
+        position: relative;
+      }
+      .polaroid-photo .photo-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, hsl(200, 30%, 82%) 0%, hsl(210, 25%, 70%) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .polaroid-photo .caption {
+        padding: 10px 4px 0;
+        text-align: center;
+      }
+      .polaroid-photo .caption-text {
+        font-size: 12px;
+        line-height: 1.4;
+        min-height: 2em;
+        color: var(--fg);
+      }
+      .polaroid-photo .caption-meta {
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
 
-    /* ═══════════════════════════════════════════════════════
+      /* ═══════════════════════════════════════════════════════
        OPTION A — Serif Quote  (inside polaroid)
     ═══════════════════════════════════════════════════════ */
-    .polaroid-base {
-      position: relative;
-      background: var(--card);
-      width: 210px;
-      flex-shrink: 0;
-      padding: 8px;
-      padding-bottom: 14px;
-      box-shadow: 0 4px 16px rgba(44,36,32,.14), 0 1px 3px rgba(44,36,32,.08);
-    }
-    .polaroid-base .pin {
-      position: absolute;
-      top: -7px; left: 50%;
-      transform: translateX(-50%);
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      background: #d64040;
-      box-shadow: 0 2px 6px rgba(214,64,64,.4);
-      opacity: .85;
-    }
-    .polaroid-base .photo-area {
-      width: 100%; aspect-ratio: 1;
-      overflow: hidden; position: relative;
-    }
-    .polaroid-base .caption { padding: 10px 4px 0; text-align: center; }
-    .polaroid-base .caption-text {
-      font-size: 12px; line-height: 1.4;
-      min-height: 2em; color: var(--fg);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .polaroid-base .caption-meta { font-size: 10px; color: var(--muted); margin-top: 4px; }
+      .polaroid-base {
+        position: relative;
+        background: var(--card);
+        width: 210px;
+        flex-shrink: 0;
+        padding: 8px;
+        padding-bottom: 14px;
+        box-shadow:
+          0 4px 16px rgba(44, 36, 32, 0.14),
+          0 1px 3px rgba(44, 36, 32, 0.08);
+      }
+      .polaroid-base .pin {
+        position: absolute;
+        top: -7px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d64040;
+        box-shadow: 0 2px 6px rgba(214, 64, 64, 0.4);
+        opacity: 0.85;
+      }
+      .polaroid-base .photo-area {
+        width: 100%;
+        aspect-ratio: 1;
+        overflow: hidden;
+        position: relative;
+      }
+      .polaroid-base .caption {
+        padding: 10px 4px 0;
+        text-align: center;
+      }
+      .polaroid-base .caption-text {
+        font-size: 12px;
+        line-height: 1.4;
+        min-height: 2em;
+        color: var(--fg);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .polaroid-base .caption-meta {
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
 
-    .note-serif {
-      width: 100%; height: 100%;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 24px 14px 12px;
-      background: hsl(33, 28%, 96%);
-    }
-    .note-serif .big-quote {
-      position: absolute;
-      top: -2px; left: 9px;
-      font-size: 62px;
-      font-family: 'Lora', Georgia, serif;
-      color: rgba(200,168,130,.26);
-      line-height: 1;
-      user-select: none;
-      pointer-events: none;
-    }
-    .note-serif p {
-      font-family: 'Lora', Georgia, serif;
-      font-style: italic;
-      font-size: 12.5px;
-      line-height: 1.62;
-      color: var(--fg);
-      display: -webkit-box;
-      -webkit-line-clamp: 5;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
+      .note-serif {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 24px 14px 12px;
+        background: hsl(33, 28%, 96%);
+      }
+      .note-serif .big-quote {
+        position: absolute;
+        top: -2px;
+        left: 9px;
+        font-size: 62px;
+        font-family: 'Lora', Georgia, serif;
+        color: rgba(200, 168, 130, 0.26);
+        line-height: 1;
+        user-select: none;
+        pointer-events: none;
+      }
+      .note-serif p {
+        font-family: 'Lora', Georgia, serif;
+        font-style: italic;
+        font-size: 12.5px;
+        line-height: 1.62;
+        color: var(--fg);
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
 
-    /* ═══════════════════════════════════════════════════════
+      /* ═══════════════════════════════════════════════════════
        OPTION B — Left-stripe Memo  (inside polaroid)
     ═══════════════════════════════════════════════════════ */
-    .note-stripe {
-      width: 100%; height: 100%;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 14px 14px 14px 20px;
-      background: hsl(33, 20%, 98%);
-      border-left: 4px solid var(--accent);
-    }
-    .note-stripe .stripe-icon {
-      position: absolute;
-      top: 10px; right: 10px;
-      opacity: .28;
-    }
-    .note-stripe p {
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--fg);
-      display: -webkit-box;
-      -webkit-line-clamp: 6;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
+      .note-stripe {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 14px 14px 14px 20px;
+        background: hsl(33, 20%, 98%);
+        border-left: 4px solid var(--accent);
+      }
+      .note-stripe .stripe-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        opacity: 0.28;
+      }
+      .note-stripe p {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--fg);
+        display: -webkit-box;
+        -webkit-line-clamp: 6;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
 
-    /* ═══════════════════════════════════════════════════════
+      /* ═══════════════════════════════════════════════════════
        OPTION C — Sticky Note  (NEW shape)
     ═══════════════════════════════════════════════════════ */
-    .sticky-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-    .sticky-note {
-      position: relative;
-      width: 194px;
-      height: 194px;
-      background: hsl(43, 78%, 88%);
-      padding: 18px 18px 24px;
-      box-shadow:
-        4px 4px 0 hsl(38, 50%, 76%),
-        0 8px 28px rgba(44,36,32,.16);
-    }
-    /* Folded corner */
-    .sticky-note::after {
-      content: '';
-      position: absolute;
-      bottom: 0; right: 0;
-      width: 26px; height: 26px;
-      background: linear-gradient(
-        225deg,
-        hsl(38, 40%, 78%) 45%,
-        hsl(43, 78%, 88%) 45%
-      );
-    }
-    .sticky-note p {
-      font-size: 12.5px;
-      line-height: 1.6;
-      color: hsl(20, 20%, 22%);
-      display: -webkit-box;
-      -webkit-line-clamp: 6;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .sticky-note .sticky-date {
-      position: absolute;
-      bottom: 7px; left: 18px;
-      font-size: 9.5px;
-      color: hsl(20, 16%, 50%);
-      font-weight: 500;
-    }
-    /* caption sits below the sticky like a polaroid caption area */
-    .sticky-caption {
-      text-align: center;
-    }
-    .sticky-caption .s-meta {
-      font-size: 10px;
-      color: var(--muted);
-    }
+      .sticky-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .sticky-note {
+        position: relative;
+        width: 194px;
+        height: 194px;
+        background: hsl(43, 78%, 88%);
+        padding: 18px 18px 24px;
+        box-shadow:
+          4px 4px 0 hsl(38, 50%, 76%),
+          0 8px 28px rgba(44, 36, 32, 0.16);
+      }
+      /* Folded corner */
+      .sticky-note::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(225deg, hsl(38, 40%, 78%) 45%, hsl(43, 78%, 88%) 45%);
+      }
+      .sticky-note p {
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: hsl(20, 20%, 22%);
+        display: -webkit-box;
+        -webkit-line-clamp: 6;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .sticky-note .sticky-date {
+        position: absolute;
+        bottom: 7px;
+        left: 18px;
+        font-size: 9.5px;
+        color: hsl(20, 16%, 50%);
+        font-weight: 500;
+      }
+      /* caption sits below the sticky like a polaroid caption area */
+      .sticky-caption {
+        text-align: center;
+      }
+      .sticky-caption .s-meta {
+        font-size: 10px;
+        color: var(--muted);
+      }
 
-    /* ═══════════════════════════════════════════════════════
+      /* ═══════════════════════════════════════════════════════
        OPTION D — Journal Entry  (NEW shape, wider)
     ═══════════════════════════════════════════════════════ */
-    .journal-card {
-      width: 250px;
-      background: var(--card);
-      overflow: hidden;
-      box-shadow: 0 4px 18px rgba(44,36,32,.12), 0 1px 3px rgba(44,36,32,.07);
-    }
-    .journal-tape {
-      height: 7px;
-      background: repeating-linear-gradient(
-        90deg,
-        hsl(33, 55%, 72%)   0px,
-        hsl(33, 55%, 72%)  20px,
-        hsl(33, 45%, 79%)  20px,
-        hsl(33, 45%, 79%)  40px
-      );
-      opacity: .75;
-    }
-    .journal-body {
-      padding: 14px 20px 0;
-    }
-    .journal-eyebrow {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .journal-date {
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .journal-kind {
-      font-size: 8.5px;
-      font-weight: 600;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      opacity: .55;
-    }
-    .journal-text {
-      font-family: 'Lora', Georgia, serif;
-      font-style: italic;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--fg);
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-    /* Trailing rules — feels like remaining page lines */
-    .journal-rules {
-      height: 38px;
-      background: repeating-linear-gradient(
-        transparent,
-        transparent 12px,
-        hsl(30, 18%, 88%) 12px,
-        hsl(30, 18%, 88%) 13px
-      );
-    }
-    .journal-footer {
-      padding: 10px 20px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid var(--border);
-    }
-    .journal-author {
-      font-size: 10px;
-      color: var(--muted);
-    }
+      .journal-card {
+        width: 250px;
+        background: var(--card);
+        overflow: hidden;
+        box-shadow:
+          0 4px 18px rgba(44, 36, 32, 0.12),
+          0 1px 3px rgba(44, 36, 32, 0.07);
+      }
+      .journal-tape {
+        height: 7px;
+        background: repeating-linear-gradient(
+          90deg,
+          hsl(33, 55%, 72%) 0px,
+          hsl(33, 55%, 72%) 20px,
+          hsl(33, 45%, 79%) 20px,
+          hsl(33, 45%, 79%) 40px
+        );
+        opacity: 0.75;
+      }
+      .journal-body {
+        padding: 14px 20px 0;
+      }
+      .journal-eyebrow {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .journal-date {
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .journal-kind {
+        font-size: 8.5px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        opacity: 0.55;
+      }
+      .journal-text {
+        font-family: 'Lora', Georgia, serif;
+        font-style: italic;
+        font-size: 13px;
+        line-height: 1.7;
+        color: var(--fg);
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+      /* Trailing rules — feels like remaining page lines */
+      .journal-rules {
+        height: 38px;
+        background: repeating-linear-gradient(
+          transparent,
+          transparent 12px,
+          hsl(30, 18%, 88%) 12px,
+          hsl(30, 18%, 88%) 13px
+        );
+      }
+      .journal-footer {
+        padding: 10px 20px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid var(--border);
+      }
+      .journal-author {
+        font-size: 10px;
+        color: var(--muted);
+      }
 
-    /* ═══════════════════════════════════════════════════════
+      /* ═══════════════════════════════════════════════════════
        OPTION E — Postcard / Stamp  (NEW shape)
     ═══════════════════════════════════════════════════════ */
-    .postcard {
-      width: 248px;
-      background: hsl(33, 30%, 97%);
-      border: 1.5px solid var(--border);
-      padding: 16px;
-      box-shadow: 0 4px 18px rgba(44,36,32,.11), 0 1px 3px rgba(44,36,32,.06);
-      position: relative;
-    }
-    .postcard-stamp {
-      position: absolute;
-      top: 14px; right: 14px;
-      width: 38px; height: 46px;
-      background: hsl(33, 40%, 95%);
-      border: 1.5px solid hsl(33, 40%, 78%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    /* Simulated perforation border */
-    .postcard-stamp::before {
-      content: '';
-      position: absolute;
-      inset: 3px;
-      border: 1px dashed hsl(33, 40%, 72%);
-    }
-    .postcard-kind {
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .postcard-kind::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-      max-width: 90px;
-    }
-    .postcard-text {
-      font-size: 13px;
-      line-height: 1.62;
-      color: var(--fg);
-      margin-right: 52px; /* space for stamp */
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 4em;
-    }
-    .postcard-hr {
-      height: 1px;
-      background: var(--border);
-      margin: 14px 0 10px;
-    }
-    .postcard-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .postcard-footer span {
-      font-size: 10px;
-      color: var(--muted);
-    }
-  </style>
-</head>
-<body>
-
-  <div class="page-header">
-    <p class="eyebrow">Our Story · Design</p>
-    <h1>Quick Note Card Options</h1>
-    <p>Five directions — two inside the polaroid frame, three as an entirely new card shape</p>
-  </div>
-
-  <!-- ── SECTION 1: In polaroid frame ─────────────────────── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-tag">Inside polaroid frame</span>
-      <div class="section-line"></div>
+      .postcard {
+        width: 248px;
+        background: hsl(33, 30%, 97%);
+        border: 1.5px solid var(--border);
+        padding: 16px;
+        box-shadow:
+          0 4px 18px rgba(44, 36, 32, 0.11),
+          0 1px 3px rgba(44, 36, 32, 0.06);
+        position: relative;
+      }
+      .postcard-stamp {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 38px;
+        height: 46px;
+        background: hsl(33, 40%, 95%);
+        border: 1.5px solid hsl(33, 40%, 78%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      /* Simulated perforation border */
+      .postcard-stamp::before {
+        content: '';
+        position: absolute;
+        inset: 3px;
+        border: 1px dashed hsl(33, 40%, 72%);
+      }
+      .postcard-kind {
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .postcard-kind::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        max-width: 90px;
+      }
+      .postcard-text {
+        font-size: 13px;
+        line-height: 1.62;
+        color: var(--fg);
+        margin-right: 52px; /* space for stamp */
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 4em;
+      }
+      .postcard-hr {
+        height: 1px;
+        background: var(--border);
+        margin: 14px 0 10px;
+      }
+      .postcard-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .postcard-footer span {
+        font-size: 10px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <p class="eyebrow">Our Story · Design</p>
+      <h1>Quick Note Card Options</h1>
+      <p>Five directions — two inside the polaroid frame, three as an entirely new card shape</p>
     </div>
 
-    <div class="cards-row">
-
-      <!-- A: Serif Quote -->
-      <div class="option">
-        <div class="polaroid-base" style="transform:rotate(-1.8deg)">
-          <div class="pin"></div>
-          <div class="photo-area">
-            <div class="note-serif">
-              <span class="big-quote">&ldquo;</span>
-              <p>First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
-            </div>
-          </div>
-          <div class="caption">
-            <p class="caption-text">First word today: "dada"</p>
-            <p class="caption-meta">Apr 22 · Sarah</p>
-          </div>
-        </div>
-        <span class="option-label">A — Serif Quote</span>
-        <div class="option-tags">
-          <span class="tag">intimate</span>
-          <span class="tag">literary</span>
-          <span class="tag">warm</span>
-        </div>
-        <p class="option-desc">Large decorative " in amber. Lora italic text. Feels like a cherished quote.</p>
+    <!-- ── SECTION 1: In polaroid frame ─────────────────────── -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-tag">Inside polaroid frame</span>
+        <div class="section-line"></div>
       </div>
 
-      <!-- B: Left-stripe Memo -->
-      <div class="option">
-        <div class="polaroid-base" style="transform:rotate(1.2deg)">
+      <div class="cards-row">
+        <!-- A: Serif Quote -->
+        <div class="option">
+          <div class="polaroid-base" style="transform: rotate(-1.8deg)">
+            <div class="pin"></div>
+            <div class="photo-area">
+              <div class="note-serif">
+                <span class="big-quote">&ldquo;</span>
+                <p>
+                  First word today: "dada" — I can't believe it. He looked right at his dad and said
+                  it clear as day.
+                </p>
+              </div>
+            </div>
+            <div class="caption">
+              <p class="caption-text">First word today: "dada"</p>
+              <p class="caption-meta">Apr 22 · Sarah</p>
+            </div>
+          </div>
+          <span class="option-label">A — Serif Quote</span>
+          <div class="option-tags">
+            <span class="tag">intimate</span>
+            <span class="tag">literary</span>
+            <span class="tag">warm</span>
+          </div>
+          <p class="option-desc">
+            Large decorative " in amber. Lora italic text. Feels like a cherished quote.
+          </p>
+        </div>
+
+        <!-- B: Left-stripe Memo -->
+        <div class="option">
+          <div class="polaroid-base" style="transform: rotate(1.2deg)">
+            <div class="pin"></div>
+            <div class="photo-area">
+              <div class="note-stripe">
+                <svg
+                  class="stripe-icon"
+                  width="15"
+                  height="15"
+                  fill="none"
+                  stroke="hsl(33,40%,65%)"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                <p>
+                  First word today: "dada" — I can't believe it. He looked right at his dad and said
+                  it clear as day.
+                </p>
+              </div>
+            </div>
+            <div class="caption">
+              <p class="caption-text">First word today: "dada"</p>
+              <p class="caption-meta">Apr 22 · Sarah</p>
+            </div>
+          </div>
+          <span class="option-label">B — Left Stripe</span>
+          <div class="option-tags">
+            <span class="tag">clean</span>
+            <span class="tag">memo</span>
+            <span class="tag">modern</span>
+          </div>
+          <p class="option-desc">
+            4px amber left border. Small pencil icon. DM Sans, left-aligned. Crisp and legible.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: New card shape ────────────────────────── -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-tag">New card shape (replaces polaroid for quick notes)</span>
+        <div class="section-line"></div>
+      </div>
+
+      <!-- Context preview: how it looks alongside photo polaroids -->
+      <p class="context-label">In context — alongside photo polaroids</p>
+      <div class="context-row" id="context-preview">
+        <!-- Photo polaroid 1 -->
+        <div class="polaroid-photo" style="transform: rotate(-1.5deg)">
           <div class="pin"></div>
           <div class="photo-area">
-            <div class="note-stripe">
-              <svg class="stripe-icon" width="15" height="15" fill="none" stroke="hsl(33,40%,65%)" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            <div class="photo-placeholder">
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                stroke="rgba(255,255,255,.5)"
+                stroke-width="1.2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                />
+                <circle cx="12" cy="13" r="4" />
               </svg>
-              <p>First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
             </div>
           </div>
           <div class="caption">
-            <p class="caption-text">First word today: "dada"</p>
-            <p class="caption-meta">Apr 22 · Sarah</p>
+            <p class="caption-text">Morning walk in the park</p>
+            <p class="caption-meta">Apr 20 · Emma</p>
           </div>
         </div>
-        <span class="option-label">B — Left Stripe</span>
-        <div class="option-tags">
-          <span class="tag">clean</span>
-          <span class="tag">memo</span>
-          <span class="tag">modern</span>
-        </div>
-        <p class="option-desc">4px amber left border. Small pencil icon. DM Sans, left-aligned. Crisp and legible.</p>
-      </div>
 
-    </div>
-  </section>
-
-  <!-- ── SECTION 2: New card shape ────────────────────────── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-tag">New card shape (replaces polaroid for quick notes)</span>
-      <div class="section-line"></div>
-    </div>
-
-    <!-- Context preview: how it looks alongside photo polaroids -->
-    <p class="context-label">In context — alongside photo polaroids</p>
-    <div class="context-row" id="context-preview">
-      <!-- Photo polaroid 1 -->
-      <div class="polaroid-photo" style="transform:rotate(-1.5deg)">
-        <div class="pin"></div>
-        <div class="photo-area">
-          <div class="photo-placeholder">
-            <svg width="32" height="32" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.2" viewBox="0 0 24 24">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-          </div>
-        </div>
-        <div class="caption">
-          <p class="caption-text">Morning walk in the park</p>
-          <p class="caption-meta">Apr 20 · Emma</p>
-        </div>
-      </div>
-
-      <!-- Quick note card — swaps to whichever option is hovered in demo -->
-      <!-- Showing option C (sticky) in context by default -->
-      <div class="sticky-wrap" style="align-self: flex-end; margin-bottom: 0;">
-        <div class="sticky-note" style="transform:rotate(1deg)">
-          <p>First word today: "dada" — I can't believe it!</p>
-          <span class="sticky-date">Apr 22 · Sarah</span>
-        </div>
-      </div>
-
-      <!-- Photo polaroid 2 -->
-      <div class="polaroid-photo" style="transform:rotate(0.6deg)">
-        <div class="pin"></div>
-        <div class="photo-area">
-          <div class="photo-placeholder" style="background: linear-gradient(135deg, hsl(20,40%,75%) 0%, hsl(30,35%,60%) 100%);">
-            <svg width="32" height="32" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.2" viewBox="0 0 24 24">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-          </div>
-        </div>
-        <div class="caption">
-          <p class="caption-text">Grandma's birthday dinner</p>
-          <p class="caption-meta">Apr 21 · Dad</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="cards-row top-align">
-
-      <!-- C: Sticky Note -->
-      <div class="option">
-        <div style="padding: 8px 8px 0;">
-          <div class="sticky-note" style="transform:rotate(1.4deg)">
-            <p>First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
+        <!-- Quick note card — swaps to whichever option is hovered in demo -->
+        <!-- Showing option C (sticky) in context by default -->
+        <div class="sticky-wrap" style="align-self: flex-end; margin-bottom: 0">
+          <div class="sticky-note" style="transform: rotate(1deg)">
+            <p>First word today: "dada" — I can't believe it!</p>
             <span class="sticky-date">Apr 22 · Sarah</span>
           </div>
         </div>
-        <span class="option-label">C — Sticky Note</span>
-        <div class="option-tags">
-          <span class="tag">playful</span>
-          <span class="tag">tactile</span>
-          <span class="tag">casual</span>
-        </div>
-        <p class="option-desc">Amber-yellow sticky note with folded corner. Same tilt + shadow language as polaroids. No pin.</p>
-      </div>
 
-      <!-- D: Journal Entry -->
-      <div class="option">
-        <div class="journal-card">
-          <div class="journal-tape"></div>
-          <div class="journal-body">
-            <div class="journal-eyebrow">
-              <span class="journal-date">Apr 22, 2026</span>
-              <span class="journal-kind">note</span>
+        <!-- Photo polaroid 2 -->
+        <div class="polaroid-photo" style="transform: rotate(0.6deg)">
+          <div class="pin"></div>
+          <div class="photo-area">
+            <div
+              class="photo-placeholder"
+              style="
+                background: linear-gradient(135deg, hsl(20, 40%, 75%) 0%, hsl(30, 35%, 60%) 100%);
+              "
+            >
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                stroke="rgba(255,255,255,.5)"
+                stroke-width="1.2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
             </div>
-            <p class="journal-text">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
-            <div class="journal-rules"></div>
           </div>
-          <div class="journal-footer">
-            <span class="journal-author">Sarah</span>
-            <svg width="13" height="13" fill="none" stroke="hsl(26,10%,49%)" stroke-width="1.5" viewBox="0 0 24 24" opacity=".35">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
+          <div class="caption">
+            <p class="caption-text">Grandma's birthday dinner</p>
+            <p class="caption-meta">Apr 21 · Dad</p>
           </div>
-        </div>
-        <span class="option-label">D — Journal Entry</span>
-        <div class="option-tags">
-          <span class="tag">editorial</span>
-          <span class="tag">nostalgic</span>
-          <span class="tag">refined</span>
-        </div>
-        <p class="option-desc">Washi-tape top strip. Lora italic text. Date header. Trailing ruled lines. No pin. Wider than polaroid.</p>
-      </div>
-
-      <!-- E: Postcard / Stamp -->
-      <div class="option">
-        <div class="postcard">
-          <div class="postcard-stamp">✦</div>
-          <p class="postcard-kind">Quick Note</p>
-          <p class="postcard-text">First word today: "dada" — I can't believe it. He looked right at his dad and said it clear as day.</p>
-          <div class="postcard-hr"></div>
-          <div class="postcard-footer">
-            <span>Apr 22, 2026</span>
-            <span>Sarah</span>
-          </div>
-        </div>
-        <span class="option-label">E — Postcard</span>
-        <div class="option-tags">
-          <span class="tag">structured</span>
-          <span class="tag">retro</span>
-          <span class="tag">crisp</span>
-        </div>
-        <p class="option-desc">Perforated stamp corner. "Quick Note" label. Postcard divider. Wider than polaroid. Most readable.</p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ── SECTION 3: Side-by-side at a glance ──────────────── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-tag">All five at a glance</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="cards-row" style="align-items: flex-end; gap: 28px;">
-      <!-- A -->
-      <div class="polaroid-base" style="transform:rotate(-1.8deg); width:168px;">
-        <div class="pin"></div>
-        <div class="photo-area" style="aspect-ratio:1;">
-          <div class="note-serif" style="padding:18px 12px 10px;">
-            <span class="big-quote" style="font-size:48px;">&ldquo;</span>
-            <p style="font-size:11px;">"dada" — first word today!</p>
-          </div>
-        </div>
-        <div class="caption">
-          <p class="caption-meta" style="font-size:9px; margin-top:6px;">A · Serif Quote</p>
         </div>
       </div>
 
-      <!-- B -->
-      <div class="polaroid-base" style="transform:rotate(1.2deg); width:168px;">
-        <div class="pin"></div>
-        <div class="photo-area" style="aspect-ratio:1;">
-          <div class="note-stripe" style="padding:12px 12px 12px 16px;">
-            <p style="font-size:11px;">"dada" — first word today!</p>
-          </div>
-        </div>
-        <div class="caption">
-          <p class="caption-meta" style="font-size:9px; margin-top:6px;">B · Left Stripe</p>
-        </div>
-      </div>
-
-      <!-- C -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-        <div class="sticky-note" style="transform:rotate(1deg); width:155px; height:155px; padding:14px 14px 20px;">
-          <p style="font-size:11px;">"dada" — first word!</p>
-          <span class="sticky-date" style="font-size:9px;">Apr 22</span>
-        </div>
-        <span style="font-size:9px;color:var(--muted);">C · Sticky Note</span>
-      </div>
-
-      <!-- D -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-        <div class="journal-card" style="width:200px;">
-          <div class="journal-tape"></div>
-          <div class="journal-body" style="padding:10px 16px 0;">
-            <div class="journal-eyebrow">
-              <span class="journal-date">Apr 22</span>
-              <span class="journal-kind">note</span>
+      <div class="cards-row top-align">
+        <!-- C: Sticky Note -->
+        <div class="option">
+          <div style="padding: 8px 8px 0">
+            <div class="sticky-note" style="transform: rotate(1.4deg)">
+              <p>
+                First word today: "dada" — I can't believe it. He looked right at his dad and said
+                it clear as day.
+              </p>
+              <span class="sticky-date">Apr 22 · Sarah</span>
             </div>
-            <p class="journal-text" style="font-size:11px; margin-bottom:10px; -webkit-line-clamp:3;">"dada" — first word today!</p>
-            <div class="journal-rules" style="height:26px;"></div>
           </div>
-          <div class="journal-footer" style="padding:7px 16px 9px;">
-            <span class="journal-author">Sarah</span>
+          <span class="option-label">C — Sticky Note</span>
+          <div class="option-tags">
+            <span class="tag">playful</span>
+            <span class="tag">tactile</span>
+            <span class="tag">casual</span>
           </div>
+          <p class="option-desc">
+            Amber-yellow sticky note with folded corner. Same tilt + shadow language as polaroids.
+            No pin.
+          </p>
         </div>
-        <span style="font-size:9px;color:var(--muted);">D · Journal Entry</span>
+
+        <!-- D: Journal Entry -->
+        <div class="option">
+          <div class="journal-card">
+            <div class="journal-tape"></div>
+            <div class="journal-body">
+              <div class="journal-eyebrow">
+                <span class="journal-date">Apr 22, 2026</span>
+                <span class="journal-kind">note</span>
+              </div>
+              <p class="journal-text">
+                First word today: "dada" — I can't believe it. He looked right at his dad and said
+                it clear as day.
+              </p>
+              <div class="journal-rules"></div>
+            </div>
+            <div class="journal-footer">
+              <span class="journal-author">Sarah</span>
+              <svg
+                width="13"
+                height="13"
+                fill="none"
+                stroke="hsl(26,10%,49%)"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                opacity=".35"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </div>
+          </div>
+          <span class="option-label">D — Journal Entry</span>
+          <div class="option-tags">
+            <span class="tag">editorial</span>
+            <span class="tag">nostalgic</span>
+            <span class="tag">refined</span>
+          </div>
+          <p class="option-desc">
+            Washi-tape top strip. Lora italic text. Date header. Trailing ruled lines. No pin. Wider
+            than polaroid.
+          </p>
+        </div>
+
+        <!-- E: Postcard / Stamp -->
+        <div class="option">
+          <div class="postcard">
+            <div class="postcard-stamp">✦</div>
+            <p class="postcard-kind">Quick Note</p>
+            <p class="postcard-text">
+              First word today: "dada" — I can't believe it. He looked right at his dad and said it
+              clear as day.
+            </p>
+            <div class="postcard-hr"></div>
+            <div class="postcard-footer">
+              <span>Apr 22, 2026</span>
+              <span>Sarah</span>
+            </div>
+          </div>
+          <span class="option-label">E — Postcard</span>
+          <div class="option-tags">
+            <span class="tag">structured</span>
+            <span class="tag">retro</span>
+            <span class="tag">crisp</span>
+          </div>
+          <p class="option-desc">
+            Perforated stamp corner. "Quick Note" label. Postcard divider. Wider than polaroid. Most
+            readable.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: Side-by-side at a glance ──────────────── -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-tag">All five at a glance</span>
+        <div class="section-line"></div>
       </div>
 
-      <!-- E -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-        <div class="postcard" style="width:200px;">
-          <div class="postcard-stamp" style="width:30px;height:36px;font-size:14px;">✦</div>
-          <p class="postcard-kind" style="font-size:7.5px; margin-bottom:8px;">Quick Note</p>
-          <p class="postcard-text" style="font-size:11px; margin-right:42px; min-height:3em;">"dada" — first word today!</p>
-          <div class="postcard-hr" style="margin: 10px 0 8px;"></div>
-          <div class="postcard-footer">
-            <span>Apr 22</span>
-            <span>Sarah</span>
+      <div class="cards-row" style="align-items: flex-end; gap: 28px">
+        <!-- A -->
+        <div class="polaroid-base" style="transform: rotate(-1.8deg); width: 168px">
+          <div class="pin"></div>
+          <div class="photo-area" style="aspect-ratio: 1">
+            <div class="note-serif" style="padding: 18px 12px 10px">
+              <span class="big-quote" style="font-size: 48px">&ldquo;</span>
+              <p style="font-size: 11px">"dada" — first word today!</p>
+            </div>
+          </div>
+          <div class="caption">
+            <p class="caption-meta" style="font-size: 9px; margin-top: 6px">A · Serif Quote</p>
           </div>
         </div>
-        <span style="font-size:9px;color:var(--muted);">E · Postcard</span>
-      </div>
-    </div>
-  </section>
 
-</body>
+        <!-- B -->
+        <div class="polaroid-base" style="transform: rotate(1.2deg); width: 168px">
+          <div class="pin"></div>
+          <div class="photo-area" style="aspect-ratio: 1">
+            <div class="note-stripe" style="padding: 12px 12px 12px 16px">
+              <p style="font-size: 11px">"dada" — first word today!</p>
+            </div>
+          </div>
+          <div class="caption">
+            <p class="caption-meta" style="font-size: 9px; margin-top: 6px">B · Left Stripe</p>
+          </div>
+        </div>
+
+        <!-- C -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div
+            class="sticky-note"
+            style="transform: rotate(1deg); width: 155px; height: 155px; padding: 14px 14px 20px"
+          >
+            <p style="font-size: 11px">"dada" — first word!</p>
+            <span class="sticky-date" style="font-size: 9px">Apr 22</span>
+          </div>
+          <span style="font-size: 9px; color: var(--muted)">C · Sticky Note</span>
+        </div>
+
+        <!-- D -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div class="journal-card" style="width: 200px">
+            <div class="journal-tape"></div>
+            <div class="journal-body" style="padding: 10px 16px 0">
+              <div class="journal-eyebrow">
+                <span class="journal-date">Apr 22</span>
+                <span class="journal-kind">note</span>
+              </div>
+              <p
+                class="journal-text"
+                style="font-size: 11px; margin-bottom: 10px; -webkit-line-clamp: 3"
+              >
+                "dada" — first word today!
+              </p>
+              <div class="journal-rules" style="height: 26px"></div>
+            </div>
+            <div class="journal-footer" style="padding: 7px 16px 9px">
+              <span class="journal-author">Sarah</span>
+            </div>
+          </div>
+          <span style="font-size: 9px; color: var(--muted)">D · Journal Entry</span>
+        </div>
+
+        <!-- E -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div class="postcard" style="width: 200px">
+            <div class="postcard-stamp" style="width: 30px; height: 36px; font-size: 14px">✦</div>
+            <p class="postcard-kind" style="font-size: 7.5px; margin-bottom: 8px">Quick Note</p>
+            <p class="postcard-text" style="font-size: 11px; margin-right: 42px; min-height: 3em">
+              "dada" — first word today!
+            </p>
+            <div class="postcard-hr" style="margin: 10px 0 8px"></div>
+            <div class="postcard-footer">
+              <span>Apr 22</span>
+              <span>Sarah</span>
+            </div>
+          </div>
+          <span style="font-size: 9px; color: var(--muted)">E · Postcard</span>
+        </div>
+      </div>
+    </section>
+  </body>
 </html>

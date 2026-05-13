@@ -1,5 +1,5 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const bodySchema = z.object({
   body: z.string().min(1).max(2000).trim(),
@@ -11,52 +11,52 @@ export default defineEventHandler(async (event) => {
 
   if (!user?.sub) throw createError({ statusCode: 401 })
 
-  const memoryId = getRouterParam(event, "id")
-  if (!memoryId) throw createError({ statusCode: 400, message: "Missing memory id" })
+  const memoryId = getRouterParam(event, 'id')
+  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Comment body is required." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Comment body is required.' })
   const { body } = result.data
 
   // Verify the user belongs to the circle that owns this memory
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, circle_id")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, circle_id')
+    .eq('id', memoryId)
     .maybeSingle()
 
   if (!memory) throw createError({ statusCode: 404 })
 
   const { data: membership } = await supabase
-    .from("circlemember")
-    .select("id")
-    .eq("user_id", user.sub)
-    .eq("circle_id", memory.circle_id)
+    .from('circlemember')
+    .select('id')
+    .eq('user_id', user.sub)
+    .eq('circle_id', memory.circle_id)
     .maybeSingle()
 
   if (!membership) throw createError({ statusCode: 403 })
 
-  const { error } = await supabase.from("memorycomment").insert({
+  const { error } = await supabase.from('memorycomment').insert({
     memory_id: memoryId,
     user_id: user.sub,
     body,
   })
 
   if (error) {
-    console.error("[comments] insert error:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to post comment." })
+    console.error('[comments] insert error:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to post comment.' })
   }
 
   // Push notification (fire-and-forget)
   const { data: actor } = await supabase
-    .from("user")
-    .select("first_name")
-    .eq("id", user.sub)
+    .from('user')
+    .select('first_name')
+    .eq('id', user.sub)
     .single()
 
   const payload = buildPushPayload({
-    type: "comment",
-    actorName: actor?.first_name ?? "Someone",
+    type: 'comment',
+    actorName: actor?.first_name ?? 'Someone',
     circleId: memory.circle_id,
     actorUserId: user.sub,
     memoryId,
@@ -64,15 +64,17 @@ export default defineEventHandler(async (event) => {
   })
 
   sendPushToCircle(supabase, memory.circle_id, user.sub, payload).catch((err) =>
-    console.error("[push] comment notify error:", err)
+    console.error('[push] comment notify error:', err),
   )
 
   // Return fresh comments
   const { data: comments } = await supabase
-    .from("memorycomment")
-    .select("id, body, created_at, updated_at, user_id, user!user_id(first_name, last_name, avatar_url)")
-    .eq("memory_id", memoryId)
-    .order("created_at", { ascending: true })
+    .from('memorycomment')
+    .select(
+      'id, body, created_at, updated_at, user_id, user!user_id(first_name, last_name, avatar_url)',
+    )
+    .eq('memory_id', memoryId)
+    .order('created_at', { ascending: true })
 
   return { comments: comments ?? [] }
 })

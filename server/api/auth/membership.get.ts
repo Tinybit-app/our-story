@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
@@ -8,10 +8,10 @@ export default defineEventHandler(async (event) => {
 
   const [{ data: memberships }, { data: profile }] = await Promise.all([
     supabase
-      .from("circlemember")
-      .select("circle_id, circle:circle_id(deleted_at)")
-      .eq("user_id", user.sub),
-    supabase.from("user").select("first_name, deleted_at").eq("id", user.sub).maybeSingle(),
+      .from('circlemember')
+      .select('circle_id, circle:circle_id(deleted_at)')
+      .eq('user_id', user.sub),
+    supabase.from('user').select('first_name, deleted_at').eq('id', user.sub).maybeSingle(),
   ])
 
   // Exclude memberships in soft-deleted or missing circles — service role bypasses

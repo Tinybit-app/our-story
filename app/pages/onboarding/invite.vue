@@ -1,20 +1,19 @@
 <template>
-  <div class="min-h-screen bg-background flex items-center justify-center px-6">
+  <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-
-      <p class="text-xs font-bold tracking-widest text-foreground mb-8 uppercase">Our Story</p>
+      <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
 
       <!-- Step indicator -->
-      <div class="flex items-center gap-1.5 mb-8">
+      <div class="mb-8 flex items-center gap-1.5">
         <div class="h-1 w-6 rounded-full bg-foreground" />
         <div class="h-1 w-6 rounded-full bg-foreground" />
         <div class="h-1 w-6 rounded-full bg-foreground" />
       </div>
 
-      <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
+      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
         {{ t('onboarding.inviteFirst') }}
       </h1>
-      <p class="text-sm text-muted-foreground mb-8">
+      <p class="mb-8 text-sm text-muted-foreground">
         {{ t('onboarding.inviteSub') }}
       </p>
 
@@ -22,39 +21,40 @@
         v-model="email"
         type="email"
         placeholder="their@email.com"
-        class="w-full bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-4"
+        class="mb-4 w-full rounded-[12px] border border-border bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         autofocus
         @keyup.enter="email && !loading && sendInvite()"
       />
 
       <p v-if="errorMsg" class="mb-4 text-sm text-destructive">{{ errorMsg }}</p>
 
-      <div v-if="sent" class="mb-4 rounded-[12px] bg-card border border-border px-4 py-3.5">
+      <div v-if="sent" class="mb-4 rounded-[12px] border border-border bg-card px-4 py-3.5">
         <p class="text-sm font-medium text-foreground">{{ t('onboarding.inviteSent') }}</p>
-        <p class="text-xs text-muted-foreground mt-0.5">{{ t('onboarding.inviteSentLink', { email }) }}</p>
+        <p class="mt-0.5 text-xs text-muted-foreground">
+          {{ t('onboarding.inviteSentLink', { email }) }}
+        </p>
       </div>
 
       <button
         @click="sendInvite"
         :disabled="!email || loading || sent"
-        class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity mb-3"
+        class="mb-3 w-full rounded-[12px] bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {{ loading ? t('nav.sending') : t('onboarding.sendInvite') }}
       </button>
 
       <button
         @click="finish"
-        class="w-full text-muted-foreground text-sm py-2.5 hover:text-foreground transition-colors"
+        class="w-full py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         {{ sent ? t('onboarding.continue') : t('onboarding.skipForNow') }}
       </button>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useAnalytics } from "~/composables/useAnalytics"
+import { useAnalytics } from '~/composables/useAnalytics'
 definePageMeta({ middleware: 'onboarding' })
 const { t } = useI18n()
 const { track } = useAnalytics()
@@ -77,9 +77,9 @@ async function sendInvite() {
       method: 'POST',
       body: { circleId: circleIdCookie.value, email: email.value },
     })
-    track("member_invited", {
+    track('member_invited', {
       circle_id: circleIdCookie.value ?? '',
-      invite_method: "link",
+      invite_method: 'link',
     })
     sent.value = true
   } catch (err: any) {

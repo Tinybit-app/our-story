@@ -1,15 +1,16 @@
 export function usePushNotifications() {
   const config = useRuntimeConfig()
 
-  const isSupported = computed(() =>
-    import.meta.client &&
-    'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window
+  const isSupported = computed(
+    () =>
+      import.meta.client &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window,
   )
 
   const permissionState = ref<NotificationPermission>(
-    import.meta.client && 'Notification' in window ? Notification.permission : 'default'
+    import.meta.client && 'Notification' in window ? Notification.permission : 'default',
   )
 
   async function requestPermission(): Promise<boolean> {

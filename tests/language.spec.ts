@@ -30,7 +30,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -41,14 +41,16 @@ function mockCirclesList(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Test Circle',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Test Circle',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -60,7 +62,7 @@ function mockTimeline(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories: [], nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
@@ -112,7 +114,9 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
     await page.getByTestId('locale-picker').click()
     await page.getByRole('button', { name: 'Français' }).click()
     // "Add memory" button becomes "Ajouter un souvenir"
-    await expect(page.getByRole('button', { name: /Ajouter un souvenir/i })).toBeVisible({ timeout: 5000 })
+    await expect(page.getByRole('button', { name: /Ajouter un souvenir/i })).toBeVisible({
+      timeout: 5000,
+    })
   })
 
   test('5. after switching to French, picker label shows FR', async ({ page }) => {
@@ -143,9 +147,11 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
     await expect(page.getByTestId('locale-picker')).toContainText('EN')
   })
 
-  test('8. switching locale PATCHes /api/profile with the correct locale code', async ({ page }) => {
+  test('8. switching locale PATCHes /api/profile with the correct locale code', async ({
+    page,
+  }) => {
     const profileRequests: string[] = []
-    page.on('request', req => {
+    page.on('request', (req) => {
       if (req.url().includes('/api/profile') && req.method() === 'PATCH') {
         profileRequests.push(req.postData() ?? '')
       }
@@ -157,6 +163,8 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
 
     // Wait briefly for the fire-and-forget PATCH to fire
     await page.waitForTimeout(500)
-    expect(profileRequests.some(body => body.includes('"fr"') || body.includes("'fr'"))).toBe(true)
+    expect(profileRequests.some((body) => body.includes('"fr"') || body.includes("'fr'"))).toBe(
+      true,
+    )
   })
 })

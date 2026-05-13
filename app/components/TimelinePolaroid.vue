@@ -1,16 +1,26 @@
 <template>
   <div ref="rootEl">
-
     <!-- Empty state -->
-    <div v-if="monthGroups.length === 0 && !loading" class="flex flex-col items-center justify-center py-32 text-center">
-      <div class="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
-        <svg class="w-7 h-7 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-          <circle cx="12" cy="13" r="3"/>
+    <div
+      v-if="monthGroups.length === 0 && !loading"
+      class="flex flex-col items-center justify-center py-32 text-center"
+    >
+      <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+        <svg
+          class="h-7 w-7 text-muted-foreground"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"
+          />
+          <circle cx="12" cy="13" r="3" />
         </svg>
       </div>
-      <p class="text-base font-semibold text-foreground mb-2">{{ typeConfig.emptyTitle }}</p>
-      <p class="text-sm text-muted-foreground leading-relaxed max-w-xs">
+      <p class="mb-2 text-base font-semibold text-foreground">{{ typeConfig.emptyTitle }}</p>
+      <p class="max-w-xs text-sm leading-relaxed text-muted-foreground">
         {{ typeConfig.emptyDesc }}
       </p>
     </div>
@@ -18,7 +28,9 @@
     <!-- Loading skeleton (first load) -->
     <div v-else-if="loading && monthGroups.length === 0" class="flex justify-center py-32">
       <div class="flex flex-col items-center gap-3">
-        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div
+          class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"
+        />
         <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
       </div>
     </div>
@@ -26,23 +38,30 @@
     <!-- Timeline -->
     <div v-else>
       <template v-for="yearSection in yearSections" :key="yearSection.year">
-
         <!-- Year anchor — IntersectionObserver target -->
         <div
           :id="`anchor-${yearSection.year}`"
           :data-year="yearSection.year"
-          class="flex items-center mb-10"
+          class="mb-10 flex items-center"
           :class="yearSections.indexOf(yearSection) === 0 ? 'mt-0' : 'mt-16'"
         >
           <!-- Amber tape label -->
           <span
-            class="font-['Caveat'] text-[28px] font-semibold select-none flex-shrink-0 relative z-[1]"
-            style="background:hsl(var(--accent)); color:hsl(var(--background)); padding:4px 20px 6px; transform:rotate(-1deg); box-shadow:2px 3px 8px rgba(44,36,32,.18); line-height:1.2;"
-          >{{ yearSection.year }}</span>
+            class="relative z-[1] flex-shrink-0 select-none font-['Caveat'] text-[28px] font-semibold"
+            style="
+              background: hsl(var(--accent));
+              color: hsl(var(--background));
+              padding: 4px 20px 6px;
+              transform: rotate(-1deg);
+              box-shadow: 2px 3px 8px rgba(44, 36, 32, 0.18);
+              line-height: 1.2;
+            "
+            >{{ yearSection.year }}</span
+          >
           <!-- Line to the right -->
-          <div class="flex-1 h-[2px] bg-border" />
+          <div class="h-[2px] flex-1 bg-border" />
           <!-- Summary -->
-          <span class="text-[11px] text-muted-foreground whitespace-nowrap px-[14px]">
+          <span class="whitespace-nowrap px-[14px] text-[11px] text-muted-foreground">
             {{ yearSummary(yearSection) }}
           </span>
         </div>
@@ -55,14 +74,16 @@
           class="mb-14 mt-12 first:mt-0"
         >
           <!-- Month divider: two lines with uppercase month label between -->
-          <div class="flex items-center gap-4 mb-8">
-            <div class="flex-1 h-px bg-border" />
-            <span class="text-[11px] font-semibold tracking-[.16em] uppercase text-muted-foreground">{{ group.label }} &middot; {{ t('timeline.memories', group.totalCount) }}</span>
-            <div class="flex-1 h-px bg-border" />
+          <div class="mb-8 flex items-center gap-4">
+            <div class="h-px flex-1 bg-border" />
+            <span class="text-[11px] font-semibold uppercase tracking-[.16em] text-muted-foreground"
+              >{{ group.label }} &middot; {{ t('timeline.memories', group.totalCount) }}</span
+            >
+            <div class="h-px flex-1 bg-border" />
           </div>
 
           <!-- Polaroid grid -->
-          <div class="flex flex-wrap gap-6 items-start">
+          <div class="flex flex-wrap items-start gap-6">
             <template v-for="(memory, i) in group.memories" :key="memory.id">
               <!-- Text-only quick notes get the postcard card -->
               <QuickNoteCard
@@ -87,29 +108,33 @@
             <NuxtLink
               v-if="group.hasMore"
               :to="`/timeline/${group.year}/${group.month}`"
-              class="flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-[4px]
-                     border-2 border-dashed border-muted-foreground/40 text-[13px] font-semibold text-muted-foreground
-                     hover:border-primary hover:text-foreground transition-colors self-center text-center px-3"
-              style="width:160px; height:160px; background:var(--border); transform:rotate(0.5deg);"
+              class="flex flex-shrink-0 flex-col items-center justify-center gap-1 self-center rounded-[4px] border-2 border-dashed border-muted-foreground/40 px-3 text-center text-[13px] font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+              style="
+                width: 160px;
+                height: 160px;
+                background: var(--border);
+                transform: rotate(0.5deg);
+              "
             >
-              <span class="leading-snug">+{{ group.totalCount - group.memories.length }} {{ t('timeline.more') }}</span>
+              <span class="leading-snug"
+                >+{{ group.totalCount - group.memories.length }} {{ t('timeline.more') }}</span
+              >
               <span class="leading-snug">{{ t('timeline.open') }} {{ group.label }} →</span>
             </NuxtLink>
-
           </div>
         </div>
-
       </template>
 
       <!-- Infinite scroll sentinel -->
-      <div ref="loadMoreEl" class="h-4 mt-2" />
+      <div ref="loadMoreEl" class="mt-2 h-4" />
 
       <!-- Pagination loading -->
       <div v-if="loading && monthGroups.length > 0" class="flex justify-center py-6">
-        <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+        <div
+          class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
+        />
       </div>
     </div>
-
   </div>
 </template>
 
@@ -152,7 +177,7 @@ const yearSections = computed(() => {
 function isWideMemory(id: string): boolean {
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return (h % 10) < 3
+  return h % 10 < 3
 }
 
 function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
@@ -186,16 +211,21 @@ function setupYearObserver() {
         }
       }
     },
-    { rootMargin: '-10% 0px -85% 0px', threshold: 0 }
+    { rootMargin: '-10% 0px -85% 0px', threshold: 0 },
   )
-  ;(rootEl.value ?? document).querySelectorAll('[data-year]').forEach((el) => yearObserver!.observe(el))
+  ;(rootEl.value ?? document)
+    .querySelectorAll('[data-year]')
+    .forEach((el) => yearObserver!.observe(el))
 }
 
 // Re-run observer when new year sections appear
-watch(() => props.monthGroups.length, async () => {
-  await nextTick()
-  setupYearObserver()
-})
+watch(
+  () => props.monthGroups.length,
+  async () => {
+    await nextTick()
+    setupYearObserver()
+  },
+)
 
 onMounted(async () => {
   await nextTick()
@@ -211,9 +241,11 @@ onUnmounted(() => {
 function scrollToYear(year: number) {
   const el = document.getElementById(`anchor-${year}`)
   if (!el) return
-  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' })
+  window.scrollTo({
+    top: el.getBoundingClientRect().top + window.scrollY - 120,
+    behavior: 'smooth',
+  })
 }
 
 defineExpose({ scrollToYear })
 </script>
-

@@ -4,110 +4,100 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: "Our Story",
-      htmlAttrs: { lang: "en" },
+      title: 'Our Story',
+      htmlAttrs: { lang: 'en' },
       meta: [
-        { name: "description", content: "Your circle of memories." },
+        { name: 'description', content: 'Your circle of memories.' },
         {
           // No maximum-scale — blocking user zoom fails Lighthouse a11y
           // (meta-viewport audit). iOS auto-zoom is already prevented by
           // bumping input font sizes to 16px (build-plan §11.2).
-          name: "viewport",
-          content:
-            "width=device-width, initial-scale=1, viewport-fit=cover",
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1, viewport-fit=cover',
         },
       ],
       link: [
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         {
-          rel: "preconnect",
-          href: "https://fonts.gstatic.com",
-          crossorigin: "",
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: '',
         },
         {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap",
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap',
         },
-        { rel: "manifest", href: "/manifest.json" },
+        { rel: 'manifest', href: '/manifest.json' },
       ],
     },
   },
 
-  compatibilityDate: "2025-07-15",
+  compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  css: ["~/assets/css/globals.css"],
+  css: ['~/assets/css/globals.css'],
 
-  components: [{ path: "~/components", extensions: ["vue"] }],
+  components: [{ path: '~/components', extensions: ['vue'] }],
 
   modules: [
-    "@nuxtjs/supabase",
-    "@nuxtjs/tailwindcss",
-    "@vueuse/nuxt",
-    "@sentry/nuxt/module",
-    "@nuxtjs/color-mode",
-    "@nuxtjs/i18n",
+    '@nuxtjs/supabase',
+    '@nuxtjs/tailwindcss',
+    '@vueuse/nuxt',
+    '@sentry/nuxt/module',
+    '@nuxtjs/color-mode',
+    '@nuxtjs/i18n',
   ],
 
   i18n: {
-    strategy: "no_prefix",
-    defaultLocale: "en",
+    strategy: 'no_prefix',
+    defaultLocale: 'en',
     locales: [
-      { code: "en", name: "English", shortLabel: "EN", file: "en.json" },
-      { code: "zh-CN", name: "中文", shortLabel: "中", file: "zh-CN.json" },
-      { code: "fr", name: "Français", shortLabel: "FR", file: "fr.json" },
+      { code: 'en', name: 'English', shortLabel: 'EN', file: 'en.json' },
+      { code: 'zh-CN', name: '中文', shortLabel: '中', file: 'zh-CN.json' },
+      { code: 'fr', name: 'Français', shortLabel: 'FR', file: 'fr.json' },
     ],
-    langDir: "../locales/",
+    langDir: '../locales/',
     detectBrowserLanguage: {
       useCookie: true,
-      cookieKey: "i18n_locale",
+      cookieKey: 'i18n_locale',
       alwaysRedirect: false,
-      fallbackLocale: "en",
+      fallbackLocale: 'en',
     },
   },
 
   colorMode: {
-    classSuffix: "",
-    preference: "system",
-    fallback: "light",
+    classSuffix: '',
+    preference: 'system',
+    fallback: 'light',
   },
 
   supabase: {
-    types: "~/types/database.ts",
+    types: '~/types/database.ts',
     redirectOptions: {
-      login: "/login",
-      callback: "/confirm",
-      exclude: [
-        "/invite/*",
-        "/view",
-        "/view/*",
-        "/",
-        "/pricing",
-        "/privacy",
-        "/terms",
-      ],
+      login: '/login',
+      callback: '/confirm',
+      exclude: ['/invite/*', '/view', '/view/*', '/', '/pricing', '/privacy', '/terms'],
     },
   },
 
   sentry: {
     sourceMapsUploadOptions: {
-      project: "our-story",
+      project: 'our-story',
       authToken: process.env.SENTRY_AUTH_TOKEN,
     },
   },
 
   routeRules: {
-    "/": { prerender: true },
-    "/pricing": { prerender: true },
-    "/privacy": { prerender: true },
-    "/terms": { prerender: true },
-    "/api/**": {
+    '/': { prerender: true },
+    '/pricing': { prerender: true },
+    '/privacy': { prerender: true },
+    '/terms': { prerender: true },
+    '/api/**': {
       cors: false, // handled manually in security-headers middleware
       headers: {
-        "Access-Control-Allow-Origin":
-          process.env.APP_URL ?? "https://our-story.tinybit.app",
-        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        'Access-Control-Allow-Origin': process.env.APP_URL ?? 'https://our-story.tinybit.app',
+        'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       },
     },
   },
@@ -127,8 +117,7 @@ export default defineNuxtConfig({
       sentryDsn: process.env.SENTRY_DSN,
       vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
       posthogKey: process.env.NUXT_PUBLIC_POSTHOG_KEY,
-      posthogHost:
-        process.env.NUXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
+      posthogHost: process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com',
     },
   },
-});
+})

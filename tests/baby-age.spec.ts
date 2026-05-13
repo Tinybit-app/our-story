@@ -29,7 +29,7 @@ const CHILD = { id: 'child-1', name: 'Emma', date_of_birth: '2024-01-01' } // Ja
  * Build a base memory. Pass `memoryChildren` to tag children on this specific memory —
  * the age stamp is derived from `memory_children`, not from a global children array.
  */
-function makeMemory(id: string, memoryChildren: typeof CHILD[] = []) {
+function makeMemory(id: string, memoryChildren: (typeof CHILD)[] = []) {
   return {
     id,
     owner_user_id: 'user-1',
@@ -60,7 +60,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -71,14 +71,16 @@ function mockCircles(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'parents',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'parents',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -88,7 +90,11 @@ function mockCircles(page: any) {
  * Mock the timeline API. `circleChildren` is the list of children available for the upload
  * form picker — it does NOT drive age stamps. Age stamps come from `memory.memory_children`.
  */
-function mockTimeline(page: any, memories: ReturnType<typeof makeMemory>[], circleChildren: typeof CHILD[] = []) {
+function mockTimeline(
+  page: any,
+  memories: ReturnType<typeof makeMemory>[],
+  circleChildren: (typeof CHILD)[] = [],
+) {
   return page.route('**/api/timeline**', (route: any) => {
     route.fulfill({
       status: 200,
@@ -103,7 +109,7 @@ function mockTimeline(page: any, memories: ReturnType<typeof makeMemory>[], circ
   })
 }
 
-function mockChildrenApi(page: any, children: typeof CHILD[]) {
+function mockChildrenApi(page: any, children: (typeof CHILD)[]) {
   return page.route('**/api/circles/*/children**', (route: any) => {
     if (route.request().method() !== 'GET') return route.continue()
     route.fulfill({
@@ -117,8 +123,9 @@ function mockChildrenApi(page: any, children: typeof CHILD[]) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Baby age stamp (4.10.1)', () => {
-
-  test('age stamp appears on polaroid card when children are tagged on the memory', async ({ page }) => {
+  test('age stamp appears on polaroid card when children are tagged on the memory', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     // Tag CHILD on this specific memory — age stamp derives from memory_children
@@ -155,7 +162,7 @@ test.describe('Baby age stamp (4.10.1)', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ members: [], invites: [], myRole: 'owner', memoryCount: 0 }),
-      })
+      }),
     )
 
     await page.goto('/circle-settings')
@@ -172,7 +179,7 @@ test.describe('Baby age stamp (4.10.1)', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ members: [], invites: [], myRole: 'owner', memoryCount: 0 }),
-      })
+      }),
     )
 
     let postBody: any = null
@@ -182,7 +189,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ child: { id: 'child-new', name: 'Emma', date_of_birth: '2024-01-01' } }),
+          body: JSON.stringify({
+            child: { id: 'child-new', name: 'Emma', date_of_birth: '2024-01-01' },
+          }),
         })
       } else {
         await route.continue()
@@ -222,7 +231,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('age stamp pill shows child name and age together on the polaroid card', async ({ page }) => {
+  test('age stamp pill shows child name and age together on the polaroid card', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
@@ -230,7 +241,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await page.goto('/timeline')
     // Both name and age appear in the pill badge — they must both be visible simultaneously
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
-    const agePill = page.locator('span', { hasText: 'Emma' }).filter({ hasText: '3 months, 2 weeks' })
+    const agePill = page
+      .locator('span', { hasText: 'Emma' })
+      .filter({ hasText: '3 months, 2 weeks' })
     await expect(agePill).toBeVisible()
   })
 
@@ -241,10 +254,18 @@ test.describe('Baby age stamp (4.10.1)', () => {
 
     // Stub reactions and comments so the modal can fully open
     await page.route('**/api/memories/mem-1/reactions', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ reactions: [] }) })
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ reactions: [] }),
+      }),
     )
     await page.route('**/api/memories/mem-1/comments', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) })
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ comments: [] }),
+      }),
     )
 
     await page.goto('/timeline')
@@ -256,5 +277,4 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await expect(page.getByText('Emma').nth(1)).toBeVisible({ timeout: 5_000 })
     await expect(page.getByText('3 months, 2 weeks').nth(1)).toBeVisible()
   })
-
 })

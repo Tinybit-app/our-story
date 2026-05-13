@@ -17,7 +17,7 @@ We do **not** introduce "Event," "Group," "Album," or any other new noun.
 - **Default upload behaviour unchanged.** Selecting N photos creates N memories (current behaviour). Multi-item is opt-in via a toggle.
 - **Upload toggle copy:** "Post as one memory" / "Post separately." No "Event" or "Group" wording.
 - **Mixed types in one memory:** image + video + text slides can coexist in a single memory.
-- **`Memory.note` is preserved** as the event-level caption (always shown above the gallery). Text slides (`MemoryMedia.media_type='text'`) are *additional* in-gallery content. See "Two text fields" below.
+- **`Memory.note` is preserved** as the event-level caption (always shown above the gallery). Text slides (`MemoryMedia.media_type='text'`) are _additional_ in-gallery content. See "Two text fields" below.
 - **Cover image:** `Memory.cover_media_id` (nullable FK). If null, defaults to first photo/video by `display_order`. User can tap any photo/video to set as cover. Text-only memories have no cover.
 - **Backwards compatible.** Single-photo memories and quick notes (zero MemoryMedia) keep working unchanged. No data migration needed.
 - **Visual hint for multi-item:** stacked-polaroid effect — 1-2 silhouettes peeking out behind the front card, slightly rotated, with deeper shadow. Plus a small count badge (`⊕12`) in the corner.
@@ -27,10 +27,10 @@ We do **not** introduce "Event," "Group," "Album," or any other new noun.
 
 ## Two text fields
 
-| Field | Role | When used |
-|-------|------|-----------|
-| `Memory.note` | Event-level caption ("Mia's birthday party!"). Always shown above the gallery. | Optional on any memory. Required for legacy quick notes (zero MemoryMedia). |
-| `MemoryMedia.text_content` (when `media_type='text'`) | Text slide interspersed in the gallery, like a quick note nested inside the carousel. | Used inside multi-item memories to add narrative beats between photos. |
+| Field                                                 | Role                                                                                  | When used                                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `Memory.note`                                         | Event-level caption ("Mia's birthday party!"). Always shown above the gallery.        | Optional on any memory. Required for legacy quick notes (zero MemoryMedia). |
+| `MemoryMedia.text_content` (when `media_type='text'`) | Text slide interspersed in the gallery, like a quick note nested inside the carousel. | Used inside multi-item memories to add narrative beats between photos.      |
 
 These are distinct concerns. The note is the cover caption; text slides are sequential content. Two fields, two roles, no migration of legacy data.
 
@@ -101,7 +101,7 @@ User can tap "+ Add note" inside the upload UI when in multi-item mode. Inserts 
 
 ### Server endpoints
 
-**`POST /api/memories/upload-batch`** *(new)* — creates ONE Memory + N MemoryMedia. Request body:
+**`POST /api/memories/upload-batch`** _(new)_ — creates ONE Memory + N MemoryMedia. Request body:
 
 ```ts
 {
@@ -122,10 +122,12 @@ User can tap "+ Add note" inside the upload UI when in multi-item mode. Inserts 
 The Edge Function `upload-media` (existing) continues to handle individual photo/video uploads — it returns `mediaId` and stores the file. The new `upload-batch` Nitro route then **groups** those previously-uploaded media into one Memory, plus inserts text slides.
 
 This split is necessary because:
+
 - Image/video upload happens via the Edge Function for streaming + size handling
 - Memory creation happens in Nitro for transactional consistency
 
 For the multi-item flow:
+
 1. Client uploads each photo/video individually via `upload-media` Edge Function — gets back a list of `mediaId`s. **Key change:** `upload-media` accepts a new `defer=true` query parameter. With `defer=true`, the Edge Function uploads the file to storage and creates a `MemoryMedia` row but does not create a real circle-visible Memory. For Phase 1, the concrete approach is: `upload-media?defer=true` creates a draft Memory owned by the caller (`visibility = 'draft'`, `note = null`) and returns `{ memoryId, mediaId }`. **Migration 030 added `'draft'` to the `Memory.visibility` CHECK constraint.** Drafts are invisible to all read paths — RLS policies and timeline filters only match `'circle'` and `'private'`, so `'draft'` rows are filtered out everywhere. Only the service role (used by `upload-batch`) can access them. The draft Memory is consumed and merged when `upload-batch` is called. If the draft is abandoned (user closes the upload sheet), it lingers as a `'draft'` row and is purged by a future cleanup cron (out of scope here, but tracked).
 2. After all media uploads complete, client posts to `POST /api/memories/upload-batch` with `{ draftMemoryIds: [...], textItems: [...], coverIndex, ...metadata }`. Server merges all draft memories' MemoryMedia into one canonical Memory (deletes the now-empty draft memories), inserts text-slide rows, sets `cover_media_id`, and returns the new memory id.
 3. **Cleaner alternative for Phase 2:** make `MemoryMedia.memory_id` nullable so deferred uploads create truly orphan rows. Avoids the draft-Memory dance. This requires another migration and audit of all existing code paths, so deferred for now.
@@ -140,19 +142,19 @@ The existing `upload-media` Edge Function and single-photo path do exactly what 
 
 ### PolaroidCard (photo/video memories)
 
-| State | Visual |
-|-------|--------|
-| Single-item memory | Existing polaroid: white border, slight rotation, single image |
+| State                       | Visual                                                                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Single-item memory          | Existing polaroid: white border, slight rotation, single image                                                                         |
 | Multi-item with image cover | Same polaroid + **2 stacked silhouettes** behind it (offset, deeper shadow, +/- rotation), **count badge** `⊕N` in bottom-right corner |
 
 The stack silhouettes are pure CSS — no extra DOM per peripheral card. Use absolutely-positioned siblings before the main card with `transform: translate + rotate`.
 
 ### QuickNoteCard (zero MemoryMedia or all-text)
 
-| State | Visual |
-|-------|--------|
-| Legacy quick note (0 media, `note` is the content) | Existing postcard, red pin |
-| Multi-text memory (2+ text slides) | Postcard + **2 stacked postcards** behind it. Cover excerpt is from the first text slide (or `note` if `cover_media_id` is null and no media). Count badge in corner. |
+| State                                              | Visual                                                                                                                                                                |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Legacy quick note (0 media, `note` is the content) | Existing postcard, red pin                                                                                                                                            |
+| Multi-text memory (2+ text slides)                 | Postcard + **2 stacked postcards** behind it. Cover excerpt is from the first text slide (or `note` if `cover_media_id` is null and no media). Count badge in corner. |
 
 ### Edge case: 1 photo + 1 text slide
 
@@ -199,7 +201,7 @@ Reuse the existing edit affordance on `MemoryModal`. New abilities:
 - **`POST /api/memories/[id]/items`** — add a slide. Body: `{ type: 'image'|'video'|'text', mediaId?: string, textContent?: string }`. Inserts at end (`max(display_order) + 1`).
 - **`DELETE /api/memories/[id]/items/[itemId]`** — remove a slide. If it was the cover, clears `cover_media_id` (timeline falls back to first photo/video).
 - **`PATCH /api/memories/[id]/items/order`** — body: `{ orderedIds: string[] }`. Sets `display_order` per row.
-- **`PATCH /api/memories/[id]`** *(extend existing)* — accept `coverMediaId` to set the cover.
+- **`PATCH /api/memories/[id]`** _(extend existing)_ — accept `coverMediaId` to set the cover.
 
 All routes: owner-only, RLS-validated, zod-typed input.
 
@@ -208,6 +210,7 @@ All routes: owner-only, RLS-validated, zod-typed input.
 ### Timeline query (extend `GET /api/timeline`)
 
 Each memory now returns:
+
 - `memorymedia[]` ordered by `display_order` (was: usually 1 row, no ordering concern)
 - `cover_media_id`
 - `media_count` (computed: `memorymedia.length`)
@@ -225,6 +228,7 @@ Returns full ordered slide list with signed URLs (7-day TTL for thumbnails, fres
 ## 7. Email Digest (12.1) — minor adjustment
 
 The weekly/monthly digest currently shows `memorymedia[0]` thumbnail per memory. With multi-item memories:
+
 - Use the cover (`cover_media_id` or first photo/video by `display_order`)
 - Add a small count overlay `⊕N` in the corner of the digest thumbnail to hint multi-item
 - All existing digest tests should still pass — the cover thumbnail concept is unchanged
@@ -238,15 +242,18 @@ Viewer links render the same `MemoryModal` carousel behaviour. No special viewer
 ## 9. Testing
 
 ### RLS (pgTAP, `supabase/tests/rls.test.sql`)
+
 - Member can SELECT all slides of memories in their circle (already covered by Memory + MemoryMedia policies — verify text slides too)
 - Owner can INSERT/UPDATE/DELETE slides on own circle's memories
 - Non-owner cannot mutate slides
 
 ### Unit (Vitest)
+
 - `unit/api-validation.test.ts` — zod schemas for `upload-batch`, `items.post`, `items.delete`, `items.order`, extended `memory.patch`
 - `unit/schema-compliance.test.ts` — migration 029 columns and constraints exist
 
 ### E2E (Playwright)
+
 - New file `tests/multi-item-memory.spec.ts`
   - Toggle upload to "one memory" → verify single Memory + N MemoryMedia
   - Toggle upload to "separately" → verify N Memories (existing behaviour preserved)

@@ -1,451 +1,668 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Our Story — Tester Guide (Print)</title>
-<style>
-  @page { size: letter; margin: 0.6in 0.65in; }
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    font-size: 10.5pt;
-    line-height: 1.42;
-    color: #111;
-    margin: 0;
-    padding: 0;
-    background: #fff;
-  }
-  h1 { font-size: 22pt; margin: 0 0 4pt 0; font-weight: 700; letter-spacing: -0.01em; }
-  h2 {
-    font-size: 14pt; margin: 18pt 0 6pt 0; font-weight: 700;
-    border-bottom: 1.5pt solid #111; padding-bottom: 3pt;
-    page-break-after: avoid;
-  }
-  h3 {
-    font-size: 11.5pt; margin: 10pt 0 3pt 0; font-weight: 700;
-    page-break-after: avoid;
-  }
-  p, ol, ul { margin: 4pt 0; }
-  ol, ul { padding-left: 18pt; }
-  ol li, ul li { margin: 2pt 0; }
-  .lead { font-size: 11pt; color: #333; }
-  .cover {
-    border: 1.5pt solid #111;
-    padding: 12pt 14pt;
-    margin: 10pt 0 14pt 0;
-  }
-  .cover-row { display: flex; gap: 14pt; margin: 4pt 0; align-items: baseline; flex-wrap: wrap; }
-  .cover-label { font-weight: 700; min-width: 80pt; }
-  .cover-blank { flex: 1; border-bottom: 1pt solid #999; min-width: 140pt; height: 14pt; }
-  .test {
-    page-break-inside: avoid;
-    margin: 8pt 0 10pt 0;
-    padding: 6pt 8pt;
-    border-left: 2.5pt solid #222;
-    background: #fafafa;
-  }
-  .test h3 { margin-top: 0; }
-  .expected { font-size: 10pt; margin: 3pt 0; }
-  .expected::before { content: "✓ "; font-weight: 700; color: #060; }
-  .notes-row {
-    margin-top: 6pt; display: flex; gap: 10pt; align-items: center;
-    font-size: 9.5pt;
-  }
-  .check { font-size: 12pt; letter-spacing: 2pt; }
-  .notes-line {
-    flex: 1; border-bottom: 1pt solid #aaa;
-    height: 11pt;
-  }
-  .warn {
-    background: #fff8e1;
-    border-left: 2.5pt solid #c87800;
-    padding: 5pt 8pt;
-    margin: 6pt 0;
-    font-size: 10pt;
-  }
-  .callout {
-    background: #eef4ff;
-    border-left: 2.5pt solid #2a5db0;
-    padding: 5pt 8pt;
-    margin: 6pt 0;
-    font-size: 10pt;
-  }
-  .small { font-size: 9.5pt; color: #555; }
-  hr { border: none; border-top: 0.5pt solid #ccc; margin: 14pt 0; }
-  .footer-note {
-    margin-top: 18pt;
-    padding: 8pt;
-    border: 1pt dashed #888;
-    font-size: 10pt;
-  }
-  @media print {
-    .no-print { display: none; }
-    body { font-size: 10pt; }
-    .test { background: transparent; }
-    .warn, .callout { background: transparent; }
-  }
-</style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Our Story — Tester Guide (Print)</title>
+    <style>
+      @page {
+        size: letter;
+        margin: 0.6in 0.65in;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        font-size: 10.5pt;
+        line-height: 1.42;
+        color: #111;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+      }
+      h1 {
+        font-size: 22pt;
+        margin: 0 0 4pt 0;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      h2 {
+        font-size: 14pt;
+        margin: 18pt 0 6pt 0;
+        font-weight: 700;
+        border-bottom: 1.5pt solid #111;
+        padding-bottom: 3pt;
+        page-break-after: avoid;
+      }
+      h3 {
+        font-size: 11.5pt;
+        margin: 10pt 0 3pt 0;
+        font-weight: 700;
+        page-break-after: avoid;
+      }
+      p,
+      ol,
+      ul {
+        margin: 4pt 0;
+      }
+      ol,
+      ul {
+        padding-left: 18pt;
+      }
+      ol li,
+      ul li {
+        margin: 2pt 0;
+      }
+      .lead {
+        font-size: 11pt;
+        color: #333;
+      }
+      .cover {
+        border: 1.5pt solid #111;
+        padding: 12pt 14pt;
+        margin: 10pt 0 14pt 0;
+      }
+      .cover-row {
+        display: flex;
+        gap: 14pt;
+        margin: 4pt 0;
+        align-items: baseline;
+        flex-wrap: wrap;
+      }
+      .cover-label {
+        font-weight: 700;
+        min-width: 80pt;
+      }
+      .cover-blank {
+        flex: 1;
+        border-bottom: 1pt solid #999;
+        min-width: 140pt;
+        height: 14pt;
+      }
+      .test {
+        page-break-inside: avoid;
+        margin: 8pt 0 10pt 0;
+        padding: 6pt 8pt;
+        border-left: 2.5pt solid #222;
+        background: #fafafa;
+      }
+      .test h3 {
+        margin-top: 0;
+      }
+      .expected {
+        font-size: 10pt;
+        margin: 3pt 0;
+      }
+      .expected::before {
+        content: '✓ ';
+        font-weight: 700;
+        color: #060;
+      }
+      .notes-row {
+        margin-top: 6pt;
+        display: flex;
+        gap: 10pt;
+        align-items: center;
+        font-size: 9.5pt;
+      }
+      .check {
+        font-size: 12pt;
+        letter-spacing: 2pt;
+      }
+      .notes-line {
+        flex: 1;
+        border-bottom: 1pt solid #aaa;
+        height: 11pt;
+      }
+      .warn {
+        background: #fff8e1;
+        border-left: 2.5pt solid #c87800;
+        padding: 5pt 8pt;
+        margin: 6pt 0;
+        font-size: 10pt;
+      }
+      .callout {
+        background: #eef4ff;
+        border-left: 2.5pt solid #2a5db0;
+        padding: 5pt 8pt;
+        margin: 6pt 0;
+        font-size: 10pt;
+      }
+      .small {
+        font-size: 9.5pt;
+        color: #555;
+      }
+      hr {
+        border: none;
+        border-top: 0.5pt solid #ccc;
+        margin: 14pt 0;
+      }
+      .footer-note {
+        margin-top: 18pt;
+        padding: 8pt;
+        border: 1pt dashed #888;
+        font-size: 10pt;
+      }
+      @media print {
+        .no-print {
+          display: none;
+        }
+        body {
+          font-size: 10pt;
+        }
+        .test {
+          background: transparent;
+        }
+        .warn,
+        .callout {
+          background: transparent;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Our Story — Tester Guide</h1>
+    <p class="lead">
+      Thank you for helping us test! Walk through each section and tick the boxes. About 30 minutes
+      total.
+    </p>
 
-<h1>Our Story — Tester Guide</h1>
-<p class="lead">Thank you for helping us test! Walk through each section and tick the boxes. About 30 minutes total.</p>
+    <div class="cover">
+      <div class="cover-row">
+        <span class="cover-label">Tester name:</span><span class="cover-blank"></span>
+      </div>
+      <div class="cover-row">
+        <span class="cover-label">Date:</span><span class="cover-blank"></span>
+      </div>
+      <div class="cover-row">
+        <span class="cover-label">Device:</span><span class="cover-blank"></span
+        ><span class="small">(e.g., iPhone 14 Safari)</span>
+      </div>
+      <div class="cover-row">
+        <span class="cover-label">Test email:</span><span class="cover-blank"></span>
+      </div>
+      <div class="cover-row">
+        <span class="cover-label">Second email:</span><span class="cover-blank"></span>
+      </div>
+    </div>
 
-<div class="cover">
-  <div class="cover-row"><span class="cover-label">Tester name:</span><span class="cover-blank"></span></div>
-  <div class="cover-row"><span class="cover-label">Date:</span><span class="cover-blank"></span></div>
-  <div class="cover-row"><span class="cover-label">Device:</span><span class="cover-blank"></span><span class="small">(e.g., iPhone 14 Safari)</span></div>
-  <div class="cover-row"><span class="cover-label">Test email:</span><span class="cover-blank"></span></div>
-  <div class="cover-row"><span class="cover-label">Second email:</span><span class="cover-blank"></span></div>
-</div>
+    <div class="callout">
+      <strong>How to report a problem:</strong> for each issue, jot down (1) what you were doing,
+      (2) what happened, (3) what you expected, (4) a screenshot if possible, (5) device + browser.
+      Bundle them at the end of the session.
+    </div>
 
-<div class="callout">
-  <strong>How to report a problem:</strong> for each issue, jot down (1) what you were doing, (2) what happened, (3) what you expected, (4) a screenshot if possible, (5) device + browser. Bundle them at the end of the session.
-</div>
+    <div class="callout">
+      <strong>Don't worry about:</strong> Push notifications on iPhone (not supported yet on iPhone
+      web); email notifications may take a few minutes or may not arrive during testing — that's
+      expected.
+    </div>
 
-<div class="callout">
-  <strong>Don't worry about:</strong> Push notifications on iPhone (not supported yet on iPhone web); email notifications may take a few minutes or may not arrive during testing — that's expected.
-</div>
+    <h2>Part 1 — Getting started</h2>
 
-<h2>Part 1 — Getting started</h2>
+    <div class="test">
+      <h3>1.1 Visit the website</h3>
+      <p>Open the link we sent you on your phone.</p>
+      <p class="expected">See a welcome page with "Start your circle — free" near the top.</p>
+      <p class="expected">Scroll down — see "How it works", circle-type cards, privacy promise.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>1.1 Visit the website</h3>
-  <p>Open the link we sent you on your phone.</p>
-  <p class="expected">See a welcome page with "Start your circle — free" near the top.</p>
-  <p class="expected">Scroll down — see "How it works", circle-type cards, privacy promise.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>1.2 Sign up with magic link</h3>
+      <ol>
+        <li>Tap "Start your circle — free" or "Sign in"</li>
+        <li>Type your email → "Send magic link"</li>
+        <li>Open inbox on the same device</li>
+        <li>Tap the link in the email within a minute</li>
+        <li>If first-time: fill first + last name</li>
+      </ol>
+      <p class="expected">Email arrives within 60 seconds.</p>
+      <p class="expected">Tapping the link signs you in automatically.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>1.2 Sign up with magic link</h3>
-  <ol>
-    <li>Tap "Start your circle — free" or "Sign in"</li>
-    <li>Type your email → "Send magic link"</li>
-    <li>Open inbox on the same device</li>
-    <li>Tap the link in the email within a minute</li>
-    <li>If first-time: fill first + last name</li>
-  </ol>
-  <p class="expected">Email arrives within 60 seconds.</p>
-  <p class="expected">Tapping the link signs you in automatically.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>1.3 Sign out, then sign back in</h3>
+      <p>Find the menu (top-right) → sign out → sign in with same email.</p>
+      <p class="expected">No need to fill in name again.</p>
+      <p class="expected">Land back where you left off.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>1.3 Sign out, then sign back in</h3>
-  <p>Find the menu (top-right) → sign out → sign in with same email.</p>
-  <p class="expected">No need to fill in name again.</p>
-  <p class="expected">Land back where you left off.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 2 — Creating your first circle</h2>
 
-<h2>Part 2 — Creating your first circle</h2>
+    <div class="test">
+      <h3>2.1 Pick a circle type</h3>
+      <p>Tap any of: Parents, Couple, Family, Friends, Travel, Solo, Other.</p>
+      <p class="expected">The card highlights when tapped; "Continue" advances.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>2.1 Pick a circle type</h3>
-  <p>Tap any of: Parents, Couple, Family, Friends, Travel, Solo, Other.</p>
-  <p class="expected">The card highlights when tapped; "Continue" advances.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>2.2 Name your circle</h3>
+      <p>Type a name → "Continue".</p>
+      <p class="expected">Advances to invite step.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>2.2 Name your circle</h3>
-  <p>Type a name → "Continue".</p>
-  <p class="expected">Advances to invite step.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>2.3 Send an invite</h3>
+      <p>Enter the second email → "Send". Check that inbox.</p>
+      <p class="expected">"Sent to..." confirmation.</p>
+      <p class="expected">Invite email arrives at the second inbox within a minute.</p>
+      <p class="small">If testing alone, you can "Skip for now" and invite later.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>2.3 Send an invite</h3>
-  <p>Enter the second email → "Send". Check that inbox.</p>
-  <p class="expected">"Sent to..." confirmation.</p>
-  <p class="expected">Invite email arrives at the second inbox within a minute.</p>
-  <p class="small">If testing alone, you can "Skip for now" and invite later.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>2.4 Accept the invite (second person)</h3>
+      <p>
+        On the second email — open the invite link in a private/incognito window or different
+        device.
+      </p>
+      <p class="expected">Brief "Joining..." screen.</p>
+      <p class="expected">After sign-in, lands in the timeline of the invited circle.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>2.4 Accept the invite (second person)</h3>
-  <p>On the second email — open the invite link in a private/incognito window or different device.</p>
-  <p class="expected">Brief "Joining..." screen.</p>
-  <p class="expected">After sign-in, lands in the timeline of the invited circle.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 3 — Adding memories</h2>
 
-<h2>Part 3 — Adding memories</h2>
+    <div class="test">
+      <h3>3.1 Upload a single photo</h3>
+      <p>
+        "+" button → "Photo or video" → pick a photo → optionally add note/milestone/date → upload.
+      </p>
+      <p class="expected">Upload spinner shows; photo appears on the timeline.</p>
+      <p class="expected">Photo is slightly tilted, like a polaroid.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>3.1 Upload a single photo</h3>
-  <p>"+" button → "Photo or video" → pick a photo → optionally add note/milestone/date → upload.</p>
-  <p class="expected">Upload spinner shows; photo appears on the timeline.</p>
-  <p class="expected">Photo is slightly tilted, like a polaroid.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>3.2 Upload a video</h3>
+      <p>Same flow; pick a short video (under a minute works best).</p>
+      <p class="expected">Video appears with a play indicator and plays when tapped.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>3.2 Upload a video</h3>
-  <p>Same flow; pick a short video (under a minute works best).</p>
-  <p class="expected">Video appears with a play indicator and plays when tapped.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>3.3 Write a quick note (no photo)</h3>
+      <p>"+" → "Quick note" → type something → optional milestone → "Save".</p>
+      <p class="expected">A postcard-style card with a red pin appears on the timeline.</p>
+      <p class="expected">Looks distinctly different from a photo card.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>3.3 Write a quick note (no photo)</h3>
-  <p>"+" → "Quick note" → type something → optional milestone → "Save".</p>
-  <p class="expected">A postcard-style card with a red pin appears on the timeline.</p>
-  <p class="expected">Looks distinctly different from a photo card.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>3.4 Multi-photo: "Post as one memory" ON</h3>
+      <p>
+        "+" → "Photo or video" → pick 3+ photos → enable "Post as one memory" → optionally add text
+        slide, reorder, set cover → upload.
+      </p>
+      <p class="expected">One card with stack effect + "+N" badge on timeline.</p>
+      <p class="expected">Tap → swipeable carousel through the photos.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>3.4 Multi-photo: "Post as one memory" ON</h3>
-  <p>"+" → "Photo or video" → pick 3+ photos → enable "Post as one memory" → optionally add text slide, reorder, set cover → upload.</p>
-  <p class="expected">One card with stack effect + "+N" badge on timeline.</p>
-  <p class="expected">Tap → swipeable carousel through the photos.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>3.5 Multi-photo: "Post as one memory" OFF</h3>
+      <p>Repeat 3.4 with different photos but toggle OFF.</p>
+      <p class="expected">N separate cards on the timeline.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>3.5 Multi-photo: "Post as one memory" OFF</h3>
-  <p>Repeat 3.4 with different photos but toggle OFF.</p>
-  <p class="expected">N separate cards on the timeline.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>3.6 Edit one of your memories</h3>
+      <p>Open a memory you uploaded → pencil icon → change something → save.</p>
+      <p class="expected">Changes reflect on timeline and modal.</p>
+      <p class="expected">On someone else's memory, the pencil should NOT appear.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>3.6 Edit one of your memories</h3>
-  <p>Open a memory you uploaded → pencil icon → change something → save.</p>
-  <p class="expected">Changes reflect on timeline and modal.</p>
-  <p class="expected">On someone else's memory, the pencil should NOT appear.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 4 — Reactions, comments, milestones</h2>
 
-<h2>Part 4 — Reactions, comments, milestones</h2>
+    <div class="test">
+      <h3>4.1 Add and toggle a reaction</h3>
+      <p>
+        Hover/tap a memory → "+" emoji button → pick one (e.g. ❤️) → tap the chip again to toggle
+        off.
+      </p>
+      <p class="expected">Chip appears with count 1, then disappears on second tap.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>4.1 Add and toggle a reaction</h3>
-  <p>Hover/tap a memory → "+" emoji button → pick one (e.g. ❤️) → tap the chip again to toggle off.</p>
-  <p class="expected">Chip appears with count 1, then disappears on second tap.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>4.2 Post a comment</h3>
+      <p>Open a memory → comments section → type → "Post" or Enter.</p>
+      <p class="expected">Comment appears immediately at the bottom of the thread.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>4.2 Post a comment</h3>
-  <p>Open a memory → comments section → type → "Post" or Enter.</p>
-  <p class="expected">Comment appears immediately at the bottom of the thread.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>4.3 Edit your comment</h3>
+      <p>Hover/tap your comment → pencil → change → save.</p>
+      <p class="expected">Comment updates; "edited" label appears next to timestamp.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>4.3 Edit your comment</h3>
-  <p>Hover/tap your comment → pencil → change → save.</p>
-  <p class="expected">Comment updates; "edited" label appears next to timestamp.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>4.4 Delete your comment</h3>
+      <p>Trash icon on your comment → confirmation appears → "Delete".</p>
+      <p class="expected">Comment removed. Cancel button must also work.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>4.4 Delete your comment</h3>
-  <p>Trash icon on your comment → confirmation appears → "Delete".</p>
-  <p class="expected">Comment removed. Cancel button must also work.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>4.5 Add a milestone</h3>
+      <p>
+        Upload new memory → tap a suggested milestone chip OR type custom (e.g., "Emma's first day")
+        → save.
+      </p>
+      <p class="expected">Memory shows ✦ badge with the milestone label.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>4.5 Add a milestone</h3>
-  <p>Upload new memory → tap a suggested milestone chip OR type custom (e.g., "Emma's first day") → save.</p>
-  <p class="expected">Memory shows ✦ badge with the milestone label.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>4.6 Milestone share card</h3>
+      <p>After saving the memory in 4.5, a share-card modal should auto-open.</p>
+      <p class="expected">Card shows photo + milestone + date + "Our Story" wordmark.</p>
+      <p class="expected">9:16 / 1:1 toggle works.</p>
+      <p class="expected">
+        "Share" opens native share sheet (mobile) or downloads image (desktop).
+      </p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>4.6 Milestone share card</h3>
-  <p>After saving the memory in 4.5, a share-card modal should auto-open.</p>
-  <p class="expected">Card shows photo + milestone + date + "Our Story" wordmark.</p>
-  <p class="expected">9:16 / 1:1 toggle works.</p>
-  <p class="expected">"Share" opens native share sheet (mobile) or downloads image (desktop).</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 5 — Sharing with non-account viewers</h2>
 
-<h2>Part 5 — Sharing with non-account viewers</h2>
+    <div class="test">
+      <h3>5.1 Create a share link</h3>
+      <p>
+        As owner: timeline header → "Share link" → "Create new link" → pick "Full circle" → name it
+        → Create.
+      </p>
+      <p class="expected">Link appears with copy / revoke / renew buttons.</p>
+      <p class="expected">Members (non-owners) should NOT see the "Share link" button.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>5.1 Create a share link</h3>
-  <p>As owner: timeline header → "Share link" → "Create new link" → pick "Full circle" → name it → Create.</p>
-  <p class="expected">Link appears with copy / revoke / renew buttons.</p>
-  <p class="expected">Members (non-owners) should NOT see the "Share link" button.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>5.2 Open the share link (no account)</h3>
+      <p>Copy link → open in private/incognito window or different device.</p>
+      <p class="expected">No sign-in prompt; lands directly on viewer page.</p>
+      <p class="expected">Circle memories visible; welcome splash shows once.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>5.2 Open the share link (no account)</h3>
-  <p>Copy link → open in private/incognito window or different device.</p>
-  <p class="expected">No sign-in prompt; lands directly on viewer page.</p>
-  <p class="expected">Circle memories visible; welcome splash shows once.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>5.3 React as a guest</h3>
+      <p>On viewer page, tap a reaction → asked for name first time → confirm.</p>
+      <p class="expected">Reaction sticks with that guest name attached.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>5.3 React as a guest</h3>
-  <p>On viewer page, tap a reaction → asked for name first time → confirm.</p>
-  <p class="expected">Reaction sticks with that guest name attached.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>5.4 Revoke the share link</h3>
+      <p>Back on owner side → share links sheet → trash → confirm. Reload viewer tab.</p>
+      <p class="expected">Viewer tab shows expired / no-longer-available state.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>5.4 Revoke the share link</h3>
-  <p>Back on owner side → share links sheet → trash → confirm. Reload viewer tab.</p>
-  <p class="expected">Viewer tab shows expired / no-longer-available state.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 6 — Notifications</h2>
 
-<h2>Part 6 — Notifications</h2>
+    <div class="callout">
+      Android Chrome only for push tests. iPhone web does not support push yet — skip those tests on
+      iPhone.
+    </div>
 
-<div class="callout">Android Chrome only for push tests. iPhone web does not support push yet — skip those tests on iPhone.</div>
+    <div class="test">
+      <h3>6.1 Enable push (Android only)</h3>
+      <p>
+        After a couple of timeline visits on Android Chrome, the banner appears → Enable → grant
+        browser permission.
+      </p>
+      <p class="expected">Banner dismisses; subscription saved.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>6.1 Enable push (Android only)</h3>
-  <p>After a couple of timeline visits on Android Chrome, the banner appears → Enable → grant browser permission.</p>
-  <p class="expected">Banner dismisses; subscription saved.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>6.2 Receive push on activity (Android only)</h3>
+      <p>Have second account upload a photo / comment / react. Watch for notifications.</p>
+      <p class="expected">
+        Notification appears within seconds; tapping opens the relevant memory.
+      </p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>6.2 Receive push on activity (Android only)</h3>
-  <p>Have second account upload a photo / comment / react. Watch for notifications.</p>
-  <p class="expected">Notification appears within seconds; tapping opens the relevant memory.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>6.3 Notification settings</h3>
+      <p>
+        Bell icon in timeline header → toggles for: mute, push, milestone reminders, email frequency
+        (weekly/monthly/off). Toggle a few.
+      </p>
+      <p class="expected">Settings persist across refresh.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>6.3 Notification settings</h3>
-  <p>Bell icon in timeline header → toggles for: mute, push, milestone reminders, email frequency (weekly/monthly/off). Toggle a few.</p>
-  <p class="expected">Settings persist across refresh.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>6.4 Mute a circle silences push</h3>
+      <p>Mute one circle → have second account upload there.</p>
+      <p class="expected">No push notification while muted.</p>
+      <p class="expected">Push resumes after unmuting.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>6.4 Mute a circle silences push</h3>
-  <p>Mute one circle → have second account upload there.</p>
-  <p class="expected">No push notification while muted.</p>
-  <p class="expected">Push resumes after unmuting.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 7 — Personalization</h2>
 
-<h2>Part 7 — Personalization</h2>
+    <div class="test">
+      <h3>7.1 Edit your name</h3>
+      <p>Settings → Account → change first/last → save.</p>
+      <p class="expected">Name updates on comments, reactions, header avatar.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>7.1 Edit your name</h3>
-  <p>Settings → Account → change first/last → save.</p>
-  <p class="expected">Name updates on comments, reactions, header avatar.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>7.2 Switch language</h3>
+      <p>Language picker → English → 中文 → Français → back.</p>
+      <p class="expected">All visible strings change immediately.</p>
+      <p class="expected">
+        Date formats update (e.g., May 11, 2026 → 2026年5月11日 → 11 mai 2026).
+      </p>
+      <p class="expected">Persists across logout/login.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>7.2 Switch language</h3>
-  <p>Language picker → English → 中文 → Français → back.</p>
-  <p class="expected">All visible strings change immediately.</p>
-  <p class="expected">Date formats update (e.g., May 11, 2026 → 2026年5月11日 → 11 mai 2026).</p>
-  <p class="expected">Persists across logout/login.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>7.3 Edit circle name (owner only)</h3>
+      <p>Circle settings → change name → save.</p>
+      <p class="expected">New name in switcher, header, future emails.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>7.3 Edit circle name (owner only)</h3>
-  <p>Circle settings → change name → save.</p>
-  <p class="expected">New name in switcher, header, future emails.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>7.4 Change circle type</h3>
+      <p>Circle settings → pick different type from grid → save.</p>
+      <p class="expected">Empty-state copy + milestone chips update accordingly.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>7.4 Change circle type</h3>
-  <p>Circle settings → pick different type from grid → save.</p>
-  <p class="expected">Empty-state copy + milestone chips update accordingly.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>7.5 Add a child (Parents circle only)</h3>
+      <p>Circle settings → children section → add name + DOB. Upload a photo and tag that child.</p>
+      <p class="expected">
+        Photo card shows pill with name + age at time of memory (e.g., "Emma · 3 months, 2 weeks").
+      </p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>7.5 Add a child (Parents circle only)</h3>
-  <p>Circle settings → children section → add name + DOB. Upload a photo and tag that child.</p>
-  <p class="expected">Photo card shows pill with name + age at time of memory (e.g., "Emma · 3 months, 2 weeks").</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 8 — Phone polish</h2>
 
-<h2>Part 8 — Phone polish</h2>
+    <div class="test">
+      <h3>8.1 Add to Home Screen — Android</h3>
+      <p>After 3+ visits on Android Chrome, banner offers "Install" → tap → confirm.</p>
+      <p class="expected">
+        Icon appears on home screen; launches in standalone mode (no browser UI).
+      </p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>8.1 Add to Home Screen — Android</h3>
-  <p>After 3+ visits on Android Chrome, banner offers "Install" → tap → confirm.</p>
-  <p class="expected">Icon appears on home screen; launches in standalone mode (no browser UI).</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (iPhone)</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>8.2 Add to Home Screen — iPhone</h3>
+      <p>
+        After 3+ visits, banner shows manual steps: "Tap Share → Add to Home Screen". Follow them.
+      </p>
+      <p class="expected">Icon appears; tapping opens in full-screen mode.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (Android)</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>8.2 Add to Home Screen — iPhone</h3>
-  <p>After 3+ visits, banner shows manual steps: "Tap Share → Add to Home Screen". Follow them.</p>
-  <p class="expected">Icon appears; tapping opens in full-screen mode.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A (Android)</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>8.3 Switch between multiple circles</h3>
+      <p>If you have 2+ circles, use the circle switcher in the header.</p>
+      <p class="expected">Timeline reloads with each circle's own memories.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>8.3 Switch between multiple circles</h3>
-  <p>If you have 2+ circles, use the circle switcher in the header.</p>
-  <p class="expected">Timeline reloads with each circle's own memories.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ N/A</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 9 — Optional advanced</h2>
 
-<h2>Part 9 — Optional advanced</h2>
+    <div class="test">
+      <h3>9.1 Export your data</h3>
+      <p>Settings → Account → "Export my data" → pick a circle → start.</p>
+      <p class="expected">"Export queued" toast.</p>
+      <p class="expected">Email arrives with 24h download link to a ZIP of photos + manifest.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>9.1 Export your data</h3>
-  <p>Settings → Account → "Export my data" → pick a circle → start.</p>
-  <p class="expected">"Export queued" toast.</p>
-  <p class="expected">Email arrives with 24h download link to a ZIP of photos + manifest.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>9.2 Delete your account</h3>
+      <div class="warn"><strong>⚠ Only with a test account you can throw away.</strong></div>
+      <p>
+        Settings → Account → "Delete" → choose: "Keep as Former member" OR "Remove all my content".
+      </p>
+      <p class="expected">Signed out after confirmation. 30-day grace period before hard purge.</p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ Skipped</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>9.2 Delete your account</h3>
-  <div class="warn"><strong>⚠ Only with a test account you can throw away.</strong></div>
-  <p>Settings → Account → "Delete" → choose: "Keep as Former member" OR "Remove all my content".</p>
-  <p class="expected">Signed out after confirmation. 30-day grace period before hard purge.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ Skipped</span><span class="notes-line"></span></div>
-</div>
+    <div class="test">
+      <h3>9.3 Delete a circle (owner)</h3>
+      <div class="warn"><strong>⚠ Only with a test circle.</strong></div>
+      <p>Circle settings → "Delete circle" at bottom → type circle name to confirm.</p>
+      <p class="expected">
+        Warning shown; you and members get notification email; 30-day grace period.
+      </p>
+      <div class="notes-row">
+        <span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ Skipped</span
+        ><span class="notes-line"></span>
+      </div>
+    </div>
 
-<div class="test">
-  <h3>9.3 Delete a circle (owner)</h3>
-  <div class="warn"><strong>⚠ Only with a test circle.</strong></div>
-  <p>Circle settings → "Delete circle" at bottom → type circle name to confirm.</p>
-  <p class="expected">Warning shown; you and members get notification email; 30-day grace period.</p>
-  <div class="notes-row"><span class="check">☐ Pass &nbsp;&nbsp; ☐ Issue &nbsp;&nbsp; ☐ Skipped</span><span class="notes-line"></span></div>
-</div>
+    <h2>Part 10 — General things to watch for</h2>
 
-<h2>Part 10 — General things to watch for</h2>
+    <ul>
+      <li>☐ Slow pages (anything over 3 seconds)</li>
+      <li>☐ Code-like text (e.g., <code>t('common.someone')</code>, <code>{{ name }}</code>)</li>
+      <li>☐ Buttons that don't respond when tapped</li>
+      <li>☐ Photos that fail to load or look pixelated</li>
+      <li>☐ Text overflowing off the screen</li>
+      <li>☐ Empty states that feel harsh</li>
+      <li>☐ Spelling and grammar issues</li>
+      <li>☐ iPhone home-indicator overlap on bottom sheets</li>
+      <li>☐ Dark mode: colors look wrong if your device is in dark mode</li>
+    </ul>
 
-<ul>
-  <li>☐ Slow pages (anything over 3 seconds)</li>
-  <li>☐ Code-like text (e.g., <code>t('common.someone')</code>, <code>{{ name }}</code>)</li>
-  <li>☐ Buttons that don't respond when tapped</li>
-  <li>☐ Photos that fail to load or look pixelated</li>
-  <li>☐ Text overflowing off the screen</li>
-  <li>☐ Empty states that feel harsh</li>
-  <li>☐ Spelling and grammar issues</li>
-  <li>☐ iPhone home-indicator overlap on bottom sheets</li>
-  <li>☐ Dark mode: colors look wrong if your device is in dark mode</li>
-</ul>
+    <div class="footer-note">
+      <strong>Closing reflection — please write a short answer:</strong>
+      <p>Did it feel calm and family-friendly, or stressful?</p>
+      <div style="height: 30pt"></div>
+      <p>What confused you the most (even if not a bug)?</p>
+      <div style="height: 30pt"></div>
+      <p>Anything you wish it did?</p>
+      <div style="height: 30pt"></div>
+    </div>
 
-<div class="footer-note">
-  <strong>Closing reflection — please write a short answer:</strong>
-  <p>Did it feel calm and family-friendly, or stressful?</p>
-  <div style="height: 30pt;"></div>
-  <p>What confused you the most (even if not a bug)?</p>
-  <div style="height: 30pt;"></div>
-  <p>Anything you wish it did?</p>
-  <div style="height: 30pt;"></div>
-</div>
-
-<p class="small" style="margin-top: 14pt; text-align: center;">
-  Thank you so much — your feedback genuinely shapes what we build next. 🙏
-</p>
-
-</body>
+    <p class="small" style="margin-top: 14pt; text-align: center">
+      Thank you so much — your feedback genuinely shapes what we build next. 🙏
+    </p>
+  </body>
 </html>

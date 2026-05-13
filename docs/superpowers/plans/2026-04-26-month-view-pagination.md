@@ -12,18 +12,19 @@
 
 ## File Map
 
-| File | Change |
-|---|---|
-| `server/api/timeline.get.ts` | yearMonth branch: fetch 25 (to detect hasMore), return nextCursor, apply cursor filter |
+| File                                    | Change                                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `server/api/timeline.get.ts`            | yearMonth branch: fetch 25 (to detect hasMore), return nextCursor, apply cursor filter         |
 | `app/pages/timeline/[year]/[month].vue` | Add cursor state, loadingMore ref, nextCursor ref, IntersectionObserver sentinel, append logic |
-| `unit/api-validation.test.ts` | Add test: cursor + yearMonth accepted together |
-| `tests/month-overflow.spec.ts` | Add test: load-more sentinel triggers second page fetch and appends memories |
+| `unit/api-validation.test.ts`           | Add test: cursor + yearMonth accepted together                                                 |
+| `tests/month-overflow.spec.ts`          | Add test: load-more sentinel triggers second page fetch and appends memories                   |
 
 ---
 
 ## Task 1: Extend API — cursor pagination for yearMonth branch
 
 **Files:**
+
 - Modify: `server/api/timeline.get.ts:99-113`
 - Modify: `unit/api-validation.test.ts` (end of file, after existing yearMonth tests)
 
@@ -46,7 +47,8 @@ describe('GET /api/timeline — cursor + yearMonth combined', () => {
     const r = timelineQuerySchemaV2.safeParse({
       circleId: '123e4567-e89b-12d3-a456-426614174000',
       yearMonth: '2025-03',
-      cursor: '2025-03-15T00:00:00.000Z,2025-03-15T10:00:00.000Z,abc12345-0000-0000-0000-000000000001',
+      cursor:
+        '2025-03-15T00:00:00.000Z,2025-03-15T10:00:00.000Z,abc12345-0000-0000-0000-000000000001',
     })
     expect(r.success).toBe(true)
   })
@@ -66,62 +68,72 @@ Expected: FAIL — the test itself should actually pass because `timelineQuerySc
 Replace the `yearMonth` branch in `server/api/timeline.get.ts` (lines 99–113):
 
 **Before:**
-```ts
-  if (yearMonth) {
-    // Filter to a specific calendar month — used by the month overflow page
-    const parts = yearMonth.split('-')
-    const year = Number(parts[0])
-    const month = Number(parts[1])
-    const from = new Date(Date.UTC(year, month - 1, 1)).toISOString()
-    const to = new Date(Date.UTC(year, month, 1)).toISOString()
-    query = query.gte("memory_date", from).lt("memory_date", to).limit(100)
 
-    const { data: memories, error } = await query
-    if (error) {
-      console.error("[timeline] month query failed:", error.message)
-      throw createError({ statusCode: 500, message: "Failed to load timeline." })
-    }
-    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null, children, members }
+```ts
+if (yearMonth) {
+  // Filter to a specific calendar month — used by the month overflow page
+  const parts = yearMonth.split('-')
+  const year = Number(parts[0])
+  const month = Number(parts[1])
+  const from = new Date(Date.UTC(year, month - 1, 1)).toISOString()
+  const to = new Date(Date.UTC(year, month, 1)).toISOString()
+  query = query.gte('memory_date', from).lt('memory_date', to).limit(100)
+
+  const { data: memories, error } = await query
+  if (error) {
+    console.error('[timeline] month query failed:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
   }
+  return {
+    memories: await attachSignedUrls(supabase, memories ?? []),
+    nextCursor: null,
+    children,
+    members,
+  }
+}
 ```
 
 **After:**
+
 ```ts
-  if (yearMonth) {
-    // Filter to a specific calendar month — used by the month overflow page.
-    // Uses the same cursor format as the main timeline for consistent pagination.
-    const PAGE_SIZE = 24
-    const parts = yearMonth.split('-')
-    const yearNum = Number(parts[0])
-    const monthNum = Number(parts[1])
-    const from = new Date(Date.UTC(yearNum, monthNum - 1, 1)).toISOString()
-    const to = new Date(Date.UTC(yearNum, monthNum, 1)).toISOString()
-    query = query.gte("memory_date", from).lt("memory_date", to).limit(PAGE_SIZE + 1)
+if (yearMonth) {
+  // Filter to a specific calendar month — used by the month overflow page.
+  // Uses the same cursor format as the main timeline for consistent pagination.
+  const PAGE_SIZE = 24
+  const parts = yearMonth.split('-')
+  const yearNum = Number(parts[0])
+  const monthNum = Number(parts[1])
+  const from = new Date(Date.UTC(yearNum, monthNum - 1, 1)).toISOString()
+  const to = new Date(Date.UTC(yearNum, monthNum, 1)).toISOString()
+  query = query
+    .gte('memory_date', from)
+    .lt('memory_date', to)
+    .limit(PAGE_SIZE + 1)
 
-    if (cursor) {
-      const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(",")
-      query = (query as any).or(
-        [
-          `memory_date.lt.${cursorDate}`,
-          `and(memory_date.eq.${cursorDate},created_at.lt.${cursorCreatedAt})`,
-          `and(memory_date.eq.${cursorDate},created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
-        ].join(",")
-      )
-    }
-
-    const { data: memories, error } = await query
-    if (error) {
-      console.error("[timeline] month query failed:", error.message)
-      throw createError({ statusCode: 500, message: "Failed to load timeline." })
-    }
-
-    const withUrls = await attachSignedUrls(supabase, memories ?? [])
-    const hasMore = withUrls.length > PAGE_SIZE
-    const page = withUrls.slice(0, PAGE_SIZE)
-    const last = page[page.length - 1]
-    const nextCursor = hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
-    return { memories: page, nextCursor, children, members }
+  if (cursor) {
+    const [cursorDate, cursorCreatedAt, cursorId] = cursor.split(',')
+    query = (query as any).or(
+      [
+        `memory_date.lt.${cursorDate}`,
+        `and(memory_date.eq.${cursorDate},created_at.lt.${cursorCreatedAt})`,
+        `and(memory_date.eq.${cursorDate},created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
+      ].join(','),
+    )
   }
+
+  const { data: memories, error } = await query
+  if (error) {
+    console.error('[timeline] month query failed:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
+  }
+
+  const withUrls = await attachSignedUrls(supabase, memories ?? [])
+  const hasMore = withUrls.length > PAGE_SIZE
+  const page = withUrls.slice(0, PAGE_SIZE)
+  const last = page[page.length - 1]
+  const nextCursor = hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
+  return { memories: page, nextCursor, children, members }
+}
 ```
 
 - [ ] **Step 4: Run unit tests**
@@ -144,6 +156,7 @@ git commit -m "feat(month-page): add cursor pagination to yearMonth API branch (
 ## Task 2: Add load-more UI to the month page
 
 **Files:**
+
 - Modify: `app/pages/timeline/[year]/[month].vue`
 
 ### Background
@@ -266,54 +279,54 @@ onMounted(() => fetchPage())
 Replace the `<main>` block in the template section of `app/pages/timeline/[year]/[month].vue`. The full updated template from `<main>` onward (the header stays unchanged):
 
 ```html
-    <main class="max-w-[1280px] mx-auto px-5 py-6">
+<main class="mx-auto max-w-[1280px] px-5 py-6">
+  <!-- Loading -->
+  <div v-if="loading" class="flex justify-center py-32">
+    <div class="flex flex-col items-center gap-3">
+      <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
+    </div>
+  </div>
 
-      <!-- Loading -->
-      <div v-if="loading" class="flex justify-center py-32">
-        <div class="flex flex-col items-center gap-3">
-          <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
-        </div>
-      </div>
+  <!-- Empty -->
+  <div v-else-if="memories.length === 0" class="py-32 text-center">
+    <p class="text-sm text-muted-foreground">
+      {{ t('timeline.noMemoriesFor', { month: monthLabel }) }}
+    </p>
+  </div>
 
-      <!-- Empty -->
-      <div v-else-if="memories.length === 0" class="text-center py-32">
-        <p class="text-sm text-muted-foreground">{{ t('timeline.noMemoriesFor', { month: monthLabel }) }}</p>
-      </div>
+  <!-- Polaroid grid -->
+  <div v-else>
+    <p class="mb-6 text-xs text-muted-foreground">{{ t('timeline.memories', memories.length) }}</p>
+    <div class="flex flex-wrap items-start gap-5">
+      <template v-for="(memory, i) in memories" :key="memory.id">
+        <QuickNoteCard
+          v-if="!memory.memorymedia.length && memory.note"
+          :memory="memory"
+          :index="i"
+          @open="onOpenMemory"
+          @reaction-update="onReactionUpdate"
+        />
+        <PolaroidCard
+          v-else
+          :memory="memory"
+          :index="i"
+          :wide="isWideMemory(memory.id)"
+          @open="onOpenMemory"
+          @reaction-update="onReactionUpdate"
+        />
+      </template>
+    </div>
 
-      <!-- Polaroid grid -->
-      <div v-else>
-        <p class="text-xs text-muted-foreground mb-6">
-          {{ t('timeline.memories', memories.length) }}
-        </p>
-        <div class="flex flex-wrap gap-5 items-start">
-          <template v-for="(memory, i) in memories" :key="memory.id">
-            <QuickNoteCard
-              v-if="!memory.memorymedia.length && memory.note"
-              :memory="memory"
-              :index="i"
-              @open="onOpenMemory"
-              @reaction-update="onReactionUpdate"
-            />
-            <PolaroidCard
-              v-else
-              :memory="memory"
-              :index="i"
-              :wide="isWideMemory(memory.id)"
-              @open="onOpenMemory"
-              @reaction-update="onReactionUpdate"
-            />
-          </template>
-        </div>
-
-        <!-- Infinite scroll sentinel + load-more spinner -->
-        <div ref="loadMoreEl" class="h-8 mt-4" />
-        <div v-if="loadingMore" class="flex justify-center py-4">
-          <div class="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-        </div>
-      </div>
-
-    </main>
+    <!-- Infinite scroll sentinel + load-more spinner -->
+    <div ref="loadMoreEl" class="mt-4 h-8" />
+    <div v-if="loadingMore" class="flex justify-center py-4">
+      <div
+        class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
+      />
+    </div>
+  </div>
+</main>
 ```
 
 - [ ] **Step 3: Run unit tests to verify no regressions**
@@ -336,6 +349,7 @@ git commit -m "feat(month-page): add infinite scroll load-more to month overflow
 ## Task 3: Update E2E tests for the month page
 
 **Files:**
+
 - Modify: `tests/month-overflow.spec.ts`
 
 ### Background
@@ -357,86 +371,98 @@ Also: update the existing `mockTimelineWithNote` helper to include `memorycommen
 Add these helpers and the new test inside the existing `test.describe('Month overflow page (/timeline/[year]/[month])', () => {` block, after the last test:
 
 ```ts
-  // ── Load-more pagination ─────────────────────────────────────────────────────
+// ── Load-more pagination ─────────────────────────────────────────────────────
 
-  test('scrolling to bottom loads the next page and appends memories', async ({ page }) => {
-    await mockMembership(page)
-    await mockCirclesList(page)
+test('scrolling to bottom loads the next page and appends memories', async ({ page }) => {
+  await mockMembership(page)
+  await mockCirclesList(page)
 
-    // Generate 24 stub memories for the first page
-    const page1Memories = Array.from({ length: 24 }, (_, i) => ({
-      id: `memory-${String(i).padStart(3, '0')}`,
-      owner_user_id: '00000000-dead-beef-0000-000000000001',
-      circle_id: CIRCLE_ID,
-      note: null,
-      milestone_label: null,
-      memory_date: `2024-06-${String(15 - Math.floor(i / 2)).padStart(2, '0')}`,
-      visibility: 'circle',
-      former_owner_name: null,
-      former_owner_user_id: null,
-      memorymedia: [],
-      memoryreaction: [],
-      memorycomment: [],
-      memory_children: [],
-      memory_members: [],
-      user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
-    }))
+  // Generate 24 stub memories for the first page
+  const page1Memories = Array.from({ length: 24 }, (_, i) => ({
+    id: `memory-${String(i).padStart(3, '0')}`,
+    owner_user_id: '00000000-dead-beef-0000-000000000001',
+    circle_id: CIRCLE_ID,
+    note: null,
+    milestone_label: null,
+    memory_date: `2024-06-${String(15 - Math.floor(i / 2)).padStart(2, '0')}`,
+    visibility: 'circle',
+    former_owner_name: null,
+    former_owner_user_id: null,
+    memorymedia: [],
+    memoryreaction: [],
+    memorycomment: [],
+    memory_children: [],
+    memory_members: [],
+    user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
+  }))
 
-    // 3 extra memories for the second page
-    const page2Memories = Array.from({ length: 3 }, (_, i) => ({
-      id: `memory-extra-${i}`,
-      owner_user_id: '00000000-dead-beef-0000-000000000001',
-      circle_id: CIRCLE_ID,
-      note: `Extra note ${i}`,
-      milestone_label: null,
-      memory_date: '2024-06-01',
-      visibility: 'circle',
-      former_owner_name: null,
-      former_owner_user_id: null,
-      memorymedia: [],
-      memoryreaction: [],
-      memorycomment: [],
-      memory_children: [],
-      memory_members: [],
-      user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
-    }))
+  // 3 extra memories for the second page
+  const page2Memories = Array.from({ length: 3 }, (_, i) => ({
+    id: `memory-extra-${i}`,
+    owner_user_id: '00000000-dead-beef-0000-000000000001',
+    circle_id: CIRCLE_ID,
+    note: `Extra note ${i}`,
+    milestone_label: null,
+    memory_date: '2024-06-01',
+    visibility: 'circle',
+    former_owner_name: null,
+    former_owner_user_id: null,
+    memorymedia: [],
+    memoryreaction: [],
+    memorycomment: [],
+    memory_children: [],
+    memory_members: [],
+    user: { first_name: 'Alice', last_name: 'Smith', avatar_url: null },
+  }))
 
-    let page2Fetched = false
+  let page2Fetched = false
 
-    await page.route('**/api/timeline**', (route) => {
-      const url = new URL(route.request().url())
-      const cursor = url.searchParams.get('cursor')
-      if (cursor === 'cursor-page-2') {
-        page2Fetched = true
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ memories: page2Memories, nextCursor: null, children: [], members: [] }),
-        })
-      }
-      // First page
+  await page.route('**/api/timeline**', (route) => {
+    const url = new URL(route.request().url())
+    const cursor = url.searchParams.get('cursor')
+    if (cursor === 'cursor-page-2') {
+      page2Fetched = true
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: page1Memories, nextCursor: 'cursor-page-2', children: [], members: [] }),
+        body: JSON.stringify({
+          memories: page2Memories,
+          nextCursor: null,
+          children: [],
+          members: [],
+        }),
       })
+    }
+    // First page
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        memories: page1Memories,
+        nextCursor: 'cursor-page-2',
+        children: [],
+        members: [],
+      }),
     })
-
-    await page.goto('/timeline/2024/06')
-
-    // Wait for first page to render — count label should show 24
-    await expect(page.getByText(/24 memories|memories/i)).toBeVisible({ timeout: 10_000 })
-
-    // Scroll the IntersectionObserver sentinel into view
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-
-    // Wait for the second API call to fire
-    await page.waitForFunction(() => document.querySelectorAll('article').length >= 24, { timeout: 10_000 })
-
-    // Verify second-page memories were appended (total ≥ 24, second-page note visible)
-    expect(page2Fetched).toBe(true)
-    await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
   })
+
+  await page.goto('/timeline/2024/06')
+
+  // Wait for first page to render — count label should show 24
+  await expect(page.getByText(/24 memories|memories/i)).toBeVisible({ timeout: 10_000 })
+
+  // Scroll the IntersectionObserver sentinel into view
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+
+  // Wait for the second API call to fire
+  await page.waitForFunction(() => document.querySelectorAll('article').length >= 24, {
+    timeout: 10_000,
+  })
+
+  // Verify second-page memories were appended (total ≥ 24, second-page note visible)
+  expect(page2Fetched).toBe(true)
+  await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
+})
 ```
 
 - [ ] **Step 2: Also fix `memorycomment` missing from existing `QUICK_NOTE_MEMORY` fixture**
@@ -495,6 +521,7 @@ git commit -m "test(month-page): add E2E test for load-more pagination"
 **Placeholder scan:** None found.
 
 **Type consistency:**
+
 - `nextCursor: string | null` used consistently in API response shape and `ref<string | null>(null)`.
 - `fetchPage(cursor?: string)` signature consistent with all call sites.
 - `PAGE_SIZE = 24` defined once in the API — client never needs to know the page size.

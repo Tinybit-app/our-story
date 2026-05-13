@@ -1,17 +1,14 @@
 <template>
-  <div class="min-h-screen bg-background flex items-center justify-center px-6">
+  <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-
       <!-- Wordmark -->
-      <p class="text-xs font-bold tracking-widest text-foreground mb-4 uppercase">
-        Our Story
-      </p>
+      <p class="mb-4 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
 
       <!-- Headline -->
-      <h1 class="font-display text-[1.625rem] font-bold leading-tight text-foreground mb-2">
+      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
         {{ t('login.tagline') }}
       </h1>
-      <p class="text-sm text-muted-foreground mb-8">
+      <p class="mb-8 text-sm text-muted-foreground">
         {{ t('login.subtitle') }}
       </p>
 
@@ -22,39 +19,48 @@
           type="email"
           placeholder="your@email.com"
           required
-          class="w-full bg-card border border-border rounded-[12px] px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-2.5"
+          class="mb-2.5 w-full rounded-[12px] border border-border bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-primary text-primary-foreground rounded-[12px] py-3.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+          class="w-full rounded-[12px] bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {{ loading ? t('login.sending') : t('login.continueWithEmail') }}
         </button>
       </form>
 
       <!-- Error message -->
-      <p v-if="authError" class="mt-4 text-sm text-center text-destructive font-medium">
+      <p v-if="authError" class="mt-4 text-center text-sm font-medium text-destructive">
         {{ authError }}
       </p>
 
       <!-- Success state -->
-      <div v-if="sent" class="mt-6 rounded-[12px] bg-card border border-border px-5 py-4 text-center">
-        <p class="text-sm font-semibold text-foreground mb-1">{{ t('login.checkInbox') }}</p>
-        <p class="text-xs text-muted-foreground leading-relaxed">
+      <div
+        v-if="sent"
+        class="mt-6 rounded-[12px] border border-border bg-card px-5 py-4 text-center"
+      >
+        <p class="mb-1 text-sm font-semibold text-foreground">{{ t('login.checkInbox') }}</p>
+        <p class="text-xs leading-relaxed text-muted-foreground">
           {{ t('login.sentLink', { email }) }}
         </p>
         <button
           type="button"
-          class="mt-3 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
-          @click="sent = false; authError = null"
+          class="mt-3 text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
+          @click="
+            sent = false
+            authError = null
+          "
         >
           {{ t('login.tryDifferent') }}
         </button>
       </div>
 
       <!-- Footer note -->
-      <p v-else-if="!authError" class="mt-4 text-[11px] text-center text-muted-foreground leading-relaxed">
+      <p
+        v-else-if="!authError"
+        class="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground"
+      >
         {{ t('login.noPassword') }}
       </p>
 
@@ -62,7 +68,6 @@
       <div class="mt-8 flex justify-center">
         <LocalePicker />
       </div>
-
     </div>
   </div>
 </template>
@@ -100,5 +105,4 @@ async function submitEmail() {
   }
   loading.value = false
 }
-
 </script>

@@ -40,12 +40,14 @@ const PHOTO_MEMORY = {
   milestone_label: null,
   milestone_is_custom: false,
   created_at: '2024-06-15T00:00:00.000Z',
-  memorymedia: [{
-    id: 'media-1',
-    url: 'https://example.com/photo.jpg',
-    thumbnailUrl: 'https://example.com/photo-thumb.jpg',
-    media_type: 'image',
-  }],
+  memorymedia: [
+    {
+      id: 'media-1',
+      url: 'https://example.com/photo.jpg',
+      thumbnailUrl: 'https://example.com/photo-thumb.jpg',
+      media_type: 'image',
+    },
+  ],
   user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
   memoryreaction: [],
   memorycomment: [],
@@ -77,7 +79,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -88,14 +90,16 @@ function mockCircles(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -107,13 +111,17 @@ function mockTimeline(page: any, memories: any[]) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
 function mockReactions(page: any, memoryId: string) {
   return page.route(`**/api/memories/${memoryId}/reactions**`, (route: any) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ reactions: [] }) })
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ reactions: [] }),
+    }),
   )
 }
 
@@ -131,7 +139,6 @@ function mockComments(page: any, memoryId: string, comments: any[] = []) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Comments (8.1)', () => {
-
   test('comments load when MemoryModal opens', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
@@ -187,17 +194,23 @@ test.describe('Comments (8.1)', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            comments: [{
-              id: 'comment-new',
-              body: postBody.body,
-              created_at: new Date().toISOString(),
-              user_id: MY_USER_ID,
-              user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
-            }],
+            comments: [
+              {
+                id: 'comment-new',
+                body: postBody.body,
+                created_at: new Date().toISOString(),
+                user_id: MY_USER_ID,
+                user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
+              },
+            ],
           }),
         })
       } else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) })
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ comments: [] }),
+        })
       }
     })
 
@@ -207,7 +220,9 @@ test.describe('Comments (8.1)', () => {
 
     await page.locator('textarea[placeholder*="comment" i]').fill('Such a lovely day!')
     // Use evaluate to bypass the MemoryShell backdrop overlay intercepting pointer events
-    await page.getByRole('button', { name: /^post$/i }).evaluate((btn: HTMLButtonElement) => btn.click())
+    await page
+      .getByRole('button', { name: /^post$/i })
+      .evaluate((btn: HTMLButtonElement) => btn.click())
 
     await page.waitForTimeout(800)
     expect(postBody).toMatchObject({ body: 'Such a lovely day!' })
@@ -250,7 +265,10 @@ test.describe('Comments (8.1)', () => {
     if (deleteBtnCount > 0) {
       // At least one delete button visible — must belong to MY_USER_ID comment
       // The other user's comment must have no delete button
-      const theirDeleteBtn = page.locator('div.group\\/comment').filter({ hasText: 'Someone else comment' }).getByTitle('Delete comment')
+      const theirDeleteBtn = page
+        .locator('div.group\\/comment')
+        .filter({ hasText: 'Someone else comment' })
+        .getByTitle('Delete comment')
       await expect(theirDeleteBtn).not.toBeAttached()
     }
     // If no delete buttons are visible the auth user does not own any comment — skip ownership assertion
@@ -276,7 +294,11 @@ test.describe('Comments (8.1)', () => {
     await page.route(`**/api/memories/${MEMORY_ID}/comments/my-comment`, async (route) => {
       if (route.request().method() === 'DELETE') {
         deleteCalled = true
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) })
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true }),
+        })
       } else {
         await route.continue()
       }
@@ -292,11 +314,16 @@ test.describe('Comments (8.1)', () => {
     const deleteBtnCount = await page.getByTitle('Delete comment').count()
     if (deleteBtnCount > 0) {
       // Trash button triggers inline confirmation, not immediate delete
-      await page.getByTitle('Delete comment').first().evaluate((btn: HTMLButtonElement) => btn.click())
+      await page
+        .getByTitle('Delete comment')
+        .first()
+        .evaluate((btn: HTMLButtonElement) => btn.click())
       // Confirmation row should appear
       await expect(page.getByText(/Delete this comment\?/i)).toBeVisible({ timeout: 3_000 })
       // Confirm — calls DELETE
-      await page.getByRole('button', { name: /^delete$/i }).evaluate((btn: HTMLButtonElement) => btn.click())
+      await page
+        .getByRole('button', { name: /^delete$/i })
+        .evaluate((btn: HTMLButtonElement) => btn.click())
       await page.waitForTimeout(500)
       expect(deleteCalled).toBe(true)
       await expect(page.getByText('Comment to delete')).not.toBeVisible({ timeout: 3_000 })
@@ -339,17 +366,23 @@ test.describe('Comments (8.1)', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            comments: [{
-              id: 'qn-comment-new',
-              body: postBody.body,
-              created_at: new Date().toISOString(),
-              user_id: MY_USER_ID,
-              user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
-            }],
+            comments: [
+              {
+                id: 'qn-comment-new',
+                body: postBody.body,
+                created_at: new Date().toISOString(),
+                user_id: MY_USER_ID,
+                user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
+              },
+            ],
           }),
         })
       } else {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) })
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ comments: [] }),
+        })
       }
     })
 
@@ -364,5 +397,4 @@ test.describe('Comments (8.1)', () => {
     await page.waitForTimeout(500)
     expect(postBody).toMatchObject({ body: 'Amazing milestone!' })
   })
-
 })

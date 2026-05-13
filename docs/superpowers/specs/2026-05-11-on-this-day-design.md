@@ -5,7 +5,7 @@
 Daily Edge Function that surfaces nostalgia memories from past years to all circle members. Two branches:
 
 - **Above threshold** (`memory_count >= 30 AND first_memory_at <= now() - 90 days`) — find any memory whose `memory_date` matches today's MM-DD from a past year; send daily push notification.
-- **Below threshold** — substitute a *"A memory from your first month"* notification (oldest memory in circle), sent max once per week.
+- **Below threshold** — substitute a _"A memory from your first month"_ notification (oldest memory in circle), sent max once per week.
 
 This is the spec's "#1 retention driver." The in-app carousel surface is explicitly Phase 3; only push + below-threshold email are in scope for Phase 1.
 
@@ -104,11 +104,13 @@ Per-circle and per-recipient errors caught and logged.
 ```
 
 Title locales:
+
 - en: `"On this day, {yearsAgo} year{s} ago"` (handles singular for 1 year)
 - zh-CN: `"{yearsAgo} 年前的今天"`
 - fr: `"Il y a {yearsAgo} an{s} aujourd'hui"`
 
 Body locales:
+
 - en: memory note truncated to 80 chars, fallback: `"{firstName} added a memory"`
 - zh-CN: same, fallback: `"{firstName} 添加了一条记忆"`
 - fr: same, fallback: `"{firstName} a ajouté un souvenir"`
@@ -188,7 +190,7 @@ No new RLS — service-role-only writes from the Edge Function. Owner-only reads
 - **Circle with `first_memory_at IS NULL`** → excluded (no memories at all)
 - **Soft-deleted circle** → excluded
 - **All-time memory_count is 30+ but `first_memory_at` is recent (e.g., circle created yesterday with 30 imported memories on the same day)** → still below threshold per `first_memory_at <= now() - 90 days`. The 90-day gate guarantees enough historical breadth, not just count.
-- **Memory match falls on the same calendar year as today** → excluded by `EXTRACT(year FROM memory_date) < thisYear`. We only surface memories from *past* years.
+- **Memory match falls on the same calendar year as today** → excluded by `EXTRACT(year FROM memory_date) < thisYear`. We only surface memories from _past_ years.
 - **Leap day (Feb 29)** → memories with `memory_date = Feb 29` only match on actual Feb 29s. We accept this — no Feb 28 fallback for the above-threshold case. (For Feb 29 birthday anniversaries, see §12.2 milestones.)
 - **No reaction-based ranking** — pick by oldest year, not most-reacted. Simplest and most nostalgic.
 - **Quiet hours** — skip push silently for both branches (consistent with §12.2, §12.4)
@@ -198,16 +200,20 @@ No new RLS — service-role-only writes from the Edge Function. Owner-only reads
 ## 7. Testing
 
 ### Unit tests
+
 - `unit/onThisDayCopy.test.ts` — push title/body locale variants, year pluralisation, note truncation, fallback when note is null
 - `unit/firstMonthMemoryEmail.test.ts` — subject + body + locale variants
 
 ### Schema compliance
+
 - `unit/schema-compliance.test.ts` — verify migration 034 adds the column
 
 ### No new RLS tests
+
 - New column has no RLS surface (service-role only).
 
 ### Manual verification
+
 1. Create a circle with `first_memory_at` 100 days ago, `memory_count = 35`. Insert a memory with `memory_date` exactly 1 year ago today (matching MM-DD).
 2. Trigger: `curl -X POST $SUPABASE_URL/functions/v1/send-on-this-day -H "Authorization: Bearer $SERVICE_ROLE_KEY"`
 3. Verify push log: `[dev] on-this-day push to user_X: On this day, 1 year ago`

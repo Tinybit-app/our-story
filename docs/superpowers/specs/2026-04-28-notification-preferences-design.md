@@ -19,6 +19,7 @@ Add a dedicated `/notification-settings` page accessible to all circle members f
 **Page layout:** Standard app page — `max-w-[1280px] mx-auto`, sticky header with back button. Same pattern as `circle-settings.vue`.
 
 **Navigation entry points:**
+
 - Timeline header: bell icon next to the existing circle settings gear icon. Visible to **all members** (the gear is owner-only). Links to `/notification-settings`.
 - Remove the notification toggles section from `circle-settings.vue` (added in 10.1). Replace with nothing — the bell icon in the timeline header is the entry point.
 
@@ -36,12 +37,14 @@ Circle list comes from the existing membership data (same source as the circle s
 Three settings per circle, displayed in a card-style section:
 
 ### Push notifications
+
 - On/off toggle
 - Label: "Push notifications"
 - Description: "Get notified when members share memories, comment, or react."
 - Maps to `NotificationPreference.push_enabled`
 
 ### Mute this circle
+
 - On/off toggle
 - Label: "Mute this circle"
 - Description: "Pause all notifications from this circle."
@@ -49,6 +52,7 @@ Three settings per circle, displayed in a card-style section:
 - When enabled, show a subtle note below: "Push notifications and email digests from this circle are paused."
 
 ### Email digest
+
 - Segmented control with three options: **Weekly** / **Monthly** / **Off**
 - Label: "Email digest"
 - Description: "A summary of new memories and activity."
@@ -65,6 +69,7 @@ Three settings per circle, displayed in a card-style section:
 ## 5. Empty State / Defaults
 
 If no `NotificationPreference` row exists for a (user, circle) pair, the UI shows defaults:
+
 - Push notifications: on
 - Mute: off
 - Email digest: monthly
@@ -93,6 +98,7 @@ Validation in API routes: `z.enum(['weekly', 'monthly', 'off'])` — `'daily'` i
 ## 8. i18n
 
 New keys under `"notificationSettings"`:
+
 - Page title, circle selector label
 - Push/mute/digest labels and descriptions
 - Mute active note

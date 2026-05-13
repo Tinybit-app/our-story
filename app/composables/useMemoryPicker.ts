@@ -5,7 +5,7 @@ export interface MemoryItem {
   memory_date: string
   signedUrl: string | null
   thumbnailUrl: string | null
-  mediaType: "image" | "video" | null
+  mediaType: 'image' | 'video' | null
   note: string | null
 }
 
@@ -53,14 +53,14 @@ export function useMemoryPicker(circleId: Ref<string>) {
   }
 
   function monthName(month: number): string {
-    return new Date(2000, month - 1).toLocaleString(locale.value, { month: "long" })
+    return new Date(2000, month - 1).toLocaleString(locale.value, { month: 'long' })
   }
 
   function formatTileDate(dateStr: string): string {
     const d = dateStr.substring(0, 10)
-    return new Date(d + "T12:00:00").toLocaleDateString(locale.value, {
-      month: "short",
-      day: "numeric",
+    return new Date(d + 'T12:00:00').toLocaleDateString(locale.value, {
+      month: 'short',
+      day: 'numeric',
     })
   }
 
@@ -98,23 +98,23 @@ export function useMemoryPicker(circleId: Ref<string>) {
     return s !== undefined && s.sel > 0 && s.sel < s.total
   }
 
-  function isMonthSelected(year: number, month: number): "full" | "partial" | "none" {
+  function isMonthSelected(year: number, month: number): 'full' | 'partial' | 'none' {
     const s = selectionStats.value.byYM.get(`${year}-${month}`)
-    if (!s || s.sel === 0) return "none"
-    return s.sel === s.total ? "full" : "partial"
+    if (!s || s.sel === 0) return 'none'
+    return s.sel === s.total ? 'full' : 'partial'
   }
 
   function yearCheckboxClass(year: number): string {
-    if (isYearFullySelected(year)) return "bg-primary border-primary"
-    if (isYearPartiallySelected(year)) return "border-primary bg-primary/10"
-    return "border-border"
+    if (isYearFullySelected(year)) return 'bg-primary border-primary'
+    if (isYearPartiallySelected(year)) return 'border-primary bg-primary/10'
+    return 'border-border'
   }
 
   function monthCheckboxClass(year: number, month: number): string {
     const state = isMonthSelected(year, month)
-    if (state === "full") return "bg-primary border-primary"
-    if (state === "partial") return "border-primary bg-primary/10"
-    return "border-border/60"
+    if (state === 'full') return 'bg-primary border-primary'
+    if (state === 'partial') return 'border-primary bg-primary/10'
+    return 'border-border/60'
   }
 
   // ── Toggle actions ───────────────────────────────────────
@@ -136,7 +136,7 @@ export function useMemoryPicker(circleId: Ref<string>) {
     const monthMems = group.memories.filter((m) => getMonth(m.memory_date) === month)
     const state = isMonthSelected(year, month)
     const s = new Set(selectedMemoryIds.value)
-    if (state === "full") {
+    if (state === 'full') {
       monthMems.forEach((m) => s.delete(m.id))
     } else {
       monthMems.forEach((m) => s.add(m.id))
@@ -188,13 +188,13 @@ export function useMemoryPicker(circleId: Ref<string>) {
   // ── Data loading ─────────────────────────────────────────
   function mapMemory(m: any): MemoryItem {
     const media = m.memorymedia?.[0] ?? null
-    const isVideo = media?.media_type === "video"
+    const isVideo = media?.media_type === 'video'
     return {
       id: m.id,
       memory_date: m.memory_date,
       signedUrl: media?.url ?? null,
       thumbnailUrl: isVideo ? null : (media?.thumbnailUrl ?? null),
-      mediaType: media ? (media.media_type === "video" ? "video" : "image") : null,
+      mediaType: media ? (media.media_type === 'video' ? 'video' : 'image') : null,
       note: m.note ?? null,
     }
   }
@@ -202,7 +202,7 @@ export function useMemoryPicker(circleId: Ref<string>) {
   async function loadYears() {
     yearsLoading.value = true
     try {
-      const data = await $fetch<{ years: number[] }>("/api/timeline/years", {
+      const data = await $fetch<{ years: number[] }>('/api/timeline/years', {
         query: { circleId: circleId.value },
       })
       yearGroups.value = data.years.map((year) => ({
@@ -224,7 +224,7 @@ export function useMemoryPicker(circleId: Ref<string>) {
     if (!group || group.loaded || group.loading) return
     group.loading = true
     try {
-      const data = await $fetch<{ memories: any[]; truncated?: boolean }>("/api/timeline", {
+      const data = await $fetch<{ memories: any[]; truncated?: boolean }>('/api/timeline', {
         query: { circleId: circleId.value, year, limit: 1000 },
       })
       group.memories = (data.memories ?? []).map(mapMemory)
@@ -244,14 +244,14 @@ export function useMemoryPicker(circleId: Ref<string>) {
   }
 
   async function loadMonthComplete(year: number, month: number): Promise<MemoryItem[]> {
-    const ym = `${year}-${String(month).padStart(2, "0")}`
+    const ym = `${year}-${String(month).padStart(2, '0')}`
     const all: MemoryItem[] = []
     let cursor: string | null = null
     let hasMore = true
     while (hasMore) {
       const query: Record<string, string> = { circleId: circleId.value, yearMonth: ym }
       if (cursor) query.cursor = cursor
-      const res = await ($fetch as Function)("/api/timeline", { query }) as {
+      const res = (await ($fetch as Function)('/api/timeline', { query })) as {
         memories: any[]
         nextCursor: string | null
       }

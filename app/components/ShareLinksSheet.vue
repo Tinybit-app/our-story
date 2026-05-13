@@ -12,26 +12,26 @@
   <Transition name="slide-up">
     <div
       v-if="open"
-      class="fixed inset-x-0 bottom-0 z-50 bg-card border-t border-border rounded-t-[24px] shadow-2xl max-h-[85vh] overflow-y-auto pb-safe"
+      class="pb-safe fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-[24px] border-t border-border bg-card shadow-2xl"
     >
       <!-- Handle -->
-      <div class="flex justify-center pt-3 pb-1">
-        <div class="w-10 h-1 rounded-full bg-border" />
+      <div class="flex justify-center pb-1 pt-3">
+        <div class="h-1 w-10 rounded-full bg-border" />
       </div>
 
       <div class="px-5 pb-8">
         <!-- Header -->
         <div class="flex items-center justify-between py-4">
           <h2 class="text-base font-bold text-foreground">
-            {{ t("viewerLink.shareButton") }}
+            {{ t('viewerLink.shareButton') }}
           </h2>
           <button
             @click="$emit('close')"
             :aria-label="t('viewerLink.close')"
-            class="p-1 text-muted-foreground hover:text-foreground transition-colors"
+            class="p-1 text-muted-foreground transition-colors hover:text-foreground"
           >
             <svg
-              class="w-5 h-5"
+              class="h-5 w-5"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -45,66 +45,55 @@
         <!-- Loading -->
         <div v-if="loading" class="py-12 text-center">
           <p class="text-sm text-muted-foreground">
-            {{ t("viewerLink.loading") }}
+            {{ t('viewerLink.loading') }}
           </p>
         </div>
 
         <!-- Error -->
-        <div v-else-if="error" class="text-sm text-destructive p-4">
+        <div v-else-if="error" class="p-4 text-sm text-destructive">
           {{ error }}
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="links.length === 0" class="text-center py-10">
+        <div v-else-if="links.length === 0" class="py-10 text-center">
           <div
-            class="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto mb-4"
+            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-secondary"
           >
             <svg
-              class="w-5 h-5 text-muted-foreground"
+              class="h-5 w-5 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               stroke-width="1.5"
               viewBox="0 0 24 24"
             >
-              <path
-                d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
-              />
-              <path
-                d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
-              />
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
             </svg>
           </div>
-          <p class="text-sm font-semibold text-foreground mb-1">
-            {{ t("viewerLink.emptyHeadline") }}
+          <p class="mb-1 text-sm font-semibold text-foreground">
+            {{ t('viewerLink.emptyHeadline') }}
           </p>
-          <p class="text-xs text-muted-foreground mb-6 max-w-[260px] mx-auto">
-            {{ t("viewerLink.emptyBody") }}
+          <p class="mx-auto mb-6 max-w-[260px] text-xs text-muted-foreground">
+            {{ t('viewerLink.emptyBody') }}
           </p>
           <button
             @click="$emit('create')"
-            class="w-full bg-primary text-primary-foreground rounded-[12px] py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
+            class="w-full rounded-[12px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
-            {{ t("viewerLink.createLink") }}
+            {{ t('viewerLink.createLink') }}
           </button>
         </div>
 
         <!-- Link list -->
         <div v-else class="flex flex-col gap-3">
-          <div
-            v-for="link in links"
-            :key="link.id"
-            class="border border-border rounded-[16px] p-4"
-          >
+          <div v-for="link in links" :key="link.id" class="rounded-[16px] border border-border p-4">
             <!-- Label (editable) + mode badge -->
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <div
-                v-if="editingLabelId === link.id"
-                class="flex-1 flex items-center gap-1.5"
-              >
+            <div class="mb-2 flex items-start justify-between gap-2">
+              <div v-if="editingLabelId === link.id" class="flex flex-1 items-center gap-1.5">
                 <input
                   v-model="editingLabelValue"
                   type="text"
-                  class="flex-1 h-7 px-2 rounded-lg bg-secondary border border-border text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  class="h-7 flex-1 rounded-lg border border-border bg-secondary px-2 text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   @keydown.enter="saveLabel(link)"
                   @keydown.escape="editingLabelId = null"
                   ref="labelInputRef"
@@ -113,14 +102,14 @@
                   type="button"
                   @click="saveLabel(link)"
                   :disabled="!editingLabelValue.trim() || savingLabel"
-                  class="h-7 px-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40"
+                  class="h-7 rounded-lg bg-primary px-2 text-xs font-semibold text-primary-foreground disabled:opacity-40"
                 >
-                  {{ savingLabel ? "…" : "✓" }}
+                  {{ savingLabel ? '…' : '✓' }}
                 </button>
                 <button
                   type="button"
                   @click="editingLabelId = null"
-                  class="h-7 px-2 rounded-lg bg-secondary text-muted-foreground text-xs font-semibold"
+                  class="h-7 rounded-lg bg-secondary px-2 text-xs font-semibold text-muted-foreground"
                 >
                   ✕
                 </button>
@@ -129,11 +118,11 @@
                 v-else
                 type="button"
                 @click="startEditLabel(link)"
-                class="text-sm font-semibold text-foreground leading-snug text-left hover:text-primary transition-colors group flex items-center gap-1"
+                class="group flex items-center gap-1 text-left text-sm font-semibold leading-snug text-foreground transition-colors hover:text-primary"
               >
                 {{ link.label }}
                 <svg
-                  class="w-3 h-3 text-muted-foreground transition-opacity flex-shrink-0"
+                  class="h-3 w-3 flex-shrink-0 text-muted-foreground transition-opacity"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
@@ -145,47 +134,42 @@
                 </svg>
               </button>
               <span
-                class="flex-shrink-0 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full"
+                class="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                 :class="
                   link.isExpired
                     ? 'bg-destructive/10 text-destructive'
                     : 'bg-secondary text-muted-foreground'
                 "
               >
-                {{ link.isExpired ? t("viewerLink.expired") : modeBadge(link) }}
+                {{ link.isExpired ? t('viewerLink.expired') : modeBadge(link) }}
               </span>
             </div>
 
             <!-- Count subline -->
-            <p
-              v-if="linkSubline(link)"
-              class="text-xs text-muted-foreground mb-2"
-            >
+            <p v-if="linkSubline(link)" class="mb-2 text-xs text-muted-foreground">
               {{ linkSubline(link) }}
             </p>
 
             <!-- Preview strip -->
-            <div v-if="link.previews.length > 0" class="flex gap-1 mb-3">
+            <div v-if="link.previews.length > 0" class="mb-3 flex gap-1">
               <div
                 v-for="(preview, i) in link.previews"
                 :key="i"
-                class="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0 relative"
+                class="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-secondary"
               >
                 <!-- Image -->
                 <img
                   v-if="preview.type === 'image' && preview.url"
                   :src="preview.url"
                   alt=""
-                  class="w-full h-full object-cover"
+                  class="h-full w-full object-cover"
                   loading="lazy"
                 />
                 <!-- Video -->
                 <template v-else-if="preview.type === 'video'">
-                  <div
-                    class="w-full h-full bg-muted flex items-center justify-center"
-                  >
+                  <div class="flex h-full w-full items-center justify-center bg-muted">
                     <svg
-                      class="w-3.5 h-3.5 text-muted-foreground"
+                      class="h-3.5 w-3.5 text-muted-foreground"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -196,10 +180,10 @@
                 <!-- Quick note -->
                 <template v-else-if="preview.type === 'note'">
                   <div
-                    class="w-full h-full bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center"
+                    class="flex h-full w-full items-center justify-center bg-amber-50 dark:bg-amber-950/30"
                   >
                     <svg
-                      class="w-3.5 h-3.5 text-amber-500"
+                      class="h-3.5 w-3.5 text-amber-500"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
@@ -213,10 +197,8 @@
                 </template>
               </div>
               <div
-                v-if="
-                  link.memoryCount && link.memoryCount > link.previews.length
-                "
-                class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0"
+                v-if="link.memoryCount && link.memoryCount > link.previews.length"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary"
               >
                 <span class="text-[10px] font-semibold text-muted-foreground"
                   >+{{ link.memoryCount - link.previews.length }}</span
@@ -228,13 +210,13 @@
             <div class="mb-3">
               <span
                 v-if="link.isExpired"
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-destructive/10 text-destructive"
+                class="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive"
               >
-                {{ t("viewerLink.expired") }}
+                {{ t('viewerLink.expired') }}
               </span>
               <p v-else class="text-xs text-muted-foreground">
                 {{
-                  t("viewerLink.expires", {
+                  t('viewerLink.expires', {
                     date: formatExpiry(link.expiresAt),
                   })
                 }}
@@ -242,34 +224,31 @@
             </div>
 
             <!-- Created date -->
-            <p class="text-xs text-muted-foreground mb-3">
+            <p class="mb-3 text-xs text-muted-foreground">
               {{ formatDate(link.createdAt) }}
             </p>
 
             <!-- Inline revoke confirmation -->
-            <div
-              v-if="revokingId === link.id"
-              class="mt-2 p-3 bg-muted rounded-md"
-            >
-              <p class="text-sm font-medium mb-1">
-                {{ t("viewerLink.revokeConfirm") }}
+            <div v-if="revokingId === link.id" class="mt-2 rounded-md bg-muted p-3">
+              <p class="mb-1 text-sm font-medium">
+                {{ t('viewerLink.revokeConfirm') }}
               </p>
-              <p class="text-xs text-muted-foreground mb-3">
-                {{ t("viewerLink.revokeConfirmBody") }}
+              <p class="mb-3 text-xs text-muted-foreground">
+                {{ t('viewerLink.revokeConfirmBody') }}
               </p>
               <div class="flex gap-2">
                 <button
                   @click="doRevoke(link.id)"
                   :disabled="revoking"
-                  class="h-8 px-3 rounded-[10px] bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                  class="h-8 rounded-[10px] bg-destructive px-3 text-xs font-semibold text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                  {{ t("viewerLink.revoke") }}
+                  {{ t('viewerLink.revoke') }}
                 </button>
                 <button
                   @click="revokingId = null"
-                  class="h-8 px-3 rounded-[10px] bg-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
+                  class="h-8 rounded-[10px] bg-secondary px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary/80"
                 >
-                  {{ t("viewerLink.cancel") }}
+                  {{ t('viewerLink.cancel') }}
                 </button>
               </div>
             </div>
@@ -280,32 +259,28 @@
               <button
                 v-if="!link.isExpired"
                 @click="copyLink(link)"
-                class="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-[10px] bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
+                class="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-secondary text-xs font-semibold text-foreground transition-colors hover:bg-secondary/80"
               >
                 <svg
-                  class="w-3.5 h-3.5"
+                  class="h-3.5 w-3.5"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
                   viewBox="0 0 24 24"
                 >
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path
-                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                  />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
                 <span>{{
-                  copiedId === link.id
-                    ? t("viewerLink.copied")
-                    : t("viewerLink.copyLink")
+                  copiedId === link.id ? t('viewerLink.copied') : t('viewerLink.copyLink')
                 }}</span>
               </button>
               <button
                 v-else
                 @click="$emit('renew', link)"
-                class="flex-1 h-8 rounded-[10px] bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
+                class="h-8 flex-1 rounded-[10px] bg-secondary text-xs font-semibold text-foreground transition-colors hover:bg-secondary/80"
               >
-                {{ t("viewerLink.renew") }}
+                {{ t('viewerLink.renew') }}
               </button>
 
               <!-- Edit (selection links only) -->
@@ -313,10 +288,10 @@
                 v-if="link.mode === 'selection' && !link.isExpired"
                 @click="$emit('edit', link)"
                 :aria-label="t('viewerLink.editLabel')"
-                class="h-8 w-8 flex items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                class="flex h-8 w-8 items-center justify-center rounded-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <svg
-                  class="w-4 h-4"
+                  class="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="1.5"
@@ -332,10 +307,10 @@
               <button
                 @click="revokingId = link.id"
                 :aria-label="t('viewerLink.revokeLabel')"
-                class="h-8 w-8 flex items-center justify-center rounded-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                class="flex h-8 w-8 items-center justify-center rounded-[10px] text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <svg
-                  class="w-4 h-4"
+                  class="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="1.5"
@@ -353,9 +328,9 @@
           <!-- Create another -->
           <button
             @click="$emit('create')"
-            class="w-full h-10 rounded-[12px] border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+            class="h-10 w-full rounded-[12px] border border-dashed border-border text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
           >
-            {{ t("viewerLink.createAnother") }}
+            {{ t('viewerLink.createAnother') }}
           </button>
         </div>
       </div>
@@ -364,154 +339,150 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n();
+const { t } = useI18n()
 
 interface ViewerLink {
-  id: string;
-  mode: "full" | "selection";
-  label: string;
-  expiresAt: string;
-  isExpired: boolean;
-  memoryCount: number | null;
-  memoryIds: string[] | null;
+  id: string
+  mode: 'full' | 'selection'
+  label: string
+  expiresAt: string
+  isExpired: boolean
+  memoryCount: number | null
+  memoryIds: string[] | null
   previews: {
-    type: "image" | "video" | "note";
-    url: string | null;
-    note: string | null;
-  }[];
-  token: string;
-  createdAt: string;
+    type: 'image' | 'video' | 'note'
+    url: string | null
+    note: string | null
+  }[]
+  token: string
+  createdAt: string
 }
 
 const props = defineProps<{
-  open: boolean;
-  circleId: string;
-}>();
+  open: boolean
+  circleId: string
+}>()
 
 const emit = defineEmits<{
-  close: [];
-  create: [];
-  renew: [link: ViewerLink];
-  edit: [link: ViewerLink];
-}>();
+  close: []
+  create: []
+  renew: [link: ViewerLink]
+  edit: [link: ViewerLink]
+}>()
 
-const links = ref<ViewerLink[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
-const revokingId = ref<string | null>(null);
-const revoking = ref(false);
-const copiedId = ref<string | null>(null);
-const editingLabelId = ref<string | null>(null);
-const editingLabelValue = ref("");
-const savingLabel = ref(false);
-const labelInputRef = ref<HTMLInputElement | null>(null);
+const links = ref<ViewerLink[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+const revokingId = ref<string | null>(null)
+const revoking = ref(false)
+const copiedId = ref<string | null>(null)
+const editingLabelId = ref<string | null>(null)
+const editingLabelValue = ref('')
+const savingLabel = ref(false)
+const labelInputRef = ref<HTMLInputElement | null>(null)
 
 async function fetchLinks() {
-  loading.value = true;
-  error.value = null;
+  loading.value = true
+  error.value = null
   try {
-    links.value = await $fetch<ViewerLink[]>(
-      `/api/circles/${props.circleId}/viewer-links`,
-    );
+    links.value = await $fetch<ViewerLink[]>(`/api/circles/${props.circleId}/viewer-links`)
   } catch {
-    error.value = t("viewerLink.loadError");
+    error.value = t('viewerLink.loadError')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-onMounted(fetchLinks);
-watch(() => props.circleId, fetchLinks);
+onMounted(fetchLinks)
+watch(() => props.circleId, fetchLinks)
 
 function startEditLabel(link: ViewerLink) {
-  editingLabelId.value = link.id;
-  editingLabelValue.value = link.label;
-  nextTick(() => labelInputRef.value?.focus());
+  editingLabelId.value = link.id
+  editingLabelValue.value = link.label
+  nextTick(() => labelInputRef.value?.focus())
 }
 
 async function saveLabel(link: ViewerLink) {
-  const trimmed = editingLabelValue.value.trim();
+  const trimmed = editingLabelValue.value.trim()
   if (!trimmed || trimmed === link.label) {
-    editingLabelId.value = null;
-    return;
+    editingLabelId.value = null
+    return
   }
-  savingLabel.value = true;
+  savingLabel.value = true
   try {
     await $fetch(`/api/circles/${props.circleId}/viewer-links/${link.id}`, {
-      method: "PATCH",
+      method: 'PATCH',
       body: { label: trimmed },
-    });
-    link.label = trimmed;
-    editingLabelId.value = null;
+    })
+    link.label = trimmed
+    editingLabelId.value = null
   } catch {
     // Silently fail — user can retry
   } finally {
-    savingLabel.value = false;
+    savingLabel.value = false
   }
 }
 
-defineExpose({ refresh: fetchLinks });
+defineExpose({ refresh: fetchLinks })
 
 function modeBadge(link: ViewerLink): string {
-  if (link.mode === "full") return t("viewerLink.modeFull");
-  return t("viewerLink.modeSelection");
+  if (link.mode === 'full') return t('viewerLink.modeFull')
+  return t('viewerLink.modeSelection')
 }
 
 function linkSubline(link: ViewerLink): string | null {
-  if (link.mode === "selection" && link.memoryCount !== null) {
-    return t("viewerLink.selectedCount", { count: link.memoryCount });
+  if (link.mode === 'selection' && link.memoryCount !== null) {
+    return t('viewerLink.selectedCount', { count: link.memoryCount })
   }
-  return null;
+  return null
 }
 
 function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-    new Date(dateStr),
-  );
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(dateStr))
 }
 
 function formatExpiry(isoStr: string): string {
   return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(isoStr));
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(isoStr))
 }
 
-let copyTimer: ReturnType<typeof setTimeout> | null = null;
+let copyTimer: ReturnType<typeof setTimeout> | null = null
 
 async function copyLink(link: ViewerLink) {
-  const url = `${window.location.origin}/view?token=${link.token}`;
+  const url = `${window.location.origin}/view?token=${link.token}`
   try {
-    await navigator.clipboard.writeText(url);
-    if (copyTimer) clearTimeout(copyTimer);
-    copiedId.value = link.id;
+    await navigator.clipboard.writeText(url)
+    if (copyTimer) clearTimeout(copyTimer)
+    copiedId.value = link.id
     copyTimer = setTimeout(() => {
-      copiedId.value = null;
-    }, 2000);
+      copiedId.value = null
+    }, 2000)
   } catch {
     // Clipboard permission denied — silently ignore, button just won't show feedback
   }
 }
 
 onUnmounted(() => {
-  if (copyTimer) clearTimeout(copyTimer);
-});
+  if (copyTimer) clearTimeout(copyTimer)
+})
 
 async function doRevoke(linkId: string) {
-  if (revoking.value) return;
-  revoking.value = true;
+  if (revoking.value) return
+  revoking.value = true
   try {
     await $fetch(`/api/circles/${props.circleId}/viewer-links/${linkId}`, {
-      method: "DELETE",
-    });
-    revokingId.value = null;
-    await fetchLinks();
+      method: 'DELETE',
+    })
+    revokingId.value = null
+    await fetchLinks()
   } catch {
     // Error is already logged server-side; just close the confirmation
-    revokingId.value = null;
+    revokingId.value = null
   } finally {
-    revoking.value = false;
+    revoking.value = false
   }
 }
 </script>

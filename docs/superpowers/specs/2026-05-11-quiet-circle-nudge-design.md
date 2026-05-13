@@ -88,11 +88,11 @@ Per-circle errors caught and logged; one bad row never aborts the run.
 
 Push copy varies slightly by nudge count (1st nudge is gentle, 3rd is final):
 
-| Count | Title (en) | Body (en) |
-|-------|------------|-----------|
-| 1 (nudge_count was 0 → becomes 1) | "Your story has been quiet 🕰" | "Add a memory to keep it alive →" |
-| 2 | "Your circle is waiting" | "It's been a while — add something this week?" |
-| 3 (final) | "One last reminder" | "Your circle hasn't seen anything new in a month. Add a memory? We won't ask again." |
+| Count                             | Title (en)                     | Body (en)                                                                            |
+| --------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------ |
+| 1 (nudge_count was 0 → becomes 1) | "Your story has been quiet 🕰" | "Add a memory to keep it alive →"                                                    |
+| 2                                 | "Your circle is waiting"       | "It's been a while — add something this week?"                                       |
+| 3 (final)                         | "One last reminder"            | "Your circle hasn't seen anything new in a month. Add a memory? We won't ask again." |
 
 The final nudge being explicit about "we won't ask again" is intentional: it respects the owner's autonomy and prevents the feeling of being badgered.
 
@@ -116,11 +116,11 @@ buildQuietCircleNudgeEmail(opts: {
 
 ### Subject lines (en)
 
-| Count | Subject |
-|-------|---------|
-| 1 | "{circleName} has been quiet for {daysSinceLastMemory} days" |
-| 2 | "It's been a while since anyone added to {circleName}" |
-| 3 | "One last reminder — {circleName}" |
+| Count | Subject                                                      |
+| ----- | ------------------------------------------------------------ |
+| 1     | "{circleName} has been quiet for {daysSinceLastMemory} days" |
+| 2     | "It's been a while since anyone added to {circleName}"       |
+| 3     | "One last reminder — {circleName}"                           |
 
 ### Body
 
@@ -158,6 +158,7 @@ None. `last_memory_at`, `quiet_nudge_count`, `quiet_nudge_last_sent_at` columns 
 ## 7. Testing
 
 ### Unit tests (`unit/quietCircleNudgeEmail.test.ts`)
+
 - Subject + body × 3 counts × 3 locales = 9 cases
 - Tone differentiation (count 1 vs count 3 body wording differs)
 - Includes appUrl + unsubscribeUrl in body
@@ -167,6 +168,7 @@ None. `last_memory_at`, `quiet_nudge_count`, `quiet_nudge_last_sent_at` columns 
 ### No new RLS tests (no new tables)
 
 ### Manual verification
+
 1. Set a circle's `last_memory_at` to 15 days ago in Supabase Studio
 2. Set `first_memory_at` to something non-null and `quiet_nudge_count = 0`
 3. Trigger: `curl -X POST $SUPABASE_URL/functions/v1/send-quiet-circle-nudges -H "Authorization: Bearer $SERVICE_ROLE_KEY"`

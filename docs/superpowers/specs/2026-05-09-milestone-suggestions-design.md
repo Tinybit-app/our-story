@@ -4,7 +4,7 @@
 
 A daily Edge Function (`send-milestone-nudges`) that detects upcoming and recent milestones and prompts circle owner+admins via push, email, and an in-app banner. Three phases per milestone: T-3 (anticipation), T+0 (the day), T+3 (catch-up — only if no memory was uploaded with `milestone_label` set in the window).
 
-The design spec calls this *"the most powerful retention hook in the entire app"*. The T+3 follow-up is the key insight from competitors that don't ship it.
+The design spec calls this _"the most powerful retention hook in the entire app"_. The T+3 follow-up is the key insight from competitors that don't ship it.
 
 ## Decisions
 
@@ -170,8 +170,8 @@ COMMENT ON COLUMN public.Circle.anniversary_date IS
 
 Add a third toggle under each circle's preferences:
 
-| Field | Label | Description |
-|-------|-------|-------------|
+| Field                      | Label                 | Description                                                                           |
+| -------------------------- | --------------------- | ------------------------------------------------------------------------------------- |
 | `milestone_nudges_enabled` | "Milestone reminders" | "Get nudged about upcoming birthdays, anniversaries, and milestones for this circle." |
 
 Same pattern as the existing `push_enabled` and `circle_muted` toggles.
@@ -196,26 +196,28 @@ New component shown on `/timeline` (alongside `PushPromptBanner` and `InstallPro
 ```ts
 interface UpcomingMilestone {
   scopeType: 'child' | 'couple' | 'trip'
-  name: string                  // child's first name, or 'your anniversary', or 'your trip anniversary'
-  milestoneKey: string          // '6mo', 'anniversary_5'
+  name: string // child's first name, or 'your anniversary', or 'your trip anniversary'
+  milestoneKey: string // '6mo', 'anniversary_5'
   phase: 'T-3' | 'T0' | 'T+3'
-  daysUntil: number             // -3..3
-  milestoneLabelSuggestion: string  // "6 months", "5 years", etc. — for upload-form pre-fill
+  daysUntil: number // -3..3
+  milestoneLabelSuggestion: string // "6 months", "5 years", etc. — for upload-form pre-fill
 }
 ```
 
 The server computes this using the same helpers as the Edge Function. Cheap; runs as part of the existing `/api/timeline` query path.
 
 **Banner UX:**
-- T-3: *"Mia turns 6 months in 3 days 🎉"* — `[Add a memory]`
-- T+0: *"Today is Mia's 6-month birthday 🎉"* — `[Add a memory]`
-- T+3: *"Did you capture Mia's 6-month milestone?"* — `[Add now]` `[Dismiss]`
+
+- T-3: _"Mia turns 6 months in 3 days 🎉"_ — `[Add a memory]`
+- T+0: _"Today is Mia's 6-month birthday 🎉"_ — `[Add a memory]`
+- T+3: _"Did you capture Mia's 6-month milestone?"_ — `[Add now]` `[Dismiss]`
 
 **"Add a memory" click:** opens the upload sheet with `milestone_label` pre-populated to `milestoneLabelSuggestion` (e.g., "6 months", "5 years"). Saves typing.
 
 **Dismiss:** session-level via `localStorage[milestone-banner-dismissed-${milestoneKey}]`. Reappears next session if still in window.
 
 **Visibility logic** (computed in the component):
+
 - Hide if `!props.memory.upcomingMilestone`
 - Hide if user has `milestone_nudges_enabled = false` for this circle (need a small fetch to check; or include this in the timeline response)
 - Hide if dismissed for this milestone in localStorage
@@ -257,11 +259,11 @@ buildAnniversaryEmail(opts: {
 
 Subject lines (en — translate to zh-CN/fr same way as existing emails):
 
-| Phase | Children | Couples | Trip |
-|-------|----------|---------|------|
-| T-3 | "Mia turns 6 months on {Day}" | "Your anniversary is in 3 days" | "Your trip anniversary is in 3 days" |
-| T+0 | "Mia is 6 months old today 🎉" | "Happy 5 years 🥂" | "5 years since your trip 🌍" |
-| T+3 | "Did you capture Mia's 6-month milestone?" | "Did you celebrate? Add a memory →" | "Did you mark the trip anniversary?" |
+| Phase | Children                                   | Couples                             | Trip                                 |
+| ----- | ------------------------------------------ | ----------------------------------- | ------------------------------------ |
+| T-3   | "Mia turns 6 months on {Day}"              | "Your anniversary is in 3 days"     | "Your trip anniversary is in 3 days" |
+| T+0   | "Mia is 6 months old today 🎉"             | "Happy 5 years 🥂"                  | "5 years since your trip 🌍"         |
+| T+3   | "Did you capture Mia's 6-month milestone?" | "Did you celebrate? Add a memory →" | "Did you mark the trip anniversary?" |
 
 Body shares the same `layout()` and `primaryButton()` helpers as digest emails, with a single CTA linking to `appUrl` (which the timeline reads to open the upload sheet pre-filled). Footer: standard "manage email preferences" link to `/notification-settings`.
 
@@ -282,25 +284,30 @@ The Deno-side mirror lives in `supabase/functions/send-milestone-nudges/mileston
 ## 7. Testing
 
 ### Unit tests (`unit/milestoneCron.test.ts`)
+
 - `getMilestoneKeyForAgeInDays`: edge cases at month boundaries (29 days = null, 30 days = '1mo'), year boundaries, beyond cap (`>18yr` returns null)
 - `getAnniversaryYear`: same MM-DD different year returns N, leap year edge cases (Feb 29 → next valid Feb 28 in non-leap years), null for date that's not anniversary
 - `getTripAnniversaryYear`: same as anniversary
 
 ### Schema compliance (`unit/schema-compliance.test.ts`)
+
 - Migration 031 creates `MilestoneNudge` with correct columns + unique index + RLS
 - Migration 032 adds `milestone_nudges_enabled` column with default true
 
 ### RLS tests (`supabase/tests/rls.test.sql`)
+
 - User can SELECT own MilestoneNudge rows
 - User cannot SELECT other users' rows
 
 ### E2E (`tests/milestone-banner.spec.ts`)
+
 - Banner renders when API returns `upcomingMilestone`
 - Banner does not render when `milestone_nudges_enabled = false`
 - Click "Add a memory" pre-fills milestone label in upload sheet
 - Dismiss persists across page reload (localStorage)
 
 ### Manual verification checklist (in build plan)
+
 1. Create circle with parents type, add ChildProfile with DOB exactly 6 months ago
 2. Curl the function: `POST /functions/v1/send-milestone-nudges` with service role
 3. Verify console output: dev mode logs push/email per recipient

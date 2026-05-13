@@ -1,0 +1,16 @@
+node_modules
+.nuxt
+.output
+.worktrees
+dist
+build
+coverage
+test-results
+playwright-report
+public
+pnpm-lock.yaml
+*.log
+.env
+.env.*
+.DS_Store
+app/types/database.ts

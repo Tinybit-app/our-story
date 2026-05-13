@@ -37,7 +37,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -48,14 +48,16 @@ function mockCirclesList(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -67,7 +69,7 @@ function mockTimeline(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories: [], nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
@@ -79,7 +81,6 @@ async function goToTimeline(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Quick note (7.3)', () => {
-
   test('"Add memory" button opens the choice sheet', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
@@ -144,7 +145,9 @@ test.describe('Quick note (7.3)', () => {
     await expect(page.getByRole('button', { name: /save note/i })).toBeDisabled({ timeout: 5_000 })
   })
 
-  test('submitting a note calls POST /api/memories/quick-note with correct payload', async ({ page }) => {
+  test('submitting a note calls POST /api/memories/quick-note with correct payload', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimeline(page)
@@ -184,7 +187,7 @@ test.describe('Quick note (7.3)', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ memoryId: MEMORY_ID }),
-      })
+      }),
     )
 
     await goToTimeline(page)
@@ -196,7 +199,6 @@ test.describe('Quick note (7.3)', () => {
     // Form should close
     await expect(page.locator('textarea')).not.toBeVisible({ timeout: 5_000 })
   })
-
 })
 
 // ── QuickNoteModal tests ──────────────────────────────────────────────────────
@@ -228,7 +230,7 @@ function mockTimelineWithNote(page: any) {
         children: [],
         members: [],
       }),
-    })
+    }),
   )
 }
 
@@ -244,7 +246,6 @@ function mockComments(page: any) {
 }
 
 test.describe('QuickNoteModal (7.3 — detail view)', () => {
-
   test('clicking a quick note card opens QuickNoteModal', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
@@ -322,5 +323,4 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
       await expect(page.getByText('First word today: dada').first()).toBeVisible()
     }
   })
-
 })

@@ -1,5 +1,5 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const schema = z.object({
   keepCircleMemories: z.boolean().default(true),
@@ -16,10 +16,10 @@ export default defineEventHandler(async (event) => {
 
   // Resolve ownership for every circle this user owns
   const { data: ownedMemberships } = await supabase
-    .from("circlemember")
-    .select("circle_id, circle:circle_id(name)")
-    .eq("user_id", user.sub)
-    .eq("role", "owner")
+    .from('circlemember')
+    .select('circle_id, circle:circle_id(name)')
+    .eq('user_id', user.sub)
+    .eq('role', 'owner')
 
   const circlesNeedingTransfer: string[] = []
   const promotions: Array<{ newOwnerId: string; circleName: string }> = []
@@ -30,26 +30,29 @@ export default defineEventHandler(async (event) => {
 
     // Find the oldest admin in this circle (excluding the deleting user)
     const { data: oldestAdmin } = await supabase
-      .from("circlemember")
-      .select("user_id")
-      .eq("circle_id", circleId)
-      .eq("role", "admin")
-      .neq("user_id", user.sub)
-      .order("created_at")
+      .from('circlemember')
+      .select('user_id')
+      .eq('circle_id', circleId)
+      .eq('role', 'admin')
+      .neq('user_id', user.sub)
+      .order('created_at')
       .limit(1)
       .maybeSingle()
 
     if (oldestAdmin) {
       // Auto-promote oldest admin to owner
       const { error } = await supabase
-        .from("circlemember")
-        .update({ role: "owner" })
-        .eq("user_id", oldestAdmin.user_id)
-        .eq("circle_id", circleId)
+        .from('circlemember')
+        .update({ role: 'owner' })
+        .eq('user_id', oldestAdmin.user_id)
+        .eq('circle_id', circleId)
 
       if (error) {
-        console.error("[account/delete] auto-promote failed:", error.message)
-        throw createError({ statusCode: 500, message: "Failed to transfer ownership. Please try again." })
+        console.error('[account/delete] auto-promote failed:', error.message)
+        throw createError({
+          statusCode: 500,
+          message: 'Failed to transfer ownership. Please try again.',
+        })
       }
 
       // Notify new owner (best-effort)
@@ -57,10 +60,10 @@ export default defineEventHandler(async (event) => {
     } else {
       // Check for other members (non-admin, non-owner)
       const { count: otherMembers } = await supabase
-        .from("circlemember")
-        .select("*", { count: "exact", head: true })
-        .eq("circle_id", circleId)
-        .neq("user_id", user.sub)
+        .from('circlemember')
+        .select('*', { count: 'exact', head: true })
+        .eq('circle_id', circleId)
+        .neq('user_id', user.sub)
 
       if ((otherMembers ?? 0) > 0) {
         // Has members but no admins — owner must manually transfer before deleting
@@ -73,24 +76,27 @@ export default defineEventHandler(async (event) => {
   if (circlesNeedingTransfer.length > 0) {
     throw createError({
       statusCode: 400,
-      message: "Some circles need a new owner before you can delete your account.",
-      data: { code: "needs_transfer", circles: circlesNeedingTransfer },
+      message: 'Some circles need a new owner before you can delete your account.',
+      data: { code: 'needs_transfer', circles: circlesNeedingTransfer },
     })
   }
 
   const now = new Date().toISOString()
   const { error } = await supabase
-    .from("user")
+    .from('user')
     .update({ deleted_at: now, deletion_requested_at: now })
-    .eq("id", user.sub)
+    .eq('id', user.sub)
 
   if (error) {
-    console.error("[account/delete] update failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to request account deletion. Please try again." })
+    console.error('[account/delete] update failed:', error.message)
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to request account deletion. Please try again.',
+    })
   }
 
   // Revoke all active sessions so the user is immediately signed out everywhere
-  await supabase.auth.admin.signOut(user.sub, "global")
+  await supabase.auth.admin.signOut(user.sub, 'global')
 
   // Handle circle memories based on user's choice.
   // keepCircleMemories=true: detach all their circle memories now (NULL owner_user_id +
@@ -98,19 +104,23 @@ export default defineEventHandler(async (event) => {
   // keepCircleMemories=false: leave as-is — the purge cron cascade-deletes them at day 30.
   if (keepCircleMemories) {
     const { data: userProfile } = await (supabase as any)
-      .from("user")
-      .select("first_name, last_name")
-      .eq("id", user.sub)
+      .from('user')
+      .select('first_name, last_name')
+      .eq('id', user.sub)
       .maybeSingle()
 
-    const formerName = [userProfile?.first_name, userProfile?.last_name]
-      .filter(Boolean).join(" ") || null
+    const formerName =
+      [userProfile?.first_name, userProfile?.last_name].filter(Boolean).join(' ') || null
 
     await supabase
-      .from("memory")
-      .update({ owner_user_id: null, former_owner_name: formerName, former_owner_user_id: user.sub } as any)
-      .eq("owner_user_id", user.sub)
-      .eq("visibility", "circle")
+      .from('memory')
+      .update({
+        owner_user_id: null,
+        former_owner_name: formerName,
+        former_owner_user_id: user.sub,
+      } as any)
+      .eq('owner_user_id', user.sub)
+      .eq('visibility', 'circle')
   }
 
   // Send emails best-effort — don't fail the request if they error
@@ -121,21 +131,21 @@ export default defineEventHandler(async (event) => {
 
     // Fetch deleting user's profile for the confirmation email
     const { data: deletingUser } = await (supabase as any)
-      .from("user")
-      .select("email, first_name, locale")
-      .eq("id", user.sub)
+      .from('user')
+      .select('email, first_name, locale')
+      .eq('id', user.sub)
       .maybeSingle()
 
     if (deletingUser?.email) {
       const formattedDate = purgeDate.toLocaleDateString(
-        deletingUser.locale === "zh-CN" ? "zh-CN" : "en",
-        { year: "numeric", month: "long", day: "numeric" }
+        deletingUser.locale === 'zh-CN' ? 'zh-CN' : 'en',
+        { year: 'numeric', month: 'long', day: 'numeric' },
       )
       const { subject, html } = buildAccountDeletionEmail({
-        firstName: deletingUser.first_name ?? "",
+        firstName: deletingUser.first_name ?? '',
         purgeDate: formattedDate,
         cancelUrl: `${config.appUrl}/settings/account`,
-        locale: deletingUser.locale ?? "en",
+        locale: deletingUser.locale ?? 'en',
       })
       await sendEmail({ to: deletingUser.email, subject, html })
     }
@@ -143,23 +153,33 @@ export default defineEventHandler(async (event) => {
     // Notify each auto-promoted owner
     for (const { newOwnerId, circleName } of promotions) {
       const [{ data: newOwner }, { data: prevOwner }] = await Promise.all([
-        (supabase as any).from("user").select("email, first_name, locale").eq("id", newOwnerId).maybeSingle(),
-        (supabase as any).from("user").select("first_name, last_name").eq("id", user.sub).maybeSingle(),
+        (supabase as any)
+          .from('user')
+          .select('email, first_name, locale')
+          .eq('id', newOwnerId)
+          .maybeSingle(),
+        (supabase as any)
+          .from('user')
+          .select('first_name, last_name')
+          .eq('id', user.sub)
+          .maybeSingle(),
       ])
       if (newOwner?.email) {
-        const prevName = [prevOwner?.first_name, prevOwner?.last_name].filter(Boolean).join(" ") || "The previous owner"
+        const prevName =
+          [prevOwner?.first_name, prevOwner?.last_name].filter(Boolean).join(' ') ||
+          'The previous owner'
         const { subject, html } = buildOwnerPromotedEmail({
-          newOwnerFirstName: newOwner.first_name ?? "",
+          newOwnerFirstName: newOwner.first_name ?? '',
           previousOwnerName: prevName,
           circleName,
           appUrl: config.appUrl as string,
-          locale: newOwner.locale ?? "en",
+          locale: newOwner.locale ?? 'en',
         })
         await sendEmail({ to: newOwner.email, subject, html })
       }
     }
   } catch (err) {
-    console.error("[account/delete] notification emails failed:", err)
+    console.error('[account/delete] notification emails failed:', err)
   }
 
   return { ok: true }

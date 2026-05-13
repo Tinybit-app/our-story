@@ -41,13 +41,13 @@
     "language": "语言"
   },
   "circleType": {
-    "parents":    { "label": "新手父母",   "description": "宝宝成长里程碑" },
-    "couple":     { "label": "情侣",       "description": "感情里程碑" },
-    "family":     { "label": "家庭",       "description": "家庭回忆" },
-    "friends":    { "label": "朋友圈",     "description": "旅行、聚会、精彩时刻" },
-    "caregiving": { "label": "照护日记",   "description": "健康与生活事件" },
-    "travel":     { "label": "旅行团",     "description": "一起探险" },
-    "solo":       { "label": "只有我",     "description": "个人时间线" }
+    "parents": { "label": "新手父母", "description": "宝宝成长里程碑" },
+    "couple": { "label": "情侣", "description": "感情里程碑" },
+    "family": { "label": "家庭", "description": "家庭回忆" },
+    "friends": { "label": "朋友圈", "description": "旅行、聚会、精彩时刻" },
+    "caregiving": { "label": "照护日记", "description": "健康与生活事件" },
+    "travel": { "label": "旅行团", "description": "一起探险" },
+    "solo": { "label": "只有我", "description": "个人时间线" }
   },
   "nav": {
     "addMemory": "添加记忆",

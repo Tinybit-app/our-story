@@ -14,12 +14,12 @@ test.describe('Viewer-role UX', () => {
   // ── Expired link ─────────────────────────────────────────────────────────────
 
   test('expired token shows a user-friendly expiry message', async ({ page }) => {
-    await page.route('**/api/viewer/timeline**', route =>
+    await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 401,
         contentType: 'application/json',
         body: JSON.stringify({ message: 'expired' }),
-      })
+      }),
     )
 
     await page.goto(`/view?token=${makeToken(-1)}`)
@@ -41,7 +41,7 @@ test.describe('Viewer-role UX', () => {
   // ── First-open splash ─────────────────────────────────────────────────────────
 
   test('valid token shows the first-open splash', async ({ page }) => {
-    await page.route('**/api/viewer/timeline**', route =>
+    await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -50,7 +50,7 @@ test.describe('Viewer-role UX', () => {
           ownerFirstName: 'Dao',
           memories: [],
         }),
-      })
+      }),
     )
 
     await page.goto(`/view?token=${makeToken()}`)
@@ -60,7 +60,7 @@ test.describe('Viewer-role UX', () => {
   })
 
   test('"See the memories" dismisses splash and shows timeline', async ({ page }) => {
-    await page.route('**/api/viewer/timeline**', route =>
+    await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -76,7 +76,7 @@ test.describe('Viewer-role UX', () => {
             },
           ],
         }),
-      })
+      }),
     )
 
     await page.goto(`/view?token=${makeToken()}`)
@@ -87,7 +87,7 @@ test.describe('Viewer-role UX', () => {
   // ── Splash shown once per session ─────────────────────────────────────────────
 
   test('splash is not shown again once dismissed within the same session', async ({ page }) => {
-    await page.route('**/api/viewer/timeline**', route =>
+    await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -96,7 +96,7 @@ test.describe('Viewer-role UX', () => {
           ownerFirstName: 'Dao',
           memories: [],
         }),
-      })
+      }),
     )
 
     await page.goto(`/view?token=${makeToken()}`)

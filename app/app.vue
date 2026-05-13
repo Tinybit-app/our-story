@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAnalytics } from "~/composables/useAnalytics"
+import { useAnalytics } from '~/composables/useAnalytics'
 
 const user = useSupabaseUser()
 const { identifyUser, resetUser } = useAnalytics()
@@ -23,9 +23,9 @@ watchEffect(async () => {
     let circleCount: number | undefined
     try {
       const { count } = await supabase
-        .from("circlemember")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", u.id)
+        .from('circlemember')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', u.id)
       circleCount = count ?? undefined
     } catch {
       circleCount = undefined

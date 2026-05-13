@@ -30,7 +30,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -41,14 +41,16 @@ function mockCirclesList(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -60,7 +62,7 @@ function mockTimelineEmpty(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories: [], nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
@@ -93,7 +95,7 @@ function mockTimelineWithNote(page: any) {
         children: [],
         members: [],
       }),
-    })
+    }),
   )
 }
 
@@ -111,7 +113,6 @@ function mockComments(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Month overflow page (/timeline/[year]/[month])', () => {
-
   test('invalid year/month redirects to /timeline', async ({ page }) => {
     await mockMembership(page)
     await mockCirclesList(page)
@@ -152,7 +153,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
     await page.goto('/timeline/2024/06')
 
-    const card = page.locator('article').filter({ hasText: 'She said mama for the first time today' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'She said mama for the first time today' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
@@ -170,7 +173,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
     await page.goto('/timeline/2024/06')
 
-    const card = page.locator('article').filter({ hasText: 'She said mama for the first time today' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'She said mama for the first time today' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
@@ -249,14 +254,24 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ memories: page2Memories, nextCursor: null, children: [], members: [] }),
+          body: JSON.stringify({
+            memories: page2Memories,
+            nextCursor: null,
+            children: [],
+            members: [],
+          }),
         })
       }
       // First page — returns a cursor so the Load more button appears
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ memories: page1Memories, nextCursor: 'cursor-page-2', children: [], members: [] }),
+        body: JSON.stringify({
+          memories: page1Memories,
+          nextCursor: 'cursor-page-2',
+          children: [],
+          members: [],
+        }),
       })
     })
 
@@ -273,7 +288,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await loadMoreBtn.click()
 
     // Wait for second-page memories to append
-    await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, { timeout: 10_000 })
+    await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, {
+      timeout: 10_000,
+    })
 
     // Verify second-page memories were appended
     expect(page2Fetched).toBe(true)
@@ -282,5 +299,4 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     // "Load more" button gone — nextCursor is now null
     await expect(loadMoreBtn).not.toBeVisible({ timeout: 3_000 })
   })
-
 })

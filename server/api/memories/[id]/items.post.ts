@@ -1,14 +1,14 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
-const bodySchema = z.discriminatedUnion("type", [
+const bodySchema = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal("media"),
+    type: z.literal('media'),
     storagePath: z.string().min(1),
     fileSize: z.number().int().positive(),
-    mediaType: z.enum(["photo", "video", "live_photo"]),
+    mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal("text"), textContent: z.string().min(1).max(2000) }),
+  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
 ])
 
 export default defineEventHandler(async (event) => {
@@ -17,17 +17,17 @@ export default defineEventHandler(async (event) => {
 
   if (!user?.sub) throw createError({ statusCode: 401 })
 
-  const memoryId = getRouterParam(event, "id")
-  if (!memoryId) throw createError({ statusCode: 400, message: "Missing memory id" })
+  const memoryId = getRouterParam(event, 'id')
+  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request body." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const bodyData = result.data
 
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, owner_user_id, circle_id")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, owner_user_id, circle_id')
+    .eq('id', memoryId)
     .maybeSingle()
 
   if (!memory) throw createError({ statusCode: 404 })
@@ -35,10 +35,10 @@ export default defineEventHandler(async (event) => {
 
   // Compute next display_order
   const { data: maxRow } = await supabase
-    .from("memorymedia")
-    .select("display_order")
-    .eq("memory_id", memoryId)
-    .order("display_order", { ascending: false })
+    .from('memorymedia')
+    .select('display_order')
+    .eq('memory_id', memoryId)
+    .order('display_order', { ascending: false })
     .limit(1)
     .maybeSingle()
 
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
 
   // Build insert payload
   const insertPayload =
-    bodyData.type === "media"
+    bodyData.type === 'media'
       ? {
           memory_id: memoryId,
           storage_path: bodyData.storagePath,
@@ -56,20 +56,20 @@ export default defineEventHandler(async (event) => {
         }
       : {
           memory_id: memoryId,
-          media_type: "text" as const,
+          media_type: 'text' as const,
           text_content: bodyData.textContent,
           display_order: nextOrder,
         }
 
   const { data: row, error } = await supabase
-    .from("memorymedia")
+    .from('memorymedia')
     .insert(insertPayload)
-    .select("id")
+    .select('id')
     .single()
 
   if (error || !row) {
-    console.error("[items.post] insert error:", error?.message)
-    throw createError({ statusCode: 500, message: "Failed to add item." })
+    console.error('[items.post] insert error:', error?.message)
+    throw createError({ statusCode: 500, message: 'Failed to add item.' })
   }
 
   return { itemId: row.id }

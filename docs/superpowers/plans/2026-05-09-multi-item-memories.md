@@ -15,6 +15,7 @@
 ## File Structure
 
 ### New
+
 - `supabase/migrations/029_multi_item_memories.sql` — schema changes
 - `server/api/memories/upload-batch.post.ts` — multi-item commit endpoint
 - `server/api/memories/[id]/items.post.ts` — add slide
@@ -24,6 +25,7 @@
 - `unit/multi-item.test.ts` — zod schema tests for new endpoints
 
 ### Modified
+
 - `supabase/functions/upload-media/index.ts` — add `defer=true` query mode
 - `server/api/timeline.get.ts` — return `cover_media_id` + ordered `memorymedia` + `media_count`
 - `server/api/viewer/timeline.get.ts` — same (viewer link path)
@@ -44,6 +46,7 @@
 ## Task 1: Migration 029 — multi-item schema
 
 **Files:**
+
 - Create: `supabase/migrations/029_multi_item_memories.sql`
 - Modify: `unit/schema-compliance.test.ts`
 
@@ -80,32 +83,34 @@ CREATE INDEX idx_memorymedia_memory_order ON memorymedia(memory_id, display_orde
 In `unit/schema-compliance.test.ts`, add `028_circle_digest_tracking.sql` to `allMigrations` join (if not already there) and append:
 
 ```ts
-describe("Step 5.4 — Multi-item memories", () => {
-  const m029 = sql("029_multi_item_memories.sql")
+describe('Step 5.4 — Multi-item memories', () => {
+  const m029 = sql('029_multi_item_memories.sql')
 
-  it("adds text_content column to memorymedia", () => {
-    expect(m029).toContain("ADD COLUMN text_content TEXT")
+  it('adds text_content column to memorymedia', () => {
+    expect(m029).toContain('ADD COLUMN text_content TEXT')
   })
 
-  it("adds display_order column to memorymedia", () => {
-    expect(m029).toContain("ADD COLUMN display_order INT NOT NULL DEFAULT 0")
+  it('adds display_order column to memorymedia', () => {
+    expect(m029).toContain('ADD COLUMN display_order INT NOT NULL DEFAULT 0')
   })
 
-  it("makes storage_path nullable", () => {
-    expect(m029).toContain("ALTER COLUMN storage_path DROP NOT NULL")
+  it('makes storage_path nullable', () => {
+    expect(m029).toContain('ALTER COLUMN storage_path DROP NOT NULL')
   })
 
-  it("extends media_type CHECK to include text", () => {
+  it('extends media_type CHECK to include text', () => {
     expect(m029).toMatch(/CHECK \(media_type IN \('photo', 'video', 'live_photo', 'text'\)\)/)
   })
 
-  it("adds content_check constraint", () => {
-    expect(m029).toContain("memorymedia_content_check")
-    expect(m029).toContain("text_content IS NOT NULL")
+  it('adds content_check constraint', () => {
+    expect(m029).toContain('memorymedia_content_check')
+    expect(m029).toContain('text_content IS NOT NULL')
   })
 
-  it("adds cover_media_id to memory", () => {
-    expect(m029).toContain("ADD COLUMN cover_media_id UUID REFERENCES memorymedia(id) ON DELETE SET NULL")
+  it('adds cover_media_id to memory', () => {
+    expect(m029).toContain(
+      'ADD COLUMN cover_media_id UUID REFERENCES memorymedia(id) ON DELETE SET NULL',
+    )
   })
 })
 ```
@@ -129,6 +134,7 @@ git commit -m "feat(memories): migration 029 for multi-item memory schema"
 ## Task 2: Edge Function — upload-media `defer=true` mode
 
 **Files:**
+
 - Modify: `supabase/functions/upload-media/index.ts`
 
 The current flow always creates a `Memory` + `MemoryMedia` together. Add a `defer=true` query param: when set, upload media but create a **draft** memory (visibility='private', note=null) so the row constraints stay valid. The client merges drafts via `upload-batch` (Task 3).
@@ -145,57 +151,58 @@ Find the section after the storage upload + before the `Memory` insert. Modify t
 // existing lines: file check, storage upload...
 
 const url = new URL(req.url)
-const isDeferred = url.searchParams.get("defer") === "true"
+const isDeferred = url.searchParams.get('defer') === 'true'
 
 // Insert Memory row
 const { data: memory, error: memoryError } = await supabase
-  .from("memory")
+  .from('memory')
   .insert({
     owner_user_id: user.id,
     circle_id: circleId,
-    visibility: isDeferred ? "private" : "circle",
-    note: isDeferred ? null : (note || null),
-    milestone_label: isDeferred ? null : (milestoneLabel || null),
+    visibility: isDeferred ? 'private' : 'circle',
+    note: isDeferred ? null : note || null,
+    milestone_label: isDeferred ? null : milestoneLabel || null,
     memory_date: memoryDate || new Date().toISOString(),
   })
   .select()
   .single()
 
 if (memoryError || !memory) {
-  await supabase.storage.from("memories-private").remove([storagePath])
-  return Response.json({ error: memoryError?.message ?? "Failed to save memory" }, { status: 500 })
+  await supabase.storage.from('memories-private').remove([storagePath])
+  return Response.json({ error: memoryError?.message ?? 'Failed to save memory' }, { status: 500 })
 }
 
 // Insert MemoryMedia row
 const { data: media, error: mediaError } = await supabase
-  .from("memorymedia")
+  .from('memorymedia')
   .insert({
     memory_id: memory.id,
     storage_path: storagePath,
     file_size: file.size,
-    media_type: isVideo ? "video" : "photo",
+    media_type: isVideo ? 'video' : 'photo',
     display_order: 0,
   })
-  .select("id")
+  .select('id')
   .single()
 
 if (mediaError || !media) {
   // Clean up storage + memory
-  await supabase.storage.from("memories-private").remove([storagePath])
-  await supabase.from("memory").delete().eq("id", memory.id)
-  return Response.json({ error: mediaError?.message ?? "Failed to save media" }, { status: 500 })
+  await supabase.storage.from('memories-private').remove([storagePath])
+  await supabase.from('memory').delete().eq('id', memory.id)
+  return Response.json({ error: mediaError?.message ?? 'Failed to save media' }, { status: 500 })
 }
 
 // Increment storage usage
 await supabase
-  .from("accountstorage")
+  .from('accountstorage')
   .update({ total_used_bytes: (storage?.total_used_bytes ?? 0) + file.size })
-  .eq("user_id", user.id)
+  .eq('user_id', user.id)
 
 return Response.json({ ok: true, memoryId: memory.id, mediaId: media.id })
 ```
 
 Key changes from the existing version:
+
 - Read `defer` query param
 - If deferred: visibility='private', no note, no milestone, no memory_date from form (we use current time as a placeholder)
 - Insert MemoryMedia and capture the returned `id`
@@ -217,6 +224,7 @@ git commit -m "feat(memories): add defer mode to upload-media for multi-item flo
 ## Task 3: `POST /api/memories/upload-batch` — multi-item commit
 
 **Files:**
+
 - Create: `server/api/memories/upload-batch.post.ts`
 - Create: `unit/multi-item.test.ts` (zod schema tests)
 
@@ -225,12 +233,12 @@ git commit -m "feat(memories): add defer mode to upload-media for multi-item flo
 Create `unit/multi-item.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest"
-import { z } from "zod"
+import { describe, it, expect } from 'vitest'
+import { z } from 'zod'
 
-const itemSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("draft"), draftMemoryId: z.uuid() }),
-  z.object({ type: z.literal("text"), textContent: z.string().min(1).max(2000) }),
+const itemSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('draft'), draftMemoryId: z.uuid() }),
+  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
 ])
 
 const uploadBatchSchema = z.object({
@@ -244,57 +252,54 @@ const uploadBatchSchema = z.object({
   items: z.array(itemSchema).min(2).max(20),
 })
 
-describe("upload-batch schema", () => {
+describe('upload-batch schema', () => {
   const baseValid = {
-    circleId: "11111111-2222-3333-4444-555555555555",
-    memoryDate: "2026-05-09",
+    circleId: '11111111-2222-3333-4444-555555555555',
+    memoryDate: '2026-05-09',
     items: [
-      { type: "draft" as const, draftMemoryId: "11111111-2222-3333-4444-555555555556" },
-      { type: "draft" as const, draftMemoryId: "11111111-2222-3333-4444-555555555557" },
+      { type: 'draft' as const, draftMemoryId: '11111111-2222-3333-4444-555555555556' },
+      { type: 'draft' as const, draftMemoryId: '11111111-2222-3333-4444-555555555557' },
     ],
   }
 
-  it("accepts a valid batch with 2 photo drafts", () => {
+  it('accepts a valid batch with 2 photo drafts', () => {
     expect(uploadBatchSchema.safeParse(baseValid).success).toBe(true)
   })
 
-  it("accepts mixed drafts + text items", () => {
+  it('accepts mixed drafts + text items', () => {
     const r = uploadBatchSchema.safeParse({
       ...baseValid,
       items: [
-        { type: "draft", draftMemoryId: "11111111-2222-3333-4444-555555555556" },
-        { type: "text", textContent: "And then she smiled." },
+        { type: 'draft', draftMemoryId: '11111111-2222-3333-4444-555555555556' },
+        { type: 'text', textContent: 'And then she smiled.' },
       ],
     })
     expect(r.success).toBe(true)
   })
 
-  it("rejects fewer than 2 items", () => {
-    expect(
-      uploadBatchSchema.safeParse({ ...baseValid, items: [baseValid.items[0]] }).success
-    ).toBe(false)
+  it('rejects fewer than 2 items', () => {
+    expect(uploadBatchSchema.safeParse({ ...baseValid, items: [baseValid.items[0]] }).success).toBe(
+      false,
+    )
   })
 
-  it("rejects more than 20 items", () => {
+  it('rejects more than 20 items', () => {
     const items = Array.from({ length: 21 }, (_, i) => ({
-      type: "text" as const,
+      type: 'text' as const,
       textContent: `Slide ${i}`,
     }))
     expect(uploadBatchSchema.safeParse({ ...baseValid, items }).success).toBe(false)
   })
 
-  it("rejects invalid coverIndex (negative)", () => {
+  it('rejects invalid coverIndex (negative)', () => {
     const r = uploadBatchSchema.safeParse({ ...baseValid, coverIndex: -1 })
     expect(r.success).toBe(false)
   })
 
-  it("rejects empty text content", () => {
+  it('rejects empty text content', () => {
     const r = uploadBatchSchema.safeParse({
       ...baseValid,
-      items: [
-        baseValid.items[0],
-        { type: "text", textContent: "" },
-      ],
+      items: [baseValid.items[0], { type: 'text', textContent: '' }],
     })
     expect(r.success).toBe(false)
   })
@@ -311,12 +316,12 @@ Expected: all pass — the schema is defined inline.
 Create `server/api/memories/upload-batch.post.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
-const itemSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("draft"), draftMemoryId: z.uuid() }),
-  z.object({ type: z.literal("text"), textContent: z.string().min(1).max(2000) }),
+const itemSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('draft'), draftMemoryId: z.uuid() }),
+  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
 ])
 
 const bodySchema = z.object({
@@ -336,86 +341,88 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request body." })
-  const { circleId, memoryDate, note, milestoneLabel, childIds, memberIds, coverIndex, items } = result.data
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  const { circleId, memoryDate, note, milestoneLabel, childIds, memberIds, coverIndex, items } =
+    result.data
 
   // Verify circle membership
   const { data: membership } = await supabase
-    .from("circlemember")
-    .select("role")
-    .eq("user_id", user.sub)
-    .eq("circle_id", circleId)
+    .from('circlemember')
+    .select('role')
+    .eq('user_id', user.sub)
+    .eq('circle_id', circleId)
     .maybeSingle()
-  if (!membership) throw createError({ statusCode: 403, message: "You are not a member of this circle." })
+  if (!membership)
+    throw createError({ statusCode: 403, message: 'You are not a member of this circle.' })
 
   // Verify all draft memories are owned by this user (ownership check before merge)
   const draftMemoryIds = items
-    .filter((i): i is Extract<typeof items[number], { type: "draft" }> => i.type === "draft")
+    .filter((i): i is Extract<(typeof items)[number], { type: 'draft' }> => i.type === 'draft')
     .map((i) => i.draftMemoryId)
 
   if (draftMemoryIds.length > 0) {
     const { data: drafts } = await supabase
-      .from("memory")
-      .select("id")
-      .in("id", draftMemoryIds)
-      .eq("owner_user_id", user.sub)
-      .eq("circle_id", circleId)
-      .eq("visibility", "private") // sanity: ensure it's still a draft
+      .from('memory')
+      .select('id')
+      .in('id', draftMemoryIds)
+      .eq('owner_user_id', user.sub)
+      .eq('circle_id', circleId)
+      .eq('visibility', 'private') // sanity: ensure it's still a draft
     if ((drafts?.length ?? 0) !== draftMemoryIds.length) {
-      throw createError({ statusCode: 403, message: "Invalid draft media ownership." })
+      throw createError({ statusCode: 403, message: 'Invalid draft media ownership.' })
     }
   }
 
   // Create the canonical Memory
   const { data: memory, error: memErr } = await supabase
-    .from("memory")
+    .from('memory')
     .insert({
       circle_id: circleId,
       owner_user_id: user.sub,
-      visibility: "circle",
+      visibility: 'circle',
       note: note ?? null,
       milestone_label: milestoneLabel ?? null,
       memory_date: memoryDate,
     })
-    .select("id")
+    .select('id')
     .single()
   if (memErr || !memory) {
-    console.error("[upload-batch] memory insert failed:", memErr?.message)
-    throw createError({ statusCode: 500, message: "Failed to create memory." })
+    console.error('[upload-batch] memory insert failed:', memErr?.message)
+    throw createError({ statusCode: 500, message: 'Failed to create memory.' })
   }
 
   // For each item, attach existing media or insert text slide, in order
   const insertedMediaIds: string[] = []
   for (let i = 0; i < items.length; i++) {
     const item = items[i]!
-    if (item.type === "draft") {
+    if (item.type === 'draft') {
       // Move all MemoryMedia rows from draft to canonical, set display_order
       const { data: rows, error: updErr } = await supabase
-        .from("memorymedia")
+        .from('memorymedia')
         .update({ memory_id: memory.id, display_order: i })
-        .eq("memory_id", item.draftMemoryId)
-        .select("id")
+        .eq('memory_id', item.draftMemoryId)
+        .select('id')
       if (updErr) {
-        console.error("[upload-batch] media reattach failed:", updErr.message)
+        console.error('[upload-batch] media reattach failed:', updErr.message)
         // Don't bail; continue and let cleanup happen
       }
       for (const r of rows ?? []) insertedMediaIds.push(r.id)
 
       // Delete the empty draft Memory
-      await supabase.from("memory").delete().eq("id", item.draftMemoryId)
+      await supabase.from('memory').delete().eq('id', item.draftMemoryId)
     } else {
       const { data: row, error: insErr } = await supabase
-        .from("memorymedia")
+        .from('memorymedia')
         .insert({
           memory_id: memory.id,
-          media_type: "text",
+          media_type: 'text',
           text_content: item.textContent,
           display_order: i,
         })
-        .select("id")
+        .select('id')
         .single()
       if (insErr || !row) {
-        console.error("[upload-batch] text slide insert failed:", insErr?.message)
+        console.error('[upload-batch] text slide insert failed:', insErr?.message)
         continue
       }
       insertedMediaIds.push(row.id)
@@ -429,27 +436,27 @@ export default defineEventHandler(async (event) => {
   }
   if (!coverMediaId) {
     const { data: firstMedia } = await supabase
-      .from("memorymedia")
-      .select("id")
-      .eq("memory_id", memory.id)
-      .neq("media_type", "text")
-      .order("display_order", { ascending: true })
+      .from('memorymedia')
+      .select('id')
+      .eq('memory_id', memory.id)
+      .neq('media_type', 'text')
+      .order('display_order', { ascending: true })
       .limit(1)
       .maybeSingle()
     coverMediaId = firstMedia?.id ?? null
   }
-  await supabase.from("memory").update({ cover_media_id: coverMediaId }).eq("id", memory.id)
+  await supabase.from('memory').update({ cover_media_id: coverMediaId }).eq('id', memory.id)
 
   // Tag children + members (mirrors existing quick-note.post.ts pattern)
   if (childIds?.length) {
-    await supabase.from("memory_children").insert(
-      childIds.map((cid) => ({ memory_id: memory.id, child_id: cid }))
-    )
+    await supabase
+      .from('memory_children')
+      .insert(childIds.map((cid) => ({ memory_id: memory.id, child_id: cid })))
   }
   if (memberIds?.length) {
-    await supabase.from("memory_members").insert(
-      memberIds.map((uid) => ({ memory_id: memory.id, user_id: uid }))
-    )
+    await supabase
+      .from('memory_members')
+      .insert(memberIds.map((uid) => ({ memory_id: memory.id, user_id: uid })))
   }
 
   return { memoryId: memory.id }
@@ -473,6 +480,7 @@ git commit -m "feat(memories): upload-batch route for multi-item memory creation
 ## Task 4: Items CRUD routes — add/remove/reorder/cover
 
 **Files:**
+
 - Create: `server/api/memories/[id]/items.post.ts`
 - Create: `server/api/memories/[id]/items/[itemId].delete.ts`
 - Create: `server/api/memories/[id]/items/order.patch.ts`
@@ -483,17 +491,17 @@ git commit -m "feat(memories): upload-batch route for multi-item memory creation
 Create `server/api/memories/[id]/items.post.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
-const bodySchema = z.discriminatedUnion("type", [
+const bodySchema = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal("media"),
+    type: z.literal('media'),
     storagePath: z.string().min(1),
     fileSize: z.number().int().positive(),
-    mediaType: z.enum(["photo", "video", "live_photo"]),
+    mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal("text"), textContent: z.string().min(1).max(2000) }),
+  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
 ])
 
 export default defineEventHandler(async (event) => {
@@ -501,56 +509,57 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user?.sub) throw createError({ statusCode: 401 })
 
-  const memoryId = getRouterParam(event, "id")
+  const memoryId = getRouterParam(event, 'id')
   if (!memoryId) throw createError({ statusCode: 400 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request body." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const item = result.data
 
   // Owner-only
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, owner_user_id, circle_id")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, owner_user_id, circle_id')
+    .eq('id', memoryId)
     .maybeSingle()
   if (!memory) throw createError({ statusCode: 404 })
   if (memory.owner_user_id !== user.sub) throw createError({ statusCode: 403 })
 
   // Compute next display_order
   const { data: maxRow } = await supabase
-    .from("memorymedia")
-    .select("display_order")
-    .eq("memory_id", memoryId)
-    .order("display_order", { ascending: false })
+    .from('memorymedia')
+    .select('display_order')
+    .eq('memory_id', memoryId)
+    .order('display_order', { ascending: false })
     .limit(1)
     .maybeSingle()
   const nextOrder = (maxRow?.display_order ?? -1) + 1
 
-  const insertPayload = item.type === "media"
-    ? {
-        memory_id: memoryId,
-        storage_path: item.storagePath,
-        file_size: item.fileSize,
-        media_type: item.mediaType,
-        display_order: nextOrder,
-      }
-    : {
-        memory_id: memoryId,
-        media_type: "text",
-        text_content: item.textContent,
-        display_order: nextOrder,
-      }
+  const insertPayload =
+    item.type === 'media'
+      ? {
+          memory_id: memoryId,
+          storage_path: item.storagePath,
+          file_size: item.fileSize,
+          media_type: item.mediaType,
+          display_order: nextOrder,
+        }
+      : {
+          memory_id: memoryId,
+          media_type: 'text',
+          text_content: item.textContent,
+          display_order: nextOrder,
+        }
 
   const { data: row, error } = await supabase
-    .from("memorymedia")
+    .from('memorymedia')
     .insert(insertPayload)
-    .select("id")
+    .select('id')
     .single()
 
   if (error || !row) {
-    console.error("[items.post] insert failed:", error?.message)
-    throw createError({ statusCode: 500, message: "Failed to add slide." })
+    console.error('[items.post] insert failed:', error?.message)
+    throw createError({ statusCode: 500, message: 'Failed to add slide.' })
   }
 
   return { itemId: row.id }
@@ -564,21 +573,21 @@ export default defineEventHandler(async (event) => {
 Create `server/api/memories/[id]/items/[itemId].delete.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
   if (!user?.sub) throw createError({ statusCode: 401 })
 
-  const memoryId = getRouterParam(event, "id")
-  const itemId = getRouterParam(event, "itemId")
+  const memoryId = getRouterParam(event, 'id')
+  const itemId = getRouterParam(event, 'itemId')
   if (!memoryId || !itemId) throw createError({ statusCode: 400 })
 
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, owner_user_id")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, owner_user_id')
+    .eq('id', memoryId)
     .maybeSingle()
   if (!memory) throw createError({ statusCode: 404 })
   if (memory.owner_user_id !== user.sub) throw createError({ statusCode: 403 })
@@ -586,14 +595,14 @@ export default defineEventHandler(async (event) => {
   // If this item is the cover, the FK ON DELETE SET NULL clears it automatically.
   // The application layer falls back to first photo/video at read time.
   const { error } = await supabase
-    .from("memorymedia")
+    .from('memorymedia')
     .delete()
-    .eq("id", itemId)
-    .eq("memory_id", memoryId)
+    .eq('id', itemId)
+    .eq('memory_id', memoryId)
 
   if (error) {
-    console.error("[items.delete] delete failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to remove slide." })
+    console.error('[items.delete] delete failed:', error.message)
+    throw createError({ statusCode: 500, message: 'Failed to remove slide.' })
   }
 
   return { ok: true }
@@ -607,8 +616,8 @@ export default defineEventHandler(async (event) => {
 Create `server/api/memories/[id]/items/order.patch.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const bodySchema = z.object({
   orderedIds: z.array(z.uuid()).min(1),
@@ -619,16 +628,16 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user?.sub) throw createError({ statusCode: 401 })
 
-  const memoryId = getRouterParam(event, "id")
+  const memoryId = getRouterParam(event, 'id')
   if (!memoryId) throw createError({ statusCode: 400 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid request body." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
 
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, owner_user_id")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, owner_user_id')
+    .eq('id', memoryId)
     .maybeSingle()
   if (!memory) throw createError({ statusCode: 404 })
   if (memory.owner_user_id !== user.sub) throw createError({ statusCode: 403 })
@@ -636,16 +645,16 @@ export default defineEventHandler(async (event) => {
   // Update each row's display_order; trust the input list to be the canonical order
   const updates = result.data.orderedIds.map((itemId, index) =>
     supabase
-      .from("memorymedia")
+      .from('memorymedia')
       .update({ display_order: index })
-      .eq("id", itemId)
-      .eq("memory_id", memoryId)
+      .eq('id', itemId)
+      .eq('memory_id', memoryId),
   )
   const results = await Promise.all(updates)
   for (const r of results) {
     if (r.error) {
-      console.error("[items/order] update failed:", r.error.message)
-      throw createError({ statusCode: 500, message: "Failed to reorder slides." })
+      console.error('[items/order] update failed:', r.error.message)
+      throw createError({ statusCode: 500, message: 'Failed to reorder slides.' })
     }
   }
 
@@ -671,49 +680,49 @@ And in the update call, include `cover_media_id: bodyData.coverMediaId` when def
 Append to `unit/multi-item.test.ts`:
 
 ```ts
-const itemsPostSchema = z.discriminatedUnion("type", [
+const itemsPostSchema = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal("media"),
+    type: z.literal('media'),
     storagePath: z.string().min(1),
     fileSize: z.number().int().positive(),
-    mediaType: z.enum(["photo", "video", "live_photo"]),
+    mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal("text"), textContent: z.string().min(1).max(2000) }),
+  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
 ])
 
 const orderPatchSchema = z.object({ orderedIds: z.array(z.uuid()).min(1) })
 
-describe("items.post schema", () => {
-  it("accepts media item", () => {
+describe('items.post schema', () => {
+  it('accepts media item', () => {
     const r = itemsPostSchema.safeParse({
-      type: "media",
-      storagePath: "abc/def.jpg",
+      type: 'media',
+      storagePath: 'abc/def.jpg',
       fileSize: 1234,
-      mediaType: "photo",
+      mediaType: 'photo',
     })
     expect(r.success).toBe(true)
   })
-  it("accepts text item", () => {
-    expect(itemsPostSchema.safeParse({ type: "text", textContent: "hi" }).success).toBe(true)
+  it('accepts text item', () => {
+    expect(itemsPostSchema.safeParse({ type: 'text', textContent: 'hi' }).success).toBe(true)
   })
-  it("rejects unknown mediaType", () => {
+  it('rejects unknown mediaType', () => {
     const r = itemsPostSchema.safeParse({
-      type: "media",
-      storagePath: "x",
+      type: 'media',
+      storagePath: 'x',
       fileSize: 1,
-      mediaType: "audio",
+      mediaType: 'audio',
     })
     expect(r.success).toBe(false)
   })
 })
 
-describe("items/order schema", () => {
-  it("accepts non-empty orderedIds", () => {
+describe('items/order schema', () => {
+  it('accepts non-empty orderedIds', () => {
     expect(
-      orderPatchSchema.safeParse({ orderedIds: ["11111111-2222-3333-4444-555555555556"] }).success
+      orderPatchSchema.safeParse({ orderedIds: ['11111111-2222-3333-4444-555555555556'] }).success,
     ).toBe(true)
   })
-  it("rejects empty orderedIds", () => {
+  it('rejects empty orderedIds', () => {
     expect(orderPatchSchema.safeParse({ orderedIds: [] }).success).toBe(false)
   })
 })
@@ -734,6 +743,7 @@ git commit -m "feat(memories): items CRUD + cover routes for multi-item memories
 ## Task 5: Backend timeline read — return cover_media_id + ordered media + media_count
 
 **Files:**
+
 - Modify: `server/api/timeline.get.ts`
 - Modify: `server/api/viewer/timeline.get.ts`
 
@@ -754,10 +764,13 @@ Read `server/api/timeline.get.ts`. Find the memory select query and the response
 Concrete edits:
 
 In the supabase select string (around line 20), change:
+
 ```ts
 memorymedia(id, storage_path, media_type, file_size),
 ```
+
 to:
+
 ```ts
 memorymedia(id, storage_path, media_type, file_size, text_content, display_order),
 cover_media_id,
@@ -796,59 +809,59 @@ Important: the response continues to include `memorymedia` as an array (length 0
 The modal needs the full ordered slide list with signed URLs. Create `server/api/memories/[id]/slides.get.ts`:
 
 ```ts
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
   if (!user?.sub) throw createError({ statusCode: 401 })
 
-  const memoryId = getRouterParam(event, "id")
+  const memoryId = getRouterParam(event, 'id')
   if (!memoryId) throw createError({ statusCode: 400 })
 
   // Membership check via memory.circle_id
   const { data: memory } = await supabase
-    .from("memory")
-    .select("id, circle_id")
-    .eq("id", memoryId)
+    .from('memory')
+    .select('id, circle_id')
+    .eq('id', memoryId)
     .maybeSingle()
   if (!memory) throw createError({ statusCode: 404 })
 
   const { data: membership } = await supabase
-    .from("circlemember")
-    .select("id")
-    .eq("user_id", user.sub)
-    .eq("circle_id", memory.circle_id)
+    .from('circlemember')
+    .select('id')
+    .eq('user_id', user.sub)
+    .eq('circle_id', memory.circle_id)
     .maybeSingle()
   if (!membership) throw createError({ statusCode: 403 })
 
   const { data: rows } = await supabase
-    .from("memorymedia")
-    .select("id, storage_path, media_type, text_content, display_order")
-    .eq("memory_id", memoryId)
-    .order("display_order", { ascending: true })
+    .from('memorymedia')
+    .select('id, storage_path, media_type, text_content, display_order')
+    .eq('memory_id', memoryId)
+    .order('display_order', { ascending: true })
 
   // Sign URLs for photo/video rows
   const slides = await Promise.all(
     (rows ?? []).map(async (row) => {
-      if (row.media_type === "text") {
+      if (row.media_type === 'text') {
         return {
           id: row.id,
-          mediaType: "text" as const,
+          mediaType: 'text' as const,
           textContent: row.text_content,
           displayOrder: row.display_order,
         }
       }
       const { data: signed } = await supabase.storage
-        .from("memories-private")
+        .from('memories-private')
         .createSignedUrl(row.storage_path, 3600)
       return {
         id: row.id,
-        mediaType: row.media_type === "video" ? "video" as const : "photo" as const,
+        mediaType: row.media_type === 'video' ? ('video' as const) : ('photo' as const),
         url: signed?.signedUrl ?? null,
         displayOrder: row.display_order,
       }
-    })
+    }),
   )
 
   return { slides }
@@ -869,6 +882,7 @@ git commit -m "feat(memories): timeline + slides endpoints support multi-item"
 ## Task 6: Frontend timeline card — stack visual + count badge
 
 **Files:**
+
 - Modify: `app/components/PolaroidCard.vue`
 - Modify: `app/components/QuickNoteCard.vue`
 
@@ -886,25 +900,25 @@ In `app/components/PolaroidCard.vue`, find the root card element. Wrap it with t
     <!-- Stack silhouettes (rendered behind, only when media_count > 1) -->
     <div
       v-if="(memory.media_count ?? 1) > 1"
-      class="absolute inset-0 -translate-y-1 translate-x-1 rotate-1 bg-card border border-border/40 shadow-md rounded-sm pointer-events-none"
+      class="pointer-events-none absolute inset-0 -translate-y-1 translate-x-1 rotate-1 rounded-sm border border-border/40 bg-card shadow-md"
       :style="{ zIndex: -1 }"
       aria-hidden="true"
     />
     <div
       v-if="(memory.media_count ?? 1) > 2"
-      class="absolute inset-0 -translate-y-2 translate-x-2 rotate-2 bg-card border border-border/30 shadow-md rounded-sm pointer-events-none"
+      class="pointer-events-none absolute inset-0 -translate-y-2 translate-x-2 rotate-2 rounded-sm border border-border/30 bg-card shadow-md"
       :style="{ zIndex: -2 }"
       aria-hidden="true"
     />
 
     <!-- Existing polaroid card body unchanged -->
-    <div class="relative ...existing classes...">
+    <div class="...existing classes... relative">
       <!-- existing content -->
 
       <!-- Count badge (bottom-right of the cover) -->
       <span
         v-if="(memory.media_count ?? 1) > 1"
-        class="absolute bottom-2 right-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-semibold backdrop-blur-sm"
+        class="absolute bottom-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm"
       >
         ⊕{{ memory.media_count }}
       </span>
@@ -925,7 +939,7 @@ For text-only multi-item memories (no cover), QuickNoteCard renders the first **
 // In the post-processing where cover is computed:
 let coverTextContent: string | null = null
 if (!cover) {
-  const firstText = allMedia.find((m) => m.media_type === "text")
+  const firstText = allMedia.find((m) => m.media_type === 'text')
   if (firstText) coverTextContent = firstText.text_content
 }
 // Include in response: cover_text_content
@@ -947,6 +961,7 @@ git commit -m "feat(memories): stack visual + count badge for multi-item cards"
 ## Task 7: Frontend modal — swipe carousel for multi-item
 
 **Files:**
+
 - Modify: `app/components/MemoryModal.vue`
 - Modify: `app/components/QuickNoteModal.vue`
 
@@ -955,22 +970,28 @@ git commit -m "feat(memories): stack visual + count badge for multi-item cards"
 In MemoryModal, when the modal opens for a memory with `media_count > 1`, fetch `/api/memories/<id>/slides`. Cache the result (per-memory) so reopening doesn't refetch.
 
 ```ts
-const slides = ref<Array<{ id: string, mediaType: "photo" | "video" | "text", url?: string, textContent?: string }>>([])
+const slides = ref<
+  Array<{ id: string; mediaType: 'photo' | 'video' | 'text'; url?: string; textContent?: string }>
+>([])
 const slidesLoading = ref(false)
 
-watch(() => props.memory?.id, async (id) => {
-  if (!id || (props.memory?.media_count ?? 1) <= 1) {
-    slides.value = []
-    return
-  }
-  slidesLoading.value = true
-  try {
-    const data = await $fetch<{ slides: any[] }>(`/api/memories/${id}/slides`)
-    slides.value = data.slides
-  } finally {
-    slidesLoading.value = false
-  }
-}, { immediate: true })
+watch(
+  () => props.memory?.id,
+  async (id) => {
+    if (!id || (props.memory?.media_count ?? 1) <= 1) {
+      slides.value = []
+      return
+    }
+    slidesLoading.value = true
+    try {
+      const data = await $fetch<{ slides: any[] }>(`/api/memories/${id}/slides`)
+      slides.value = data.slides
+    } finally {
+      slidesLoading.value = false
+    }
+  },
+  { immediate: true },
+)
 ```
 
 - [ ] **Step 2: Add swipe carousel UI**
@@ -1017,7 +1038,7 @@ function onScroll() {
   const idx = Math.round(carouselRef.value.scrollLeft / carouselRef.value.clientWidth)
   currentSlideIdx.value = idx
 }
-onMounted(() => carouselRef.value?.addEventListener("scroll", onScroll, { passive: true }))
+onMounted(() => carouselRef.value?.addEventListener('scroll', onScroll, { passive: true }))
 ```
 
 - [ ] **Step 3: Same for QuickNoteModal (multi-text memories)**
@@ -1030,8 +1051,13 @@ In `app/assets/css/globals.css` (if not already present):
 
 ```css
 @layer utilities {
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 ```
 
@@ -1047,6 +1073,7 @@ git commit -m "feat(memories): swipe carousel for multi-item modal"
 ## Task 8: Frontend upload UI — toggle + multi-item submission
 
 **Files:**
+
 - Modify: `app/components/UploadMemory.vue`
 
 This is the largest UI change. The component already handles multi-file selection. Add:
@@ -1070,7 +1097,7 @@ This is the largest UI change. The component already handles multi-file selectio
 Add a `groupAsOne` ref. Show the toggle in the template when `items.value.length >= 2`:
 
 ```vue
-<div v-if="items.length >= 2" class="flex items-center gap-2 px-4 py-3 border-b border-border">
+<div v-if="items.length >= 2" class="flex items-center gap-2 border-b border-border px-4 py-3">
   <button
     type="button"
     class="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
@@ -1099,7 +1126,7 @@ Hide per-item date/note/milestone inputs; show a single shared form at the top i
 When `groupAsOne = true`, add a button that opens a small text input modal/inline. On submit, push a new `{ type: 'text', textContent: '...' }` item into a parallel `textSlides` ref:
 
 ```ts
-const textSlides = ref<Array<{ tempId: string, textContent: string }>>([])
+const textSlides = ref<Array<{ tempId: string; textContent: string }>>([])
 ```
 
 These render alongside `items` in the upload sheet preview (drag handles for reorder, trash to remove).
@@ -1126,13 +1153,16 @@ async function uploadAsOneMemory() {
 
   // 2. Build the items array in display order
   const orderedItems: Array<
-    | { type: "draft"; draftMemoryId: string }
-    | { type: "text"; textContent: string }
+    { type: 'draft'; draftMemoryId: string } | { type: 'text'; textContent: string }
   > = items.value
-    .map((it, idx) => draftResults[idx] ? { type: "draft" as const, draftMemoryId: draftResults[idx]!.memoryId } : null)
+    .map((it, idx) =>
+      draftResults[idx]
+        ? { type: 'draft' as const, draftMemoryId: draftResults[idx]!.memoryId }
+        : null,
+    )
     .filter(Boolean) as any
   for (const ts of textSlides.value) {
-    orderedItems.push({ type: "text", textContent: ts.textContent })
+    orderedItems.push({ type: 'text', textContent: ts.textContent })
   }
 
   // 3. Resolve cover index
@@ -1141,8 +1171,8 @@ async function uploadAsOneMemory() {
     : null
 
   // 4. Call upload-batch
-  await $fetch("/api/memories/upload-batch", {
-    method: "POST",
+  await $fetch('/api/memories/upload-batch', {
+    method: 'POST',
     body: {
       circleId: props.circleId,
       memoryDate: groupDate.value,
@@ -1155,11 +1185,13 @@ async function uploadAsOneMemory() {
     },
   })
 
-  emit("uploaded")
+  emit('uploaded')
   cancel()
 }
 
-async function uploadItemDeferred(item: UploadItem): Promise<{ memoryId: string; mediaId: string } | null> {
+async function uploadItemDeferred(
+  item: UploadItem,
+): Promise<{ memoryId: string; mediaId: string } | null> {
   // Same as existing uploadItem, but use POST /functions/v1/upload-media?defer=true
   // Don't tag children/members — they'll be applied at the batch level
   // Return the response { memoryId, mediaId }
@@ -1182,6 +1214,7 @@ git commit -m "feat(memories): upload UI toggle for posting as one memory"
 ## Task 9: Frontend edit slides UI
 
 **Files:**
+
 - Modify: `app/components/MemoryModal.vue`
 
 In edit mode (owner only), provide:
@@ -1220,6 +1253,7 @@ git commit -m "feat(memories): edit slides UI (add/remove/reorder/cover)"
 ## Task 10: Tests + Docs
 
 **Files:**
+
 - Modify: `supabase/tests/rls.test.sql`
 - Create: `tests/multi-item-memory.spec.ts`
 - Modify: `docs/build-plan.md`
@@ -1228,6 +1262,7 @@ git commit -m "feat(memories): edit slides UI (add/remove/reorder/cover)"
 - [ ] **Step 1: RLS tests for text slides**
 
 Append to `supabase/tests/rls.test.sql` — a fixture creates a memory with a text slide owned by a circle owner; assert:
+
 - Member can SELECT the text slide
 - Non-member cannot SELECT
 - Owner can INSERT a text slide on own memory
@@ -1240,11 +1275,11 @@ Append to `supabase/tests/rls.test.sql` — a fixture creates a memory with a te
 Create `tests/multi-item-memory.spec.ts`:
 
 ```ts
-import { test, expect } from "@playwright/test"
+import { test, expect } from '@playwright/test'
 
-test.use({ storageState: "tests/.auth/user.json" })
+test.use({ storageState: 'tests/.auth/user.json' })
 
-test.describe("Multi-item memories", () => {
+test.describe('Multi-item memories', () => {
   test("toggle 'Post as one memory' creates one memory with N media", async ({ page }) => {
     // Mock circles + timeline as in existing tests
     // Open upload sheet, select 3 files
@@ -1258,13 +1293,13 @@ test.describe("Multi-item memories", () => {
     // ... assert N cards on timeline
   })
 
-  test("modal opens carousel for multi-item", async ({ page }) => {
+  test('modal opens carousel for multi-item', async ({ page }) => {
     // Click on a multi-item card
     // Assert dot indicators visible
     // Assert swipe / scroll changes current slide
   })
 
-  test("count badge appears on PolaroidCard for multi-item", async ({ page }) => {
+  test('count badge appears on PolaroidCard for multi-item', async ({ page }) => {
     // Mock timeline response with media_count: 5
     // Assert ⊕5 badge visible
   })

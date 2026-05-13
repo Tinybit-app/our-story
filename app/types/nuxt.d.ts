@@ -1,6 +1,6 @@
-import type { PostHog } from "posthog-js"
+import type { PostHog } from 'posthog-js'
 
-declare module "#app" {
+declare module '#app' {
   interface NuxtApp {
     $posthog: PostHog | null
   }

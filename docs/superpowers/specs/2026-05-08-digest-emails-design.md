@@ -105,6 +105,7 @@ interface DigestEmailOpts {
 ```
 
 **Subject lines (en):**
+
 - Weekly with child: `"{Child name} this week — {N} new memories"`
 - Weekly without child: `"The {Circle name} added {N} memories this week"`
 - Monthly with child: `"{Child name}'s {Month} — {N} memories"`

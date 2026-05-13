@@ -28,12 +28,14 @@ const MULTI_ITEM_MEMORY = {
   milestone_label: null,
   milestone_is_custom: false,
   created_at: '2024-06-15T00:00:00.000Z',
-  memorymedia: [{
-    id: 'media-cover',
-    url: 'https://example.com/cover.jpg',
-    thumbnailUrl: 'https://example.com/cover-thumb.jpg',
-    media_type: 'photo',
-  }],
+  memorymedia: [
+    {
+      id: 'media-cover',
+      url: 'https://example.com/cover.jpg',
+      thumbnailUrl: 'https://example.com/cover-thumb.jpg',
+      media_type: 'photo',
+    },
+  ],
   media_count: 5,
   cover_text_content: null,
   user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
@@ -57,7 +59,7 @@ function mockMembership(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
-    })
+    }),
   )
 }
 
@@ -68,14 +70,16 @@ function mockCircles(page: any) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        circles: [{
-          id: CIRCLE_ID,
-          name: 'Smith Family',
-          circle_type: 'family',
-          memberCount: 2,
-          role: 'owner',
-          anniversary_date: null,
-        }],
+        circles: [
+          {
+            id: CIRCLE_ID,
+            name: 'Smith Family',
+            circle_type: 'family',
+            memberCount: 2,
+            role: 'owner',
+            anniversary_date: null,
+          },
+        ],
       }),
     })
   })
@@ -87,7 +91,7 @@ function mockTimeline(page: any, memories: any[]) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
-    })
+    }),
   )
 }
 
@@ -97,20 +101,23 @@ function mockSlides(page: any, memoryId: string, slides: any[]) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ slides }),
-    })
+    }),
   )
 }
 
 function mockComments(page: any) {
   return page.route('**/api/memories/*/comments**', (route: any) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ comments: [] }) })
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ comments: [] }),
+    }),
   )
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Multi-item memories (5.4)', () => {
-
   test('PolaroidCard shows count badge for multi-item memory', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
@@ -143,5 +150,4 @@ test.describe('Multi-item memories (5.4)', () => {
     await expect(page.getByText('Birthday party')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('⊕')).not.toBeVisible()
   })
-
 })

@@ -15,11 +15,13 @@
 ## File Structure
 
 **Create:**
+
 - `app/plugins/posthog.client.ts` — initializes posthog-js, provides `$posthog`
 - `app/composables/useAnalytics.ts` — `createAnalytics(posthog)` factory + `useAnalytics()` composable
 - `unit/useAnalytics.test.ts` — vitest unit tests for the factory
 
 **Modify:**
+
 - `nuxt.config.ts:103-108` — add `posthogKey`, `posthogHost` to `runtimeConfig.public`
 - `.env.example` — add `NUXT_PUBLIC_POSTHOG_KEY`, `NUXT_PUBLIC_POSTHOG_HOST`
 - `package.json` — add `posthog-js`
@@ -40,6 +42,7 @@
 ## Task 1: Install posthog-js
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install the SDK**
@@ -64,6 +67,7 @@ git commit -m "chore(deps): add posthog-js for analytics"
 ## Task 2: Add env vars and runtimeConfig
 
 **Files:**
+
 - Modify: `.env.example`
 - Modify: `nuxt.config.ts:103-108`
 
@@ -122,6 +126,7 @@ git commit -m "feat(analytics): wire posthog env vars into runtimeConfig"
 ## Task 3: Create the Nuxt client plugin
 
 **Files:**
+
 - Create: `app/plugins/posthog.client.ts`
 
 - [ ] **Step 1: Write the plugin**
@@ -129,12 +134,12 @@ git commit -m "feat(analytics): wire posthog env vars into runtimeConfig"
 Create `app/plugins/posthog.client.ts`:
 
 ```ts
-import posthog from "posthog-js"
+import posthog from 'posthog-js'
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
   const key = config.public.posthogKey as string | undefined
-  const host = (config.public.posthogHost as string) || "https://eu.i.posthog.com"
+  const host = (config.public.posthogHost as string) || 'https://eu.i.posthog.com'
 
   // No key set (typical in local dev) → plugin no-ops, composable will see undefined
   if (!key) {
@@ -147,7 +152,7 @@ export default defineNuxtPlugin(() => {
     api_host: host,
     autocapture: false,
     capture_pageview: true,
-    persistence: "localStorage",
+    persistence: 'localStorage',
     respect_dnt: true,
     disable_session_recording: true,
   })
@@ -165,9 +170,9 @@ Append to `app/types/database.ts` (or create `app/types/nuxt.d.ts` if neater —
 Create `app/types/nuxt.d.ts`:
 
 ```ts
-import type { PostHog } from "posthog-js"
+import type { PostHog } from 'posthog-js'
 
-declare module "#app" {
+declare module '#app' {
   interface NuxtApp {
     $posthog: PostHog | null
   }
@@ -193,6 +198,7 @@ git commit -m "feat(analytics): add posthog client plugin (autocapture off, DNT 
 ## Task 4: Create useAnalytics composable with unit tests (TDD)
 
 **Files:**
+
 - Create: `unit/useAnalytics.test.ts`
 - Create: `app/composables/useAnalytics.ts`
 
@@ -213,8 +219,8 @@ Create `unit/useAnalytics.test.ts`:
  *   - identifyUser and resetUser proxy through correctly
  */
 
-import { describe, it, expect, vi } from "vitest"
-import { createAnalytics } from "../app/composables/useAnalytics"
+import { describe, it, expect, vi } from 'vitest'
+import { createAnalytics } from '../app/composables/useAnalytics'
 
 function makeMockPostHog() {
   return {
@@ -224,81 +230,81 @@ function makeMockPostHog() {
   }
 }
 
-describe("createAnalytics", () => {
-  describe("when posthog is null (key unset)", () => {
-    it("track is a no-op", () => {
+describe('createAnalytics', () => {
+  describe('when posthog is null (key unset)', () => {
+    it('track is a no-op', () => {
       const a = createAnalytics(null)
-      expect(() => a.track("user_signed_up", { method: "email" })).not.toThrow()
+      expect(() => a.track('user_signed_up', { method: 'email' })).not.toThrow()
     })
 
-    it("identifyUser is a no-op", () => {
+    it('identifyUser is a no-op', () => {
       const a = createAnalytics(null)
-      expect(() => a.identifyUser("user-123", { circle_count: 2 })).not.toThrow()
+      expect(() => a.identifyUser('user-123', { circle_count: 2 })).not.toThrow()
     })
 
-    it("resetUser is a no-op", () => {
+    it('resetUser is a no-op', () => {
       const a = createAnalytics(null)
       expect(() => a.resetUser()).not.toThrow()
     })
   })
 
-  describe("when posthog is present", () => {
-    it("track calls posthog.capture with name and props", () => {
+  describe('when posthog is present', () => {
+    it('track calls posthog.capture with name and props', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.track("memory_uploaded", {
-        circle_id: "c1",
-        memory_type: "photo",
-        visibility: "circle",
+      a.track('memory_uploaded', {
+        circle_id: 'c1',
+        memory_type: 'photo',
+        visibility: 'circle',
         media_count: 3,
       })
-      expect(ph.capture).toHaveBeenCalledWith("memory_uploaded", {
-        circle_id: "c1",
-        memory_type: "photo",
-        visibility: "circle",
+      expect(ph.capture).toHaveBeenCalledWith('memory_uploaded', {
+        circle_id: 'c1',
+        memory_type: 'photo',
+        visibility: 'circle',
         media_count: 3,
       })
     })
 
-    it("identifyUser calls posthog.identify with userId and props", () => {
+    it('identifyUser calls posthog.identify with userId and props', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.identifyUser("user-123", { circle_count: 2 })
-      expect(ph.identify).toHaveBeenCalledWith("user-123", { circle_count: 2 })
+      a.identifyUser('user-123', { circle_count: 2 })
+      expect(ph.identify).toHaveBeenCalledWith('user-123', { circle_count: 2 })
     })
 
-    it("identifyUser works without props", () => {
+    it('identifyUser works without props', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.identifyUser("user-123")
-      expect(ph.identify).toHaveBeenCalledWith("user-123", undefined)
+      a.identifyUser('user-123')
+      expect(ph.identify).toHaveBeenCalledWith('user-123', undefined)
     })
 
-    it("resetUser calls posthog.reset", () => {
+    it('resetUser calls posthog.reset', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
       a.resetUser()
       expect(ph.reset).toHaveBeenCalledOnce()
     })
 
-    it("track passes through circle_created event", () => {
+    it('track passes through circle_created event', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.track("circle_created", { circle_id: "c1", circle_type: "parents" })
-      expect(ph.capture).toHaveBeenCalledWith("circle_created", {
-        circle_id: "c1",
-        circle_type: "parents",
+      a.track('circle_created', { circle_id: 'c1', circle_type: 'parents' })
+      expect(ph.capture).toHaveBeenCalledWith('circle_created', {
+        circle_id: 'c1',
+        circle_type: 'parents',
       })
     })
 
-    it("track passes through reaction_added event with emoji", () => {
+    it('track passes through reaction_added event with emoji', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.track("reaction_added", { circle_id: "c1", memory_id: "m1", emoji: "❤️" })
-      expect(ph.capture).toHaveBeenCalledWith("reaction_added", {
-        circle_id: "c1",
-        memory_id: "m1",
-        emoji: "❤️",
+      a.track('reaction_added', { circle_id: 'c1', memory_id: 'm1', emoji: '❤️' })
+      expect(ph.capture).toHaveBeenCalledWith('reaction_added', {
+        circle_id: 'c1',
+        memory_id: 'm1',
+        emoji: '❤️',
       })
     })
   })
@@ -315,7 +321,7 @@ Expected: FAIL — module `../app/composables/useAnalytics` not found / `createA
 Create `app/composables/useAnalytics.ts`:
 
 ```ts
-import type { PostHog } from "posthog-js"
+import type { PostHog } from 'posthog-js'
 
 /**
  * Discriminated union of every analytics event in the Phase 1 catalog.
@@ -326,29 +332,29 @@ import type { PostHog } from "posthog-js"
  * Spec: docs/superpowers/specs/2026-05-11-posthog-analytics-design.md §2
  */
 export type AnalyticsEvent =
-  | { name: "user_signed_up"; props: { method: "email" } }
-  | { name: "circle_created"; props: { circle_id: string; circle_type: string } }
-  | { name: "member_invited"; props: { circle_id: string; invite_method: "link" } }
-  | { name: "member_joined"; props: { circle_id: string; joined_via: "invite" } }
+  | { name: 'user_signed_up'; props: { method: 'email' } }
+  | { name: 'circle_created'; props: { circle_id: string; circle_type: string } }
+  | { name: 'member_invited'; props: { circle_id: string; invite_method: 'link' } }
+  | { name: 'member_joined'; props: { circle_id: string; joined_via: 'invite' } }
   | {
-      name: "memory_uploaded"
+      name: 'memory_uploaded'
       props: {
         circle_id: string
-        memory_type: "photo" | "video" | "note" | "mixed"
-        visibility: "circle" | "private"
+        memory_type: 'photo' | 'video' | 'note' | 'mixed'
+        visibility: 'circle' | 'private'
         media_count: number
       }
     }
-  | { name: "memory_shared_to_circle"; props: { circle_id: string; memory_id: string } }
-  | { name: "comment_added"; props: { circle_id: string; memory_id: string } }
-  | { name: "reaction_added"; props: { circle_id: string; memory_id: string; emoji: string } }
-  | { name: "milestone_created"; props: { circle_id: string; milestone_type: string } }
-  | { name: "export_requested"; props: { circle_id: string; format: "zip" } }
-  | { name: "subscription_upgraded"; props: { tier: "plus"; interval: "monthly" | "annual" } }
-  | { name: "subscription_cancelled"; props: { tier: "plus" } }
+  | { name: 'memory_shared_to_circle'; props: { circle_id: string; memory_id: string } }
+  | { name: 'comment_added'; props: { circle_id: string; memory_id: string } }
+  | { name: 'reaction_added'; props: { circle_id: string; memory_id: string; emoji: string } }
+  | { name: 'milestone_created'; props: { circle_id: string; milestone_type: string } }
+  | { name: 'export_requested'; props: { circle_id: string; format: 'zip' } }
+  | { name: 'subscription_upgraded'; props: { tier: 'plus'; interval: 'monthly' | 'annual' } }
+  | { name: 'subscription_cancelled'; props: { tier: 'plus' } }
 
-type EventName = AnalyticsEvent["name"]
-type PropsFor<N extends EventName> = Extract<AnalyticsEvent, { name: N }>["props"]
+type EventName = AnalyticsEvent['name']
+type PropsFor<N extends EventName> = Extract<AnalyticsEvent, { name: N }>['props']
 
 /**
  * Pure factory — easy to unit test without Nuxt context.
@@ -398,6 +404,7 @@ git commit -m "feat(analytics): typed useAnalytics composable + tests"
 ## Task 5: Wire identify on auth state, reset on logout
 
 **Files:**
+
 - Modify: `app/app.vue`
 
 - [ ] **Step 1: Inspect current `app/app.vue`**
@@ -442,9 +449,9 @@ watchEffect(async () => {
     let circleCount: number | undefined
     try {
       const { count } = await supabase
-        .from("CircleMember")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", u.id)
+        .from('CircleMember')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', u.id)
       circleCount = count ?? undefined
     } catch {
       circleCount = undefined
@@ -479,6 +486,7 @@ git commit -m "feat(analytics): identify supabase user on login, reset on logout
 ## Task 6: Emit user_signed_up on confirm.vue
 
 **Files:**
+
 - Modify: `app/pages/confirm.vue`
 
 - [ ] **Step 1: Locate the OTP success branch**
@@ -500,12 +508,10 @@ const u = useSupabaseUser()
 // Supabase sets last_sign_in_at AFTER verifyOtp returns, so check created_at distance.
 if (u.value) {
   const created = new Date(u.value.created_at).getTime()
-  const lastSignIn = u.value.last_sign_in_at
-    ? new Date(u.value.last_sign_in_at).getTime()
-    : created
+  const lastSignIn = u.value.last_sign_in_at ? new Date(u.value.last_sign_in_at).getTime() : created
   // First sign-in if created and last_sign_in differ by less than 5 seconds
   if (Math.abs(lastSignIn - created) < 5000) {
-    track("user_signed_up", { method: "email" })
+    track('user_signed_up', { method: 'email' })
   }
 }
 ```
@@ -529,6 +535,7 @@ git commit -m "feat(analytics): emit user_signed_up on initial OTP confirm"
 ## Task 7: Emit circle_created on successful circle insert
 
 **Files:**
+
 - Modify: circle creation site
 
 - [ ] **Step 1: Locate circle creation calls**
@@ -544,7 +551,7 @@ In each circle-create site, after the insert resolves successfully and you have 
 const { track } = useAnalytics()
 
 // ... after insert succeeds and you have the new circle row:
-track("circle_created", {
+track('circle_created', {
   circle_id: newCircle.id,
   circle_type: newCircle.circle_type,
 })
@@ -569,6 +576,7 @@ git commit -m "feat(analytics): emit circle_created on Circle insert"
 ## Task 8: Emit member_invited and member_joined
 
 **Files:**
+
 - Modify: invite-link UI (likely `app/components/ShareLinksSheet.vue` or similar; grep to find)
 - Modify: `app/pages/invite/[token].vue`
 
@@ -586,9 +594,9 @@ At the place where the invite is successfully created (immediately after the ins
 const { track } = useAnalytics()
 
 // ... after CircleInvite insert succeeds:
-track("member_invited", {
+track('member_invited', {
   circle_id: invite.circle_id,
-  invite_method: "link",
+  invite_method: 'link',
 })
 ```
 
@@ -605,9 +613,9 @@ In the success block (after the user is added to the circle and you have `circle
 const { track } = useAnalytics()
 
 // ... after circle join succeeds:
-track("member_joined", {
+track('member_joined', {
   circle_id: circleId,
-  joined_via: "invite",
+  joined_via: 'invite',
 })
 ```
 
@@ -627,6 +635,7 @@ git commit -m "feat(analytics): emit member_invited and member_joined"
 ## Task 9: Emit memory_uploaded + memory_shared_to_circle
 
 **Files:**
+
 - Modify: `app/components/UploadMemory.vue`
 
 - [ ] **Step 1: Locate the upload success branch**
@@ -639,16 +648,16 @@ Expected: where the upload POST resolves and we have the new memory's id, visibi
 Just before the existing success/emit block (where the memory's items are known), compute:
 
 ```ts
-type ItemType = "photo" | "video" | "note"
-function deriveMemoryType(items: { type?: string | null }[]): "photo" | "video" | "note" | "mixed" {
+type ItemType = 'photo' | 'video' | 'note'
+function deriveMemoryType(items: { type?: string | null }[]): 'photo' | 'video' | 'note' | 'mixed' {
   const kinds = new Set<ItemType>()
   for (const it of items) {
-    if (it.type === "text") kinds.add("note")
-    else if (it.type === "video") kinds.add("video")
-    else kinds.add("photo")  // photo or unspecified image fallback
+    if (it.type === 'text') kinds.add('note')
+    else if (it.type === 'video') kinds.add('video')
+    else kinds.add('photo') // photo or unspecified image fallback
   }
-  if (kinds.size > 1) return "mixed"
-  return kinds.values().next().value ?? "photo"
+  if (kinds.size > 1) return 'mixed'
+  return kinds.values().next().value ?? 'photo'
 }
 ```
 
@@ -663,14 +672,14 @@ const { track } = useAnalytics()
 
 // after upload success — you have: memoryId, circleId, items, visibility
 const memoryType = deriveMemoryType(items)
-track("memory_uploaded", {
+track('memory_uploaded', {
   circle_id: circleId,
   memory_type: memoryType,
-  visibility: visibility as "circle" | "private",
+  visibility: visibility as 'circle' | 'private',
   media_count: items.length,
 })
-if (visibility === "circle") {
-  track("memory_shared_to_circle", {
+if (visibility === 'circle') {
+  track('memory_shared_to_circle', {
     circle_id: circleId,
     memory_id: memoryId,
   })
@@ -695,6 +704,7 @@ git commit -m "feat(analytics): emit memory_uploaded and memory_shared_to_circle
 ## Task 10: Emit comment_added and reaction_added
 
 **Files:**
+
 - Modify: `app/components/MemoryModal.vue`
 
 - [ ] **Step 1: Locate `toggleReaction` and the comment submit handler**
@@ -710,7 +720,7 @@ Inside `toggleReaction(emoji)`, locate the branch where the insert succeeds (as 
 const { track } = useAnalytics()
 
 // after a successful insert into Reaction (NOT after a delete):
-track("reaction_added", {
+track('reaction_added', {
   circle_id: props.memory.circle_id,
   memory_id: props.memory.id,
   emoji,
@@ -724,7 +734,7 @@ Toggling off a reaction (delete) should NOT emit any event — only the add half
 Find the comment submit handler. After the comment is inserted successfully:
 
 ```ts
-track("comment_added", {
+track('comment_added', {
   circle_id: props.memory.circle_id,
   memory_id: props.memory.id,
 })
@@ -748,6 +758,7 @@ git commit -m "feat(analytics): emit comment_added and reaction_added"
 ## Task 11: Emit milestone_created
 
 **Files:**
+
 - Modify: milestone creation site (likely `app/components/MilestoneShareModal.vue` or wherever Milestone inserts happen)
 
 - [ ] **Step 1: Locate the milestone insert call**
@@ -761,7 +772,7 @@ Expected: the place where a new Milestone row is created, with `milestone_type` 
 const { track } = useAnalytics()
 
 // after Milestone insert succeeds:
-track("milestone_created", {
+track('milestone_created', {
   circle_id: milestone.circle_id,
   milestone_type: milestone.milestone_type,
 })
@@ -783,6 +794,7 @@ git commit -m "feat(analytics): emit milestone_created"
 ## Task 12: Emit export_requested
 
 **Files:**
+
 - Modify: `app/pages/settings/account.vue`
 
 - [ ] **Step 1: Locate the export trigger**
@@ -798,9 +810,9 @@ In the success branch (after the export API returns 2xx), add:
 const { track } = useAnalytics()
 
 // after /api/account/export resolves successfully:
-track("export_requested", {
-  circle_id: activeCircleId,  // whichever circle this export is for
-  format: "zip",
+track('export_requested', {
+  circle_id: activeCircleId, // whichever circle this export is for
+  format: 'zip',
 })
 ```
 
@@ -822,6 +834,7 @@ git commit -m "feat(analytics): emit export_requested"
 ## Task 13: End-to-end verification + docs update
 
 **Files:**
+
 - Modify: `docs/build-plan.md`
 - Modify: `docs/design-spec.md`
 
@@ -900,6 +913,7 @@ git commit -m "docs: mark 1.7 complete, update spec to posthog cloud EU"
 ## Self-Review Notes
 
 **Spec coverage:**
+
 - Plugin config (autocapture, DNT, persistence, host) → Task 3 ✓
 - Typed composable + discriminated union → Task 4 ✓
 - Identify on auth, reset on logout → Task 5 ✓

@@ -14,7 +14,9 @@ test.describe('Onboarding flow', () => {
   // Tests that complete circle creation and need /timeline accessible flip this
   // to true via setHasMembership().
   let hasMembership = false
-  const setHasMembership = (v: boolean) => { hasMembership = v }
+  const setHasMembership = (v: boolean) => {
+    hasMembership = v
+  }
 
   test.beforeEach(async ({ page }) => {
     hasMembership = false
@@ -23,12 +25,12 @@ test.describe('Onboarding flow', () => {
     await page.addInitScript(() => {
       localStorage.setItem('value_prop_seen', '1')
     })
-    await page.route('**/api/auth/membership**', route =>
+    await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ hasMembership, needsProfile: false, deletedAt: null }),
-      })
+      }),
     )
   })
 
@@ -37,11 +39,22 @@ test.describe('Onboarding flow', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/onboarding')
       // Wait for client-side rendering to complete
-      await page.locator('button').filter({ hasText: /new parents/i }).waitFor({ timeout: 20_000 })
+      await page
+        .locator('button')
+        .filter({ hasText: /new parents/i })
+        .waitFor({ timeout: 20_000 })
     })
 
     test('shows all 7 circle type buttons', async ({ page }) => {
-      const labels = ['New parents', 'Couple', 'Family', 'Friend group', 'Caregiving', 'Travel group', 'Just me']
+      const labels = [
+        'New parents',
+        'Couple',
+        'Family',
+        'Friend group',
+        'Caregiving',
+        'Travel group',
+        'Just me',
+      ]
       for (const label of labels) {
         await expect(page.locator('button').filter({ hasText: label }).first()).toBeVisible()
       }
@@ -85,12 +98,12 @@ test.describe('Onboarding flow', () => {
     })
 
     test('non-solo circle navigates to the invite step after creation', async ({ page }) => {
-      await page.route('**/api/circles/create**', route =>
+      await page.route('**/api/circles/create**', (route) =>
         route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({ circleId: TEST_CIRCLE_ID }),
-        })
+        }),
       )
 
       await page.locator('input[type="text"]').fill('The Smith Family')
@@ -108,7 +121,7 @@ test.describe('Onboarding flow', () => {
       await page.getByRole('button', { name: 'Continue' }).click()
       await page.waitForURL('/onboarding/name')
 
-      await page.route('**/api/circles/create**', async route => {
+      await page.route('**/api/circles/create**', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -127,21 +140,24 @@ test.describe('Onboarding flow', () => {
     })
 
     test('shows an error message when circle creation fails', async ({ page }) => {
-      await page.route('**/api/circles/create**', route =>
+      await page.route('**/api/circles/create**', (route) =>
         route.fulfill({
           status: 500,
           contentType: 'application/json',
           body: JSON.stringify({ message: 'Something went wrong' }),
-        })
+        }),
       )
 
       await page.locator('input[type="text"]').fill('Test Circle')
       await page.getByRole('button', { name: 'Continue' }).click()
 
       // Error message should appear on the page
-      await expect(page.locator('p').filter({ hasText: /something went wrong/i }).or(
-        page.locator('p').filter({ hasText: /went wrong|error|failed/i })
-      )).toBeVisible({ timeout: 5_000 })
+      await expect(
+        page
+          .locator('p')
+          .filter({ hasText: /something went wrong/i })
+          .or(page.locator('p').filter({ hasText: /went wrong|error|failed/i })),
+      ).toBeVisible({ timeout: 5_000 })
     })
   })
 
@@ -155,7 +171,7 @@ test.describe('Onboarding flow', () => {
       await page.getByRole('button', { name: 'Continue' }).click()
       await page.waitForURL('/onboarding/name')
 
-      await page.route('**/api/circles/create**', async route => {
+      await page.route('**/api/circles/create**', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -182,8 +198,8 @@ test.describe('Onboarding flow', () => {
     })
 
     test('sending a valid invite shows a success confirmation', async ({ page }) => {
-      await page.route('**/api/circles/invite**', route =>
-        route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+      await page.route('**/api/circles/invite**', (route) =>
+        route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
       )
 
       await page.locator('input[type="email"]').fill('partner@example.com')
@@ -193,8 +209,8 @@ test.describe('Onboarding flow', () => {
     })
 
     test('after sending an invite the skip button changes to Continue', async ({ page }) => {
-      await page.route('**/api/circles/invite**', route =>
-        route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+      await page.route('**/api/circles/invite**', (route) =>
+        route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
       )
 
       await page.locator('input[type="email"]').fill('partner@example.com')

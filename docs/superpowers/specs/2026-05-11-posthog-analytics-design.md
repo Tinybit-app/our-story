@@ -31,7 +31,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const key = config.public.posthogKey
   const host = config.public.posthogHost
 
-  if (!key) return  // no-op when key is unset (local dev)
+  if (!key) return // no-op when key is unset (local dev)
 
   posthog.init(key, {
     api_host: host,
@@ -62,7 +62,15 @@ type AnalyticsEvent =
   | { name: 'circle_created'; props: { circle_id: string; circle_type: CircleType } }
   | { name: 'member_invited'; props: { circle_id: string; invite_method: 'link' } }
   | { name: 'member_joined'; props: { circle_id: string; joined_via: 'invite' } }
-  | { name: 'memory_uploaded'; props: { circle_id: string; memory_type: 'photo' | 'video' | 'note' | 'mixed'; visibility: 'circle' | 'private'; media_count: number } }
+  | {
+      name: 'memory_uploaded'
+      props: {
+        circle_id: string
+        memory_type: 'photo' | 'video' | 'note' | 'mixed'
+        visibility: 'circle' | 'private'
+        media_count: number
+      }
+    }
   | { name: 'memory_shared_to_circle'; props: { circle_id: string; memory_id: string } }
   | { name: 'comment_added'; props: { circle_id: string; memory_id: string } }
   | { name: 'reaction_added'; props: { circle_id: string; memory_id: string; emoji: string } }
@@ -103,20 +111,20 @@ The discriminated union means `track('memory_uploaded', { circle_id })` fails at
 
 ## 4. Events catalog
 
-| Event | Fired from | Properties |
-|---|---|---|
-| `user_signed_up` | `app/pages/confirm.vue` (post-OTP success, first session) | `{ method: 'email' }` |
-| `circle_created` | Wherever the Circle insert succeeds (onboarding circle page) | `{ circle_id, circle_type }` |
-| `member_invited` | Invite link copy/share UI | `{ circle_id, invite_method: 'link' }` |
-| `member_joined` | `app/pages/invite/[token].vue` on accept | `{ circle_id, joined_via: 'invite' }` |
-| `memory_uploaded` | `app/components/UploadMemory.vue` post-success | `{ circle_id, memory_type, visibility, media_count }` |
-| `memory_shared_to_circle` | Same site, when `visibility === 'circle'` | `{ circle_id, memory_id }` |
-| `comment_added` | Comment composer submit success | `{ circle_id, memory_id }` |
-| `reaction_added` | Reaction picker tap | `{ circle_id, memory_id, emoji }` |
-| `milestone_created` | Milestone creation UI submit | `{ circle_id, milestone_type }` |
-| `export_requested` | Export trigger UI | `{ circle_id, format: 'zip' }` |
-| `subscription_upgraded` | Stripe checkout success (Phase 2) | `{ tier: 'plus', interval }` |
-| `subscription_cancelled` | Cancel handler (Phase 2) | `{ tier: 'plus' }` |
+| Event                     | Fired from                                                   | Properties                                            |
+| ------------------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| `user_signed_up`          | `app/pages/confirm.vue` (post-OTP success, first session)    | `{ method: 'email' }`                                 |
+| `circle_created`          | Wherever the Circle insert succeeds (onboarding circle page) | `{ circle_id, circle_type }`                          |
+| `member_invited`          | Invite link copy/share UI                                    | `{ circle_id, invite_method: 'link' }`                |
+| `member_joined`           | `app/pages/invite/[token].vue` on accept                     | `{ circle_id, joined_via: 'invite' }`                 |
+| `memory_uploaded`         | `app/components/UploadMemory.vue` post-success               | `{ circle_id, memory_type, visibility, media_count }` |
+| `memory_shared_to_circle` | Same site, when `visibility === 'circle'`                    | `{ circle_id, memory_id }`                            |
+| `comment_added`           | Comment composer submit success                              | `{ circle_id, memory_id }`                            |
+| `reaction_added`          | Reaction picker tap                                          | `{ circle_id, memory_id, emoji }`                     |
+| `milestone_created`       | Milestone creation UI submit                                 | `{ circle_id, milestone_type }`                       |
+| `export_requested`        | Export trigger UI                                            | `{ circle_id, format: 'zip' }`                        |
+| `subscription_upgraded`   | Stripe checkout success (Phase 2)                            | `{ tier: 'plus', interval }`                          |
+| `subscription_cancelled`  | Cancel handler (Phase 2)                                     | `{ tier: 'plus' }`                                    |
 
 **`memory_type` derivation:** at the Memory level, derived from items: `note` if only text slides, `photo`/`video` if uniform, `mixed` if heterogeneous.
 

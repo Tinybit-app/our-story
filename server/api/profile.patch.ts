@@ -1,10 +1,19 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server"
-import { z } from "zod"
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { z } from 'zod'
 
 const schema = z.object({
-  firstName: z.string().min(1).max(100).transform((s) => s.trim()).optional(),
-  lastName: z.string().max(100).transform((s) => s.trim()).optional(),
-  locale: z.enum(["en", "zh-CN", "fr"]).optional(),
+  firstName: z
+    .string()
+    .min(1)
+    .max(100)
+    .transform((s) => s.trim())
+    .optional(),
+  lastName: z
+    .string()
+    .max(100)
+    .transform((s) => s.trim())
+    .optional(),
+  locale: z.enum(['en', 'zh-CN', 'fr']).optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -14,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: "Invalid profile data." })
+  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid profile data.' })
   const { firstName, lastName, locale } = result.data
 
   // Build update payload — only include fields that were provided
@@ -25,14 +34,14 @@ export default defineEventHandler(async (event) => {
 
   if (Object.keys(patch).length === 0) return { ok: true }
 
-  const { error } = await supabase
-    .from("user")
-    .update(patch)
-    .eq("id", user.sub)
+  const { error } = await supabase.from('user').update(patch).eq('id', user.sub)
 
   if (error) {
-    console.error("[profile] update failed:", error.message)
-    throw createError({ statusCode: 500, message: "Failed to save profile. Please try again." })
+    console.error('[profile] update failed:', error.message)
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to save profile. Please try again.',
+    })
   }
 
   return { ok: true }
