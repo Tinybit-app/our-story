@@ -28,7 +28,10 @@ describe('buildFirstMonthRecapEmail — subject', () => {
   })
 
   it('zh-CN subject is in Chinese', () => {
-    const { subject } = buildFirstMonthRecapEmail({ ...baseOpts, locale: 'zh-CN' })
+    const { subject } = buildFirstMonthRecapEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
     expect(subject).toContain('The Smiths')
   })
@@ -94,7 +97,10 @@ describe('buildFirstMonthRecapEmail — body', () => {
   })
 
   it("handles null firstMemoryNote without rendering 'null'", () => {
-    const { html } = buildFirstMonthRecapEmail({ ...baseOpts, firstMemoryNote: null })
+    const { html } = buildFirstMonthRecapEmail({
+      ...baseOpts,
+      firstMemoryNote: null,
+    })
     expect(html).not.toContain('null')
   })
 })

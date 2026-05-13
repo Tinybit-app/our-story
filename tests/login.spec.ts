@@ -10,22 +10,38 @@ test.describe('Login page', () => {
   })
 
   test('shows wordmark, headline and subtitle', async ({ page }) => {
-    await expect(page.locator('p').filter({ hasText: 'Our Story' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /every moment worth keeping/i })).toBeVisible()
-    await expect(page.getByText('For you, your family, your friends.')).toBeVisible()
+    await expect(
+      page.locator('p').filter({ hasText: 'Our Story' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /every moment worth keeping/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('For you, your family, your friends.'),
+    ).toBeVisible()
   })
 
   test('shows the magic-link sign-in method', async ({ page }) => {
     // Google SSO is deferred to Phase 2 (build-plan §3.1) — only magic link in Phase 1.
     await expect(page.getByPlaceholder('your@email.com')).toBeVisible()
-    await expect(page.getByRole('button', { name: /continue with email/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /continue with google/i })).toHaveCount(0)
+    await expect(
+      page.getByRole('button', { name: /continue with email/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /continue with google/i }),
+    ).toHaveCount(0)
   })
 
-  test('shows success message after valid email submission', async ({ page }) => {
+  test('shows success message after valid email submission', async ({
+    page,
+  }) => {
     // Intercept the Supabase OTP request so we don't need real credentials
     await page.route('**/auth/v1/otp**', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '{}',
+      }),
     )
 
     await page.getByPlaceholder('your@email.com').fill('test@example.com')
@@ -95,7 +111,9 @@ test.describe('Pricing page', () => {
 // so there is no risk of Supabase client initialisation from a prior
 // navigation bleeding into the session check.
 test.describe('Auth routing', () => {
-  test('unauthenticated visit to /timeline redirects to /login', async ({ page }) => {
+  test('unauthenticated visit to /timeline redirects to /login', async ({
+    page,
+  }) => {
     await page.goto('/timeline')
     await page.waitForURL(/\/login/, { timeout: 10_000 })
     await expect(page).toHaveURL(/\/login/)

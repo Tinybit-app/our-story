@@ -1,16 +1,24 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Nav -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
-      <div class="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 py-3.5">
-        <p class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
+      <div
+        class="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 py-3.5"
+      >
+        <p
+          class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent"
+        >
           Our Story
         </p>
 
         <div class="flex items-center gap-2">
           <!-- Theme toggle -->
           <button
-            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+            :aria-label="
+              isDark ? 'Switch to light mode' : 'Switch to dark mode'
+            "
             class="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             @click="toggleTheme"
           >
@@ -54,8 +62,14 @@
               class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-ring"
               @click="menuOpen = !menuOpen"
             >
-              <img v-if="avatarUrl" :src="avatarUrl" class="h-full w-full object-cover" />
-              <span v-else class="text-[10px] font-bold text-foreground">{{ userInitial }}</span>
+              <img
+                v-if="avatarUrl"
+                :src="avatarUrl"
+                class="h-full w-full object-cover"
+              />
+              <span v-else class="text-[10px] font-bold text-foreground">{{
+                userInitial
+              }}</span>
             </button>
 
             <Transition
@@ -119,7 +133,10 @@
         >
           {{ t('landing.hero.headline') }}
         </h1>
-        <p data-reveal="d1" class="relative z-10 mb-8 text-base text-muted-foreground">
+        <p
+          data-reveal="d1"
+          class="relative z-10 mb-8 text-base text-muted-foreground"
+        >
           {{ t('landing.hero.subhead') }}
         </p>
         <NuxtLink
@@ -199,11 +216,17 @@
               class="step-item text-center sm:text-left"
             >
               <!-- Large faded background numeral -->
-              <span class="step-bg-numeral" aria-hidden="true">0{{ i + 1 }}</span>
-              <h2 class="relative z-10 mb-2 font-display text-lg font-bold text-foreground">
+              <span class="step-bg-numeral" aria-hidden="true"
+                >0{{ i + 1 }}</span
+              >
+              <h2
+                class="relative z-10 mb-2 font-display text-lg font-bold text-foreground"
+              >
                 {{ step.title }}
               </h2>
-              <p class="relative z-10 text-sm leading-relaxed text-muted-foreground">
+              <p
+                class="relative z-10 text-sm leading-relaxed text-muted-foreground"
+              >
                 {{ step.desc }}
               </p>
             </div>
@@ -340,7 +363,9 @@
       <div
         class="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-5 py-6"
       >
-        <p class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent">
+        <p
+          class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent"
+        >
           Our Story
         </p>
         <div class="flex items-center gap-5">
@@ -384,7 +409,9 @@ const { t } = useI18n()
 const colorMode = useColorMode()
 const prefersDark = usePreferredDark()
 const isDark = computed(() =>
-  colorMode.preference === 'system' ? prefersDark.value : colorMode.preference === 'dark',
+  colorMode.preference === 'system'
+    ? prefersDark.value
+    : colorMode.preference === 'dark',
 )
 function toggleTheme() {
   colorMode.preference = isDark.value ? 'light' : 'dark'
@@ -396,7 +423,9 @@ const { data: profile } = useAsyncData(
   'landing-profile',
   () =>
     authUser.value
-      ? $fetch<{ firstName: string | null; avatarUrl: string | null }>('/api/profile')
+      ? $fetch<{ firstName: string | null; avatarUrl: string | null }>(
+          '/api/profile',
+        )
       : Promise.resolve(null),
   { watch: [authUser] },
 )
@@ -428,7 +457,9 @@ onMounted(() => {
     },
     { threshold: 0.08, rootMargin: '0px 0px -48px 0px' },
   )
-  document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el))
+  document
+    .querySelectorAll('[data-reveal]')
+    .forEach((el) => observer.observe(el))
 })
 
 const howItWorksSteps = computed(() => [
@@ -446,7 +477,11 @@ const howItWorksSteps = computed(() => [
   },
 ])
 
-const privacyItems = ['No ads', 'No algorithm', 'No AI training on your memories']
+const privacyItems = [
+  'No ads',
+  'No algorithm',
+  'No AI training on your memories',
+]
 
 const featureHighlights = [
   {
@@ -716,7 +751,11 @@ const circleTypes = [
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, hsl(33 40% 65% / 0.1) 0%, transparent 65%);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    hsl(33 40% 65% / 0.1) 0%,
+    transparent 65%
+  );
   pointer-events: none;
 }
 .vision-quote-mark {

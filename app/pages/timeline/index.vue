@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <!-- Circle name / member count -->
         <div class="min-w-0 flex-1">
@@ -65,7 +67,9 @@
               </svg>
             </NuxtLink>
             <template v-if="circle?.memberCount">
-              <span class="flex-shrink-0 text-xs leading-none text-border">/</span>
+              <span class="flex-shrink-0 text-xs leading-none text-border"
+                >/</span
+              >
               <NuxtLink
                 to="/members"
                 class="group inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground transition-colors hover:text-foreground"
@@ -145,8 +149,12 @@
             stroke-width="2"
             viewBox="0 0 24 24"
           >
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
           </svg>
           <span>{{ t('viewerLink.shareButton') }}</span>
         </button>
@@ -160,8 +168,14 @@
             class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-ring"
             @click="menuOpen = !menuOpen"
           >
-            <img v-if="userAvatarUrl" :src="userAvatarUrl" class="h-full w-full object-cover" />
-            <span v-else class="text-[10px] font-bold text-foreground">{{ userInitials }}</span>
+            <img
+              v-if="userAvatarUrl"
+              :src="userAvatarUrl"
+              class="h-full w-full object-cover"
+            />
+            <span v-else class="text-[10px] font-bold text-foreground">{{
+              userInitials
+            }}</span>
           </button>
 
           <!-- Dropdown -->
@@ -210,10 +224,7 @@
                 <button
                   v-if="canInvite"
                   class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary"
-                  @click="
-                    menuOpen = false
-                    inviteOpen = true
-                  "
+                  @click="((menuOpen = false), (inviteOpen = true))"
                 >
                   <svg
                     class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
@@ -318,14 +329,22 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="jumpOpen" class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-20">
-        <div class="absolute inset-0 bg-black/45 backdrop-blur-sm" @click="jumpOpen = false" />
+      <div
+        v-if="jumpOpen"
+        class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-20"
+      >
+        <div
+          class="absolute inset-0 bg-black/45 backdrop-blur-sm"
+          @click="jumpOpen = false"
+        />
         <div
           class="relative w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl"
           @click.stop
         >
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-foreground">{{ t('nav.jumpTo') }}</h2>
+            <h2 class="text-sm font-semibold text-foreground">
+              {{ t('nav.jumpTo') }}
+            </h2>
             <button
               class="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
               @click="jumpOpen = false"
@@ -343,8 +362,15 @@
             </button>
           </div>
 
-          <div v-for="info in yearInfos" :key="info.year" class="mb-4 last:mb-0">
-            <div class="grid gap-1.5" style="grid-template-columns: 44px repeat(12, 1fr)">
+          <div
+            v-for="info in yearInfos"
+            :key="info.year"
+            class="mb-4 last:mb-0"
+          >
+            <div
+              class="grid gap-1.5"
+              style="grid-template-columns: 44px repeat(12, 1fr)"
+            >
               <button
                 class="py-1 text-left text-xs font-bold text-foreground transition-colors hover:text-accent"
                 @click="jumpToYear(info.year)"
@@ -385,7 +411,10 @@
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="closeInvite"
+        />
 
         <!-- Sheet -->
         <div
@@ -411,7 +440,10 @@
             <p v-if="inviteError" class="mb-3 text-xs text-destructive">
               {{ inviteError }}
             </p>
-            <p v-if="inviteSentTo" class="mb-3 text-xs text-green-600 dark:text-green-400">
+            <p
+              v-if="inviteSentTo"
+              class="mb-3 text-xs text-green-600 dark:text-green-400"
+            >
               {{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
             </p>
 
@@ -489,7 +521,9 @@
         >
           <!-- Header -->
           <div class="border-b border-border px-5 pb-3 pt-5">
-            <p class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <p
+              class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{ t('nav.yourCircles') }}
             </p>
           </div>
@@ -499,7 +533,9 @@
             <li v-for="c in allCircles" :key="c.id">
               <button
                 class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
-                :class="c.id === circleId ? 'bg-secondary' : 'hover:bg-secondary/60'"
+                :class="
+                  c.id === circleId ? 'bg-secondary' : 'hover:bg-secondary/60'
+                "
                 @click="switchCircle(c.id)"
               >
                 <div
@@ -508,8 +544,12 @@
                   {{ c.name?.[0]?.toUpperCase() ?? '?' }}
                 </div>
                 <div class="min-w-0 flex-1">
-                  <p class="truncate text-sm font-medium text-foreground">{{ c.name }}</p>
-                  <p class="text-[11px] text-muted-foreground">{{ roleLabel(c.role) }}</p>
+                  <p class="truncate text-sm font-medium text-foreground">
+                    {{ c.name }}
+                  </p>
+                  <p class="text-[11px] text-muted-foreground">
+                    {{ roleLabel(c.role) }}
+                  </p>
                 </div>
                 <svg
                   v-if="c.id === circleId"
@@ -545,7 +585,9 @@
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
               </div>
-              <p class="text-sm font-medium text-foreground">{{ t('nav.createNewCircle') }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ t('nav.createNewCircle') }}
+              </p>
             </button>
           </div>
         </div>
@@ -570,14 +612,15 @@
       :open="shareSheetOpen"
       :circle-id="circleId ?? ''"
       @close="shareSheetOpen = false"
-      @create="
-        createSheetOpen = true
-        editingLink = null
-      "
+      @create="((createSheetOpen = true), (editingLink = null))"
       @renew="renewViewerLink"
       @edit="
         (link) => {
-          editingLink = { id: link.id, memoryIds: link.memoryIds ?? [], label: link.label }
+          editingLink = {
+            id: link.id,
+            memoryIds: link.memoryIds ?? [],
+            label: link.label,
+          }
           createSheetOpen = true
         }
       "
@@ -586,10 +629,7 @@
       :open="createSheetOpen"
       :circle-id="circleId ?? ''"
       :edit-link="editingLink"
-      @close="
-        createSheetOpen = false
-        editingLink = null
-      "
+      @close="((createSheetOpen = false), (editingLink = null))"
       @created="onLinkCreated"
     />
   </div>
@@ -632,10 +672,17 @@ function onOpenMemory({
 
 function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
   const i = memoriesFlat.value.findIndex((m) => m.id === patch.id)
-  if (i !== -1) memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
+  if (i !== -1)
+    memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
 }
 
-function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions: any[] }) {
+function onReactionUpdate({
+  memoryId,
+  reactions,
+}: {
+  memoryId: string
+  reactions: any[]
+}) {
   const i = memoriesFlat.value.findIndex((m) => m.id === memoryId)
   if (i !== -1)
     memoriesFlat.value[i] = {
@@ -664,14 +711,21 @@ if (profile.value?.locale) {
 const userAvatarUrl = computed(() => profile.value?.avatarUrl ?? null)
 
 const userDisplayName = computed(() => {
-  const parts = [profile.value?.firstName, profile.value?.lastName].filter(Boolean)
-  return parts.length ? parts.join(' ') : (authUser.value?.email?.split('@')[0] ?? 'You')
+  const parts = [profile.value?.firstName, profile.value?.lastName].filter(
+    Boolean,
+  )
+  return parts.length
+    ? parts.join(' ')
+    : (authUser.value?.email?.split('@')[0] ?? 'You')
 })
 
 const userInitials = computed(() => {
   const first = profile.value?.firstName?.[0] ?? ''
   const last = profile.value?.lastName?.[0] ?? ''
-  return (first + last).toUpperCase() || userDisplayName.value.slice(0, 2).toUpperCase()
+  return (
+    (first + last).toUpperCase() ||
+    userDisplayName.value.slice(0, 2).toUpperCase()
+  )
 })
 
 // ── Dropdown ───────────────────────────────────────────────
@@ -711,7 +765,9 @@ onClickOutside(menuRef, () => {
 const colorMode = useColorMode()
 const prefersDark = usePreferredDark()
 const isDark = computed(() =>
-  colorMode.preference === 'system' ? prefersDark.value : colorMode.preference === 'dark',
+  colorMode.preference === 'system'
+    ? prefersDark.value
+    : colorMode.preference === 'dark',
 )
 function toggleTheme() {
   colorMode.preference = isDark.value ? 'light' : 'dark'
@@ -799,13 +855,16 @@ async function fetchTimeline(year?: number) {
     }>('/api/timeline', {
       query: { circleId: circleId.value, ...(year ? { year } : {}) },
     })
-    memoriesFlat.value = year ? [...memoriesFlat.value, ...data.memories] : data.memories
+    memoriesFlat.value = year
+      ? [...memoriesFlat.value, ...data.memories]
+      : data.memories
     prevYear.value = data.prevYear
     if (!year) {
       children.value = data.children ?? []
       members.value = data.members ?? []
       upcomingMilestone.value = data.upcomingMilestone ?? null
-      milestoneNudgesEnabled.value = data.milestoneNudgesEnabledForActiveCircle ?? true
+      milestoneNudgesEnabled.value =
+        data.milestoneNudgesEnabledForActiveCircle ?? true
     }
   } catch (err) {
     console.error('[timeline] fetch error:', err)
@@ -938,8 +997,10 @@ async function sendInvite() {
     inviteEmail.value = ''
   } catch (err: any) {
     const msg = err?.data?.message ?? ''
-    if (msg.includes('already been sent')) inviteError.value = t('nav.inviteAlreadySent')
-    else if (msg.includes('Max 10')) inviteError.value = t('nav.inviteMaxPending')
+    if (msg.includes('already been sent'))
+      inviteError.value = t('nav.inviteAlreadySent')
+    else if (msg.includes('Max 10'))
+      inviteError.value = t('nav.inviteMaxPending')
     else inviteError.value = t('nav.inviteFailed')
   } finally {
     inviteSending.value = false
@@ -949,7 +1010,11 @@ async function sendInvite() {
 // ── Viewer links (owner-only) ──────────────────────────────────────────────────
 const shareSheetOpen = ref(false)
 const createSheetOpen = ref(false)
-const editingLink = ref<{ id: string; memoryIds: string[]; label: string } | null>(null)
+const editingLink = ref<{
+  id: string
+  memoryIds: string[]
+  label: string
+} | null>(null)
 const shareLinksSheetRef = ref<{ refresh: () => void } | null>(null)
 
 function openShareSheet() {
@@ -959,7 +1024,9 @@ function openShareSheet() {
 async function renewViewerLink(link: { id: string }) {
   if (!circleId.value) return
   try {
-    await $fetch(`/api/circles/${circleId.value}/viewer-links/${link.id}`, { method: 'DELETE' })
+    await $fetch(`/api/circles/${circleId.value}/viewer-links/${link.id}`, {
+      method: 'DELETE',
+    })
     createSheetOpen.value = true
   } catch {
     // Error logged server-side; silently ignore on client — user can try again from the sheet

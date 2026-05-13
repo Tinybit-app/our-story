@@ -8,7 +8,10 @@ const bodySchema = z.discriminatedUnion('type', [
     fileSize: z.number().int().positive(),
     mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 export default defineEventHandler(async (event) => {
@@ -18,10 +21,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const memoryId = getRouterParam(event, 'id')
-  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
+  if (!memoryId)
+    throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const bodyData = result.data
 
   const { data: memory } = await supabase

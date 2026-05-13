@@ -3,15 +3,23 @@
     <!-- Missing token: redirect handled in onMounted -->
     <template v-if="!token">
       <div class="flex min-h-screen items-center justify-center px-6">
-        <p class="text-sm text-muted-foreground">{{ t('viewerLink.redirecting') }}</p>
+        <p class="text-sm text-muted-foreground">
+          {{ t('viewerLink.redirecting') }}
+        </p>
       </div>
     </template>
 
     <!-- Error states -->
     <template v-else-if="errorType">
-      <div class="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <div
+        class="flex min-h-screen flex-col items-center justify-center px-6 text-center"
+      >
         <div class="w-full max-w-sm">
-          <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+          <p
+            class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+          >
+            Our Story
+          </p>
           <div
             class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-secondary"
           >
@@ -62,9 +70,13 @@
 
     <!-- First-open splash -->
     <template v-else-if="showSplash && timeline">
-      <div class="relative flex min-h-screen flex-col items-center justify-end px-6 pb-16">
+      <div
+        class="relative flex min-h-screen flex-col items-center justify-end px-6 pb-16"
+      >
         <!-- Full-bleed background: most recent memory or gradient -->
-        <div class="absolute inset-0 bg-gradient-to-b from-stone-800 to-stone-900">
+        <div
+          class="absolute inset-0 bg-gradient-to-b from-stone-800 to-stone-900"
+        >
           <img
             v-if="timeline.memories[0]?.signedUrl"
             :src="timeline.memories[0].signedUrl"
@@ -74,12 +86,18 @@
         </div>
         <!-- Overlay content -->
         <div class="relative z-10 w-full max-w-sm text-center">
-          <p class="mb-6 text-xs font-bold uppercase tracking-widest text-white/70">Our Story</p>
+          <p
+            class="mb-6 text-xs font-bold uppercase tracking-widest text-white/70"
+          >
+            Our Story
+          </p>
           <h1 class="mb-3 text-2xl font-bold leading-snug text-white">
             {{ timeline.ownerFirstName || t('common.someone') }}
             {{ t('viewerLink.viewerSplashTitle') }}
           </h1>
-          <p class="mb-10 text-sm text-white/70">{{ t('viewerLink.viewerSplashSubtitle') }}</p>
+          <p class="mb-10 text-sm text-white/70">
+            {{ t('viewerLink.viewerSplashSubtitle') }}
+          </p>
           <button
             type="button"
             @click="dismissSplash"
@@ -129,8 +147,13 @@
 
         <main class="px-4 py-6">
           <!-- Mode banner + guest name -->
-          <div v-if="modeBanner || guestName" class="mb-4 mt-1 flex items-center justify-between">
-            <p v-if="modeBanner" class="text-xs text-muted-foreground">{{ modeBanner }}</p>
+          <div
+            v-if="modeBanner || guestName"
+            class="mb-4 mt-1 flex items-center justify-between"
+          >
+            <p v-if="modeBanner" class="text-xs text-muted-foreground">
+              {{ modeBanner }}
+            </p>
             <button
               v-if="guestName"
               type="button"
@@ -158,7 +181,9 @@
             <p class="mb-1 text-sm font-semibold text-foreground">
               {{ t('viewerLink.emptyState') }}
             </p>
-            <p class="text-xs text-muted-foreground">{{ t('viewerLink.emptyStateBody') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('viewerLink.emptyStateBody') }}
+            </p>
           </div>
 
           <!-- Memory list (large text for viewer accessibility) -->
@@ -187,7 +212,10 @@
                 <p class="mb-1 text-xs text-muted-foreground">
                   {{ formatDate(memory.memory_date) }}
                 </p>
-                <p v-if="memory.note" class="text-base leading-relaxed text-foreground">
+                <p
+                  v-if="memory.note"
+                  class="text-base leading-relaxed text-foreground"
+                >
                   {{ memory.note }}
                 </p>
                 <!-- Reaction button -->
@@ -215,7 +243,9 @@
                       stroke-width="2"
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      :fill="reactedIds.has(memory.id) ? 'currentColor' : 'none'"
+                      :fill="
+                        reactedIds.has(memory.id) ? 'currentColor' : 'none'
+                      "
                     >
                       <path
                         d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
@@ -266,7 +296,11 @@
                       : 'bg-accent text-accent-foreground hover:opacity-90'
                   "
                 >
-                  {{ referralCopied ? t('viewerLink.copied') : t('viewerLink.referralCta') }}
+                  {{
+                    referralCopied
+                      ? t('viewerLink.copied')
+                      : t('viewerLink.referralCta')
+                  }}
                 </button>
               </div>
             </Transition>
@@ -288,7 +322,9 @@
     <!-- Loading -->
     <template v-else>
       <div class="flex min-h-screen items-center justify-center">
-        <p class="text-sm text-muted-foreground">{{ t('viewerLink.loading') }}</p>
+        <p class="text-sm text-muted-foreground">
+          {{ t('viewerLink.loading') }}
+        </p>
       </div>
     </template>
 
@@ -390,7 +426,10 @@ function loadReactedIds(): Set<string> {
 
 function saveReactedIds() {
   try {
-    localStorage.setItem(REACTED_STORAGE_KEY, JSON.stringify([...reactedIds.value]))
+    localStorage.setItem(
+      REACTED_STORAGE_KEY,
+      JSON.stringify([...reactedIds.value]),
+    )
   } catch {
     /* quota exceeded — best effort */
   }
@@ -400,7 +439,9 @@ function saveReactedIds() {
 const memoriesSeenCount = ref(0)
 const referralDismissed = ref(false)
 const referralCopied = ref(false)
-const showReferral = computed(() => memoriesSeenCount.value >= 3 && !referralDismissed.value)
+const showReferral = computed(
+  () => memoriesSeenCount.value >= 3 && !referralDismissed.value,
+)
 
 // ── Mode banner ────────────────────────────────────────────────────────────────
 const modeBanner = computed(() => {
@@ -408,7 +449,10 @@ const modeBanner = computed(() => {
   const { mode, selectionDateRange, memories } = timeline.value
   if (mode === 'selection' && selectionDateRange) {
     const fmt = (d: string) =>
-      new Intl.DateTimeFormat(locale.value, { month: 'short', year: 'numeric' }).format(new Date(d))
+      new Intl.DateTimeFormat(locale.value, {
+        month: 'short',
+        year: 'numeric',
+      }).format(new Date(d))
     return t('viewerLink.selectionBanner', {
       count: memories.length,
       from: fmt(selectionDateRange.from),
@@ -421,7 +465,10 @@ const modeBanner = computed(() => {
 // ── IntersectionObserver for referral trigger ──────────────────────────────────
 let observer: IntersectionObserver | null = null
 
-function observeMemory(el: Element | ComponentPublicInstance | null, index: number) {
+function observeMemory(
+  el: Element | ComponentPublicInstance | null,
+  index: number,
+) {
   if (!(el instanceof Element) || index < 2) return // only observe 3rd memory (index 2)
   if (observer) return
   observer = new IntersectionObserver(
@@ -493,7 +540,9 @@ async function loadTimeline() {
 
     // Show splash unless already seen this session
     const seenThisSession =
-      typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(SESSION_KEY) === '1' : false
+      typeof sessionStorage !== 'undefined'
+        ? sessionStorage.getItem(SESSION_KEY) === '1'
+        : false
     showSplash.value = !seenThisSession
   } catch (err: any) {
     const msg = err?.data?.message ?? err?.message ?? ''
@@ -540,7 +589,9 @@ async function reactToMemory(memoryId: string) {
 
 async function confirmReaction() {
   if (!guestName.value.trim()) return
-  const savedName = useCookie('viewer_guest_name', { maxAge: 365 * 24 * 60 * 60 })
+  const savedName = useCookie('viewer_guest_name', {
+    maxAge: 365 * 24 * 60 * 60,
+  })
   savedName.value = guestName.value.trim()
   showNamePrompt.value = false
   // If opened from a reaction tap, submit it; if editing name only, just save
@@ -554,7 +605,12 @@ async function submitReaction(memoryId: string, name: string) {
   try {
     await $fetch('/api/reactions/guest', {
       method: 'POST',
-      body: { viewerToken: token.value, memoryId, emoji: '❤️', guestName: name },
+      body: {
+        viewerToken: token.value,
+        memoryId,
+        emoji: '❤️',
+        guestName: name,
+      },
     })
     reactedIds.value = new Set([...reactedIds.value, memoryId])
     saveReactedIds()

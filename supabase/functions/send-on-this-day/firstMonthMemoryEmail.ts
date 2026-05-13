@@ -46,7 +46,8 @@ export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
 
   const subject = (() => {
     if (locale === 'zh-CN') return `「${circleName}」最初的一段回忆`
-    if (locale === 'fr') return `Un souvenir de vos premiers jours avec ${circleName}`
+    if (locale === 'fr')
+      return `Un souvenir de vos premiers jours avec ${circleName}`
     return `A memory from your first month with ${circleName}`
   })()
 
@@ -59,7 +60,8 @@ export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
 
   const intro = (() => {
     if (locale === 'zh-CN') return `这是你们圈子最早期的一段回忆。`
-    if (locale === 'fr') return `Voici un souvenir des tout débuts de votre cercle.`
+    if (locale === 'fr')
+      return `Voici un souvenir des tout débuts de votre cercle.`
     return `Here's a memory from your circle's earliest days.`
   })()
 

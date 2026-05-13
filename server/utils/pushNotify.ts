@@ -37,7 +37,10 @@ export function buildPushPayload(input: PushPayloadInput): PushPayload {
     case 'upload': {
       const count = input.recentUploadCount ?? 1
       renotify = count <= 1
-      title = count > 1 ? `${actorName} added ${count} memories` : `${actorName} added a memory`
+      title =
+        count > 1
+          ? `${actorName} added ${count} memories`
+          : `${actorName} added a memory`
       body =
         count > 1
           ? "Check out what's new"
@@ -95,7 +98,9 @@ export async function sendPushToCircle(
   // 2. Check notification preferences — skip muted or push-disabled
   const { data: prefs } = await supabase
     .from('notificationpreference')
-    .select('user_id, push_enabled, circle_muted, quiet_hours_start, quiet_hours_end')
+    .select(
+      'user_id, push_enabled, circle_muted, quiet_hours_start, quiet_hours_end',
+    )
     .eq('circle_id', circleId)
     .in('user_id', memberIds)
 
@@ -111,7 +116,8 @@ export async function sendPushToCircle(
     if (pref.circle_muted) return false
     if (!pref.push_enabled) return false
     if (pref.quiet_hours_start && pref.quiet_hours_end) {
-      if (isWithinQuietHours(pref.quiet_hours_start, pref.quiet_hours_end)) return false
+      if (isWithinQuietHours(pref.quiet_hours_start, pref.quiet_hours_end))
+        return false
     }
     return true
   })

@@ -14,7 +14,13 @@
       class="flex items-center gap-2 rounded-[12px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       @click="fileInput?.click()"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+      >
         <path d="M12 5v14M5 12h14" />
       </svg>
       {{ t('nav.addMemory') }}
@@ -26,7 +32,10 @@
         class="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/50" @click="!isUploading && cancel()" />
+        <div
+          class="absolute inset-0 bg-black/50"
+          @click="!isUploading && cancel()"
+        />
 
         <!-- Sheet -->
         <div
@@ -39,7 +48,9 @@
             <div>
               <h2 class="text-sm font-semibold text-foreground">
                 {{
-                  items.length === 1 ? t('upload.addMemory') : t('upload.addMemories', items.length)
+                  items.length === 1
+                    ? t('upload.addMemory')
+                    : t('upload.addMemories', items.length)
                 }}
               </h2>
               <button
@@ -101,12 +112,16 @@
           <!-- Batch people picker — shown when NOT groupAsOne (separate mode) -->
           <div
             v-if="
-              items.length > 1 && !groupAsOne && (props.members?.length || props.children?.length)
+              items.length > 1 &&
+              !groupAsOne &&
+              (props.members?.length || props.children?.length)
             "
             class="flex-shrink-0 border-b border-border px-5 py-2.5"
           >
             <div class="mb-1.5 flex items-center justify-between">
-              <p class="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
+              <p
+                class="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
+              >
                 {{ t('upload.tagPeople') }}
               </p>
               <button
@@ -203,14 +218,21 @@
                   v-if="firstItem.isVideo"
                   class="absolute bottom-2 left-2 rounded bg-black/50 px-1.5 py-0.5"
                 >
-                  <span class="text-[9px] font-semibold tracking-wide text-white">VIDEO</span>
+                  <span
+                    class="text-[9px] font-semibold tracking-wide text-white"
+                    >VIDEO</span
+                  >
                 </div>
                 <div
                   v-if="firstItem.uploading"
                   class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50"
                 >
-                  <p class="text-lg font-bold text-white">{{ firstItem.progress }}%</p>
-                  <div class="h-1 w-24 overflow-hidden rounded-full bg-white/30">
+                  <p class="text-lg font-bold text-white">
+                    {{ firstItem.progress }}%
+                  </p>
+                  <div
+                    class="h-1 w-24 overflow-hidden rounded-full bg-white/30"
+                  >
                     <div
                       class="h-1 rounded-full bg-white transition-all duration-150"
                       :style="{ width: `${firstItem.progress}%` }"
@@ -221,7 +243,9 @@
                   v-if="firstItem.done"
                   class="absolute inset-0 flex items-center justify-center bg-black/30"
                 >
-                  <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20"
+                  >
                     <svg
                       class="h-6 w-6 text-white"
                       fill="none"
@@ -237,7 +261,9 @@
 
               <!-- Date + people picker: immediately below the image so they're always visible -->
               <div class="mb-3 flex items-center justify-between">
-                <label class="text-sm text-muted-foreground">{{ t('upload.whenWas') }}</label>
+                <label class="text-sm text-muted-foreground">{{
+                  t('upload.whenWas')
+                }}</label>
                 <input
                   v-model="firstItem.date"
                   type="date"
@@ -246,10 +272,17 @@
               </div>
 
               <!-- Combined people picker: members + children -->
-              <div v-if="props.members?.length || props.children?.length" class="mb-3">
+              <div
+                v-if="props.members?.length || props.children?.length"
+                class="mb-3"
+              >
                 <p
                   class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em]"
-                  :class="props.circleType === 'parents' ? 'text-accent' : 'text-muted-foreground'"
+                  :class="
+                    props.circleType === 'parents'
+                      ? 'text-accent'
+                      : 'text-muted-foreground'
+                  "
                 >
                   {{ t('upload.whoIsIn') }}
                 </p>
@@ -299,11 +332,15 @@
 
               <div class="mb-3">
                 <div class="mb-1 flex items-baseline justify-between">
-                  <label class="text-xs text-muted-foreground">{{ t('upload.note') }}</label>
+                  <label class="text-xs text-muted-foreground">{{
+                    t('upload.note')
+                  }}</label>
                   <span
                     class="text-[11px]"
                     :class="
-                      firstItem.note.length >= 500 ? 'text-destructive' : 'text-muted-foreground'
+                      firstItem.note.length >= 500
+                        ? 'text-destructive'
+                        : 'text-muted-foreground'
                     "
                     >{{ firstItem.note.length }} / 500</span
                   >
@@ -319,7 +356,9 @@
 
               <div class="mb-3">
                 <div class="mb-1 flex items-baseline justify-between">
-                  <label class="text-xs text-muted-foreground">{{ t('upload.milestone') }}</label>
+                  <label class="text-xs text-muted-foreground">{{
+                    t('upload.milestone')
+                  }}</label>
                   <span
                     class="text-[11px]"
                     :class="
@@ -339,7 +378,10 @@
                 />
                 <!-- Milestone chips — quick-pick suggestions -->
                 <div
-                  v-if="typeConfig.milestoneChips.length > 0 && !firstItem.milestoneLabel"
+                  v-if="
+                    typeConfig.milestoneChips.length > 0 &&
+                    !firstItem.milestoneLabel
+                  "
                   class="mt-2 flex flex-wrap gap-1.5"
                 >
                   <button
@@ -354,7 +396,10 @@
                 </div>
               </div>
 
-              <p v-if="firstItem.error" class="mt-1 text-center text-sm text-destructive">
+              <p
+                v-if="firstItem.error"
+                class="mt-1 text-center text-sm text-destructive"
+              >
                 {{ firstItem.error }}
               </p>
             </template>
@@ -387,7 +432,10 @@
                       v-if="item.isVideo"
                       class="absolute bottom-1.5 left-1.5 rounded bg-black/50 px-1.5 py-0.5"
                     >
-                      <span class="text-[9px] font-semibold tracking-wide text-white">VIDEO</span>
+                      <span
+                        class="text-[9px] font-semibold tracking-wide text-white"
+                        >VIDEO</span
+                      >
                     </div>
 
                     <!-- Uploading overlay -->
@@ -395,8 +443,12 @@
                       v-if="item.uploading"
                       class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50"
                     >
-                      <p class="text-sm font-bold text-white">{{ item.progress }}%</p>
-                      <div class="h-0.5 w-14 overflow-hidden rounded-full bg-white/30">
+                      <p class="text-sm font-bold text-white">
+                        {{ item.progress }}%
+                      </p>
+                      <div
+                        class="h-0.5 w-14 overflow-hidden rounded-full bg-white/30"
+                      >
                         <div
                           class="h-0.5 rounded-full bg-white transition-all duration-150"
                           :style="{ width: `${item.progress}%` }"
@@ -487,7 +539,9 @@
                           :src="member.avatarUrl"
                           class="h-full w-full object-cover"
                         />
-                        <span v-else class="text-foreground">{{ memberInitials(member) }}</span>
+                        <span v-else class="text-foreground">{{
+                          memberInitials(member)
+                        }}</span>
                       </button>
                       <button
                         v-for="child in props.children"
@@ -504,7 +558,10 @@
                         {{ child.name }}
                       </button>
                     </div>
-                    <p v-if="item.error" class="text-[11px] leading-tight text-destructive">
+                    <p
+                      v-if="item.error"
+                      class="text-[11px] leading-tight text-destructive"
+                    >
                       {{ item.error }}
                     </p>
                   </div>
@@ -516,7 +573,9 @@
             <template v-else>
               <!-- Shared date -->
               <div class="mb-3 flex items-center justify-between">
-                <label class="text-sm text-muted-foreground">{{ t('upload.whenWas') }}</label>
+                <label class="text-sm text-muted-foreground">{{
+                  t('upload.whenWas')
+                }}</label>
                 <input
                   v-model="groupDate"
                   type="date"
@@ -525,7 +584,10 @@
               </div>
 
               <!-- Shared people picker -->
-              <div v-if="props.members?.length || props.children?.length" class="mb-3">
+              <div
+                v-if="props.members?.length || props.children?.length"
+                class="mb-3"
+              >
                 <p
                   class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
                 >
@@ -576,10 +638,16 @@
               <!-- Shared note -->
               <div class="mb-3">
                 <div class="mb-1 flex items-baseline justify-between">
-                  <label class="text-xs text-muted-foreground">{{ t('upload.note') }}</label>
+                  <label class="text-xs text-muted-foreground">{{
+                    t('upload.note')
+                  }}</label>
                   <span
                     class="text-[11px]"
-                    :class="groupNote.length >= 500 ? 'text-destructive' : 'text-muted-foreground'"
+                    :class="
+                      groupNote.length >= 500
+                        ? 'text-destructive'
+                        : 'text-muted-foreground'
+                    "
                     >{{ groupNote.length }} / 500</span
                   >
                 </div>
@@ -595,7 +663,9 @@
               <!-- Shared milestone -->
               <div class="mb-4">
                 <div class="mb-1 flex items-baseline justify-between">
-                  <label class="text-xs text-muted-foreground">{{ t('upload.milestone') }}</label>
+                  <label class="text-xs text-muted-foreground">{{
+                    t('upload.milestone')
+                  }}</label>
                   <span
                     class="text-[11px]"
                     :class="
@@ -641,7 +711,10 @@
                     v-if="item.isVideo"
                     class="absolute bottom-1.5 left-1.5 rounded bg-black/50 px-1.5 py-0.5"
                   >
-                    <span class="text-[9px] font-semibold tracking-wide text-white">VIDEO</span>
+                    <span
+                      class="text-[9px] font-semibold tracking-wide text-white"
+                      >VIDEO</span
+                    >
                   </div>
 
                   <!-- Uploading overlay -->
@@ -649,8 +722,12 @@
                     v-if="item.uploading"
                     class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50"
                   >
-                    <p class="text-sm font-bold text-white">{{ item.progress }}%</p>
-                    <div class="h-0.5 w-14 overflow-hidden rounded-full bg-white/30">
+                    <p class="text-sm font-bold text-white">
+                      {{ item.progress }}%
+                    </p>
+                    <div
+                      class="h-0.5 w-14 overflow-hidden rounded-full bg-white/30"
+                    >
                       <div
                         class="h-0.5 rounded-full bg-white transition-all duration-150"
                         :style="{ width: `${item.progress}%` }"
@@ -681,7 +758,9 @@
                     v-if="item.done"
                     class="absolute inset-0 flex items-center justify-center bg-black/30"
                   >
-                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                    <div
+                      class="flex h-9 w-9 items-center justify-center rounded-full bg-white/20"
+                    >
                       <svg
                         class="h-5 w-5 text-white"
                         fill="none"
@@ -699,7 +778,9 @@
                     v-if="item.error"
                     class="absolute bottom-1.5 left-1.5 right-1.5 rounded bg-destructive/90 px-1.5 py-0.5"
                   >
-                    <p class="text-[9px] leading-tight text-white">{{ item.error }}</p>
+                    <p class="text-[9px] leading-tight text-white">
+                      {{ item.error }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -711,7 +792,9 @@
                   :key="slide.tempId"
                   class="flex items-start gap-2 rounded-[12px] border border-border bg-card px-3 py-2.5"
                 >
-                  <p class="flex-1 text-sm leading-snug text-foreground">{{ slide.textContent }}</p>
+                  <p class="flex-1 text-sm leading-snug text-foreground">
+                    {{ slide.textContent }}
+                  </p>
                   <button
                     type="button"
                     class="mt-0.5 flex-shrink-0 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
@@ -732,7 +815,10 @@
                   + {{ t('upload.addTextSlide') }}
                 </button>
               </div>
-              <div v-else class="rounded-[12px] border border-border bg-card p-3">
+              <div
+                v-else
+                class="rounded-[12px] border border-border bg-card p-3"
+              >
                 <textarea
                   v-model="newTextContent"
                   :placeholder="t('upload.notePlaceholder')"
@@ -771,7 +857,9 @@
           </p>
 
           <!-- Footer -->
-          <div class="flex flex-shrink-0 gap-2.5 border-t border-border px-5 py-4">
+          <div
+            class="flex flex-shrink-0 gap-2.5 border-t border-border px-5 py-4"
+          >
             <button
               class="flex-1 rounded-[12px] border border-border bg-card py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
               :disabled="isUploading"
@@ -789,7 +877,9 @@
               }}</span>
               <span v-else-if="allDone">{{ t('upload.allUploaded') }}</span>
               <span v-else>{{
-                items.length === 1 ? t('upload.upload') : t('upload.uploadN', items.length)
+                items.length === 1
+                  ? t('upload.upload')
+                  : t('upload.uploadN', items.length)
               }}</span>
             </button>
           </div>
@@ -893,7 +983,11 @@ const effectiveCoverTempId = computed(() => {
 })
 
 function memberInitials(member: CircleMember): string {
-  return ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?'
+  return (
+    (
+      (member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')
+    ).toUpperCase() || '?'
+  )
 }
 
 function toggleChild(item: UploadItem, childId: string) {
@@ -939,13 +1033,18 @@ function cancelAddTextSlide() {
 
 function confirmAddTextSlide() {
   if (!newTextContent.value.trim()) return
-  textSlides.value.push({ tempId: crypto.randomUUID(), textContent: newTextContent.value.trim() })
+  textSlides.value.push({
+    tempId: crypto.randomUUID(),
+    textContent: newTextContent.value.trim(),
+  })
   newTextContent.value = ''
   showAddTextDialog.value = false
 }
 
 const isUploading = computed(() => items.value.some((i) => i.uploading))
-const allDone = computed(() => items.value.length > 0 && items.value.every((i) => i.done))
+const allDone = computed(
+  () => items.value.length > 0 && items.value.every((i) => i.done),
+)
 const doneCount = computed(() => items.value.filter((i) => i.done).length)
 // Safe – only accessed inside v-if="items.length === 1" in the template
 const firstItem = computed(() => items.value[0] as UploadItem)
@@ -993,7 +1092,9 @@ async function onFilesSelected(e: Event) {
     const isVideo = file.type.startsWith('video/')
     const maxSize = isVideo ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES
     if (file.size > maxSize) {
-      globalError.value = isVideo ? t('upload.errorVideoSize') : t('upload.errorPhotoSize')
+      globalError.value = isVideo
+        ? t('upload.errorVideoSize')
+        : t('upload.errorPhotoSize')
       continue
     }
     const date = isVideo ? today() : await extractExifDate(file)
@@ -1016,7 +1117,11 @@ async function onFilesSelected(e: Event) {
   }
 
   // Prefill group milestone label when first batch of items is added
-  if (items.value.length === 0 && newItems.length > 0 && props.prefillMilestoneLabel) {
+  if (
+    items.value.length === 0 &&
+    newItems.length > 0 &&
+    props.prefillMilestoneLabel
+  ) {
     groupMilestoneLabel.value = props.prefillMilestoneLabel
   }
 
@@ -1063,7 +1168,8 @@ async function uploadItem(item: UploadItem): Promise<void> {
   formData.append('file', item.file)
   formData.append('circleId', props.circleId)
   formData.append('note', item.note)
-  if (item.milestoneLabel.trim()) formData.append('milestoneLabel', item.milestoneLabel.trim())
+  if (item.milestoneLabel.trim())
+    formData.append('milestoneLabel', item.milestoneLabel.trim())
   formData.append('memoryDate', `${item.date}T00:00:00Z`)
 
   return new Promise((resolve) => {
@@ -1072,7 +1178,8 @@ async function uploadItem(item: UploadItem): Promise<void> {
     xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) item.progress = Math.round((e.loaded / e.total) * 100)
+      if (e.lengthComputable)
+        item.progress = Math.round((e.loaded / e.total) * 100)
     }
 
     xhr.onload = async () => {
@@ -1087,13 +1194,17 @@ async function uploadItem(item: UploadItem): Promise<void> {
               ? $fetch(`/api/memories/${result.memoryId}/children`, {
                   method: 'POST',
                   body: { childIds: item.selectedChildIds },
-                }).catch((err) => console.error('[upload] failed to tag children:', err))
+                }).catch((err) =>
+                  console.error('[upload] failed to tag children:', err),
+                )
               : Promise.resolve(),
             item.selectedMemberIds.length > 0
               ? $fetch(`/api/memories/${result.memoryId}/members`, {
                   method: 'POST',
                   body: { userIds: item.selectedMemberIds },
-                }).catch((err) => console.error('[upload] failed to tag members:', err))
+                }).catch((err) =>
+                  console.error('[upload] failed to tag members:', err),
+                )
               : Promise.resolve(),
           ])
 
@@ -1167,11 +1278,15 @@ async function uploadItemDeferred(
 
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${config.public.supabaseUrl}/functions/v1/upload-media?defer=true`)
+    xhr.open(
+      'POST',
+      `${config.public.supabaseUrl}/functions/v1/upload-media?defer=true`,
+    )
     xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) item.progress = Math.round((e.loaded / e.total) * 100)
+      if (e.lengthComputable)
+        item.progress = Math.round((e.loaded / e.total) * 100)
     }
 
     xhr.onload = () => {
@@ -1207,7 +1322,9 @@ async function uploadAsOneMemory() {
   globalError.value = ''
 
   // 1. Upload all media files in parallel with defer=true
-  const draftResults = await Promise.all(items.value.map((item) => uploadItemDeferred(item)))
+  const draftResults = await Promise.all(
+    items.value.map((item) => uploadItemDeferred(item)),
+  )
 
   // If any upload failed, abort
   if (draftResults.some((r) => !r)) {
@@ -1217,10 +1334,14 @@ async function uploadAsOneMemory() {
 
   // 2. Build the items array: drafts (in selection order) + text slides at the end
   const orderedItems: Array<
-    { type: 'draft'; draftMemoryId: string } | { type: 'text'; textContent: string }
+    | { type: 'draft'; draftMemoryId: string }
+    | { type: 'text'; textContent: string }
   > = []
   for (let i = 0; i < items.value.length; i++) {
-    orderedItems.push({ type: 'draft', draftMemoryId: draftResults[i]!.memoryId })
+    orderedItems.push({
+      type: 'draft',
+      draftMemoryId: draftResults[i]!.memoryId,
+    })
   }
   for (const ts of textSlides.value) {
     orderedItems.push({ type: 'text', textContent: ts.textContent })
@@ -1229,25 +1350,30 @@ async function uploadAsOneMemory() {
   // 3. Resolve cover index
   let coverIdx: number | null = null
   if (coverItemTempId.value) {
-    const idx = items.value.findIndex((it) => it.tempId === coverItemTempId.value)
+    const idx = items.value.findIndex(
+      (it) => it.tempId === coverItemTempId.value,
+    )
     if (idx >= 0) coverIdx = idx
   }
 
   // 4. Call upload-batch
   try {
-    const batchResult = await $fetch<{ memoryId: string }>('/api/memories/upload-batch', {
-      method: 'POST',
-      body: {
-        circleId: props.circleId,
-        memoryDate: groupDate.value,
-        note: groupNote.value || null,
-        milestoneLabel: groupMilestoneLabel.value || null,
-        childIds: groupChildIds.value,
-        memberIds: groupMemberIds.value,
-        coverIndex: coverIdx,
-        items: orderedItems,
+    const batchResult = await $fetch<{ memoryId: string }>(
+      '/api/memories/upload-batch',
+      {
+        method: 'POST',
+        body: {
+          circleId: props.circleId,
+          memoryDate: groupDate.value,
+          note: groupNote.value || null,
+          milestoneLabel: groupMilestoneLabel.value || null,
+          childIds: groupChildIds.value,
+          memberIds: groupMemberIds.value,
+          coverIndex: coverIdx,
+          items: orderedItems,
+        },
       },
-    })
+    )
 
     const mediaTypes = new Set<'photo' | 'video' | 'note'>()
     for (const it of items.value) {
@@ -1255,7 +1381,11 @@ async function uploadAsOneMemory() {
     }
     if (textSlides.value.length > 0) mediaTypes.add('note')
 
-    const singleType = mediaTypes.values().next().value as 'photo' | 'video' | 'note' | undefined
+    const singleType = mediaTypes.values().next().value as
+      | 'photo'
+      | 'video'
+      | 'note'
+      | undefined
     const memoryType: 'photo' | 'video' | 'note' | 'mixed' =
       mediaTypes.size > 1 ? 'mixed' : (singleType ?? 'photo')
 
@@ -1316,7 +1446,10 @@ watch(allDone, (done) => {
       .map((id) => props.children?.find((c) => c.id === id))
       .filter(Boolean)
       .map((child) => {
-        const age = computeBabyAge(child!.date_of_birth, `${item.date}T00:00:00Z`)
+        const age = computeBabyAge(
+          child!.date_of_birth,
+          `${item.date}T00:00:00Z`,
+        )
         return age ? { name: child!.name, age } : null
       })
       .filter(Boolean) as Array<{ name: string; age: string }>

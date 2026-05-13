@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { buildChildMilestoneEmail, buildAnniversaryEmail } from '../server/utils/email'
+import {
+  buildChildMilestoneEmail,
+  buildAnniversaryEmail,
+} from '../server/utils/email'
 
 const baseChild = {
   recipientFirstName: 'Dao',
@@ -21,19 +24,30 @@ describe('buildChildMilestoneEmail — subjects', () => {
   })
 
   it('T+0 says today', () => {
-    const { subject } = buildChildMilestoneEmail({ ...baseChild, phase: 'T0', daysUntil: 0 })
+    const { subject } = buildChildMilestoneEmail({
+      ...baseChild,
+      phase: 'T0',
+      daysUntil: 0,
+    })
     expect(subject.toLowerCase()).toMatch(/today|🎉/)
     expect(subject).toContain('Mia')
   })
 
   it('T+3 asks if captured', () => {
-    const { subject } = buildChildMilestoneEmail({ ...baseChild, phase: 'T+3', daysUntil: -3 })
+    const { subject } = buildChildMilestoneEmail({
+      ...baseChild,
+      phase: 'T+3',
+      daysUntil: -3,
+    })
     expect(subject.toLowerCase()).toMatch(/capture|did you/)
     expect(subject).toContain('Mia')
   })
 
   it('renders zh-CN subject with Chinese characters', () => {
-    const { subject } = buildChildMilestoneEmail({ ...baseChild, locale: 'zh-CN' })
+    const { subject } = buildChildMilestoneEmail({
+      ...baseChild,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
   })
 

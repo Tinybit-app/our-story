@@ -1,7 +1,11 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-      <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <!-- Step indicator -->
       <div class="mb-8 flex items-center gap-1.5">
@@ -10,7 +14,9 @@
         <div class="h-1 w-6 rounded-full bg-border" />
       </div>
 
-      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
+      <h1
+        class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground"
+      >
         {{ t('onboarding.nameCircle') }}
       </h1>
       <p class="mb-8 text-sm text-muted-foreground">
@@ -26,7 +32,9 @@
         @keyup.enter="name && !loading && createCircle()"
       />
 
-      <p v-if="errorMsg" class="mb-4 text-sm text-destructive">{{ errorMsg }}</p>
+      <p v-if="errorMsg" class="mb-4 text-sm text-destructive">
+        {{ errorMsg }}
+      </p>
 
       <button
         @click="createCircle"
@@ -58,8 +66,12 @@ const name = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
 
-const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
-const circleIdCookie = useCookie<string | null>('onboarding_circle_id', { maxAge: 60 * 60 * 2 })
+const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', {
+  maxAge: 60 * 60 * 2,
+})
+const circleIdCookie = useCookie<string | null>('onboarding_circle_id', {
+  maxAge: 60 * 60 * 2,
+})
 
 const placeholder = computed(() => {
   const map: Record<string, string> = {
@@ -71,7 +83,10 @@ const placeholder = computed(() => {
     travel: t('onboarding.circlePlaceholderTravel'),
     caregiving: t('onboarding.circlePlaceholderCaregiving'),
   }
-  return map[circleTypeCookie.value ?? ''] ?? t('onboarding.circlePlaceholderDefault')
+  return (
+    map[circleTypeCookie.value ?? ''] ??
+    t('onboarding.circlePlaceholderDefault')
+  )
 })
 
 async function createCircle() {
@@ -79,10 +94,13 @@ async function createCircle() {
   errorMsg.value = ''
 
   try {
-    const { circleId } = await $fetch<{ circleId: string }>('/api/circles/create', {
-      method: 'POST',
-      body: { name: name.value, circleType: circleTypeCookie.value },
-    })
+    const { circleId } = await $fetch<{ circleId: string }>(
+      '/api/circles/create',
+      {
+        method: 'POST',
+        body: { name: name.value, circleType: circleTypeCookie.value },
+      },
+    )
 
     circleIdCookie.value = circleId
 

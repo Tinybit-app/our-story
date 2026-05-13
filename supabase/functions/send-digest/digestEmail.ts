@@ -104,7 +104,10 @@ function digestBody(
   `
 }
 
-export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string; html: string } {
+export function buildWeeklyDigestEmail(opts: DigestEmailOpts): {
+  subject: string
+  html: string
+} {
   const { circleName, childName, totalCount, locale } = opts
 
   const subject = (() => {
@@ -127,7 +130,10 @@ export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string
   return { subject, html: layout(digestBody(opts, periodLabel)) }
 }
 
-export function buildMonthlyDigestEmail(opts: DigestEmailOpts): { subject: string; html: string } {
+export function buildMonthlyDigestEmail(opts: DigestEmailOpts): {
+  subject: string
+  html: string
+} {
   const { circleName, childName, totalCount, locale } = opts
 
   // Use the previous month name (the digest covers the trailing 30 days but is sent on the 1st)

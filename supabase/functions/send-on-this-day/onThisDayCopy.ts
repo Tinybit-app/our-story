@@ -4,9 +4,13 @@
 
 export type Locale = 'en' | 'zh-CN' | 'fr'
 
-export function buildOnThisDayPushTitle(yearsAgo: number, locale: Locale): string {
+export function buildOnThisDayPushTitle(
+  yearsAgo: number,
+  locale: Locale,
+): string {
   if (locale === 'zh-CN') return `${yearsAgo} 年前的今天`
-  if (locale === 'fr') return `Il y a ${yearsAgo} an${yearsAgo === 1 ? '' : 's'} aujourd'hui`
+  if (locale === 'fr')
+    return `Il y a ${yearsAgo} an${yearsAgo === 1 ? '' : 's'} aujourd'hui`
   return `On this day, ${yearsAgo} year${yearsAgo === 1 ? '' : 's'} ago`
 }
 

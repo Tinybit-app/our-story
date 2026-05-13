@@ -1,6 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getMilestoneKeyForAge, getAnniversaryYear } from './milestoneCron.ts'
-import { buildChildMilestoneEmail, buildAnniversaryEmail } from './milestoneEmail.ts'
+import {
+  buildChildMilestoneEmail,
+  buildAnniversaryEmail,
+} from './milestoneEmail.ts'
 import webpush from 'https://esm.sh/web-push@3.6.7'
 
 // Triggered daily by pg_cron at 9am UTC.
@@ -17,7 +20,8 @@ import webpush from 'https://esm.sh/web-push@3.6.7'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
+const VAPID_SUBJECT =
+  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
@@ -51,8 +55,12 @@ Deno.serve(async (req) => {
 
   const today = new Date()
   const todayISO = today.toISOString().slice(0, 10)
-  const plus3 = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-  const minus3 = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const plus3 = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10)
+  const minus3 = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10)
 
   const phaseTargets: Array<['T-3' | 'T0' | 'T+3', string]> = [
     ['T-3', plus3],
@@ -100,7 +108,9 @@ Deno.serve(async (req) => {
         scope_type: isCouple ? 'couple' : 'trip',
         scope_id: c.id,
         circle_id: c.id,
-        milestone_key: isCouple ? `anniversary_${year}` : `trip_anniversary_${year}`,
+        milestone_key: isCouple
+          ? `anniversary_${year}`
+          : `trip_anniversary_${year}`,
         phase,
         display_name: c.name,
         years_or_label: String(year),
@@ -135,7 +145,9 @@ Deno.serve(async (req) => {
       // Recipients: owner + admins of the circle
       const { data: members } = await supabase
         .from('circlemember')
-        .select(`user_id, role, user!inner(id, email, first_name, locale, deletion_requested_at)`)
+        .select(
+          `user_id, role, user!inner(id, email, first_name, locale, deletion_requested_at)`,
+        )
         .eq('circle_id', cand.circle_id)
         .in('role', ['owner', 'admin'])
       const recipients = (members ?? []).filter(
@@ -186,7 +198,10 @@ Deno.serve(async (req) => {
         }
 
         const pushEnabled = prefs?.push_enabled !== false
-        const inQuiet = isInQuietHours(prefs?.quiet_hours_start, prefs?.quiet_hours_end)
+        const inQuiet = isInQuietHours(
+          prefs?.quiet_hours_start,
+          prefs?.quiet_hours_end,
+        )
 
         // Try push first
         if (pushEnabled && !inQuiet) {
@@ -205,12 +220,18 @@ Deno.serve(async (req) => {
             for (const s of subs as any[]) {
               try {
                 await webpush.sendNotification(
-                  { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                  {
+                    endpoint: s.endpoint,
+                    keys: { p256dh: s.p256dh, auth: s.auth },
+                  },
                   payload,
                 )
               } catch (err: any) {
                 if (err?.statusCode === 410 || err?.statusCode === 404) {
-                  await supabase.from('pushsubscription').delete().eq('id', s.id)
+                  await supabase
+                    .from('pushsubscription')
+                    .delete()
+                    .eq('id', s.id)
                 }
               }
             }
@@ -282,7 +303,10 @@ function addDaysISO(iso: string, days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-function isInQuietHours(start: string | null | undefined, end: string | null | undefined): boolean {
+function isInQuietHours(
+  start: string | null | undefined,
+  end: string | null | undefined,
+): boolean {
   if (!start || !end) return false
   const now = new Date()
   const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
@@ -308,8 +332,10 @@ function humanizeMilestoneKey(key: string): string {
 
 function pushTitle(c: MilestoneCandidate): string {
   if (c.scope_type === 'child') {
-    if (c.phase === 'T-3') return `${c.display_name} turns ${c.years_or_label} in 3 days 🎉`
-    if (c.phase === 'T0') return `${c.display_name} is ${c.years_or_label} today 🎉`
+    if (c.phase === 'T-3')
+      return `${c.display_name} turns ${c.years_or_label} in 3 days 🎉`
+    if (c.phase === 'T0')
+      return `${c.display_name} is ${c.years_or_label} today 🎉`
     return `Did you capture ${c.display_name}'s ${c.years_or_label}?`
   }
   if (c.scope_type === 'couple') {
@@ -328,7 +354,11 @@ function pushBody(c: MilestoneCandidate): string {
   return 'Add it before the moment fades →'
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] milestone email to ${to}: ${subject}`)
@@ -337,7 +367,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         from: 'Our Story <hello@our-story.tinybit.app>',
         to,

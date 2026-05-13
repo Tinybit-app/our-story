@@ -9,7 +9,10 @@ export default defineEventHandler(async (event) => {
   const memoryId = getRouterParam(event, 'id')
   const itemId = getRouterParam(event, 'itemId')
   if (!memoryId || !itemId)
-    throw createError({ statusCode: 400, message: 'Missing memory id or item id' })
+    throw createError({
+      statusCode: 400,
+      message: 'Missing memory id or item id',
+    })
 
   const { data: memory } = await supabase
     .from('memory')

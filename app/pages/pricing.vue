@@ -1,8 +1,12 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Nav -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
-      <div class="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 py-3.5">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
+      <div
+        class="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 py-3.5"
+      >
         <NuxtLink
           to="/"
           class="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -16,7 +20,9 @@
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          <p class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent">
+          <p
+            class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent"
+          >
             Our Story
           </p>
         </NuxtLink>
@@ -35,15 +41,21 @@
         <h1 class="mb-3 font-display text-4xl font-bold text-foreground">
           {{ t('pricing.headline') }}
         </h1>
-        <p class="text-base text-muted-foreground">{{ t('pricing.subhead') }}</p>
+        <p class="text-base text-muted-foreground">
+          {{ t('pricing.subhead') }}
+        </p>
       </div>
 
       <!-- Tier cards -->
       <div class="mb-6 grid gap-4 sm:grid-cols-3">
         <!-- Free -->
-        <div class="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6">
+        <div
+          class="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6"
+        >
           <div>
-            <p class="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <p
+              class="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{ t('pricing.tiers.free.name') }}
             </p>
             <div class="mb-0.5 flex items-baseline gap-1">
@@ -51,14 +63,20 @@
                 t('pricing.tiers.free.price')
               }}</span>
             </div>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.free.priceSub') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.free.priceSub') }}
+            </p>
           </div>
           <div class="flex flex-col gap-2">
             <p class="text-xs font-semibold text-foreground">
               {{ t('pricing.tiers.free.storage') }}
             </p>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.free.circles') }}</p>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.free.members') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.free.circles') }}
+            </p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.free.members') }}
+            </p>
           </div>
           <ul class="flex flex-1 flex-col gap-2">
             <li
@@ -91,7 +109,9 @@
           class="relative flex flex-col gap-5 rounded-2xl border-2 border-foreground bg-card p-6"
         >
           <div>
-            <p class="mb-2 text-xs font-bold uppercase tracking-widest text-foreground">
+            <p
+              class="mb-2 text-xs font-bold uppercase tracking-widest text-foreground"
+            >
               {{ t('pricing.tiers.plus.name') }}
             </p>
             <div class="mb-0.5 flex items-baseline gap-1">
@@ -99,14 +119,20 @@
                 t('pricing.tiers.plus.price')
               }}</span>
             </div>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.plus.priceSub') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.plus.priceSub') }}
+            </p>
           </div>
           <div class="flex flex-col gap-2">
             <p class="text-xs font-semibold text-foreground">
               {{ t('pricing.tiers.plus.storage') }}
             </p>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.plus.circles') }}</p>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.plus.members') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.plus.circles') }}
+            </p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.plus.members') }}
+            </p>
           </div>
           <ul class="flex flex-1 flex-col gap-2">
             <li
@@ -135,10 +161,14 @@
         </div>
 
         <!-- Pro (coming soon) -->
-        <div class="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 opacity-60">
+        <div
+          class="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 opacity-60"
+        >
           <div>
             <div class="mb-2 flex items-center gap-2">
-              <p class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              <p
+                class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+              >
                 {{ t('pricing.tiers.pro.name') }}
               </p>
               <span
@@ -151,14 +181,20 @@
                 t('pricing.tiers.pro.price')
               }}</span>
             </div>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.pro.priceSub') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.pro.priceSub') }}
+            </p>
           </div>
           <div class="flex flex-col gap-2">
             <p class="text-xs font-semibold text-foreground">
               {{ t('pricing.tiers.pro.storage') }}
             </p>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.pro.circles') }}</p>
-            <p class="text-xs text-muted-foreground">{{ t('pricing.tiers.pro.members') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.pro.circles') }}
+            </p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('pricing.tiers.pro.members') }}
+            </p>
           </div>
           <ul class="flex flex-1 flex-col gap-2">
             <li
@@ -195,13 +231,19 @@
 
       <!-- FAQ -->
       <div class="mx-auto max-w-xl">
-        <p class="mb-8 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-accent">
+        <p
+          class="mb-8 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-accent"
+        >
           {{ t('pricing.faq.title') }}
         </p>
         <div class="flex flex-col gap-6">
           <div v-for="item in faqItems" :key="item.q">
-            <p class="mb-1.5 text-sm font-semibold text-foreground">{{ item.q }}</p>
-            <p class="text-sm leading-relaxed text-muted-foreground">{{ item.a }}</p>
+            <p class="mb-1.5 text-sm font-semibold text-foreground">
+              {{ item.q }}
+            </p>
+            <p class="text-sm leading-relaxed text-muted-foreground">
+              {{ item.a }}
+            </p>
           </div>
         </div>
       </div>
@@ -212,7 +254,9 @@
       <div
         class="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-5 py-6"
       >
-        <p class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent">
+        <p
+          class="select-none text-[9px] font-bold uppercase tracking-[0.18em] text-accent"
+        >
           Our Story
         </p>
         <div class="flex items-center gap-5">
@@ -242,7 +286,8 @@ definePageMeta({ auth: false })
 
 useSeoMeta({
   title: 'Pricing — Our Story',
-  description: 'Simple, honest pricing. Start free. Upgrade when your story grows.',
+  description:
+    'Simple, honest pricing. Start free. Upgrade when your story grows.',
   ogTitle: 'Pricing — Our Story',
   ogDescription:
     'Simple, honest pricing. Free plan includes unlimited memories, milestones, and reactions.',

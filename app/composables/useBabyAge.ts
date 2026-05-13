@@ -45,7 +45,8 @@ export function computeBabyAge(
   if (months >= 12) {
     const years = Math.floor(months / 12)
     const remMonths = months % 12
-    if (remMonths === 0) return years === 1 ? '1 year old' : `${years} years old`
+    if (remMonths === 0)
+      return years === 1 ? '1 year old' : `${years} years old`
     const mLabel = remMonths === 1 ? '1 month' : `${remMonths} months`
     const yLabel = years === 1 ? '1 year' : `${years} years`
     return `${yLabel}, ${mLabel}`
@@ -54,7 +55,9 @@ export function computeBabyAge(
   // ── Months: 1–23 months ──────────────────────────────────────────────────────
   // Remaining days after whole months
   const afterMonths = addMonths(dob, months)
-  const remDays = Math.floor((mem.getTime() - afterMonths.getTime()) / 86_400_000)
+  const remDays = Math.floor(
+    (mem.getTime() - afterMonths.getTime()) / 86_400_000,
+  )
   const remWeeks = Math.floor(remDays / 7)
 
   const mLabel = months === 1 ? '1 month' : `${months} months`
@@ -68,7 +71,8 @@ export function computeBabyAge(
 /** Number of whole calendar months between two dates. */
 function countCalendarMonths(from: Date, to: Date): number {
   let months =
-    (to.getUTCFullYear() - from.getUTCFullYear()) * 12 + (to.getUTCMonth() - from.getUTCMonth())
+    (to.getUTCFullYear() - from.getUTCFullYear()) * 12 +
+    (to.getUTCMonth() - from.getUTCMonth())
 
   // If the day-of-month hasn't been reached yet, subtract one
   if (to.getUTCDate() < from.getUTCDate()) {

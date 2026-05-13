@@ -139,7 +139,8 @@ import posthog from 'posthog-js'
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
   const key = config.public.posthogKey as string | undefined
-  const host = (config.public.posthogHost as string) || 'https://eu.i.posthog.com'
+  const host =
+    (config.public.posthogHost as string) || 'https://eu.i.posthog.com'
 
   // No key set (typical in local dev) → plugin no-ops, composable will see undefined
   if (!key) {
@@ -239,7 +240,9 @@ describe('createAnalytics', () => {
 
     it('identifyUser is a no-op', () => {
       const a = createAnalytics(null)
-      expect(() => a.identifyUser('user-123', { circle_count: 2 })).not.toThrow()
+      expect(() =>
+        a.identifyUser('user-123', { circle_count: 2 }),
+      ).not.toThrow()
     })
 
     it('resetUser is a no-op', () => {
@@ -300,7 +303,11 @@ describe('createAnalytics', () => {
     it('track passes through reaction_added event with emoji', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.track('reaction_added', { circle_id: 'c1', memory_id: 'm1', emoji: '❤️' })
+      a.track('reaction_added', {
+        circle_id: 'c1',
+        memory_id: 'm1',
+        emoji: '❤️',
+      })
       expect(ph.capture).toHaveBeenCalledWith('reaction_added', {
         circle_id: 'c1',
         memory_id: 'm1',
@@ -333,9 +340,18 @@ import type { PostHog } from 'posthog-js'
  */
 export type AnalyticsEvent =
   | { name: 'user_signed_up'; props: { method: 'email' } }
-  | { name: 'circle_created'; props: { circle_id: string; circle_type: string } }
-  | { name: 'member_invited'; props: { circle_id: string; invite_method: 'link' } }
-  | { name: 'member_joined'; props: { circle_id: string; joined_via: 'invite' } }
+  | {
+      name: 'circle_created'
+      props: { circle_id: string; circle_type: string }
+    }
+  | {
+      name: 'member_invited'
+      props: { circle_id: string; invite_method: 'link' }
+    }
+  | {
+      name: 'member_joined'
+      props: { circle_id: string; joined_via: 'invite' }
+    }
   | {
       name: 'memory_uploaded'
       props: {
@@ -345,16 +361,31 @@ export type AnalyticsEvent =
         media_count: number
       }
     }
-  | { name: 'memory_shared_to_circle'; props: { circle_id: string; memory_id: string } }
+  | {
+      name: 'memory_shared_to_circle'
+      props: { circle_id: string; memory_id: string }
+    }
   | { name: 'comment_added'; props: { circle_id: string; memory_id: string } }
-  | { name: 'reaction_added'; props: { circle_id: string; memory_id: string; emoji: string } }
-  | { name: 'milestone_created'; props: { circle_id: string; milestone_type: string } }
+  | {
+      name: 'reaction_added'
+      props: { circle_id: string; memory_id: string; emoji: string }
+    }
+  | {
+      name: 'milestone_created'
+      props: { circle_id: string; milestone_type: string }
+    }
   | { name: 'export_requested'; props: { circle_id: string; format: 'zip' } }
-  | { name: 'subscription_upgraded'; props: { tier: 'plus'; interval: 'monthly' | 'annual' } }
+  | {
+      name: 'subscription_upgraded'
+      props: { tier: 'plus'; interval: 'monthly' | 'annual' }
+    }
   | { name: 'subscription_cancelled'; props: { tier: 'plus' } }
 
 type EventName = AnalyticsEvent['name']
-type PropsFor<N extends EventName> = Extract<AnalyticsEvent, { name: N }>['props']
+type PropsFor<N extends EventName> = Extract<
+  AnalyticsEvent,
+  { name: N }
+>['props']
 
 /**
  * Pure factory — easy to unit test without Nuxt context.
@@ -456,7 +487,10 @@ watchEffect(async () => {
     } catch {
       circleCount = undefined
     }
-    identifyUser(u.id, circleCount !== undefined ? { circle_count: circleCount } : undefined)
+    identifyUser(
+      u.id,
+      circleCount !== undefined ? { circle_count: circleCount } : undefined,
+    )
     lastIdentifiedId.value = u.id
   } else if (!u && lastIdentifiedId.value) {
     resetUser()
@@ -508,7 +542,9 @@ const u = useSupabaseUser()
 // Supabase sets last_sign_in_at AFTER verifyOtp returns, so check created_at distance.
 if (u.value) {
   const created = new Date(u.value.created_at).getTime()
-  const lastSignIn = u.value.last_sign_in_at ? new Date(u.value.last_sign_in_at).getTime() : created
+  const lastSignIn = u.value.last_sign_in_at
+    ? new Date(u.value.last_sign_in_at).getTime()
+    : created
   // First sign-in if created and last_sign_in differ by less than 5 seconds
   if (Math.abs(lastSignIn - created) < 5000) {
     track('user_signed_up', { method: 'email' })
@@ -649,7 +685,9 @@ Just before the existing success/emit block (where the memory's items are known)
 
 ```ts
 type ItemType = 'photo' | 'video' | 'note'
-function deriveMemoryType(items: { type?: string | null }[]): 'photo' | 'video' | 'note' | 'mixed' {
+function deriveMemoryType(
+  items: { type?: string | null }[],
+): 'photo' | 'video' | 'note' | 'mixed' {
   const kinds = new Set<ItemType>()
   for (const it of items) {
     if (it.type === 'text') kinds.add('note')

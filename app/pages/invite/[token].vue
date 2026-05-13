@@ -1,7 +1,11 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm text-center">
-      <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <template v-if="errorMsg">
         <h1 class="mb-3 font-display text-xl font-bold text-foreground">
@@ -50,15 +54,17 @@ const token = route.params.token as string
 const errorMsg = ref('')
 
 // Store token in cookie so it survives the auth redirect
-const inviteCookie = useCookie('pending_invite_token', { maxAge: 60 * 60 * 24 * 7 })
+const inviteCookie = useCookie('pending_invite_token', {
+  maxAge: 60 * 60 * 24 * 7,
+})
 
 onMounted(async () => {
   // Pre-validate the invite before touching auth — this way someone who
   // clicks a stale link sees the right error immediately, without being
   // forced through a sign-in flow first.
-  const status = await $fetch<{ status: 'pending' | 'expired' | 'circle_deleted' }>(
-    `/api/invites/${token}/status`,
-  ).catch(() => ({ status: 'error' as const }))
+  const status = await $fetch<{
+    status: 'pending' | 'expired' | 'circle_deleted'
+  }>(`/api/invites/${token}/status`).catch(() => ({ status: 'error' as const }))
 
   if (status.status === 'expired') {
     errorMsg.value = 'invite_expired'
@@ -87,9 +93,12 @@ onMounted(async () => {
 
 async function acceptInvite() {
   try {
-    const result = await $fetch<{ ok: boolean; circleId: string }>(`/api/invites/${token}/accept`, {
-      method: 'POST',
-    })
+    const result = await $fetch<{ ok: boolean; circleId: string }>(
+      `/api/invites/${token}/accept`,
+      {
+        method: 'POST',
+      },
+    )
     inviteCookie.value = null
     track('member_joined', {
       circle_id: result.circleId,

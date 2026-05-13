@@ -183,7 +183,9 @@ Create `app/pages/notification-settings.vue`:
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
         <button
           class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -239,7 +241,9 @@ Create `app/pages/notification-settings.vue`:
 
           <!-- Single circle name (when only 1) -->
           <div v-else>
-            <p class="text-sm font-semibold text-foreground">{{ circles[0].name }}</p>
+            <p class="text-sm font-semibold text-foreground">
+              {{ circles[0].name }}
+            </p>
           </div>
 
           <div class="h-px bg-border" />
@@ -281,7 +285,10 @@ Create `app/pages/notification-settings.vue`:
           </label>
 
           <!-- Mute active note -->
-          <p v-if="circleMuted" class="-mt-2 pl-0.5 text-xs text-muted-foreground/70">
+          <p
+            v-if="circleMuted"
+            class="-mt-2 pl-0.5 text-xs text-muted-foreground/70"
+          >
             {{ t('notificationSettings.muteActiveNote') }}
           </p>
 
@@ -296,7 +303,9 @@ Create `app/pages/notification-settings.vue`:
               {{ t('notificationSettings.emailDigestDesc') }}
             </p>
 
-            <div class="inline-flex overflow-hidden rounded-lg border border-border">
+            <div
+              class="inline-flex overflow-hidden rounded-lg border border-border"
+            >
               <button
                 v-for="opt in digestOptions"
                 :key="opt.value"
@@ -564,7 +573,10 @@ async function loadNotificationPrefs() {
   loadingPrefs.value = false
 }
 
-async function saveNotificationPref(field: 'push_enabled' | 'circle_muted', value: boolean) {
+async function saveNotificationPref(
+  field: 'push_enabled' | 'circle_muted',
+  value: boolean,
+) {
   if (!circle.value) return
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()

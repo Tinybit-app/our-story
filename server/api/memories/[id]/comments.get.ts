@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const memoryId = getRouterParam(event, 'id')
-  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
+  if (!memoryId)
+    throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   // Verify the user belongs to the circle that owns this memory
   const { data: memory } = await supabase

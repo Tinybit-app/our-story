@@ -33,7 +33,10 @@ Deno.serve(async (req) => {
   const memoryDate = formData.get('memoryDate') as string | null
 
   if (!file || !circleId) {
-    return Response.json({ error: 'file and circleId are required' }, { status: 400 })
+    return Response.json(
+      { error: 'file and circleId are required' },
+      { status: 400 },
+    )
   }
 
   // File size check
@@ -64,7 +67,8 @@ Deno.serve(async (req) => {
   ])
 
   if (userRecord?.platform_role !== 'platform_admin') {
-    const quota = (storage?.total_quota_bytes ?? 0) + (storage?.bonus_bytes ?? 0)
+    const quota =
+      (storage?.total_quota_bytes ?? 0) + (storage?.bonus_bytes ?? 0)
     const used = storage?.total_used_bytes ?? 0
     if (used + file.size > quota) {
       return Response.json({ error: 'storage_full' }, { status: 413 })
@@ -127,7 +131,10 @@ Deno.serve(async (req) => {
     // Clean up storage + memory on failure
     await supabase.storage.from('memories-private').remove([storagePath])
     await supabase.from('memory').delete().eq('id', memory.id)
-    return Response.json({ error: mediaError?.message ?? 'Failed to save media' }, { status: 500 })
+    return Response.json(
+      { error: mediaError?.message ?? 'Failed to save media' },
+      { status: 500 },
+    )
   }
 
   // Increment storage usage

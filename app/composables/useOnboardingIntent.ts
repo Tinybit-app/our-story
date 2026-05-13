@@ -9,4 +9,5 @@
  * they'll bounce to /timeline (since they're a member). They can click the
  * button again.
  */
-export const useOnboardingIntent = () => useState<boolean>('onboardingIntent', () => false)
+export const useOnboardingIntent = () =>
+  useState<boolean>('onboardingIntent', () => false)

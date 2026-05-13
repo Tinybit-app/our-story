@@ -34,7 +34,10 @@ const createCircleSchema = z.object({
 
 describe('POST /api/circles/create — input validation', () => {
   it('accepts valid name and circleType', () => {
-    const r = createCircleSchema.safeParse({ name: 'The Dao Family', circleType: 'parents' })
+    const r = createCircleSchema.safeParse({
+      name: 'The Dao Family',
+      circleType: 'parents',
+    })
     expect(r.success).toBe(true)
   })
 
@@ -46,7 +49,10 @@ describe('POST /api/circles/create — input validation', () => {
   })
 
   it('rejects an unknown circleType', () => {
-    const r = createCircleSchema.safeParse({ name: 'Test', circleType: 'household' })
+    const r = createCircleSchema.safeParse({
+      name: 'Test',
+      circleType: 'household',
+    })
     expect(r.success).toBe(false)
   })
 
@@ -56,7 +62,10 @@ describe('POST /api/circles/create — input validation', () => {
   })
 
   it('rejects name longer than 100 characters', () => {
-    const r = createCircleSchema.safeParse({ name: 'a'.repeat(101), circleType: 'custom' })
+    const r = createCircleSchema.safeParse({
+      name: 'a'.repeat(101),
+      circleType: 'custom',
+    })
     expect(r.success).toBe(false)
   })
 
@@ -107,7 +116,10 @@ describe('POST /api/circles/invite — input validation', () => {
   })
 
   it('rejects invalid UUID format for circleId', () => {
-    const r = inviteSchema.safeParse({ circleId: 'not-a-uuid', email: 'a@b.com' })
+    const r = inviteSchema.safeParse({
+      circleId: 'not-a-uuid',
+      email: 'a@b.com',
+    })
     expect(r.success).toBe(false)
   })
 
@@ -120,7 +132,9 @@ describe('POST /api/circles/invite — input validation', () => {
   })
 
   it('rejects missing email', () => {
-    const r = inviteSchema.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000' })
+    const r = inviteSchema.safeParse({
+      circleId: '123e4567-e89b-12d3-a456-426614174000',
+    })
     expect(r.success).toBe(false)
   })
 })
@@ -209,30 +223,54 @@ describe('POST /api/circles/invite — expiry of previous invite before re-invit
     existing: Invite | null,
     targetEmail: string,
   ): InviteStatus | null {
-    if (!existing || existing.email !== targetEmail || existing.status !== 'pending') {
+    if (
+      !existing ||
+      existing.email !== targetEmail ||
+      existing.status !== 'pending'
+    ) {
       return existing?.status ?? null
     }
     return 'expired'
   }
 
   it('expires a pending invite for the same email before re-inviting', () => {
-    const existing = { email: 'grandma@example.com', status: 'pending' as InviteStatus }
-    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe('expired')
+    const existing = {
+      email: 'grandma@example.com',
+      status: 'pending' as InviteStatus,
+    }
+    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe(
+      'expired',
+    )
   })
 
   it('does not touch an already-expired invite (no double-expiry)', () => {
-    const existing = { email: 'grandma@example.com', status: 'expired' as InviteStatus }
-    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe('expired')
+    const existing = {
+      email: 'grandma@example.com',
+      status: 'expired' as InviteStatus,
+    }
+    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe(
+      'expired',
+    )
   })
 
   it('does not touch an accepted invite when re-inviting the same person', () => {
-    const existing = { email: 'grandma@example.com', status: 'accepted' as InviteStatus }
-    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe('accepted')
+    const existing = {
+      email: 'grandma@example.com',
+      status: 'accepted' as InviteStatus,
+    }
+    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe(
+      'accepted',
+    )
   })
 
   it('does not affect an invite for a different email', () => {
-    const existing = { email: 'other@example.com', status: 'pending' as InviteStatus }
-    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe('pending')
+    const existing = {
+      email: 'other@example.com',
+      status: 'pending' as InviteStatus,
+    }
+    expect(expireExistingPendingInvite(existing, 'grandma@example.com')).toBe(
+      'pending',
+    )
   })
 
   it('handles the case where no prior invite exists for the email', () => {
@@ -250,7 +288,9 @@ const timelineQuerySchema = z.object({
 
 describe('GET /api/timeline — input validation', () => {
   it('accepts valid circleId', () => {
-    const r = timelineQuerySchema.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000' })
+    const r = timelineQuerySchema.safeParse({
+      circleId: '123e4567-e89b-12d3-a456-426614174000',
+    })
     expect(r.success).toBe(true)
   })
 
@@ -350,7 +390,9 @@ describe('GET /api/timeline — yearMonth param validation', () => {
   })
 
   it('accepts request without yearMonth (normal cursor pagination)', () => {
-    const r = timelineQuerySchemaV2.safeParse({ circleId: '123e4567-e89b-12d3-a456-426614174000' })
+    const r = timelineQuerySchemaV2.safeParse({
+      circleId: '123e4567-e89b-12d3-a456-426614174000',
+    })
     expect(r.success).toBe(true)
   })
 })
@@ -389,15 +431,21 @@ describe('POST /api/account/delete — owner resolution logic', () => {
   })
 
   it('allows deletion when owned circle has an admin to auto-promote', () => {
-    expect(resolveOwnership([{ hasAdmin: true, otherMemberCount: 2 }])).toBe('ok')
+    expect(resolveOwnership([{ hasAdmin: true, otherMemberCount: 2 }])).toBe(
+      'ok',
+    )
   })
 
   it('allows deletion when user is sole member (no one to transfer to)', () => {
-    expect(resolveOwnership([{ hasAdmin: false, otherMemberCount: 0 }])).toBe('ok')
+    expect(resolveOwnership([{ hasAdmin: false, otherMemberCount: 0 }])).toBe(
+      'ok',
+    )
   })
 
   it('blocks deletion when circle has members but no admins', () => {
-    expect(resolveOwnership([{ hasAdmin: false, otherMemberCount: 3 }])).toBe('needs_transfer')
+    expect(resolveOwnership([{ hasAdmin: false, otherMemberCount: 3 }])).toBe(
+      'needs_transfer',
+    )
   })
 
   it('blocks deletion when any circle needs transfer even if others are resolved', () => {
@@ -420,11 +468,15 @@ const removeMemberSchema = z.object({
 
 describe('DELETE /api/circles/[id]/members/[userId] — input validation', () => {
   it('accepts keepContent: true', () => {
-    expect(removeMemberSchema.safeParse({ keepContent: true }).success).toBe(true)
+    expect(removeMemberSchema.safeParse({ keepContent: true }).success).toBe(
+      true,
+    )
   })
 
   it('accepts keepContent: false', () => {
-    expect(removeMemberSchema.safeParse({ keepContent: false }).success).toBe(true)
+    expect(removeMemberSchema.safeParse({ keepContent: false }).success).toBe(
+      true,
+    )
   })
 
   it('rejects missing keepContent', () => {
@@ -432,7 +484,9 @@ describe('DELETE /api/circles/[id]/members/[userId] — input validation', () =>
   })
 
   it('rejects string instead of boolean', () => {
-    expect(removeMemberSchema.safeParse({ keepContent: 'true' }).success).toBe(false)
+    expect(removeMemberSchema.safeParse({ keepContent: 'true' }).success).toBe(
+      false,
+    )
   })
 })
 
@@ -460,7 +514,10 @@ describe('DELETE /api/circles/[id]/members/[userId] — reaction removal rule', 
 describe('DELETE /api/circles/[id]/members/[userId] — memory detach rule', () => {
   type MemoryAction = 'detach' | 'delete' | 'none'
 
-  function resolveMemoryAction(keepContent: boolean, memoryCount: number): MemoryAction {
+  function resolveMemoryAction(
+    keepContent: boolean,
+    memoryCount: number,
+  ): MemoryAction {
     if (memoryCount === 0) return 'none'
     return keepContent ? 'detach' : 'delete'
   }
@@ -561,7 +618,9 @@ describe('notification email content — member removed from circle', () => {
 // Warning sent on day 27 by the daily purge cron (3 days before hard delete).
 // ============================================================
 describe('notification email triggers — account deletion', () => {
-  function deletionEmailsSent(daysSinceRequest: number): Array<'confirmation' | 'warning'> {
+  function deletionEmailsSent(
+    daysSinceRequest: number,
+  ): Array<'confirmation' | 'warning'> {
     const emails: Array<'confirmation' | 'warning'> = []
     if (daysSinceRequest === 0) emails.push('confirmation')
     if (daysSinceRequest === 27) emails.push('warning')
@@ -635,11 +694,15 @@ const deleteAccountSchema = z.object({
 
 describe('POST /api/account/delete — keepCircleMemories schema', () => {
   it('accepts keepCircleMemories: true', () => {
-    expect(deleteAccountSchema.safeParse({ keepCircleMemories: true }).success).toBe(true)
+    expect(
+      deleteAccountSchema.safeParse({ keepCircleMemories: true }).success,
+    ).toBe(true)
   })
 
   it('accepts keepCircleMemories: false', () => {
-    expect(deleteAccountSchema.safeParse({ keepCircleMemories: false }).success).toBe(true)
+    expect(
+      deleteAccountSchema.safeParse({ keepCircleMemories: false }).success,
+    ).toBe(true)
   })
 
   it('defaults to true when field is omitted', () => {
@@ -649,7 +712,9 @@ describe('POST /api/account/delete — keepCircleMemories schema', () => {
   })
 
   it('rejects a string value', () => {
-    expect(deleteAccountSchema.safeParse({ keepCircleMemories: 'yes' }).success).toBe(false)
+    expect(
+      deleteAccountSchema.safeParse({ keepCircleMemories: 'yes' }).success,
+    ).toBe(false)
   })
 })
 
@@ -681,9 +746,15 @@ describe('POST /api/account/delete — circle memory action', () => {
 // so UI can still attribute the photo after the account is gone.
 // ============================================================
 describe('former_owner_name snapshot rule', () => {
-  type DetachedMemory = { owner_user_id: null; former_owner_name: string | null }
+  type DetachedMemory = {
+    owner_user_id: null
+    former_owner_name: string | null
+  }
 
-  function buildFormerOwnerName(firstName: string | null, lastName: string | null): string | null {
+  function buildFormerOwnerName(
+    firstName: string | null,
+    lastName: string | null,
+  ): string | null {
     const name = [firstName, lastName].filter(Boolean).join(' ')
     return name || null
   }
@@ -701,12 +772,18 @@ describe('former_owner_name snapshot rule', () => {
   })
 
   it('detached memory has owner_user_id = null', () => {
-    const m: DetachedMemory = { owner_user_id: null, former_owner_name: 'Sarah Kim' }
+    const m: DetachedMemory = {
+      owner_user_id: null,
+      former_owner_name: 'Sarah Kim',
+    }
     expect(m.owner_user_id).toBeNull()
   })
 
   it('detached memory preserves former_owner_name', () => {
-    const m: DetachedMemory = { owner_user_id: null, former_owner_name: 'Sarah Kim' }
+    const m: DetachedMemory = {
+      owner_user_id: null,
+      former_owner_name: 'Sarah Kim',
+    }
     expect(m.former_owner_name).toBe('Sarah Kim')
   })
 })
@@ -734,7 +811,9 @@ describe('PATCH /api/circles/[id]/members/[userId] — input validation', () => 
   })
 
   it('rejects unknown role', () => {
-    expect(roleChangeSchema.safeParse({ role: 'caregiver' }).success).toBe(false)
+    expect(roleChangeSchema.safeParse({ role: 'caregiver' }).success).toBe(
+      false,
+    )
   })
 
   it('rejects missing role', () => {
@@ -745,7 +824,11 @@ describe('PATCH /api/circles/[id]/members/[userId] — input validation', () => 
 describe('PATCH /api/circles/[id]/members/[userId] — access control', () => {
   type Role = 'owner' | 'admin' | 'member'
 
-  function canChangeRole(requesterRole: Role, targetRole: Role, isSelf: boolean): boolean {
+  function canChangeRole(
+    requesterRole: Role,
+    targetRole: Role,
+    isSelf: boolean,
+  ): boolean {
     if (requesterRole !== 'owner') return false
     if (isSelf) return false
     if (targetRole === 'owner') return false
@@ -784,7 +867,11 @@ describe('PATCH /api/circles/[id]/members/[userId] — access control', () => {
 describe('PATCH /api/circles/[id]/members/[userId] — transfer ownership effect', () => {
   type Membership = { userId: string; role: string }
 
-  function transferOwnership(members: Membership[], fromId: string, toId: string): Membership[] {
+  function transferOwnership(
+    members: Membership[],
+    fromId: string,
+    toId: string,
+  ): Membership[] {
     return members.map((m) => {
       if (m.userId === toId) return { ...m, role: 'owner' }
       if (m.userId === fromId) return { ...m, role: 'admin' }
@@ -832,15 +919,22 @@ describe('POST /api/invites/[token]/accept — deleted circle guard', () => {
     inviteExpired: boolean
   }
 
-  function acceptResult(check: InviteCheck): 'ok' | 'invite_expired' | 'invite_circle_deleted' {
-    if (check.inviteStatus !== 'pending' || check.inviteExpired) return 'invite_expired'
+  function acceptResult(
+    check: InviteCheck,
+  ): 'ok' | 'invite_expired' | 'invite_circle_deleted' {
+    if (check.inviteStatus !== 'pending' || check.inviteExpired)
+      return 'invite_expired'
     if (check.circleDeletedAt) return 'invite_circle_deleted'
     return 'ok'
   }
 
   it('accepts a valid invite for an active circle', () => {
     expect(
-      acceptResult({ inviteStatus: 'pending', circleDeletedAt: null, inviteExpired: false }),
+      acceptResult({
+        inviteStatus: 'pending',
+        circleDeletedAt: null,
+        inviteExpired: false,
+      }),
     ).toBe('ok')
   })
 
@@ -866,7 +960,11 @@ describe('POST /api/invites/[token]/accept — deleted circle guard', () => {
 
   it('rejects an expired invite for an active circle', () => {
     expect(
-      acceptResult({ inviteStatus: 'pending', circleDeletedAt: null, inviteExpired: true }),
+      acceptResult({
+        inviteStatus: 'pending',
+        circleDeletedAt: null,
+        inviteExpired: true,
+      }),
     ).toBe('invite_expired')
   })
 })
@@ -887,10 +985,19 @@ describe('POST /api/invites/[token]/accept — memory re-attach on rejoin', () =
     former_owner_name: string | null
   }
 
-  function reattachMemories(memories: Memory[], userId: string, circleId: string): Memory[] {
+  function reattachMemories(
+    memories: Memory[],
+    userId: string,
+    circleId: string,
+  ): Memory[] {
     return memories.map((m) => {
       if (m.former_owner_user_id === userId && m.circle_id === circleId) {
-        return { ...m, owner_user_id: userId, former_owner_user_id: null, former_owner_name: null }
+        return {
+          ...m,
+          owner_user_id: userId,
+          former_owner_user_id: null,
+          former_owner_name: null,
+        }
       }
       return m
     })
@@ -969,7 +1076,9 @@ const exportSchema = z.object({
 
 describe('POST /api/account/export — schema validation', () => {
   it('accepts a valid UUID circleId', () => {
-    const r = exportSchema.safeParse({ circleId: '550e8400-e29b-41d4-a716-446655440000' })
+    const r = exportSchema.safeParse({
+      circleId: '550e8400-e29b-41d4-a716-446655440000',
+    })
     expect(r.success).toBe(true)
   })
 
@@ -995,9 +1104,14 @@ describe('POST /api/account/export — per-circle duplicate job guard', () => {
 
   type ActiveJob = { circle_id: string; status: string }
 
-  function exportWouldBeBlocked(activeJobs: ActiveJob[], circleId: string): boolean {
+  function exportWouldBeBlocked(
+    activeJobs: ActiveJob[],
+    circleId: string,
+  ): boolean {
     return activeJobs.some(
-      (j) => j.circle_id === circleId && (j.status === 'pending' || j.status === 'processing'),
+      (j) =>
+        j.circle_id === circleId &&
+        (j.status === 'pending' || j.status === 'processing'),
     )
   }
 
@@ -1006,34 +1120,57 @@ describe('POST /api/account/export — per-circle duplicate job guard', () => {
   })
 
   it('blocks export when a pending job exists for the same circle', () => {
-    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: 'pending' }], CIRCLE_A)).toBe(true)
+    expect(
+      exportWouldBeBlocked(
+        [{ circle_id: CIRCLE_A, status: 'pending' }],
+        CIRCLE_A,
+      ),
+    ).toBe(true)
   })
 
   it('blocks export when a processing job exists for the same circle', () => {
-    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: 'processing' }], CIRCLE_A)).toBe(
-      true,
-    )
+    expect(
+      exportWouldBeBlocked(
+        [{ circle_id: CIRCLE_A, status: 'processing' }],
+        CIRCLE_A,
+      ),
+    ).toBe(true)
   })
 
   it('allows export for a different circle even when another circle has an active job', () => {
-    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: 'pending' }], CIRCLE_B)).toBe(false)
+    expect(
+      exportWouldBeBlocked(
+        [{ circle_id: CIRCLE_A, status: 'pending' }],
+        CIRCLE_B,
+      ),
+    ).toBe(false)
   })
 
   it('allows export after a completed job for the same circle', () => {
-    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: 'complete' }], CIRCLE_A)).toBe(
-      false,
-    )
+    expect(
+      exportWouldBeBlocked(
+        [{ circle_id: CIRCLE_A, status: 'complete' }],
+        CIRCLE_A,
+      ),
+    ).toBe(false)
   })
 
   it('allows export after a failed job for the same circle', () => {
-    expect(exportWouldBeBlocked([{ circle_id: CIRCLE_A, status: 'failed' }], CIRCLE_A)).toBe(false)
+    expect(
+      exportWouldBeBlocked(
+        [{ circle_id: CIRCLE_A, status: 'failed' }],
+        CIRCLE_A,
+      ),
+    ).toBe(false)
   })
 })
 
 describe('POST /api/account/export — export scope by role', () => {
   function getScopeFilter(role: string, userId: string, circleId: string) {
     const isOwnerOrAdmin = role === 'owner' || role === 'admin'
-    return isOwnerOrAdmin ? { circle_id: circleId } : { circle_id: circleId, owner_user_id: userId }
+    return isOwnerOrAdmin
+      ? { circle_id: circleId }
+      : { circle_id: circleId, owner_user_id: userId }
   }
 
   const USER = 'user-123'
@@ -1071,7 +1208,10 @@ describe('POST /api/account/export — export scope by role', () => {
 describe('multi-circle — active circle selection', () => {
   type Circle = { id: string; name: string; role: string }
 
-  function resolveActiveCircle(circles: Circle[], paramId: string | undefined): Circle | null {
+  function resolveActiveCircle(
+    circles: Circle[],
+    paramId: string | undefined,
+  ): Circle | null {
     if (paramId) {
       const found = circles.find((c) => c.id === paramId)
       if (found) return found
@@ -1139,7 +1279,9 @@ describe('multi-circle — post-creation redirect', () => {
   })
 
   it('redirects to /?circle=<id> after finishing invite step', () => {
-    expect(postCreationRedirect('another-circle-id')).toBe('/?circle=another-circle-id')
+    expect(postCreationRedirect('another-circle-id')).toBe(
+      '/?circle=another-circle-id',
+    )
   })
 })
 
@@ -1153,22 +1295,30 @@ describe('multi-circle — post-creation redirect', () => {
 describe('/no-circle routing — guard logic', () => {
   type UserState = { hasMembership: boolean; needsProfile: boolean }
 
-  function resolveRedirect(state: UserState): '/' | '/onboarding' | '/no-circle' | null {
+  function resolveRedirect(
+    state: UserState,
+  ): '/' | '/onboarding' | '/no-circle' | null {
     if (state.hasMembership) return '/'
     if (state.needsProfile) return '/onboarding'
     return '/no-circle'
   }
 
   it('sends user with membership to home', () => {
-    expect(resolveRedirect({ hasMembership: true, needsProfile: false })).toBe('/')
+    expect(resolveRedirect({ hasMembership: true, needsProfile: false })).toBe(
+      '/',
+    )
   })
 
   it('sends brand-new user (needsProfile) to onboarding', () => {
-    expect(resolveRedirect({ hasMembership: false, needsProfile: true })).toBe('/onboarding')
+    expect(resolveRedirect({ hasMembership: false, needsProfile: true })).toBe(
+      '/onboarding',
+    )
   })
 
   it('sends existing user with no circle to /no-circle', () => {
-    expect(resolveRedirect({ hasMembership: false, needsProfile: false })).toBe('/no-circle')
+    expect(resolveRedirect({ hasMembership: false, needsProfile: false })).toBe(
+      '/no-circle',
+    )
   })
 })
 
@@ -1182,24 +1332,30 @@ describe('/no-circle routing — guard logic', () => {
 describe('auth.global middleware — /no-circle bounce-away', () => {
   type UserState = { hasMembership: boolean; needsProfile: boolean }
 
-  function noCircleMiddleware(state: UserState): '/' | '/onboarding/profile' | null {
+  function noCircleMiddleware(
+    state: UserState,
+  ): '/' | '/onboarding/profile' | null {
     if (state.needsProfile) return '/onboarding/profile'
     if (state.hasMembership) return '/'
     return null // stay on /no-circle
   }
 
   it('stays on /no-circle for user with no membership and complete profile', () => {
-    expect(noCircleMiddleware({ hasMembership: false, needsProfile: false })).toBeNull()
+    expect(
+      noCircleMiddleware({ hasMembership: false, needsProfile: false }),
+    ).toBeNull()
   })
 
   it('redirects user with membership away to home', () => {
-    expect(noCircleMiddleware({ hasMembership: true, needsProfile: false })).toBe('/')
+    expect(
+      noCircleMiddleware({ hasMembership: true, needsProfile: false }),
+    ).toBe('/')
   })
 
   it('redirects user still needing profile to /onboarding/profile', () => {
-    expect(noCircleMiddleware({ hasMembership: false, needsProfile: true })).toBe(
-      '/onboarding/profile',
-    )
+    expect(
+      noCircleMiddleware({ hasMembership: false, needsProfile: true }),
+    ).toBe('/onboarding/profile')
   })
 })
 
@@ -1208,7 +1364,11 @@ describe('auth.global middleware — /no-circle bounce-away', () => {
 // Mirrors purge-deleted-users Edge Function cutoff check.
 // ============================================================
 describe('purge-deleted-users — grace period logic', () => {
-  function isPastGracePeriod(deletedAt: Date, now: Date, graceDays = 30): boolean {
+  function isPastGracePeriod(
+    deletedAt: Date,
+    now: Date,
+    graceDays = 30,
+  ): boolean {
     const cutoff = new Date(now.getTime() - graceDays * 24 * 60 * 60 * 1000)
     return deletedAt < cutoff
   }
@@ -1281,7 +1441,11 @@ describe('GET /api/auth/membership — hasMembership excludes soft-deleted circl
   })
 
   it("returns false when the user's only circle is soft-deleted", () => {
-    expect(computeHasMembership([{ circle: { deleted_at: '2026-04-18T00:00:00Z' } }])).toBe(false)
+    expect(
+      computeHasMembership([
+        { circle: { deleted_at: '2026-04-18T00:00:00Z' } },
+      ]),
+    ).toBe(false)
   })
 
   it('returns false when the user has no memberships at all', () => {
@@ -1321,7 +1485,8 @@ describe('auth.global middleware — deleted account gate', () => {
     targetPath: string,
   ): string | null {
     if (!hasSession) return '/login'
-    if (deletedAt && targetPath !== '/settings/account') return '/settings/account'
+    if (deletedAt && targetPath !== '/settings/account')
+      return '/settings/account'
     return null // allow navigation
   }
 
@@ -1331,15 +1496,21 @@ describe('auth.global middleware — deleted account gate', () => {
   })
 
   it('redirects a deleted user from / to /settings/account', () => {
-    expect(resolveRoute(true, '2026-04-18T03:00:00Z', '/')).toBe('/settings/account')
+    expect(resolveRoute(true, '2026-04-18T03:00:00Z', '/')).toBe(
+      '/settings/account',
+    )
   })
 
   it('redirects a deleted user from /members to /settings/account', () => {
-    expect(resolveRoute(true, '2026-04-18T03:00:00Z', '/members')).toBe('/settings/account')
+    expect(resolveRoute(true, '2026-04-18T03:00:00Z', '/members')).toBe(
+      '/settings/account',
+    )
   })
 
   it('allows a deleted user to stay on /settings/account', () => {
-    expect(resolveRoute(true, '2026-04-18T03:00:00Z', '/settings/account')).toBeNull()
+    expect(
+      resolveRoute(true, '2026-04-18T03:00:00Z', '/settings/account'),
+    ).toBeNull()
   })
 
   it('redirects an unauthenticated user to /login regardless of deletedAt', () => {
@@ -1388,11 +1559,15 @@ const deleteCircleSchema = z.object({
 
 describe('POST /api/circles/[id]/delete — input validation', () => {
   it('accepts a non-empty confirmName', () => {
-    expect(deleteCircleSchema.safeParse({ confirmName: 'Dao Family' }).success).toBe(true)
+    expect(
+      deleteCircleSchema.safeParse({ confirmName: 'Dao Family' }).success,
+    ).toBe(true)
   })
 
   it('rejects an empty confirmName', () => {
-    expect(deleteCircleSchema.safeParse({ confirmName: '' }).success).toBe(false)
+    expect(deleteCircleSchema.safeParse({ confirmName: '' }).success).toBe(
+      false,
+    )
   })
 
   it('rejects missing confirmName', () => {
@@ -1461,7 +1636,8 @@ describe('POST /api/circles/[id]/delete — access control', () => {
 // ============================================================
 describe('POST /api/circles/[id]/restore — window check', () => {
   function isRestorable(deletedAt: Date, now: Date, graceDays = 30): boolean {
-    const daysSince = (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)
+    const daysSince =
+      (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)
     return daysSince < graceDays
   }
 
@@ -1518,7 +1694,9 @@ describe('GET /api/circles — deleted circles filtered', () => {
   })
 
   it('returns empty list when all circles are deleted', () => {
-    const rows: CircleRow[] = [{ id: 'c1', name: 'Gone', deleted_at: '2026-04-01T00:00:00Z' }]
+    const rows: CircleRow[] = [
+      { id: 'c1', name: 'Gone', deleted_at: '2026-04-01T00:00:00Z' },
+    ]
     expect(filterActiveCircles(rows)).toHaveLength(0)
   })
 })
@@ -1542,7 +1720,12 @@ describe('purge-deleted-users — circle hard-purge sequence', () => {
   }
 
   it('runs full purge sequence when circle has memories', () => {
-    expect(circlePurgeSteps(5)).toEqual(['storage', 'memories', 'members', 'circle'])
+    expect(circlePurgeSteps(5)).toEqual([
+      'storage',
+      'memories',
+      'members',
+      'circle',
+    ])
   })
 
   it('skips storage/memory steps when circle has no memories', () => {
@@ -1568,9 +1751,12 @@ describe('GET /api/invites/[token]/status — invite pre-validation', () => {
     circle_deleted_at: string | null
   } | null
 
-  function statusResult(invite: InviteRow): 'pending' | 'expired' | 'circle_deleted' {
+  function statusResult(
+    invite: InviteRow,
+  ): 'pending' | 'expired' | 'circle_deleted' {
     if (!invite || invite.status !== 'pending') return 'expired'
-    if (new Date(invite.expires_at) < new Date('2026-04-18T00:00:00Z')) return 'expired'
+    if (new Date(invite.expires_at) < new Date('2026-04-18T00:00:00Z'))
+      return 'expired'
     if (invite.circle_deleted_at) return 'circle_deleted'
     return 'pending'
   }
@@ -1653,9 +1839,13 @@ const patchCircleSchema = z
       .optional(),
   })
   .refine(
-    (d) => d.name !== undefined || d.circleType !== undefined || d.anniversaryDate !== undefined,
+    (d) =>
+      d.name !== undefined ||
+      d.circleType !== undefined ||
+      d.anniversaryDate !== undefined,
     {
-      message: 'At least one field (name, circleType, or anniversaryDate) must be provided.',
+      message:
+        'At least one field (name, circleType, or anniversaryDate) must be provided.',
     },
   )
 
@@ -1667,15 +1857,21 @@ describe('PATCH /api/circles/[id] — input validation', () => {
   })
 
   it('accepts a valid name', () => {
-    expect(patchCircleSchema.safeParse({ name: 'The Smiths' }).success).toBe(true)
+    expect(patchCircleSchema.safeParse({ name: 'The Smiths' }).success).toBe(
+      true,
+    )
   })
 
   it('accepts a valid anniversaryDate', () => {
-    expect(patchCircleSchema.safeParse({ anniversaryDate: '2022-06-15' }).success).toBe(true)
+    expect(
+      patchCircleSchema.safeParse({ anniversaryDate: '2022-06-15' }).success,
+    ).toBe(true)
   })
 
   it('accepts null anniversaryDate (clear)', () => {
-    expect(patchCircleSchema.safeParse({ anniversaryDate: null }).success).toBe(true)
+    expect(patchCircleSchema.safeParse({ anniversaryDate: null }).success).toBe(
+      true,
+    )
   })
 
   it('accepts all three fields together', () => {
@@ -1689,7 +1885,9 @@ describe('PATCH /api/circles/[id] — input validation', () => {
   })
 
   it('rejects an unknown circleType', () => {
-    expect(patchCircleSchema.safeParse({ circleType: 'household' }).success).toBe(false)
+    expect(
+      patchCircleSchema.safeParse({ circleType: 'household' }).success,
+    ).toBe(false)
   })
 
   it('rejects empty name', () => {
@@ -1697,11 +1895,15 @@ describe('PATCH /api/circles/[id] — input validation', () => {
   })
 
   it('rejects name longer than 100 characters', () => {
-    expect(patchCircleSchema.safeParse({ name: 'a'.repeat(101) }).success).toBe(false)
+    expect(patchCircleSchema.safeParse({ name: 'a'.repeat(101) }).success).toBe(
+      false,
+    )
   })
 
   it('rejects anniversaryDate with wrong format', () => {
-    expect(patchCircleSchema.safeParse({ anniversaryDate: '15-06-2022' }).success).toBe(false)
+    expect(
+      patchCircleSchema.safeParse({ anniversaryDate: '15-06-2022' }).success,
+    ).toBe(false)
   })
 
   it('rejects when no fields are provided', () => {
@@ -1893,7 +2095,9 @@ describe('PATCH /api/memories/[id] — input validation', () => {
   const VALID_DATE = '2024-06-15'
 
   it('accepts a valid note update', () => {
-    expect(memoryPatchSchema.safeParse({ note: 'Updated note' }).success).toBe(true)
+    expect(memoryPatchSchema.safeParse({ note: 'Updated note' }).success).toBe(
+      true,
+    )
   })
 
   it('accepts null note (clearing the note)', () => {
@@ -1901,15 +2105,21 @@ describe('PATCH /api/memories/[id] — input validation', () => {
   })
 
   it('accepts a valid milestone_label update', () => {
-    expect(memoryPatchSchema.safeParse({ milestone_label: 'First steps' }).success).toBe(true)
+    expect(
+      memoryPatchSchema.safeParse({ milestone_label: 'First steps' }).success,
+    ).toBe(true)
   })
 
   it('accepts null milestone_label (clearing the milestone)', () => {
-    expect(memoryPatchSchema.safeParse({ milestone_label: null }).success).toBe(true)
+    expect(memoryPatchSchema.safeParse({ milestone_label: null }).success).toBe(
+      true,
+    )
   })
 
   it('accepts a valid memory_date update', () => {
-    expect(memoryPatchSchema.safeParse({ memory_date: VALID_DATE }).success).toBe(true)
+    expect(
+      memoryPatchSchema.safeParse({ memory_date: VALID_DATE }).success,
+    ).toBe(true)
   })
 
   it('accepts all three fields together', () => {
@@ -1929,19 +2139,27 @@ describe('PATCH /api/memories/[id] — input validation', () => {
   })
 
   it('rejects note longer than 500 characters', () => {
-    expect(memoryPatchSchema.safeParse({ note: 'a'.repeat(501) }).success).toBe(false)
+    expect(memoryPatchSchema.safeParse({ note: 'a'.repeat(501) }).success).toBe(
+      false,
+    )
   })
 
   it('rejects milestone_label longer than 40 characters', () => {
-    expect(memoryPatchSchema.safeParse({ milestone_label: 'a'.repeat(41) }).success).toBe(false)
+    expect(
+      memoryPatchSchema.safeParse({ milestone_label: 'a'.repeat(41) }).success,
+    ).toBe(false)
   })
 
   it('rejects memory_date with wrong format (DD-MM-YYYY)', () => {
-    expect(memoryPatchSchema.safeParse({ memory_date: '15-06-2024' }).success).toBe(false)
+    expect(
+      memoryPatchSchema.safeParse({ memory_date: '15-06-2024' }).success,
+    ).toBe(false)
   })
 
   it('rejects memory_date with wrong format (MM/DD/YYYY)', () => {
-    expect(memoryPatchSchema.safeParse({ memory_date: '06/15/2024' }).success).toBe(false)
+    expect(
+      memoryPatchSchema.safeParse({ memory_date: '06/15/2024' }).success,
+    ).toBe(false)
   })
 })
 
@@ -1955,11 +2173,15 @@ describe('PATCH /api/memories/[id] — ownership check', () => {
   }
 
   it('allows the uploader to edit their own memory', () => {
-    expect(isOwner({ owner_user_id: 'user-a', requesterId: 'user-a' })).toBe(true)
+    expect(isOwner({ owner_user_id: 'user-a', requesterId: 'user-a' })).toBe(
+      true,
+    )
   })
 
   it('blocks a different circle member from editing', () => {
-    expect(isOwner({ owner_user_id: 'user-a', requesterId: 'user-b' })).toBe(false)
+    expect(isOwner({ owner_user_id: 'user-a', requesterId: 'user-b' })).toBe(
+      false,
+    )
   })
 
   it('blocks editing a detached memory (owner_user_id is null)', () => {
@@ -1991,13 +2213,16 @@ describe('PATCH /api/circles/[id]/children/[childId] — input validation', () =
   })
 
   it('accepts a dateOfBirth-only update', () => {
-    expect(childPatchSchema.safeParse({ dateOfBirth: '2024-01-15' }).success).toBe(true)
+    expect(
+      childPatchSchema.safeParse({ dateOfBirth: '2024-01-15' }).success,
+    ).toBe(true)
   })
 
   it('accepts both name and dateOfBirth together', () => {
-    expect(childPatchSchema.safeParse({ name: 'Emma', dateOfBirth: '2024-01-15' }).success).toBe(
-      true,
-    )
+    expect(
+      childPatchSchema.safeParse({ name: 'Emma', dateOfBirth: '2024-01-15' })
+        .success,
+    ).toBe(true)
   })
 
   it('rejects empty body (at least one field required)', () => {
@@ -2009,19 +2234,27 @@ describe('PATCH /api/circles/[id]/children/[childId] — input validation', () =
   })
 
   it('rejects name longer than 100 characters', () => {
-    expect(childPatchSchema.safeParse({ name: 'a'.repeat(101) }).success).toBe(false)
+    expect(childPatchSchema.safeParse({ name: 'a'.repeat(101) }).success).toBe(
+      false,
+    )
   })
 
   it('rejects dateOfBirth with wrong format (MM/DD/YYYY)', () => {
-    expect(childPatchSchema.safeParse({ dateOfBirth: '01/15/2024' }).success).toBe(false)
+    expect(
+      childPatchSchema.safeParse({ dateOfBirth: '01/15/2024' }).success,
+    ).toBe(false)
   })
 
   it('rejects dateOfBirth with wrong format (DD-MM-YYYY)', () => {
-    expect(childPatchSchema.safeParse({ dateOfBirth: '15-01-2024' }).success).toBe(false)
+    expect(
+      childPatchSchema.safeParse({ dateOfBirth: '15-01-2024' }).success,
+    ).toBe(false)
   })
 
   it('accepts name at exact max length (100 chars)', () => {
-    expect(childPatchSchema.safeParse({ name: 'a'.repeat(100) }).success).toBe(true)
+    expect(childPatchSchema.safeParse({ name: 'a'.repeat(100) }).success).toBe(
+      true,
+    )
   })
 })
 
@@ -2073,23 +2306,35 @@ describe('GET /api/timeline — year param validation', () => {
   const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000'
 
   it('accepts a valid year', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 2024 })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: 2024,
+    })
     expect(r.success).toBe(true)
   })
 
   it('coerces year string to number', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: '2024' })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: '2024',
+    })
     expect(r.success).toBe(true)
     if (r.success) expect(r.data.year).toBe(2024)
   })
 
   it('rejects year below 2000', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 1999 })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: 1999,
+    })
     expect(r.success).toBe(false)
   })
 
   it('rejects year above 2100', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 2101 })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: 2101,
+    })
     expect(r.success).toBe(false)
   })
 
@@ -2116,7 +2361,10 @@ describe('POST /api/push/subscribe — input validation', () => {
   const VALID_KEYS = { p256dh: 'BNcRd...', auth: 'tBHItJ...' }
 
   it('accepts valid endpoint URL and keys', () => {
-    const r = pushSubscribeSchema.safeParse({ endpoint: VALID_ENDPOINT, keys: VALID_KEYS })
+    const r = pushSubscribeSchema.safeParse({
+      endpoint: VALID_ENDPOINT,
+      keys: VALID_KEYS,
+    })
     expect(r.success).toBe(true)
   })
 
@@ -2126,7 +2374,10 @@ describe('POST /api/push/subscribe — input validation', () => {
   })
 
   it('rejects invalid URL for endpoint', () => {
-    const r = pushSubscribeSchema.safeParse({ endpoint: 'not-a-url', keys: VALID_KEYS })
+    const r = pushSubscribeSchema.safeParse({
+      endpoint: 'not-a-url',
+      keys: VALID_KEYS,
+    })
     expect(r.success).toBe(false)
   })
 
@@ -2190,7 +2441,9 @@ const pushNotifySchema = z.object({
 
 describe('POST /api/push/notify — input validation', () => {
   it('accepts valid UUID', () => {
-    const r = pushNotifySchema.safeParse({ memoryId: '123e4567-e89b-12d3-a456-426614174000' })
+    const r = pushNotifySchema.safeParse({
+      memoryId: '123e4567-e89b-12d3-a456-426614174000',
+    })
     expect(r.success).toBe(true)
   })
 
@@ -2228,7 +2481,10 @@ describe('PATCH /api/notification-preferences — input validation', () => {
   })
 
   it('accepts valid circleId with circle_muted', () => {
-    const r = notificationPrefsSchema.safeParse({ circleId: VALID_CIRCLE_UUID, circle_muted: true })
+    const r = notificationPrefsSchema.safeParse({
+      circleId: VALID_CIRCLE_UUID,
+      circle_muted: true,
+    })
     expect(r.success).toBe(true)
   })
 
@@ -2262,7 +2518,10 @@ describe('PATCH /api/notification-preferences — input validation', () => {
   })
 
   it('rejects invalid circleId (not UUID)', () => {
-    const r = notificationPrefsSchema.safeParse({ circleId: 'not-a-uuid', push_enabled: true })
+    const r = notificationPrefsSchema.safeParse({
+      circleId: 'not-a-uuid',
+      push_enabled: true,
+    })
     expect(r.success).toBe(false)
   })
 
@@ -2319,7 +2578,9 @@ const notificationPrefsQuerySchema = z.object({
 
 describe('GET /api/notification-preferences — input validation', () => {
   it('accepts valid circleId', () => {
-    const r = notificationPrefsQuerySchema.safeParse({ circleId: VALID_CIRCLE_UUID })
+    const r = notificationPrefsQuerySchema.safeParse({
+      circleId: VALID_CIRCLE_UUID,
+    })
     expect(r.success).toBe(true)
   })
 

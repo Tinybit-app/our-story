@@ -37,8 +37,17 @@ const TEST_SECRET = 'test-viewer-secret-at-least-32-chars!!'
 
 const TEST_NONCE = 'test-nonce-fixed'
 
-function makeViewerToken(linkId = LINK_ID_FULL, expirySeconds = 30 * 24 * 60 * 60) {
-  return signViewerToken(CIRCLE_ID, TEST_SECRET, expirySeconds, linkId, TEST_NONCE)
+function makeViewerToken(
+  linkId = LINK_ID_FULL,
+  expirySeconds = 30 * 24 * 60 * 60,
+) {
+  return signViewerToken(
+    CIRCLE_ID,
+    TEST_SECRET,
+    expirySeconds,
+    linkId,
+    TEST_NONCE,
+  )
 }
 
 // ── Common route mocks ────────────────────────────────────────────────────────
@@ -48,7 +57,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -90,7 +103,12 @@ function mockTimeline(page: any, memories: any[] = []) {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+          body: JSON.stringify({
+            memories,
+            nextCursor: null,
+            children: [],
+            members: [],
+          }),
         }),
       ),
     )
@@ -132,11 +150,15 @@ test.describe('Viewer link management — owner dashboard', () => {
     await mockCircles(page, 'owner')
     await mockTimeline(page)
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
     // Share button appears when circle.role === 'owner'
-    await expect(page.getByRole('button', { name: /share/i })).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: /share/i })).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   test('member does not see Share button', async ({ page }) => {
@@ -144,7 +166,9 @@ test.describe('Viewer link management — owner dashboard', () => {
     await mockCircles(page, 'member')
     await mockTimeline(page)
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
     await expect(page.getByRole('button', { name: /share/i })).not.toBeVisible()
@@ -152,7 +176,9 @@ test.describe('Viewer link management — owner dashboard', () => {
 
   // ── 2. Create full-timeline link ────────────────────────────────────────────
 
-  test('create full-timeline link → POST called with mode:full', async ({ page }) => {
+  test('create full-timeline link → POST called with mode:full', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page)
@@ -161,38 +187,45 @@ test.describe('Viewer link management — owner dashboard', () => {
     let postBody: any = null
 
     // Viewer-links: empty GET first, then handle POST
-    await page.route(`**/api/circles/${CIRCLE_ID}/viewer-links`, async (route) => {
-      const method = route.request().method()
-      if (method === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify([]),
-        })
-      } else if (method === 'POST') {
-        postBody = JSON.parse(route.request().postData() ?? '{}')
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            id: LINK_ID_FULL,
-            mode: 'full',
-            label: 'Full timeline',
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            isExpired: false,
-            memoryCount: null,
-            dateRange: null,
-            previews: [],
-            token: createdToken,
-          }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/circles/${CIRCLE_ID}/viewer-links`,
+      async (route) => {
+        const method = route.request().method()
+        if (method === 'GET') {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([]),
+          })
+        } else if (method === 'POST') {
+          postBody = JSON.parse(route.request().postData() ?? '{}')
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              id: LINK_ID_FULL,
+              mode: 'full',
+              label: 'Full timeline',
+              expiresAt: new Date(
+                Date.now() + 30 * 24 * 60 * 60 * 1000,
+              ).toISOString(),
+              isExpired: false,
+              memoryCount: null,
+              dateRange: null,
+              previews: [],
+              token: createdToken,
+            }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
@@ -200,18 +233,23 @@ test.describe('Viewer link management — owner dashboard', () => {
     await page.getByRole('button', { name: /share/i }).click()
 
     // Empty state — click Create link button
-    await expect(page.getByText('Share your circle')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Share your circle')).toBeVisible({
+      timeout: 5_000,
+    })
     await page.getByRole('button', { name: /create a link/i }).click()
 
     // CreateLinkSheet opens — verify its heading is visible
-    await expect(page.getByRole('heading', { name: 'Create a link' })).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Create a link' }),
+    ).toBeVisible({
       timeout: 5_000,
     })
 
     // Click the submit button and wait for the POST response
     const [_postResponse] = await Promise.all([
       page.waitForResponse(
-        (r) => r.url().includes('viewer-links') && r.request().method() === 'POST',
+        (r) =>
+          r.url().includes('viewer-links') && r.request().method() === 'POST',
       ),
       page.locator('button:has-text("Create a link")').last().click(),
     ])
@@ -249,7 +287,9 @@ test.describe('Viewer link management — owner dashboard', () => {
 
   // ── 5. Revoke link → DELETE called for correct link ID ─────────────────────
 
-  test('revoke link → DELETE is called for the correct link id', async ({ page }) => {
+  test('revoke link → DELETE is called for the correct link id', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page)
@@ -257,55 +297,67 @@ test.describe('Viewer link management — owner dashboard', () => {
     const token = makeViewerToken(LINK_ID_FULL)
     let deleteCalledForId: string | null = null
 
-    await page.route(`**/api/circles/${CIRCLE_ID}/viewer-links**`, async (route) => {
-      const method = route.request().method()
-      const url = route.request().url()
+    await page.route(
+      `**/api/circles/${CIRCLE_ID}/viewer-links**`,
+      async (route) => {
+        const method = route.request().method()
+        const url = route.request().url()
 
-      if (method === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify([
-            {
-              id: LINK_ID_FULL,
-              mode: 'full',
-              label: 'Full timeline',
-              expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              isExpired: false,
-              memoryCount: null,
-              dateRange: null,
-              previews: [],
-              token,
-              createdAt: new Date().toISOString(),
-            },
-          ]),
-        })
-      } else if (method === 'DELETE') {
-        const parts = url.split('/')
-        deleteCalledForId = parts[parts.length - 1]
-        await route.fulfill({ status: 204, body: '' })
-      } else {
-        await route.continue()
-      }
-    })
+        if (method === 'GET') {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([
+              {
+                id: LINK_ID_FULL,
+                mode: 'full',
+                label: 'Full timeline',
+                expiresAt: new Date(
+                  Date.now() + 30 * 24 * 60 * 60 * 1000,
+                ).toISOString(),
+                isExpired: false,
+                memoryCount: null,
+                dateRange: null,
+                previews: [],
+                token,
+                createdAt: new Date().toISOString(),
+              },
+            ]),
+          })
+        } else if (method === 'DELETE') {
+          const parts = url.split('/')
+          deleteCalledForId = parts[parts.length - 1]
+          await route.fulfill({ status: 204, body: '' })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
     // Open share sheet
     await page.getByRole('button', { name: /share/i }).click()
-    await expect(page.getByText('Full timeline').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Full timeline').first()).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Click revoke icon button (aria-label: "Revoke link")
     await page.getByRole('button', { name: /revoke link/i }).click()
 
     // Confirm inline revoke dialog
-    await expect(page.getByText(/revoke this link/i)).toBeVisible({ timeout: 3_000 })
+    await expect(page.getByText(/revoke this link/i)).toBeVisible({
+      timeout: 3_000,
+    })
     const [_deleteResponse] = await Promise.all([
       page.waitForResponse(
-        (r) => r.url().includes('viewer-links') && r.request().method() === 'DELETE',
+        (r) =>
+          r.url().includes('viewer-links') && r.request().method() === 'DELETE',
       ),
       page.getByRole('button', { name: /^revoke$/i }).click(),
     ])
@@ -314,30 +366,37 @@ test.describe('Viewer link management — owner dashboard', () => {
 
   // ── 8. Expired link badge → Renew opens create sheet ──────────────────────
 
-  test('expired link badge shown in sheet; Renew opens create sheet', async ({ page }) => {
+  test('expired link badge shown in sheet; Renew opens create sheet', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page)
 
     const expiredToken = makeViewerToken(LINK_ID_FULL, -1)
     // Mock GET (returns expired link) and DELETE (renew deletes then opens CreateLinkSheet)
-    await page.route(`**/api/circles/${CIRCLE_ID}/viewer-links**`, async (route) => {
-      const method = route.request().method()
-      if (method === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify([makeExpiredLink(expiredToken)]),
-        })
-      } else if (method === 'DELETE') {
-        await route.fulfill({ status: 204, body: '' })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/circles/${CIRCLE_ID}/viewer-links**`,
+      async (route) => {
+        const method = route.request().method()
+        if (method === 'GET') {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([makeExpiredLink(expiredToken)]),
+          })
+        } else if (method === 'DELETE') {
+          await route.fulfill({ status: 204, body: '' })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
@@ -345,7 +404,9 @@ test.describe('Viewer link management — owner dashboard', () => {
     await page.getByRole('button', { name: /share/i }).click()
 
     // Expired badge should appear
-    await expect(page.getByText('Expired').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Expired').first()).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Renew button replaces Copy for expired links
     await expect(page.getByRole('button', { name: /renew/i })).toBeVisible()
@@ -354,7 +415,9 @@ test.describe('Viewer link management — owner dashboard', () => {
     await page.getByRole('button', { name: /renew/i }).click()
 
     // CreateLinkSheet heading
-    await expect(page.getByRole('heading', { name: 'Create a link' })).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Create a link' }),
+    ).toBeVisible({
       timeout: 5_000,
     })
   })
@@ -370,7 +433,9 @@ test.describe('Viewer link management — public viewer page', () => {
 
   // ── 3. Selection link → viewer sees only selected memories ────────────────
 
-  test('create selection link → viewer sees only selected memories', async ({ page }) => {
+  test('create selection link → viewer sees only selected memories', async ({
+    page,
+  }) => {
     const token = makeViewerToken(LINK_ID_SEL)
 
     await page.route('**/api/viewer/timeline**', (route) =>
@@ -406,14 +471,20 @@ test.describe('Viewer link management — public viewer page', () => {
     await page.goto(`/view?token=${token}`)
 
     // Dismiss splash
-    await expect(page.getByRole('button', { name: /see the memories/i })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: /see the memories/i }),
+    ).toBeVisible({
       timeout: 10_000,
     })
     await page.getByRole('button', { name: /see the memories/i }).click()
 
     // Both selected memories should appear
-    await expect(page.getByText('Selected memory A')).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByText('Selected memory B')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Selected memory A')).toBeVisible({
+      timeout: 5_000,
+    })
+    await expect(page.getByText('Selected memory B')).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Selection banner (count + date range) should appear
     await expect(page.getByText(/selected memories/i)).toBeVisible()
@@ -433,7 +504,9 @@ test.describe('Viewer link management — public viewer page', () => {
     )
 
     await page.goto(`/view?token=${token}`)
-    await expect(page.getByText(/link is invalid/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/link is invalid/i)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
   // ── 6. Referral CTA appears after scrolling 3+ memories ──────────────────
@@ -481,7 +554,9 @@ test.describe('Viewer link management — public viewer page', () => {
     await page.goto(`/view?token=${token}`)
 
     // Dismiss splash
-    await expect(page.getByRole('button', { name: /see the memories/i })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: /see the memories/i }),
+    ).toBeVisible({
       timeout: 10_000,
     })
     await page.getByRole('button', { name: /see the memories/i }).click()
@@ -495,11 +570,15 @@ test.describe('Viewer link management — public viewer page', () => {
     await page
       .locator('article')
       .nth(2)
-      .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }))
+      .evaluate((el) =>
+        el.scrollIntoView({ behavior: 'instant', block: 'center' }),
+      )
     await page.waitForTimeout(500)
 
     // Referral CTA should appear after the 3rd memory enters the viewport
-    await expect(page.getByText(/enjoying these memories/i)).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText(/enjoying these memories/i)).toBeVisible({
+      timeout: 8_000,
+    })
     await expect(page.getByText(/create your own circle/i)).toBeVisible()
   })
 
@@ -526,13 +605,17 @@ test.describe('Viewer link management — public viewer page', () => {
     await page.goto(`/view?token=${token}`)
 
     // Dismiss splash
-    await expect(page.getByRole('button', { name: /see the memories/i })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: /see the memories/i }),
+    ).toBeVisible({
       timeout: 10_000,
     })
     await page.getByRole('button', { name: /see the memories/i }).click()
 
     // Empty state text should appear (viewerLink.emptyState or viewerLink.viewerNoMemories key)
-    await expect(page.getByText(/no memories (to show here|shared yet)/i)).toBeVisible({
+    await expect(
+      page.getByText(/no memories (to show here|shared yet)/i),
+    ).toBeVisible({
       timeout: 5_000,
     })
   })

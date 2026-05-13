@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <template v-if="!pendingDeletionDate">
           <NuxtLink
@@ -21,7 +23,9 @@
           </NuxtLink>
           <span class="text-border">·</span>
         </template>
-        <p class="text-sm font-semibold text-foreground">{{ t('settings.account.title') }}</p>
+        <p class="text-sm font-semibold text-foreground">
+          {{ t('settings.account.title') }}
+        </p>
       </div>
     </header>
 
@@ -33,7 +37,9 @@
           class="overflow-hidden rounded-2xl border border-destructive/25"
         >
           <!-- Coloured header strip -->
-          <div class="bg-destructive/8 border-b border-destructive/15 px-5 pb-4 pt-5">
+          <div
+            class="bg-destructive/8 border-b border-destructive/15 px-5 pb-4 pt-5"
+          >
             <div class="flex items-start gap-3">
               <div
                 class="bg-destructive/12 mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
@@ -55,7 +61,11 @@
                   {{ t('settings.account.pendingDeletionTitle') }}
                 </p>
                 <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {{ t('settings.account.pendingDeletionDesc', { date: pendingDeletionDate }) }}
+                  {{
+                    t('settings.account.pendingDeletionDesc', {
+                      date: pendingDeletionDate,
+                    })
+                  }}
                 </p>
               </div>
             </div>
@@ -67,7 +77,9 @@
               class="w-full rounded-[10px] border border-border py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
             >
               {{
-                canceling ? t('settings.account.canceling') : t('settings.account.cancelDeletion')
+                canceling
+                  ? t('settings.account.canceling')
+                  : t('settings.account.cancelDeletion')
               }}
             </button>
           </div>
@@ -78,7 +90,9 @@
           <h2 class="mb-1 text-base font-semibold text-foreground">
             {{ t('settings.account.exportTitle') }}
           </h2>
-          <p class="mb-4 text-sm text-muted-foreground">{{ t('settings.account.exportDesc') }}</p>
+          <p class="mb-4 text-sm text-muted-foreground">
+            {{ t('settings.account.exportDesc') }}
+          </p>
 
           <!-- Circle selector — only shown when user belongs to more than one circle -->
           <select
@@ -86,14 +100,22 @@
             v-model="selectedCircleId"
             class="mb-4 w-full rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
           >
-            <option value="" disabled>{{ t('settings.account.exportSelectCircle') }}</option>
-            <option v-for="c in exportCircles" :key="c.id" :value="c.id">{{ c.name }}</option>
+            <option value="" disabled>
+              {{ t('settings.account.exportSelectCircle') }}
+            </option>
+            <option v-for="c in exportCircles" :key="c.id" :value="c.id">
+              {{ c.name }}
+            </option>
           </select>
 
           <p
             v-if="exportMsg"
             class="mb-3 text-sm"
-            :class="exportError ? 'text-destructive' : 'text-green-600 dark:text-green-400'"
+            :class="
+              exportError
+                ? 'text-destructive'
+                : 'text-green-600 dark:text-green-400'
+            "
           >
             {{ exportMsg }}
           </p>
@@ -102,7 +124,11 @@
             :disabled="exporting || !selectedCircleId"
             class="rounded-[10px] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
           >
-            {{ exporting ? t('settings.account.exporting') : t('settings.account.exportButton') }}
+            {{
+              exporting
+                ? t('settings.account.exporting')
+                : t('settings.account.exportButton')
+            }}
           </button>
         </div>
 
@@ -117,7 +143,10 @@
             {{ t('settings.account.deletedCirclesDesc') }}
           </p>
 
-          <p v-if="restoreMsg" class="mb-3 text-sm text-green-600 dark:text-green-400">
+          <p
+            v-if="restoreMsg"
+            class="mb-3 text-sm text-green-600 dark:text-green-400"
+          >
             {{ restoreMsg }}
           </p>
 
@@ -128,9 +157,15 @@
               class="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3"
             >
               <div class="min-w-0">
-                <p class="truncate text-sm font-medium text-foreground">{{ c.name }}</p>
+                <p class="truncate text-sm font-medium text-foreground">
+                  {{ c.name }}
+                </p>
                 <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ t('settings.account.purgesOn', { date: formatPurgeDate(c.purge_date) }) }}
+                  {{
+                    t('settings.account.purgesOn', {
+                      date: formatPurgeDate(c.purge_date),
+                    })
+                  }}
                 </p>
               </div>
               <button
@@ -146,7 +181,9 @@
               </button>
             </li>
           </ul>
-          <p v-if="restoreError" class="mt-2 text-xs text-destructive">{{ restoreError }}</p>
+          <p v-if="restoreError" class="mt-2 text-xs text-destructive">
+            {{ restoreError }}
+          </p>
         </div>
 
         <div v-if="deletedCircles.length > 0" class="h-px bg-border" />
@@ -179,7 +216,9 @@
                   <line x1="12" y1="9" x2="12" y2="13" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
-                <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
+                <p
+                  class="text-sm font-medium text-amber-700 dark:text-amber-300"
+                >
                   {{ t('settings.account.needsTransferWarning') }}
                 </p>
               </div>
@@ -191,7 +230,9 @@
                   :key="name"
                   class="flex items-center gap-2 text-sm text-muted-foreground"
                 >
-                  <span class="h-1 w-1 flex-shrink-0 rounded-full bg-muted-foreground/40" />
+                  <span
+                    class="h-1 w-1 flex-shrink-0 rounded-full bg-muted-foreground/40"
+                  />
                   {{ name }}
                 </li>
               </ul>
@@ -212,15 +253,21 @@
                     <div
                       class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10"
                     >
-                      <span class="text-[10px] font-bold text-destructive">1</span>
+                      <span class="text-[10px] font-bold text-destructive"
+                        >1</span
+                      >
                     </div>
                     <div class="min-h-[16px] w-px flex-1 bg-border" />
                   </div>
                   <div class="pb-2">
-                    <p class="text-sm font-semibold leading-snug text-foreground">
+                    <p
+                      class="text-sm font-semibold leading-snug text-foreground"
+                    >
                       {{ t('settings.account.deleteStep1Title') }}
                     </p>
-                    <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    <p
+                      class="mt-1 text-xs leading-relaxed text-muted-foreground"
+                    >
                       {{ t('settings.account.deleteStep1Desc') }}
                     </p>
                   </div>
@@ -233,18 +280,30 @@
                     <div
                       class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10"
                     >
-                      <span class="text-[10px] font-bold text-destructive">2</span>
+                      <span class="text-[10px] font-bold text-destructive"
+                        >2</span
+                      >
                     </div>
                   </div>
                   <div>
-                    <p class="text-sm font-semibold leading-snug text-foreground">
-                      {{ t('settings.account.deleteStep2Title', { date: purgePreviewDate }) }}
+                    <p
+                      class="text-sm font-semibold leading-snug text-foreground"
+                    >
+                      {{
+                        t('settings.account.deleteStep2Title', {
+                          date: purgePreviewDate,
+                        })
+                      }}
                     </p>
-                    <p class="mb-2.5 mt-1 text-xs leading-relaxed text-muted-foreground">
+                    <p
+                      class="mb-2.5 mt-1 text-xs leading-relaxed text-muted-foreground"
+                    >
                       {{ t('settings.account.deleteStep2Desc') }}
                     </p>
                     <ul class="space-y-1.5">
-                      <li class="flex items-center gap-2 text-xs text-muted-foreground">
+                      <li
+                        class="flex items-center gap-2 text-xs text-muted-foreground"
+                      >
                         <svg
                           class="h-3 w-3 flex-shrink-0 text-destructive/60"
                           fill="none"
@@ -256,7 +315,9 @@
                         </svg>
                         {{ t('settings.account.deleteItem1') }}
                       </li>
-                      <li class="flex items-center gap-2 text-xs text-muted-foreground">
+                      <li
+                        class="flex items-center gap-2 text-xs text-muted-foreground"
+                      >
                         <svg
                           class="h-3 w-3 flex-shrink-0 text-destructive/60"
                           fill="none"
@@ -268,7 +329,9 @@
                         </svg>
                         {{ t('settings.account.deleteItem2') }}
                       </li>
-                      <li class="flex items-center gap-2 text-xs text-muted-foreground">
+                      <li
+                        class="flex items-center gap-2 text-xs text-muted-foreground"
+                      >
                         <svg
                           class="h-3 w-3 flex-shrink-0 text-destructive/60"
                           fill="none"
@@ -288,7 +351,9 @@
 
             <!-- Circle memories choice -->
             <div class="mb-5">
-              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground"
+              >
                 {{ t('settings.account.deleteCircleQuestion') }}
               </p>
               <div class="space-y-2">
@@ -345,7 +410,9 @@
             <p class="mb-4 text-xs leading-relaxed text-muted-foreground">
               {{ t('settings.account.deleteEmailNote') }}
             </p>
-            <p v-if="deleteError" class="mb-3 text-sm text-destructive">{{ deleteError }}</p>
+            <p v-if="deleteError" class="mb-3 text-sm text-destructive">
+              {{ deleteError }}
+            </p>
             <button
               @click="confirmingDelete = true"
               :disabled="deleting"
@@ -382,10 +449,7 @@
                   {{ t('settings.account.deleteConfirmCancel') }}
                 </button>
                 <button
-                  @click="
-                    confirmingDelete = false
-                    requestDeletion()
-                  "
+                  @click="((confirmingDelete = false), requestDeletion())"
                   :disabled="deleting"
                   class="flex-1 rounded-[10px] bg-destructive py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
@@ -412,26 +476,36 @@ const router = useRouter()
 const supabase = useSupabaseClient()
 const { track } = useAnalytics()
 
-const { data: profile } = await useFetch<{ deletedAt: string | null }>('/api/profile')
+const { data: profile } = await useFetch<{ deletedAt: string | null }>(
+  '/api/profile',
+)
 
 const pendingDeletionDate = computed(() => {
   if (!profile.value?.deletedAt) return null
   const purgeDate = new Date(profile.value.deletedAt)
   purgeDate.setDate(purgeDate.getDate() + 30)
-  return purgeDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+  return purgeDate.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 })
 
 // Preview the purge date before initiating (today + 30 days)
 const purgePreviewDate = computed(() => {
   const d = new Date()
   d.setDate(d.getDate() + 30)
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+  return d.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 })
 
 // ── Export ──────────────────────────────────────────────────
-const { data: circlesData } = await useFetch<{ circles: { id: string; name: string }[] }>(
-  '/api/circles',
-)
+const { data: circlesData } = await useFetch<{
+  circles: { id: string; name: string }[]
+}>('/api/circles')
 const exportCircles = computed(() => circlesData.value?.circles ?? [])
 const selectedCircleId = ref<string>('')
 watch(
@@ -482,10 +556,12 @@ const keepCircleMemories = ref(true)
 const confirmingDelete = ref(false)
 
 // Pre-load ownership check so the warning is visible before the user clicks delete
-const { data: preflightData } = await useFetch<{ circlesNeedingTransfer: string[] }>(
-  '/api/account/deletion-preflight',
+const { data: preflightData } = await useFetch<{
+  circlesNeedingTransfer: string[]
+}>('/api/account/deletion-preflight')
+const circlesNeedingTransfer = ref<string[]>(
+  preflightData.value?.circlesNeedingTransfer ?? [],
 )
-const circlesNeedingTransfer = ref<string[]>(preflightData.value?.circlesNeedingTransfer ?? [])
 
 async function requestDeletion() {
   deleting.value = true
@@ -513,15 +589,16 @@ async function requestDeletion() {
 }
 
 // ── Deleted circles (restore) ───────────────────────────────
-const { data: deletedCirclesData, refresh: refreshDeletedCircles } = await useFetch<{
-  circles: {
-    id: string
-    name: string
-    circle_type: string
-    deleted_at: string
-    purge_date: string
-  }[]
-}>('/api/circles/deleted')
+const { data: deletedCirclesData, refresh: refreshDeletedCircles } =
+  await useFetch<{
+    circles: {
+      id: string
+      name: string
+      circle_type: string
+      deleted_at: string
+      purge_date: string
+    }[]
+  }>('/api/circles/deleted')
 
 const deletedCircles = computed(() => deletedCirclesData.value?.circles ?? [])
 
@@ -543,11 +620,14 @@ async function restoreCircle(circle: { id: string; name: string }) {
   restoreMsg.value = ''
   try {
     await $fetch(`/api/circles/${circle.id}/restore`, { method: 'POST' })
-    restoreMsg.value = t('settings.account.restoreSuccess', { name: circle.name })
+    restoreMsg.value = t('settings.account.restoreSuccess', {
+      name: circle.name,
+    })
     useUserState().clear()
     await refreshDeletedCircles()
   } catch (err: any) {
-    restoreError.value = err?.data?.message ?? t('settings.account.restoreError')
+    restoreError.value =
+      err?.data?.message ?? t('settings.account.restoreError')
   } finally {
     restoringId.value = null
   }

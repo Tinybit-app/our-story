@@ -68,7 +68,9 @@ describe('Migration 034 — On This Day tracking', () => {
   const m = sql('034_on_this_day_tracking.sql')
 
   it('adds last_first_month_memory_sent_at column to Circle', () => {
-    expect(m).toContain('ADD COLUMN last_first_month_memory_sent_at TIMESTAMPTZ')
+    expect(m).toContain(
+      'ADD COLUMN last_first_month_memory_sent_at TIMESTAMPTZ',
+    )
   })
 })
 ```
@@ -135,9 +137,9 @@ describe('buildOnThisDayPushTitle', () => {
 
 describe('buildOnThisDayPushBody', () => {
   it('returns note when present', () => {
-    expect(buildOnThisDayPushBody('Emma', 'First steps at the park', 'en')).toBe(
-      'First steps at the park',
-    )
+    expect(
+      buildOnThisDayPushBody('Emma', 'First steps at the park', 'en'),
+    ).toBe('First steps at the park')
   })
 
   it('truncates note longer than 80 chars to ~80 with ellipsis', () => {
@@ -148,15 +150,21 @@ describe('buildOnThisDayPushBody', () => {
   })
 
   it('falls back to uploader name (en) when note is null', () => {
-    expect(buildOnThisDayPushBody('Emma', null, 'en')).toBe('Emma added a memory')
+    expect(buildOnThisDayPushBody('Emma', null, 'en')).toBe(
+      'Emma added a memory',
+    )
   })
 
   it('falls back to uploader name (zh-CN) when note is null', () => {
-    expect(buildOnThisDayPushBody('Emma', null, 'zh-CN')).toBe('Emma 添加了一条记忆')
+    expect(buildOnThisDayPushBody('Emma', null, 'zh-CN')).toBe(
+      'Emma 添加了一条记忆',
+    )
   })
 
   it('falls back to uploader name (fr) when note is null', () => {
-    expect(buildOnThisDayPushBody('Emma', null, 'fr')).toBe('Emma a ajouté un souvenir')
+    expect(buildOnThisDayPushBody('Emma', null, 'fr')).toBe(
+      'Emma a ajouté un souvenir',
+    )
   })
 
   it('falls back to uploader name when note is empty string', () => {
@@ -166,7 +174,9 @@ describe('buildOnThisDayPushBody', () => {
 
 describe('buildFirstMonthMemoryPushTitle', () => {
   it('en', () => {
-    expect(buildFirstMonthMemoryPushTitle('en')).toBe('A memory from your first month')
+    expect(buildFirstMonthMemoryPushTitle('en')).toBe(
+      'A memory from your first month',
+    )
   })
 
   it('zh-CN renders Chinese', () => {
@@ -181,11 +191,15 @@ describe('buildFirstMonthMemoryPushTitle', () => {
 
 describe('buildFirstMonthMemoryPushBody', () => {
   it('returns note when present', () => {
-    expect(buildFirstMonthMemoryPushBody('Mom', 'First steps', 'en')).toBe('First steps')
+    expect(buildFirstMonthMemoryPushBody('Mom', 'First steps', 'en')).toBe(
+      'First steps',
+    )
   })
 
   it('falls back to uploader name in en', () => {
-    expect(buildFirstMonthMemoryPushBody('Mom', null, 'en')).toBe('Mom added a memory')
+    expect(buildFirstMonthMemoryPushBody('Mom', null, 'en')).toBe(
+      'Mom added a memory',
+    )
   })
 })
 ```
@@ -206,9 +220,13 @@ Create `server/utils/onThisDayCopy.ts`:
 
 export type Locale = 'en' | 'zh-CN' | 'fr'
 
-export function buildOnThisDayPushTitle(yearsAgo: number, locale: Locale): string {
+export function buildOnThisDayPushTitle(
+  yearsAgo: number,
+  locale: Locale,
+): string {
   if (locale === 'zh-CN') return `${yearsAgo} 年前的今天`
-  if (locale === 'fr') return `Il y a ${yearsAgo} an${yearsAgo === 1 ? '' : 's'} aujourd'hui`
+  if (locale === 'fr')
+    return `Il y a ${yearsAgo} an${yearsAgo === 1 ? '' : 's'} aujourd'hui`
   return `On this day, ${yearsAgo} year${yearsAgo === 1 ? '' : 's'} ago`
 }
 
@@ -300,12 +318,18 @@ describe('buildFirstMonthMemoryEmail — subject', () => {
   })
 
   it('zh-CN is in Chinese', () => {
-    const { subject } = buildFirstMonthMemoryEmail({ ...baseOpts, locale: 'zh-CN' })
+    const { subject } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
   })
 
   it('fr is not English', () => {
-    const { subject } = buildFirstMonthMemoryEmail({ ...baseOpts, locale: 'fr' })
+    const { subject } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      locale: 'fr',
+    })
     expect(subject.toLowerCase()).not.toMatch(/^a memory from/)
   })
 })
@@ -330,7 +354,9 @@ describe('buildFirstMonthMemoryEmail — body', () => {
 
   it('includes appUrl as primary CTA', () => {
     const { html } = buildFirstMonthMemoryEmail(baseOpts)
-    expect(html).toContain('https://our-story.tinybit.app/timeline?circle=c1&memory=m1')
+    expect(html).toContain(
+      'https://our-story.tinybit.app/timeline?circle=c1&memory=m1',
+    )
   })
 
   it('includes unsubscribe link', () => {
@@ -339,12 +365,18 @@ describe('buildFirstMonthMemoryEmail — body', () => {
   })
 
   it("handles null memoryNote without rendering 'null'", () => {
-    const { html } = buildFirstMonthMemoryEmail({ ...baseOpts, memoryNote: null })
+    const { html } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      memoryNote: null,
+    })
     expect(html).not.toContain('null')
   })
 
   it("handles null memoryThumbnailUrl without rendering 'null'", () => {
-    const { html } = buildFirstMonthMemoryEmail({ ...baseOpts, memoryThumbnailUrl: null })
+    const { html } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      memoryThumbnailUrl: null,
+    })
     expect(html).not.toContain('null')
   })
 })
@@ -394,7 +426,8 @@ export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
 
   const subject = (() => {
     if (locale === 'zh-CN') return `「${circleName}」最初的一段回忆`
-    if (locale === 'fr') return `Un souvenir de vos premiers jours avec ${circleName}`
+    if (locale === 'fr')
+      return `Un souvenir de vos premiers jours avec ${circleName}`
     return `A memory from your first month with ${circleName}`
   })()
 
@@ -407,7 +440,8 @@ export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
 
   const intro = (() => {
     if (locale === 'zh-CN') return `这是你们圈子最早期的一段回忆。`
-    if (locale === 'fr') return `Voici un souvenir des tout débuts de votre cercle.`
+    if (locale === 'fr')
+      return `Voici un souvenir des tout débuts de votre cercle.`
     return `Here's a memory from your circle's earliest days.`
   })()
 
@@ -524,7 +558,8 @@ import webpush from 'https://esm.sh/web-push@3.6.7'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
+const VAPID_SUBJECT =
+  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
@@ -550,17 +585,26 @@ Deno.serve(async (req) => {
   const thisYear = now.getUTCFullYear()
   const todayMonth = now.getUTCMonth() + 1
   const todayDay = now.getUTCDate()
-  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString()
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const ninetyDaysAgo = new Date(
+    now.getTime() - 90 * 24 * 60 * 60 * 1000,
+  ).toISOString()
+  const sevenDaysAgo = new Date(
+    now.getTime() - 7 * 24 * 60 * 60 * 1000,
+  ).toISOString()
 
   const { data: circles, error: circlesErr } = await supabase
     .from('circle')
-    .select('id, name, memory_count, first_memory_at, last_first_month_memory_sent_at')
+    .select(
+      'id, name, memory_count, first_memory_at, last_first_month_memory_sent_at',
+    )
     .is('deleted_at', null)
     .not('first_memory_at', 'is', null)
 
   if (circlesErr) {
-    console.error('[send-on-this-day] circles query failed:', circlesErr.message)
+    console.error(
+      '[send-on-this-day] circles query failed:',
+      circlesErr.message,
+    )
     return Response.json({ error: 'circles query failed' }, { status: 500 })
   }
 
@@ -572,7 +616,8 @@ Deno.serve(async (req) => {
     try {
       const isAboveThreshold =
         (c.memory_count ?? 0) >= 30 &&
-        new Date(c.first_memory_at).getTime() <= new Date(ninetyDaysAgo).getTime()
+        new Date(c.first_memory_at).getTime() <=
+          new Date(ninetyDaysAgo).getTime()
 
       if (isAboveThreshold) {
         // ── Above threshold: find a matching past-year memory by MM-DD ──
@@ -593,7 +638,9 @@ Deno.serve(async (req) => {
           const d = new Date(m.memory_date)
           if (Number.isNaN(d.getTime())) return false
           if (d.getUTCFullYear() >= thisYear) return false
-          return d.getUTCMonth() + 1 === todayMonth && d.getUTCDate() === todayDay
+          return (
+            d.getUTCMonth() + 1 === todayMonth && d.getUTCDate() === todayDay
+          )
         })
 
         if (matchingMemories.length === 0) {
@@ -602,19 +649,24 @@ Deno.serve(async (req) => {
         }
 
         const memory = matchingMemories[0] as any // oldest (we ordered ASC)
-        const yearsAgo = thisYear - new Date(memory.memory_date).getUTCFullYear()
+        const yearsAgo =
+          thisYear - new Date(memory.memory_date).getUTCFullYear()
         const uploaderName = memory.user?.first_name ?? 'someone'
 
         await sendPushToAllMembers(supabase, c.id, {
           buildTitle: (locale) => buildOnThisDayPushTitle(yearsAgo, locale),
-          buildBody: (locale) => buildOnThisDayPushBody(uploaderName, memory.note ?? null, locale),
+          buildBody: (locale) =>
+            buildOnThisDayPushBody(uploaderName, memory.note ?? null, locale),
           tag: `onthisday-${c.id}-${memory.id}`,
           memoryId: memory.id,
         })
         sent++
       } else {
         // ── Below threshold: weekly fallback, oldest memory ──
-        if (c.last_first_month_memory_sent_at && c.last_first_month_memory_sent_at > sevenDaysAgo) {
+        if (
+          c.last_first_month_memory_sent_at &&
+          c.last_first_month_memory_sent_at > sevenDaysAgo
+        ) {
           skipped++
           continue
         }
@@ -653,7 +705,11 @@ Deno.serve(async (req) => {
         await sendPushOrEmailToAllMembers(supabase, c.id, {
           buildPushTitle: (locale) => buildFirstMonthMemoryPushTitle(locale),
           buildPushBody: (locale) =>
-            buildFirstMonthMemoryPushBody(uploaderName, memory.note ?? null, locale),
+            buildFirstMonthMemoryPushBody(
+              uploaderName,
+              memory.note ?? null,
+              locale,
+            ),
           tag: `first-month-memory-${c.id}`,
           memoryId: memory.id,
           buildEmail: (recipientFirstName, locale) =>
@@ -696,7 +752,11 @@ interface PushSpec {
   memoryId: string
 }
 
-async function sendPushToAllMembers(supabase: any, circleId: string, spec: PushSpec) {
+async function sendPushToAllMembers(
+  supabase: any,
+  circleId: string,
+  spec: PushSpec,
+) {
   const { data: members } = await supabase
     .from('circlemember')
     .select(`user_id, user!inner(id, locale, deletion_requested_at)`)
@@ -714,7 +774,8 @@ async function sendPushToAllMembers(supabase: any, circleId: string, spec: PushS
       .maybeSingle()
     if (prefs?.circle_muted) continue
     if (prefs?.push_enabled === false) continue
-    if (isInQuietHours(prefs?.quiet_hours_start, prefs?.quiet_hours_end)) continue
+    if (isInQuietHours(prefs?.quiet_hours_start, prefs?.quiet_hours_end))
+      continue
 
     const { data: subs } = await supabase
       .from('pushsubscription')
@@ -729,7 +790,9 @@ async function sendPushToAllMembers(supabase: any, circleId: string, spec: PushS
       body: spec.buildBody(locale),
       tag: spec.tag,
       renotify: true,
-      data: { url: `${APP_URL}/timeline?circle=${circleId}&memory=${spec.memoryId}` },
+      data: {
+        url: `${APP_URL}/timeline?circle=${circleId}&memory=${spec.memoryId}`,
+      },
     })
 
     for (const s of subs as any[]) {
@@ -758,10 +821,16 @@ interface PushOrEmailSpec {
   ) => { subject: string; html: string }
 }
 
-async function sendPushOrEmailToAllMembers(supabase: any, circleId: string, spec: PushOrEmailSpec) {
+async function sendPushOrEmailToAllMembers(
+  supabase: any,
+  circleId: string,
+  spec: PushOrEmailSpec,
+) {
   const { data: members } = await supabase
     .from('circlemember')
-    .select(`user_id, user!inner(id, email, first_name, locale, deletion_requested_at)`)
+    .select(
+      `user_id, user!inner(id, email, first_name, locale, deletion_requested_at)`,
+    )
     .eq('circle_id', circleId)
 
   for (const m of (members ?? []) as any[]) {
@@ -782,7 +851,10 @@ async function sendPushOrEmailToAllMembers(supabase: any, circleId: string, spec
     let delivered = false
 
     const pushEnabled = prefs?.push_enabled !== false
-    const inQuiet = isInQuietHours(prefs?.quiet_hours_start, prefs?.quiet_hours_end)
+    const inQuiet = isInQuietHours(
+      prefs?.quiet_hours_start,
+      prefs?.quiet_hours_end,
+    )
 
     if (pushEnabled && !inQuiet && VAPID_PUBLIC && VAPID_PRIVATE) {
       const { data: subs } = await supabase
@@ -795,12 +867,17 @@ async function sendPushOrEmailToAllMembers(supabase: any, circleId: string, spec
           body: spec.buildPushBody(locale),
           tag: spec.tag,
           renotify: true,
-          data: { url: `${APP_URL}/timeline?circle=${circleId}&memory=${spec.memoryId}` },
+          data: {
+            url: `${APP_URL}/timeline?circle=${circleId}&memory=${spec.memoryId}`,
+          },
         })
         for (const s of subs as any[]) {
           try {
             await webpush.sendNotification(
-              { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+              {
+                endpoint: s.endpoint,
+                keys: { p256dh: s.p256dh, auth: s.auth },
+              },
               payload,
             )
           } catch (err: any) {
@@ -822,7 +899,10 @@ async function sendPushOrEmailToAllMembers(supabase: any, circleId: string, spec
   }
 }
 
-function isInQuietHours(start: string | null | undefined, end: string | null | undefined): boolean {
+function isInQuietHours(
+  start: string | null | undefined,
+  end: string | null | undefined,
+): boolean {
   if (!start || !end) return false
   const now = new Date()
   const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
@@ -830,7 +910,11 @@ function isInQuietHours(start: string | null | undefined, end: string | null | u
   return hhmm >= start || hhmm < end
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] first-month-memory email to ${to}: ${subject}`)
@@ -839,7 +923,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         from: 'Our Story <hello@our-story.tinybit.app>',
         to,

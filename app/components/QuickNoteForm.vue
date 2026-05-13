@@ -4,19 +4,26 @@
       class="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
     >
       <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
+      <div
+        class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        @click="emit('close')"
+      />
 
       <!-- Sheet -->
       <div
         class="relative w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl sm:max-w-sm sm:rounded-[24px]"
       >
         <!-- Accent stripe -->
-        <div class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60" />
+        <div
+          class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60"
+        />
 
         <div class="px-5 pb-5 pt-4">
           <!-- Header -->
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-foreground">{{ t('quickNote.title') }}</h2>
+            <h2 class="text-sm font-semibold text-foreground">
+              {{ t('quickNote.title') }}
+            </h2>
             <button
               class="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               :aria-label="t('modal.cancel')"
@@ -147,7 +154,9 @@ const { t } = useI18n()
 const { track } = useAnalytics()
 const colorMode = useColorMode()
 const isDark = computed(() =>
-  colorMode.preference === 'system' ? colorMode.value === 'dark' : colorMode.preference === 'dark',
+  colorMode.preference === 'system'
+    ? colorMode.value === 'dark'
+    : colorMode.preference === 'dark',
 )
 
 const props = defineProps<{
@@ -204,17 +213,20 @@ async function save() {
   }
   saving.value = true
   try {
-    const result = await $fetch<{ memoryId: string }>('/api/memories/quick-note', {
-      method: 'POST',
-      body: {
-        circleId: props.circleId,
-        note: note.value.trim(),
-        memoryDate: memoryDate.value,
-        milestoneLabel: milestoneLabel.value.trim() || null,
-        childIds: [...selectedChildIds.value],
-        memberIds: [...selectedMemberIds.value],
+    const result = await $fetch<{ memoryId: string }>(
+      '/api/memories/quick-note',
+      {
+        method: 'POST',
+        body: {
+          circleId: props.circleId,
+          note: note.value.trim(),
+          memoryDate: memoryDate.value,
+          milestoneLabel: milestoneLabel.value.trim() || null,
+          childIds: [...selectedChildIds.value],
+          memberIds: [...selectedMemberIds.value],
+        },
       },
-    })
+    )
     track('memory_uploaded', {
       circle_id: props.circleId,
       memory_type: 'note',

@@ -18,7 +18,8 @@ export default defineEventHandler(async (event) => {
   const linkId = getRouterParam(event, 'linkId')!
 
   const parsed = bodySchema.safeParse(await readBody(event))
-  if (!parsed.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!parsed.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
 
   const { memoryIds, label } = parsed.data
 
@@ -33,7 +34,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (membership?.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the circle owner can edit viewer links.' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the circle owner can edit viewer links.',
+    })
   }
 
   // Verify the link exists, belongs to this circle, and is a selection link
@@ -49,7 +53,10 @@ export default defineEventHandler(async (event) => {
   }
 
   if (memoryIds && existing.mode !== 'selection') {
-    throw createError({ statusCode: 400, message: 'Only selection links can update memories.' })
+    throw createError({
+      statusCode: 400,
+      message: 'Only selection links can update memories.',
+    })
   }
 
   // Build update payload
@@ -65,7 +72,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[viewer-links.patch] update failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to update viewer link.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to update viewer link.',
+    })
   }
 
   return { ok: true }

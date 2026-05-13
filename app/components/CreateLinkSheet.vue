@@ -20,7 +20,9 @@
       <!-- Header -->
       <div class="flex flex-shrink-0 items-center justify-between px-5 py-3">
         <h2 class="text-base font-bold text-foreground">
-          {{ isEditMode ? t('viewerLink.editLink') : t('viewerLink.createLink') }}
+          {{
+            isEditMode ? t('viewerLink.editLink') : t('viewerLink.createLink')
+          }}
         </h2>
         <button
           type="button"
@@ -71,7 +73,11 @@
             v-if="picker.selectedMemoryIds.value.size > 0"
             class="text-sm font-semibold text-foreground"
           >
-            {{ t('viewerLink.selectedCount', { count: picker.selectedMemoryIds.value.size }) }}
+            {{
+              t('viewerLink.selectedCount', {
+                count: picker.selectedMemoryIds.value.size,
+              })
+            }}
           </span>
           <span v-else class="text-xs text-muted-foreground">{{
             t('viewerLink.tapToSelect')
@@ -100,7 +106,11 @@
       <div class="scroll-styled flex-1 overflow-y-auto overscroll-contain pb-4">
         <!-- FULL mode -->
         <div v-if="selectedMode === 'full'" class="px-5 py-4">
-          <template v-if="!picker.yearsLoading.value && picker.yearGroups.value.length === 0">
+          <template
+            v-if="
+              !picker.yearsLoading.value && picker.yearGroups.value.length === 0
+            "
+          >
             <div class="py-8 text-center">
               <div
                 class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-secondary"
@@ -120,7 +130,9 @@
               <p class="mb-1 text-sm font-semibold text-foreground">
                 {{ t('viewerLink.noMemoriesTitle') }}
               </p>
-              <p class="text-xs text-muted-foreground">{{ t('viewerLink.noMemoriesBody') }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ t('viewerLink.noMemoriesBody') }}
+              </p>
             </div>
           </template>
           <p v-else class="text-sm leading-relaxed text-muted-foreground">
@@ -253,13 +265,16 @@ async function handleCreate() {
   createError.value = null
   try {
     if (isEditMode.value && props.editLink) {
-      await $fetch(`/api/circles/${props.circleId}/viewer-links/${props.editLink.id}`, {
-        method: 'PATCH',
-        body: {
-          memoryIds: [...picker.selectedMemoryIds.value],
-          label: label.value || undefined,
+      await $fetch(
+        `/api/circles/${props.circleId}/viewer-links/${props.editLink.id}`,
+        {
+          method: 'PATCH',
+          body: {
+            memoryIds: [...picker.selectedMemoryIds.value],
+            label: label.value || undefined,
+          },
         },
-      })
+      )
     } else {
       await $fetch(`/api/circles/${props.circleId}/viewer-links`, {
         method: 'POST',
@@ -267,7 +282,9 @@ async function handleCreate() {
           mode: selectedMode.value === 'full' ? 'full' : 'selection',
           label: label.value || undefined,
           memoryIds:
-            selectedMode.value === 'custom' ? [...picker.selectedMemoryIds.value] : undefined,
+            selectedMode.value === 'custom'
+              ? [...picker.selectedMemoryIds.value]
+              : undefined,
         },
       })
     }

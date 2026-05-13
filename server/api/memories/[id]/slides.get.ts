@@ -44,7 +44,9 @@ export default defineEventHandler(async (event) => {
         .createSignedUrl(row.storage_path!, 3600)
       return {
         id: row.id,
-        mediaType: (row.media_type === 'video' ? 'video' : 'photo') as 'photo' | 'video',
+        mediaType: (row.media_type === 'video' ? 'video' : 'photo') as
+          | 'photo'
+          | 'video',
         url: signed?.signedUrl ?? null,
         displayOrder: row.display_order,
       }

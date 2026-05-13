@@ -982,7 +982,10 @@ Every error response to the client must be human-readable and must not expose:
 throw createError({ statusCode: 500, message: error.message })
 
 // Good — safe, human-readable
-throw createError({ statusCode: 500, message: 'Something went wrong. Please try again.' })
+throw createError({
+  statusCode: 500,
+  message: 'Something went wrong. Please try again.',
+})
 
 // Log the real error server-side only
 console.error('[upload-media]', error)
@@ -2774,7 +2777,9 @@ const memoriesWithUrls = await Promise.all(
   memories.map(async (memory) => {
     const signedUrls = await Promise.all(
       memory.MemoryMedia.map(({ storage_path }) =>
-        supabase.storage.from('memories-private').createSignedUrl(storage_path, 3600),
+        supabase.storage
+          .from('memories-private')
+          .createSignedUrl(storage_path, 3600),
       ),
     )
     return { ...memory, signedUrls }
@@ -3061,14 +3066,20 @@ A missed webhook means a user who paid stays on Free, or a cancelled user keeps 
 ```ts
 describe('stripe webhooks', () => {
   it('upgrades circle to plus on checkout.session.completed', async () => {
-    await handleStripeEvent(checkoutCompletedEvent({ userId: 'user-1', plan: 'plus' }))
+    await handleStripeEvent(
+      checkoutCompletedEvent({ userId: 'user-1', plan: 'plus' }),
+    )
     const user = await db.from('User').select().eq('id', 'user-1').single()
     expect(user.subscription_status).toBe('plus')
   })
 
   it('starts grace period on invoice.payment_failed', async () => {
     await handleStripeEvent(paymentFailedEvent({ userId: 'user-1' }))
-    const circle = await db.from('Circle').select().eq('created_by', 'user-1').single()
+    const circle = await db
+      .from('Circle')
+      .select()
+      .eq('created_by', 'user-1')
+      .single()
     expect(circle.subscription_status).toBe('grace')
     expect(circle.grace_period_until).not.toBeNull()
   })
@@ -3079,7 +3090,11 @@ describe('stripe webhooks', () => {
   // violating the contractual 30-day wind-down. See canonical grace period rules in Error States.
   it('starts 30-day grace period on customer.subscription.deleted (voluntary cancellation)', async () => {
     await handleStripeEvent(subscriptionDeletedEvent({ userId: 'user-1' }))
-    const circle = await db.from('Circle').select().eq('created_by', 'user-1').single()
+    const circle = await db
+      .from('Circle')
+      .select()
+      .eq('created_by', 'user-1')
+      .single()
     expect(circle.subscription_status).toBe('grace')
     expect(circle.grace_period_until).not.toBeNull()
     // User.subscription_status must NOT change to "free" yet — stays at paid tier during grace
@@ -3095,7 +3110,10 @@ Broken invite = new users can't join. Test the full token lifecycle.
 ```ts
 describe('invite flow', () => {
   it('auto-joins circle after signup with pending invite token', async () => {
-    const { token } = await createInvite({ circleId: 'circle-1', email: 'new@user.com' })
+    const { token } = await createInvite({
+      circleId: 'circle-1',
+      email: 'new@user.com',
+    })
     await signUp({ email: 'new@user.com', inviteToken: token })
     const member = await db
       .from('CircleMember')
@@ -3126,7 +3144,10 @@ describe('invite flow', () => {
   })
 
   it('rejects expired invite token', async () => {
-    const { token } = await createInvite({ circleId: 'circle-1', expiresAt: pastDate() })
+    const { token } = await createInvite({
+      circleId: 'circle-1',
+      expiresAt: pastDate(),
+    })
     const res = await acceptInvite(token)
     expect(res.status).toBe(410)
     expect(res.body.error).toBe('invite_expired')
@@ -3383,10 +3404,14 @@ jobs:
 // Sync new/modified storage objects to S3 backup bucket
 // Use AWS SDK S3 client in Deno Edge Function
 // Only sync objects modified in last 24h (incremental)
-const objects = await supabase.storage.from('memories-private').list('', { limit: 1000 })
+const objects = await supabase.storage
+  .from('memories-private')
+  .list('', { limit: 1000 })
 
 for (const obj of objects) {
-  const { data } = await supabase.storage.from('memories-private').download(obj.name)
+  const { data } = await supabase.storage
+    .from('memories-private')
+    .download(obj.name)
   await s3.putObject({ Bucket: 'our-story-backups', Key: obj.name, Body: data })
 }
 ```
@@ -3607,7 +3632,10 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (!userRecord?.stripe_customer_id) {
-    throw createError({ statusCode: 400, message: 'No active subscription found.' })
+    throw createError({
+      statusCode: 400,
+      message: 'No active subscription found.',
+    })
   }
 
   const session = await stripe.billingPortal.sessions.create({
@@ -3809,7 +3837,11 @@ FeatureFlag
 
 ```ts
 async function isEnabled(flag: string, userId: string): Promise<boolean> {
-  const { data } = await supabase.from('FeatureFlag').select('*').eq('key', flag).single()
+  const { data } = await supabase
+    .from('FeatureFlag')
+    .select('*')
+    .eq('key', flag)
+    .single()
 
   if (!data) return false
   if (data.enabled_globally) return true
@@ -3829,7 +3861,9 @@ async function isEnabled(flag: string, userId: string): Promise<boolean> {
 // composables/useFeatureFlag.ts
 const { data: flags } = await useFetch('/api/flags')
 
-const hasMilestoneChapters = computed(() => flags.value?.includes('milestone_chapters'))
+const hasMilestoneChapters = computed(() =>
+  flags.value?.includes('milestone_chapters'),
+)
 ```
 
 ### Rollout workflow
@@ -4856,7 +4890,11 @@ Post-upload CTA: "Want to start your own family story? →"
 
 ```ts
 // server/api/event/upload.post.ts
-const token = await supabase.from('EventUploadToken').select('*').eq('token', tokenParam).single()
+const token = await supabase
+  .from('EventUploadToken')
+  .select('*')
+  .eq('token', tokenParam)
+  .single()
 
 if (!token || token.expires_at < now()) return 401
 if (token.revoked) return 401

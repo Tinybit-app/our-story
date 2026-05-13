@@ -1,7 +1,11 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-      <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <!-- Step indicator -->
       <div class="mb-8 flex items-center gap-1.5">
@@ -10,7 +14,9 @@
         <div class="h-1 w-6 rounded-full bg-foreground" />
       </div>
 
-      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
+      <h1
+        class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground"
+      >
         {{ t('onboarding.inviteFirst') }}
       </h1>
       <p class="mb-8 text-sm text-muted-foreground">
@@ -26,10 +32,17 @@
         @keyup.enter="email && !loading && sendInvite()"
       />
 
-      <p v-if="errorMsg" class="mb-4 text-sm text-destructive">{{ errorMsg }}</p>
+      <p v-if="errorMsg" class="mb-4 text-sm text-destructive">
+        {{ errorMsg }}
+      </p>
 
-      <div v-if="sent" class="mb-4 rounded-[12px] border border-border bg-card px-4 py-3.5">
-        <p class="text-sm font-medium text-foreground">{{ t('onboarding.inviteSent') }}</p>
+      <div
+        v-if="sent"
+        class="mb-4 rounded-[12px] border border-border bg-card px-4 py-3.5"
+      >
+        <p class="text-sm font-medium text-foreground">
+          {{ t('onboarding.inviteSent') }}
+        </p>
         <p class="mt-0.5 text-xs text-muted-foreground">
           {{ t('onboarding.inviteSentLink', { email }) }}
         </p>
@@ -65,8 +78,12 @@ const sent = ref(false)
 const errorMsg = ref('')
 const router = useRouter()
 
-const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
-const circleIdCookie = useCookie<string | null>('onboarding_circle_id', { maxAge: 60 * 60 * 2 })
+const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', {
+  maxAge: 60 * 60 * 2,
+})
+const circleIdCookie = useCookie<string | null>('onboarding_circle_id', {
+  maxAge: 60 * 60 * 2,
+})
 
 async function sendInvite() {
   loading.value = true

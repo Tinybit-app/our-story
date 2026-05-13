@@ -13,7 +13,9 @@ function makeToken(expirySeconds = 30 * 24 * 60 * 60) {
 test.describe('Viewer-role UX', () => {
   // ── Expired link ─────────────────────────────────────────────────────────────
 
-  test('expired token shows a user-friendly expiry message', async ({ page }) => {
+  test('expired token shows a user-friendly expiry message', async ({
+    page,
+  }) => {
     await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 401,
@@ -23,13 +25,19 @@ test.describe('Viewer-role UX', () => {
     )
 
     await page.goto(`/view?token=${makeToken(-1)}`)
-    await expect(page.getByText(/link has expired/i)).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByRole('button', { name: /send a reminder/i })).toBeVisible()
+    await expect(page.getByText(/link has expired/i)).toBeVisible({
+      timeout: 10_000,
+    })
+    await expect(
+      page.getByRole('button', { name: /send a reminder/i }),
+    ).toBeVisible()
   })
 
   test('invalid token shows a generic error', async ({ page }) => {
     await page.goto('/view?token=not.a.valid.token')
-    await expect(page.getByText(/link has expired|invalid/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/link has expired|invalid/i)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
   test('missing token redirects to /login', async ({ page }) => {
@@ -54,12 +62,18 @@ test.describe('Viewer-role UX', () => {
     )
 
     await page.goto(`/view?token=${makeToken()}`)
-    await expect(page.getByText(/never miss a moment/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/never miss a moment/i)).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page.getByText(/no account needed/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /see the memories/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /see the memories/i }),
+    ).toBeVisible()
   })
 
-  test('"See the memories" dismisses splash and shows timeline', async ({ page }) => {
+  test('"See the memories" dismisses splash and shows timeline', async ({
+    page,
+  }) => {
     await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 200,
@@ -81,12 +95,16 @@ test.describe('Viewer-role UX', () => {
 
     await page.goto(`/view?token=${makeToken()}`)
     await page.getByRole('button', { name: /see the memories/i }).click()
-    await expect(page.getByText('The Smith Family')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('The Smith Family')).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   // ── Splash shown once per session ─────────────────────────────────────────────
 
-  test('splash is not shown again once dismissed within the same session', async ({ page }) => {
+  test('splash is not shown again once dismissed within the same session', async ({
+    page,
+  }) => {
     await page.route('**/api/viewer/timeline**', (route) =>
       route.fulfill({
         status: 200,
@@ -104,6 +122,8 @@ test.describe('Viewer-role UX', () => {
 
     // Navigate away and back (same session — sessionStorage flag)
     await page.goto(`/view?token=${makeToken()}`)
-    await expect(page.getByText(/never miss a moment/i)).not.toBeVisible({ timeout: 3_000 })
+    await expect(page.getByText(/never miss a moment/i)).not.toBeVisible({
+      timeout: 3_000,
+    })
   })
 })

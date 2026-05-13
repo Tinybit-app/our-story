@@ -16,7 +16,11 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid subscription data.' })
+  if (!result.success)
+    throw createError({
+      statusCode: 400,
+      message: 'Invalid subscription data.',
+    })
 
   const { endpoint, keys } = result.data
 
@@ -30,7 +34,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[push/subscribe] upsert error:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to save subscription.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to save subscription.',
+    })
   }
 
   return { ok: true }

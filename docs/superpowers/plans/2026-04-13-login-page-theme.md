@@ -212,13 +212,21 @@ Create `app/components/GoogleIcon.vue`:
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
       <!-- Wordmark -->
-      <p class="mb-4 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-4 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <!-- Headline -->
-      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
+      <h1
+        class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground"
+      >
         Every moment worth keeping, in one place.
       </h1>
-      <p class="mb-8 text-sm text-muted-foreground">For you, your family, your friends.</p>
+      <p class="mb-8 text-sm text-muted-foreground">
+        For you, your family, your friends.
+      </p>
 
       <!-- Google -->
       <button
@@ -261,7 +269,10 @@ Create `app/components/GoogleIcon.vue`:
       </p>
 
       <!-- Footer note -->
-      <p v-else class="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+      <p
+        v-else
+        class="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground"
+      >
         We'll send you a sign-in link — no password needed.
       </p>
     </div>
@@ -364,19 +375,31 @@ test.describe('Login page', () => {
 
   test('shows wordmark, headline and subtitle', async ({ page }) => {
     await expect(page.getByText('Our Story', { exact: false })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /every moment worth keeping/i })).toBeVisible()
-    await expect(page.getByText('For you, your family, your friends.')).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /every moment worth keeping/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('For you, your family, your friends.'),
+    ).toBeVisible()
   })
 
   test('shows both sign-in methods', async ({ page }) => {
-    await expect(page.getByRole('button', { name: /continue with google/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /continue with google/i }),
+    ).toBeVisible()
     await expect(page.getByPlaceholder('your@email.com')).toBeVisible()
-    await expect(page.getByRole('button', { name: /continue with email/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /continue with email/i }),
+    ).toBeVisible()
   })
 
-  test('shows success message after valid email submission', async ({ page }) => {
+  test('shows success message after valid email submission', async ({
+    page,
+  }) => {
     // Intercept the Supabase OTP request so we don't need real credentials
-    await page.route('**/auth/v1/otp**', (route) => route.fulfill({ status: 200, body: '{}' }))
+    await page.route('**/auth/v1/otp**', (route) =>
+      route.fulfill({ status: 200, body: '{}' }),
+    )
 
     await page.getByPlaceholder('your@email.com').fill('test@example.com')
     await page.getByRole('button', { name: /continue with email/i }).click()

@@ -131,7 +131,8 @@ if (yearMonth) {
   const hasMore = withUrls.length > PAGE_SIZE
   const page = withUrls.slice(0, PAGE_SIZE)
   const last = page[page.length - 1]
-  const nextCursor = hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
+  const nextCursor =
+    hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
   return { memories: page, nextCursor, children, members }
 }
 ```
@@ -283,7 +284,9 @@ Replace the `<main>` block in the template section of `app/pages/timeline/[year]
   <!-- Loading -->
   <div v-if="loading" class="flex justify-center py-32">
     <div class="flex flex-col items-center gap-3">
-      <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div
+        class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"
+      />
       <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
     </div>
   </div>
@@ -297,7 +300,9 @@ Replace the `<main>` block in the template section of `app/pages/timeline/[year]
 
   <!-- Polaroid grid -->
   <div v-else>
-    <p class="mb-6 text-xs text-muted-foreground">{{ t('timeline.memories', memories.length) }}</p>
+    <p class="mb-6 text-xs text-muted-foreground">
+      {{ t('timeline.memories', memories.length) }}
+    </p>
     <div class="flex flex-wrap items-start gap-5">
       <template v-for="(memory, i) in memories" :key="memory.id">
         <QuickNoteCard
@@ -373,7 +378,9 @@ Add these helpers and the new test inside the existing `test.describe('Month ove
 ```ts
 // ── Load-more pagination ─────────────────────────────────────────────────────
 
-test('scrolling to bottom loads the next page and appends memories', async ({ page }) => {
+test('scrolling to bottom loads the next page and appends memories', async ({
+  page,
+}) => {
   await mockMembership(page)
   await mockCirclesList(page)
 
@@ -449,15 +456,20 @@ test('scrolling to bottom loads the next page and appends memories', async ({ pa
   await page.goto('/timeline/2024/06')
 
   // Wait for first page to render — count label should show 24
-  await expect(page.getByText(/24 memories|memories/i)).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText(/24 memories|memories/i)).toBeVisible({
+    timeout: 10_000,
+  })
 
   // Scroll the IntersectionObserver sentinel into view
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
   // Wait for the second API call to fire
-  await page.waitForFunction(() => document.querySelectorAll('article').length >= 24, {
-    timeout: 10_000,
-  })
+  await page.waitForFunction(
+    () => document.querySelectorAll('article').length >= 24,
+    {
+      timeout: 10_000,
+    },
+  )
 
   // Verify second-page memories were appended (total ≥ 24, second-page note visible)
   expect(page2Fetched).toBe(true)

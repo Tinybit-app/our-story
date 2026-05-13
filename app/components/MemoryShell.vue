@@ -1,6 +1,9 @@
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div
+      v-if="visible"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+    >
       <!-- Backdrop -->
       <div
         ref="backdropEl"
@@ -189,7 +192,12 @@ const isQuickNote = computed(() => {
 // The switch happens while opacity is 0 (mid-navigation), so it's invisible.
 const cardSizeStyle = computed(() =>
   isQuickNote.value
-    ? { width: '100%', maxWidth: '520px', minHeight: '420px', maxHeight: '82vh' }
+    ? {
+        width: '100%',
+        maxWidth: '520px',
+        minHeight: '420px',
+        maxHeight: '82vh',
+      }
     : {
         width: '100%',
         height: '100%',
@@ -229,7 +237,8 @@ async function runEnterAnimation() {
     'transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 280ms ease, box-shadow 420ms ease'
   el.style.transform = 'none'
   el.style.opacity = '1'
-  el.style.boxShadow = '0 28px 80px rgba(44,36,32,.38), 0 6px 20px rgba(44,36,32,.18)'
+  el.style.boxShadow =
+    '0 28px 80px rgba(44,36,32,.38), 0 6px 20px rgba(44,36,32,.18)'
 
   if (bd) {
     bd.getBoundingClientRect()
@@ -242,7 +251,8 @@ async function runEnterAnimation() {
 // ── Navigation (unified — works for both photo↔note transitions) ──
 async function navigate(dir: 'prev' | 'next') {
   if (navigating.value) return
-  const newIdx = dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
+  const newIdx =
+    dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
   if (newIdx < 0 || newIdx >= props.memories.length) return
 
   navigating.value = true
@@ -267,7 +277,8 @@ async function navigate(dir: 'prev' | 'next') {
     el.style.transform = `translateX(${xIn}px)`
     el.style.opacity = '0'
     el.getBoundingClientRect() // force reflow
-    el.style.transition = 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease'
+    el.style.transition =
+      'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease'
     el.style.transform = 'none'
     el.style.opacity = '1'
     await new Promise((r) => setTimeout(r, 290))

@@ -19,24 +19,36 @@ describe('buildQuietCircleNudgeEmail — subject', () => {
   })
 
   it("count=2 mentions 'a while'", () => {
-    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, nudgeCount: 2 })
+    const { subject } = buildQuietCircleNudgeEmail({
+      ...baseOpts,
+      nudgeCount: 2,
+    })
     expect(subject).toContain('The Smiths')
     expect(subject.toLowerCase()).toMatch(/while|since/)
   })
 
   it("count=3 says 'last reminder'", () => {
-    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, nudgeCount: 3 })
+    const { subject } = buildQuietCircleNudgeEmail({
+      ...baseOpts,
+      nudgeCount: 3,
+    })
     expect(subject.toLowerCase()).toMatch(/last reminder|final/)
     expect(subject).toContain('The Smiths')
   })
 
   it('renders zh-CN subject with Chinese characters', () => {
-    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, locale: 'zh-CN' })
+    const { subject } = buildQuietCircleNudgeEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
   })
 
   it('renders fr subject (not English)', () => {
-    const { subject } = buildQuietCircleNudgeEmail({ ...baseOpts, locale: 'fr' })
+    const { subject } = buildQuietCircleNudgeEmail({
+      ...baseOpts,
+      locale: 'fr',
+    })
     expect(subject.toLowerCase()).not.toMatch(/^the smiths has been/)
   })
 })
@@ -64,7 +76,9 @@ describe('buildQuietCircleNudgeEmail — body', () => {
       nudgeCount: 3,
       daysSinceLastMemory: 45,
     })
-    expect(html.toLowerCase()).toMatch(/last nudge|won't (ask|badger)|here when you/)
+    expect(html.toLowerCase()).toMatch(
+      /last nudge|won't (ask|badger)|here when you/,
+    )
   })
 
   it('includes appUrl as CTA', () => {

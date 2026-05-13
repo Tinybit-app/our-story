@@ -10,7 +10,11 @@ test.describe('No-circle screen', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: false, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({
+          hasMembership: false,
+          needsProfile: false,
+          deletedAt: null,
+        }),
       }),
     )
     // No pending deletions by default
@@ -33,7 +37,9 @@ test.describe('No-circle screen', () => {
 
   test('shows heading and description', async ({ page }) => {
     await page.goto('/no-circle')
-    await expect(page.getByRole('heading', { name: /not in any circle/i })).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: /not in any circle/i }),
+    ).toBeVisible({
       timeout: 10_000,
     })
     await expect(page.getByText(/invite hasn't arrived/i)).toBeVisible()
@@ -48,26 +54,38 @@ test.describe('No-circle screen', () => {
 
   test('shows "Waiting for an invite?" info block', async ({ page }) => {
     await page.goto('/no-circle')
-    await expect(page.getByText(/waiting for an invite/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/waiting for an invite/i)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
-  test('no pending-deletion banner when there are no deleted circles', async ({ page }) => {
+  test('no pending-deletion banner when there are no deleted circles', async ({
+    page,
+  }) => {
     await page.goto('/no-circle')
-    await expect(page.getByText(/recently deleted a circle/i)).not.toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/recently deleted a circle/i)).not.toBeVisible({
+      timeout: 10_000,
+    })
   })
 
-  test('pending-deletion banner appears when deleted circles exist', async ({ page }) => {
+  test('pending-deletion banner appears when deleted circles exist', async ({
+    page,
+  }) => {
     // Override: return one deleted circle
     await page.route('**/api/circles/deleted**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ circles: [{ id: 'dead-circle-id', name: 'Old Circle' }] }),
+        body: JSON.stringify({
+          circles: [{ id: 'dead-circle-id', name: 'Old Circle' }],
+        }),
       }),
     )
 
     await page.goto('/no-circle')
-    await expect(page.getByText(/recently deleted a circle/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/recently deleted a circle/i)).toBeVisible({
+      timeout: 10_000,
+    })
     // Banner should link to account settings
     await expect(
       page.getByRole('link', { name: /restore from account settings/i }),
@@ -82,7 +100,11 @@ test.describe('No-circle screen', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({
+          hasMembership: true,
+          needsProfile: false,
+          deletedAt: null,
+        }),
       }),
     )
     // Provide circles + empty timeline so /timeline can render

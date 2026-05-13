@@ -79,7 +79,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -111,7 +115,12 @@ function mockTimeline(page: any, memories: any[]) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories,
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
@@ -130,7 +139,9 @@ function mockComments(page: any, memoryId: string) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Emoji reactions (8.2)', () => {
-  test('existing reaction chip renders on PolaroidCard when hovered', async ({ page }) => {
+  test('existing reaction chip renders on PolaroidCard when hovered', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [
@@ -146,16 +157,23 @@ test.describe('Emoji reactions (8.2)', () => {
     ])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
     // Reaction overlay on PolaroidCard is shown on hover only (v-if="isHovered")
-    const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
     await card.hover()
 
     // Chip with heart emoji should appear on the hovered card
-    await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({ timeout: 5_000 })
+    await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   test('+ button opens emoji picker on PolaroidCard', async ({ page }) => {
@@ -164,12 +182,17 @@ test.describe('Emoji reactions (8.2)', () => {
     await mockTimeline(page, [makePhotoMemory()])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
     // Hover the card to reveal the picker button
-    const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
     await card.hover()
 
     // The + picker button should appear
@@ -180,45 +203,57 @@ test.describe('Emoji reactions (8.2)', () => {
     await pickerBtn.click()
 
     // Heart emoji should appear in the picker
-    await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible({ timeout: 3_000 })
+    await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible(
+      { timeout: 3_000 },
+    )
   })
 
-  test('picking an emoji calls POST and chip appears on card', async ({ page }) => {
+  test('picking an emoji calls POST and chip appears on card', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [makePhotoMemory()])
 
     let postEmoji: string | null = null
-    await page.route(`**/api/memories/${MEMORY_ID}/reactions**`, async (route) => {
-      if (route.request().method() === 'POST') {
-        const body = JSON.parse(route.request().postData() ?? '{}')
-        postEmoji = body.emoji
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            reactions: [
-              {
-                id: 'r-new',
-                emoji: body.emoji,
-                user_id: MY_USER_ID,
-                guest_name: null,
-                user: { first_name: 'Dao', last_name: 'Z' },
-              },
-            ],
-          }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/memories/${MEMORY_ID}/reactions**`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          const body = JSON.parse(route.request().postData() ?? '{}')
+          postEmoji = body.emoji
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              reactions: [
+                {
+                  id: 'r-new',
+                  emoji: body.emoji,
+                  user_id: MY_USER_ID,
+                  guest_name: null,
+                  user: { first_name: 'Dao', last_name: 'Z' },
+                },
+              ],
+            }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
-    const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
     await card.hover()
 
     const pickerBtn = card.locator('button', { hasText: '+' })
@@ -226,7 +261,9 @@ test.describe('Emoji reactions (8.2)', () => {
     await pickerBtn.evaluate((btn: HTMLButtonElement) => btn.click())
 
     // Click the heart emoji in the picker
-    await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible({ timeout: 3_000 })
+    await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible(
+      { timeout: 3_000 },
+    )
     await page
       .locator('button', { hasText: '❤️' })
       .first()
@@ -236,7 +273,9 @@ test.describe('Emoji reactions (8.2)', () => {
     expect(postEmoji).toBe('❤️')
   })
 
-  test('clicking own reaction chip calls POST to toggle it off', async ({ page }) => {
+  test('clicking own reaction chip calls POST to toggle it off', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [
@@ -252,30 +291,40 @@ test.describe('Emoji reactions (8.2)', () => {
     ])
 
     let postCalled = false
-    await page.route(`**/api/memories/${MEMORY_ID}/reactions**`, async (route) => {
-      if (route.request().method() === 'POST') {
-        postCalled = true
-        // Return empty reactions (removed)
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ reactions: [] }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/memories/${MEMORY_ID}/reactions**`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          postCalled = true
+          // Return empty reactions (removed)
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ reactions: [] }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
-    const card = page.locator('article').filter({ hasText: 'A birthday moment' }).first()
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
     await card.hover()
 
     // The heart chip should be visible (own reaction, highlighted)
-    await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({ timeout: 5_000 })
+    await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Click to toggle off
     await card
@@ -303,50 +352,63 @@ test.describe('Emoji reactions (8.2)', () => {
     await mockComments(page, MEMORY_ID)
 
     let postEmoji: string | null = null
-    await page.route(`**/api/memories/${MEMORY_ID}/reactions**`, async (route) => {
-      if (route.request().method() === 'POST') {
-        const body = JSON.parse(route.request().postData() ?? '{}')
-        postEmoji = body.emoji
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            reactions: [
-              {
-                id: 'r1',
-                emoji: '😍',
-                user_id: OTHER_USER_ID,
-                guest_name: null,
-                user: { first_name: 'Alice', last_name: 'S' },
-              },
-              {
-                id: 'r-new',
-                emoji: body.emoji,
-                user_id: MY_USER_ID,
-                guest_name: null,
-                user: { first_name: 'Dao', last_name: 'Z' },
-              },
-            ],
-          }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/memories/${MEMORY_ID}/reactions**`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          const body = JSON.parse(route.request().postData() ?? '{}')
+          postEmoji = body.emoji
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              reactions: [
+                {
+                  id: 'r1',
+                  emoji: '😍',
+                  user_id: OTHER_USER_ID,
+                  guest_name: null,
+                  user: { first_name: 'Alice', last_name: 'S' },
+                },
+                {
+                  id: 'r-new',
+                  emoji: body.emoji,
+                  user_id: MY_USER_ID,
+                  guest_name: null,
+                  user: { first_name: 'Dao', last_name: 'Z' },
+                },
+              ],
+            }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await page.locator('article').filter({ hasText: 'A birthday moment' }).first().click()
+    await page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
+      .click()
 
     // Existing reaction chip should be visible in modal
     // (card reaction overlay hidden - v-if="isHovered" is false when modal is open)
-    await expect(page.locator('button', { hasText: '😍' }).first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('button', { hasText: '😍' }).first()).toBeVisible(
+      { timeout: 5_000 },
+    )
 
     // Picker + button visible in modal
-    await expect(page.locator('button', { hasText: '+' }).first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('button', { hasText: '+' }).first()).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Click the + to open picker and pick an emoji
     await page.locator('button', { hasText: '+' }).first().click()
-    await expect(page.locator('button', { hasText: '🎉' }).first()).toBeVisible({ timeout: 3_000 })
+    await expect(page.locator('button', { hasText: '🎉' }).first()).toBeVisible(
+      { timeout: 3_000 },
+    )
     await page.locator('button', { hasText: '🎉' }).first().click()
 
     await page.waitForTimeout(500)
@@ -369,7 +431,9 @@ test.describe('Emoji reactions (8.2)', () => {
     ])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 
@@ -393,47 +457,55 @@ test.describe('Emoji reactions (8.2)', () => {
     ])
 
     let postEmoji: string | null = null
-    await page.route(`**/api/memories/${QN_MEMORY_ID}/reactions**`, async (route) => {
-      if (route.request().method() === 'POST') {
-        const body = JSON.parse(route.request().postData() ?? '{}')
-        postEmoji = body.emoji
+    await page.route(
+      `**/api/memories/${QN_MEMORY_ID}/reactions**`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          const body = JSON.parse(route.request().postData() ?? '{}')
+          postEmoji = body.emoji
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              reactions: [
+                {
+                  id: 'r1',
+                  emoji: '👏',
+                  user_id: OTHER_USER_ID,
+                  guest_name: null,
+                  user: { first_name: 'Alice', last_name: 'S' },
+                },
+                {
+                  id: 'r-new',
+                  emoji: body.emoji,
+                  user_id: MY_USER_ID,
+                  guest_name: null,
+                  user: { first_name: 'Dao', last_name: 'Z' },
+                },
+              ],
+            }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
+    await page.route(
+      `**/api/memories/${QN_MEMORY_ID}/comments**`,
+      async (route) => {
+        if (route.request().method() !== 'GET') return route.continue()
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({
-            reactions: [
-              {
-                id: 'r1',
-                emoji: '👏',
-                user_id: OTHER_USER_ID,
-                guest_name: null,
-                user: { first_name: 'Alice', last_name: 'S' },
-              },
-              {
-                id: 'r-new',
-                emoji: body.emoji,
-                user_id: MY_USER_ID,
-                guest_name: null,
-                user: { first_name: 'Dao', last_name: 'Z' },
-              },
-            ],
-          }),
+          body: JSON.stringify({ comments: [] }),
         })
-      } else {
-        await route.continue()
-      }
-    })
-    await page.route(`**/api/memories/${QN_MEMORY_ID}/comments**`, async (route) => {
-      if (route.request().method() !== 'GET') return route.continue()
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ comments: [] }),
-      })
-    })
+      },
+    )
 
     await page.goto('/timeline')
-    const card = page.locator('article').filter({ hasText: 'First steps today!' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First steps today!' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
@@ -441,11 +513,15 @@ test.describe('Emoji reactions (8.2)', () => {
     const modal = page.locator('.fixed.inset-0')
 
     // Existing chip should appear in QuickNoteModal
-    await expect(modal.locator('button', { hasText: '👏' })).toBeVisible({ timeout: 5_000 })
+    await expect(modal.locator('button', { hasText: '👏' })).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Pick a new emoji via the modal's picker (not the QuickNoteCard's always-visible + button)
     await modal.locator('button', { hasText: '+' }).click()
-    await expect(modal.locator('button', { hasText: '🔥' })).toBeVisible({ timeout: 3_000 })
+    await expect(modal.locator('button', { hasText: '🔥' })).toBeVisible({
+      timeout: 3_000,
+    })
     await modal.locator('button', { hasText: '🔥' }).click()
 
     await page.waitForTimeout(500)

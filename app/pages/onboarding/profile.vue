@@ -1,9 +1,15 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-      <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
-      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
+      <h1
+        class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground"
+      >
         {{ t('onboarding.whatsYourName') }}
       </h1>
       <p class="mb-8 text-sm text-muted-foreground">
@@ -15,7 +21,9 @@
         <p class="mb-2 text-xs text-muted-foreground">
           {{ t('onboarding.language') }}
         </p>
-        <div class="inline-flex gap-0.5 rounded-[10px] border border-border bg-card p-0.5">
+        <div
+          class="inline-flex gap-0.5 rounded-[10px] border border-border bg-card p-0.5"
+        >
           <button
             v-for="loc in locales"
             :key="loc.code"

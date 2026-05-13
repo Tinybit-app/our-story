@@ -16,13 +16,17 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[circles/deleted] query failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to load deleted circles.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to load deleted circles.',
+    })
   }
 
   // Filter to only those within the 30-day window
   const now = Date.now()
   const restorable = (data ?? []).filter((c) => {
-    const days = (now - new Date(c.deleted_at!).getTime()) / (1000 * 60 * 60 * 24)
+    const days =
+      (now - new Date(c.deleted_at!).getTime()) / (1000 * 60 * 60 * 24)
     return days < 30
   })
 

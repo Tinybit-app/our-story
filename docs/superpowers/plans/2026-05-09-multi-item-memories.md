@@ -99,7 +99,9 @@ describe('Step 5.4 — Multi-item memories', () => {
   })
 
   it('extends media_type CHECK to include text', () => {
-    expect(m029).toMatch(/CHECK \(media_type IN \('photo', 'video', 'live_photo', 'text'\)\)/)
+    expect(m029).toMatch(
+      /CHECK \(media_type IN \('photo', 'video', 'live_photo', 'text'\)\)/,
+    )
   })
 
   it('adds content_check constraint', () => {
@@ -169,7 +171,10 @@ const { data: memory, error: memoryError } = await supabase
 
 if (memoryError || !memory) {
   await supabase.storage.from('memories-private').remove([storagePath])
-  return Response.json({ error: memoryError?.message ?? 'Failed to save memory' }, { status: 500 })
+  return Response.json(
+    { error: memoryError?.message ?? 'Failed to save memory' },
+    { status: 500 },
+  )
 }
 
 // Insert MemoryMedia row
@@ -189,7 +194,10 @@ if (mediaError || !media) {
   // Clean up storage + memory
   await supabase.storage.from('memories-private').remove([storagePath])
   await supabase.from('memory').delete().eq('id', memory.id)
-  return Response.json({ error: mediaError?.message ?? 'Failed to save media' }, { status: 500 })
+  return Response.json(
+    { error: mediaError?.message ?? 'Failed to save media' },
+    { status: 500 },
+  )
 }
 
 // Increment storage usage
@@ -238,7 +246,10 @@ import { z } from 'zod'
 
 const itemSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('draft'), draftMemoryId: z.uuid() }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 const uploadBatchSchema = z.object({
@@ -257,8 +268,14 @@ describe('upload-batch schema', () => {
     circleId: '11111111-2222-3333-4444-555555555555',
     memoryDate: '2026-05-09',
     items: [
-      { type: 'draft' as const, draftMemoryId: '11111111-2222-3333-4444-555555555556' },
-      { type: 'draft' as const, draftMemoryId: '11111111-2222-3333-4444-555555555557' },
+      {
+        type: 'draft' as const,
+        draftMemoryId: '11111111-2222-3333-4444-555555555556',
+      },
+      {
+        type: 'draft' as const,
+        draftMemoryId: '11111111-2222-3333-4444-555555555557',
+      },
     ],
   }
 
@@ -270,7 +287,10 @@ describe('upload-batch schema', () => {
     const r = uploadBatchSchema.safeParse({
       ...baseValid,
       items: [
-        { type: 'draft', draftMemoryId: '11111111-2222-3333-4444-555555555556' },
+        {
+          type: 'draft',
+          draftMemoryId: '11111111-2222-3333-4444-555555555556',
+        },
         { type: 'text', textContent: 'And then she smiled.' },
       ],
     })
@@ -278,9 +298,10 @@ describe('upload-batch schema', () => {
   })
 
   it('rejects fewer than 2 items', () => {
-    expect(uploadBatchSchema.safeParse({ ...baseValid, items: [baseValid.items[0]] }).success).toBe(
-      false,
-    )
+    expect(
+      uploadBatchSchema.safeParse({ ...baseValid, items: [baseValid.items[0]] })
+        .success,
+    ).toBe(false)
   })
 
   it('rejects more than 20 items', () => {
@@ -288,7 +309,9 @@ describe('upload-batch schema', () => {
       type: 'text' as const,
       textContent: `Slide ${i}`,
     }))
-    expect(uploadBatchSchema.safeParse({ ...baseValid, items }).success).toBe(false)
+    expect(uploadBatchSchema.safeParse({ ...baseValid, items }).success).toBe(
+      false,
+    )
   })
 
   it('rejects invalid coverIndex (negative)', () => {
@@ -321,7 +344,10 @@ import { z } from 'zod'
 
 const itemSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('draft'), draftMemoryId: z.uuid() }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 const bodySchema = z.object({
@@ -341,9 +367,18 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
-  const { circleId, memoryDate, note, milestoneLabel, childIds, memberIds, coverIndex, items } =
-    result.data
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  const {
+    circleId,
+    memoryDate,
+    note,
+    milestoneLabel,
+    childIds,
+    memberIds,
+    coverIndex,
+    items,
+  } = result.data
 
   // Verify circle membership
   const { data: membership } = await supabase
@@ -353,11 +388,17 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .maybeSingle()
   if (!membership)
-    throw createError({ statusCode: 403, message: 'You are not a member of this circle.' })
+    throw createError({
+      statusCode: 403,
+      message: 'You are not a member of this circle.',
+    })
 
   // Verify all draft memories are owned by this user (ownership check before merge)
   const draftMemoryIds = items
-    .filter((i): i is Extract<(typeof items)[number], { type: 'draft' }> => i.type === 'draft')
+    .filter(
+      (i): i is Extract<(typeof items)[number], { type: 'draft' }> =>
+        i.type === 'draft',
+    )
     .map((i) => i.draftMemoryId)
 
   if (draftMemoryIds.length > 0) {
@@ -369,7 +410,10 @@ export default defineEventHandler(async (event) => {
       .eq('circle_id', circleId)
       .eq('visibility', 'private') // sanity: ensure it's still a draft
     if ((drafts?.length ?? 0) !== draftMemoryIds.length) {
-      throw createError({ statusCode: 403, message: 'Invalid draft media ownership.' })
+      throw createError({
+        statusCode: 403,
+        message: 'Invalid draft media ownership.',
+      })
     }
   }
 
@@ -422,7 +466,10 @@ export default defineEventHandler(async (event) => {
         .select('id')
         .single()
       if (insErr || !row) {
-        console.error('[upload-batch] text slide insert failed:', insErr?.message)
+        console.error(
+          '[upload-batch] text slide insert failed:',
+          insErr?.message,
+        )
         continue
       }
       insertedMediaIds.push(row.id)
@@ -431,7 +478,11 @@ export default defineEventHandler(async (event) => {
 
   // Resolve cover: explicit index, or first photo/video by display_order
   let coverMediaId: string | null = null
-  if (coverIndex !== null && coverIndex !== undefined && coverIndex < insertedMediaIds.length) {
+  if (
+    coverIndex !== null &&
+    coverIndex !== undefined &&
+    coverIndex < insertedMediaIds.length
+  ) {
     coverMediaId = insertedMediaIds[coverIndex] ?? null
   }
   if (!coverMediaId) {
@@ -445,7 +496,10 @@ export default defineEventHandler(async (event) => {
       .maybeSingle()
     coverMediaId = firstMedia?.id ?? null
   }
-  await supabase.from('memory').update({ cover_media_id: coverMediaId }).eq('id', memory.id)
+  await supabase
+    .from('memory')
+    .update({ cover_media_id: coverMediaId })
+    .eq('id', memory.id)
 
   // Tag children + members (mirrors existing quick-note.post.ts pattern)
   if (childIds?.length) {
@@ -501,7 +555,10 @@ const bodySchema = z.discriminatedUnion('type', [
     fileSize: z.number().int().positive(),
     mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 export default defineEventHandler(async (event) => {
@@ -513,7 +570,8 @@ export default defineEventHandler(async (event) => {
   if (!memoryId) throw createError({ statusCode: 400 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const item = result.data
 
   // Owner-only
@@ -632,7 +690,8 @@ export default defineEventHandler(async (event) => {
   if (!memoryId) throw createError({ statusCode: 400 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
 
   const { data: memory } = await supabase
     .from('memory')
@@ -654,7 +713,10 @@ export default defineEventHandler(async (event) => {
   for (const r of results) {
     if (r.error) {
       console.error('[items/order] update failed:', r.error.message)
-      throw createError({ statusCode: 500, message: 'Failed to reorder slides.' })
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to reorder slides.',
+      })
     }
   }
 
@@ -687,7 +749,10 @@ const itemsPostSchema = z.discriminatedUnion('type', [
     fileSize: z.number().int().positive(),
     mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 const orderPatchSchema = z.object({ orderedIds: z.array(z.uuid()).min(1) })
@@ -703,7 +768,9 @@ describe('items.post schema', () => {
     expect(r.success).toBe(true)
   })
   it('accepts text item', () => {
-    expect(itemsPostSchema.safeParse({ type: 'text', textContent: 'hi' }).success).toBe(true)
+    expect(
+      itemsPostSchema.safeParse({ type: 'text', textContent: 'hi' }).success,
+    ).toBe(true)
   })
   it('rejects unknown mediaType', () => {
     const r = itemsPostSchema.safeParse({
@@ -719,7 +786,9 @@ describe('items.post schema', () => {
 describe('items/order schema', () => {
   it('accepts non-empty orderedIds', () => {
     expect(
-      orderPatchSchema.safeParse({ orderedIds: ['11111111-2222-3333-4444-555555555556'] }).success,
+      orderPatchSchema.safeParse({
+        orderedIds: ['11111111-2222-3333-4444-555555555556'],
+      }).success,
     ).toBe(true)
   })
   it('rejects empty orderedIds', () => {
@@ -857,7 +926,8 @@ export default defineEventHandler(async (event) => {
         .createSignedUrl(row.storage_path, 3600)
       return {
         id: row.id,
-        mediaType: row.media_type === 'video' ? ('video' as const) : ('photo' as const),
+        mediaType:
+          row.media_type === 'video' ? ('video' as const) : ('photo' as const),
         url: signed?.signedUrl ?? null,
         displayOrder: row.display_order,
       }
@@ -971,7 +1041,12 @@ In MemoryModal, when the modal opens for a memory with `media_count > 1`, fetch 
 
 ```ts
 const slides = ref<
-  Array<{ id: string; mediaType: 'photo' | 'video' | 'text'; url?: string; textContent?: string }>
+  Array<{
+    id: string
+    mediaType: 'photo' | 'video' | 'text'
+    url?: string
+    textContent?: string
+  }>
 >([])
 const slidesLoading = ref(false)
 
@@ -1035,10 +1110,14 @@ const carouselRef = ref<HTMLDivElement | null>(null)
 
 function onScroll() {
   if (!carouselRef.value) return
-  const idx = Math.round(carouselRef.value.scrollLeft / carouselRef.value.clientWidth)
+  const idx = Math.round(
+    carouselRef.value.scrollLeft / carouselRef.value.clientWidth,
+  )
   currentSlideIdx.value = idx
 }
-onMounted(() => carouselRef.value?.addEventListener('scroll', onScroll, { passive: true }))
+onMounted(() =>
+  carouselRef.value?.addEventListener('scroll', onScroll, { passive: true }),
+)
 ```
 
 - [ ] **Step 3: Same for QuickNoteModal (multi-text memories)**
@@ -1097,7 +1176,10 @@ This is the largest UI change. The component already handles multi-file selectio
 Add a `groupAsOne` ref. Show the toggle in the template when `items.value.length >= 2`:
 
 ```vue
-<div v-if="items.length >= 2" class="flex items-center gap-2 border-b border-border px-4 py-3">
+<div
+  v-if="items.length >= 2"
+  class="flex items-center gap-2 border-b border-border px-4 py-3"
+>
   <button
     type="button"
     class="flex-1 py-2 rounded-lg text-xs font-semibold transition-colors"
@@ -1148,12 +1230,15 @@ async function uploadAll() {
 
 async function uploadAsOneMemory() {
   // 1. Upload all media files in parallel with defer=true
-  const draftResults = await Promise.all(items.value.map((item) => uploadItemDeferred(item)))
+  const draftResults = await Promise.all(
+    items.value.map((item) => uploadItemDeferred(item)),
+  )
   const draftMemoryIds = draftResults.filter(Boolean).map((r) => r!.memoryId)
 
   // 2. Build the items array in display order
   const orderedItems: Array<
-    { type: 'draft'; draftMemoryId: string } | { type: 'text'; textContent: string }
+    | { type: 'draft'; draftMemoryId: string }
+    | { type: 'text'; textContent: string }
   > = items.value
     .map((it, idx) =>
       draftResults[idx]
@@ -1280,7 +1365,9 @@ import { test, expect } from '@playwright/test'
 test.use({ storageState: 'tests/.auth/user.json' })
 
 test.describe('Multi-item memories', () => {
-  test("toggle 'Post as one memory' creates one memory with N media", async ({ page }) => {
+  test("toggle 'Post as one memory' creates one memory with N media", async ({
+    page,
+  }) => {
     // Mock circles + timeline as in existing tests
     // Open upload sheet, select 3 files
     // Click 'Post as one memory'
@@ -1289,7 +1376,9 @@ test.describe('Multi-item memories', () => {
     // (use page.route to intercept upload-batch and assert payload)
   })
 
-  test("default 'Post separately' still creates N memories", async ({ page }) => {
+  test("default 'Post separately' still creates N memories", async ({
+    page,
+  }) => {
     // ... assert N cards on timeline
   })
 
@@ -1299,7 +1388,9 @@ test.describe('Multi-item memories', () => {
     // Assert swipe / scroll changes current slide
   })
 
-  test('count badge appears on PolaroidCard for multi-item', async ({ page }) => {
+  test('count badge appears on PolaroidCard for multi-item', async ({
+    page,
+  }) => {
     // Mock timeline response with media_count: 5
     // Assert ⊕5 badge visible
   })

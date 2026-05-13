@@ -13,7 +13,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[account/cancel-deletion] update failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to cancel deletion. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to cancel deletion. Please try again.',
+    })
   }
 
   return { ok: true }

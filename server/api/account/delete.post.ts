@@ -76,7 +76,8 @@ export default defineEventHandler(async (event) => {
   if (circlesNeedingTransfer.length > 0) {
     throw createError({
       statusCode: 400,
-      message: 'Some circles need a new owner before you can delete your account.',
+      message:
+        'Some circles need a new owner before you can delete your account.',
       data: { code: 'needs_transfer', circles: circlesNeedingTransfer },
     })
   }
@@ -110,7 +111,9 @@ export default defineEventHandler(async (event) => {
       .maybeSingle()
 
     const formerName =
-      [userProfile?.first_name, userProfile?.last_name].filter(Boolean).join(' ') || null
+      [userProfile?.first_name, userProfile?.last_name]
+        .filter(Boolean)
+        .join(' ') || null
 
     await supabase
       .from('memory')
@@ -166,8 +169,9 @@ export default defineEventHandler(async (event) => {
       ])
       if (newOwner?.email) {
         const prevName =
-          [prevOwner?.first_name, prevOwner?.last_name].filter(Boolean).join(' ') ||
-          'The previous owner'
+          [prevOwner?.first_name, prevOwner?.last_name]
+            .filter(Boolean)
+            .join(' ') || 'The previous owner'
         const { subject, html } = buildOwnerPromotedEmail({
           newOwnerFirstName: newOwner.first_name ?? '',
           previousOwnerName: prevName,

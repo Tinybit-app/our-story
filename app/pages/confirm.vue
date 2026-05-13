@@ -1,7 +1,11 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="text-center">
-      <p class="mb-6 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-6 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <template v-if="errorMsg">
         <p class="mb-4 text-sm text-destructive">{{ errorMsg }}</p>
@@ -13,7 +17,9 @@
         </button>
       </template>
       <template v-else>
-        <p class="text-sm text-muted-foreground">{{ t('confirm.signingIn') }}</p>
+        <p class="text-sm text-muted-foreground">
+          {{ t('confirm.signingIn') }}
+        </p>
       </template>
     </div>
   </div>

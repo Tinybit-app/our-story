@@ -5,7 +5,9 @@ import { reactiveOmit } from '@vueuse/core'
 import { ToastAction } from 'reka-ui'
 import { cn } from '@/lib/utils'
 
-const props = defineProps<ToastActionProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<
+  ToastActionProps & { class?: HTMLAttributes['class'] }
+>()
 
 const delegatedProps = reactiveOmit(props, 'class')
 </script>

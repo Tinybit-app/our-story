@@ -31,9 +31,9 @@ describe('buildOnThisDayPushTitle', () => {
 
 describe('buildOnThisDayPushBody', () => {
   it('returns note when present', () => {
-    expect(buildOnThisDayPushBody('Emma', 'First steps at the park', 'en')).toBe(
-      'First steps at the park',
-    )
+    expect(
+      buildOnThisDayPushBody('Emma', 'First steps at the park', 'en'),
+    ).toBe('First steps at the park')
   })
 
   it('truncates note longer than 80 chars to ~80 with ellipsis', () => {
@@ -44,15 +44,21 @@ describe('buildOnThisDayPushBody', () => {
   })
 
   it('falls back to uploader name (en) when note is null', () => {
-    expect(buildOnThisDayPushBody('Emma', null, 'en')).toBe('Emma added a memory')
+    expect(buildOnThisDayPushBody('Emma', null, 'en')).toBe(
+      'Emma added a memory',
+    )
   })
 
   it('falls back to uploader name (zh-CN) when note is null', () => {
-    expect(buildOnThisDayPushBody('Emma', null, 'zh-CN')).toBe('Emma 添加了一条记忆')
+    expect(buildOnThisDayPushBody('Emma', null, 'zh-CN')).toBe(
+      'Emma 添加了一条记忆',
+    )
   })
 
   it('falls back to uploader name (fr) when note is null', () => {
-    expect(buildOnThisDayPushBody('Emma', null, 'fr')).toBe('Emma a ajouté un souvenir')
+    expect(buildOnThisDayPushBody('Emma', null, 'fr')).toBe(
+      'Emma a ajouté un souvenir',
+    )
   })
 
   it('falls back to uploader name when note is empty string', () => {
@@ -62,7 +68,9 @@ describe('buildOnThisDayPushBody', () => {
 
 describe('buildFirstMonthMemoryPushTitle', () => {
   it('en', () => {
-    expect(buildFirstMonthMemoryPushTitle('en')).toBe('A memory from your first month')
+    expect(buildFirstMonthMemoryPushTitle('en')).toBe(
+      'A memory from your first month',
+    )
   })
 
   it('zh-CN renders Chinese', () => {
@@ -77,10 +85,14 @@ describe('buildFirstMonthMemoryPushTitle', () => {
 
 describe('buildFirstMonthMemoryPushBody', () => {
   it('returns note when present', () => {
-    expect(buildFirstMonthMemoryPushBody('Mom', 'First steps', 'en')).toBe('First steps')
+    expect(buildFirstMonthMemoryPushBody('Mom', 'First steps', 'en')).toBe(
+      'First steps',
+    )
   })
 
   it('falls back to uploader name in en', () => {
-    expect(buildFirstMonthMemoryPushBody('Mom', null, 'en')).toBe('Mom added a memory')
+    expect(buildFirstMonthMemoryPushBody('Mom', null, 'en')).toBe(
+      'Mom added a memory',
+    )
   })
 })

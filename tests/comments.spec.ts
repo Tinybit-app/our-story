@@ -78,7 +78,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -110,7 +114,12 @@ function mockTimeline(page: any, memories: any[]) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories,
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
@@ -156,13 +165,19 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     // Open the memory modal
-    await page.locator('article').filter({ hasText: 'A birthday moment' }).first().click()
+    await page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
+      .click()
 
     // Switch to the Comments tab
     await page.getByRole('button', { name: /comments/i }).click()
 
     // The loaded comment should be visible
-    await expect(page.getByText('What a great photo!')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('What a great photo!')).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   test('comment input Post button is disabled when empty', async ({ page }) => {
@@ -173,52 +188,69 @@ test.describe('Comments (8.1)', () => {
     await mockComments(page, MEMORY_ID)
 
     await page.goto('/timeline')
-    await page.locator('article').filter({ hasText: 'A birthday moment' }).first().click()
+    await page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
+      .click()
     await page.getByRole('button', { name: /comments/i }).click()
 
     // Post button should be disabled when input is empty
-    await expect(page.getByRole('button', { name: /^post$/i })).toBeDisabled({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: /^post$/i })).toBeDisabled({
+      timeout: 5_000,
+    })
   })
 
-  test('posting a comment calls POST /api/memories/:id/comments', async ({ page }) => {
+  test('posting a comment calls POST /api/memories/:id/comments', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [PHOTO_MEMORY])
     await mockReactions(page, MEMORY_ID)
 
     let postBody: any = null
-    await page.route(`**/api/memories/${MEMORY_ID}/comments**`, async (route) => {
-      if (route.request().method() === 'POST') {
-        postBody = JSON.parse(route.request().postData() ?? '{}')
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            comments: [
-              {
-                id: 'comment-new',
-                body: postBody.body,
-                created_at: new Date().toISOString(),
-                user_id: MY_USER_ID,
-                user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
-              },
-            ],
-          }),
-        })
-      } else {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ comments: [] }),
-        })
-      }
-    })
+    await page.route(
+      `**/api/memories/${MEMORY_ID}/comments**`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          postBody = JSON.parse(route.request().postData() ?? '{}')
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              comments: [
+                {
+                  id: 'comment-new',
+                  body: postBody.body,
+                  created_at: new Date().toISOString(),
+                  user_id: MY_USER_ID,
+                  user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
+                },
+              ],
+            }),
+          })
+        } else {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ comments: [] }),
+          })
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await page.locator('article').filter({ hasText: 'A birthday moment' }).first().click()
+    await page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
+      .click()
     await page.getByRole('button', { name: /comments/i }).click()
 
-    await page.locator('textarea[placeholder*="comment" i]').fill('Such a lovely day!')
+    await page
+      .locator('textarea[placeholder*="comment" i]')
+      .fill('Such a lovely day!')
     // Use evaluate to bypass the MemoryShell backdrop overlay intercepting pointer events
     await page
       .getByRole('button', { name: /^post$/i })
@@ -228,7 +260,9 @@ test.describe('Comments (8.1)', () => {
     expect(postBody).toMatchObject({ body: 'Such a lovely day!' })
   })
 
-  test('delete button rendered for own comments, absent for others', async ({ page }) => {
+  test('delete button rendered for own comments, absent for others', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [PHOTO_MEMORY])
@@ -253,10 +287,16 @@ test.describe('Comments (8.1)', () => {
     ])
 
     await page.goto('/timeline')
-    await page.locator('article').filter({ hasText: 'A birthday moment' }).first().click()
+    await page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
+      .click()
     await page.getByRole('button', { name: /comments/i }).click()
 
-    await expect(page.getByText('My own comment')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('My own comment')).toBeVisible({
+      timeout: 5_000,
+    })
     await expect(page.getByText('Someone else comment')).toBeVisible()
 
     // Delete buttons are rendered via v-if only for own comments.
@@ -274,7 +314,9 @@ test.describe('Comments (8.1)', () => {
     // If no delete buttons are visible the auth user does not own any comment — skip ownership assertion
   })
 
-  test('clicking delete shows confirmation and calls DELETE on confirm', async ({ page }) => {
+  test('clicking delete shows confirmation and calls DELETE on confirm', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [PHOTO_MEMORY])
@@ -291,24 +333,33 @@ test.describe('Comments (8.1)', () => {
     ])
 
     let deleteCalled = false
-    await page.route(`**/api/memories/${MEMORY_ID}/comments/my-comment`, async (route) => {
-      if (route.request().method() === 'DELETE') {
-        deleteCalled = true
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ success: true }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/memories/${MEMORY_ID}/comments/my-comment`,
+      async (route) => {
+        if (route.request().method() === 'DELETE') {
+          deleteCalled = true
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await page.locator('article').filter({ hasText: 'A birthday moment' }).first().click()
+    await page
+      .locator('article')
+      .filter({ hasText: 'A birthday moment' })
+      .first()
+      .click()
     await page.getByRole('button', { name: /comments/i }).click()
 
-    await expect(page.getByText('Comment to delete')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Comment to delete')).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Only exercise the delete flow if auth resolved and the button rendered
     const deleteBtnCount = await page.getByTitle('Delete comment').count()
@@ -319,14 +370,18 @@ test.describe('Comments (8.1)', () => {
         .first()
         .evaluate((btn: HTMLButtonElement) => btn.click())
       // Confirmation row should appear
-      await expect(page.getByText(/Delete this comment\?/i)).toBeVisible({ timeout: 3_000 })
+      await expect(page.getByText(/Delete this comment\?/i)).toBeVisible({
+        timeout: 3_000,
+      })
       // Confirm — calls DELETE
       await page
         .getByRole('button', { name: /^delete$/i })
         .evaluate((btn: HTMLButtonElement) => btn.click())
       await page.waitForTimeout(500)
       expect(deleteCalled).toBe(true)
-      await expect(page.getByText('Comment to delete')).not.toBeVisible({ timeout: 3_000 })
+      await expect(page.getByText('Comment to delete')).not.toBeVisible({
+        timeout: 3_000,
+      })
     }
   })
 
@@ -345,7 +400,9 @@ test.describe('Comments (8.1)', () => {
     ])
 
     await page.goto('/timeline')
-    const card = page.locator('article').filter({ hasText: 'First steps today!' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First steps today!' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
@@ -359,39 +416,46 @@ test.describe('Comments (8.1)', () => {
     await mockTimeline(page, [QUICK_NOTE_MEMORY])
 
     let postBody: any = null
-    await page.route(`**/api/memories/${QN_MEMORY_ID}/comments**`, async (route) => {
-      if (route.request().method() === 'POST') {
-        postBody = JSON.parse(route.request().postData() ?? '{}')
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            comments: [
-              {
-                id: 'qn-comment-new',
-                body: postBody.body,
-                created_at: new Date().toISOString(),
-                user_id: MY_USER_ID,
-                user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
-              },
-            ],
-          }),
-        })
-      } else {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ comments: [] }),
-        })
-      }
-    })
+    await page.route(
+      `**/api/memories/${QN_MEMORY_ID}/comments**`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          postBody = JSON.parse(route.request().postData() ?? '{}')
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              comments: [
+                {
+                  id: 'qn-comment-new',
+                  body: postBody.body,
+                  created_at: new Date().toISOString(),
+                  user_id: MY_USER_ID,
+                  user: { first_name: 'Dao', last_name: 'Z', avatar_url: null },
+                },
+              ],
+            }),
+          })
+        } else {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ comments: [] }),
+          })
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    const card = page.locator('article').filter({ hasText: 'First steps today!' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First steps today!' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    await page.locator('textarea[placeholder*="comment" i]').fill('Amazing milestone!')
+    await page
+      .locator('textarea[placeholder*="comment" i]')
+      .fill('Amazing milestone!')
     await page.getByRole('button', { name: /^post$/i }).click()
 
     await page.waitForTimeout(500)

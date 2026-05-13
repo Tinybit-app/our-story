@@ -63,7 +63,9 @@ describe('useCircleTypeConfig — couple type', () => {
 
   it('includes anniversary-related chip', () => {
     const { milestoneChips } = useCircleTypeConfig('couple')
-    const hasAnniversary = milestoneChips.some((c) => /anniversary|engaged|wedding/i.test(c))
+    const hasAnniversary = milestoneChips.some((c) =>
+      /anniversary|engaged|wedding/i.test(c),
+    )
     expect(hasAnniversary).toBe(true)
   })
 })

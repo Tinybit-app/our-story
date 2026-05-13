@@ -21,7 +21,8 @@ export default defineEventHandler(async (event) => {
 
   const circleId = getRouterParam(event, 'id')
   const childId = getRouterParam(event, 'childId')
-  if (!circleId || !childId) throw createError({ statusCode: 400, message: 'Missing IDs' })
+  if (!circleId || !childId)
+    throw createError({ statusCode: 400, message: 'Missing IDs' })
 
   const body = await readBody(event)
   const parsed = schema.safeParse(body)
@@ -41,12 +42,16 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership || membership.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the circle owner can manage children.' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the circle owner can manage children.',
+    })
   }
 
   const updates: Record<string, string> = {}
   if (parsed.data.name !== undefined) updates.name = parsed.data.name
-  if (parsed.data.dateOfBirth !== undefined) updates.date_of_birth = parsed.data.dateOfBirth
+  if (parsed.data.dateOfBirth !== undefined)
+    updates.date_of_birth = parsed.data.dateOfBirth
 
   const { data, error } = await supabase
     .from('childprofile')

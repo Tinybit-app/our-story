@@ -11,14 +11,19 @@
         stroke-width="1.5"
         viewBox="0 0 24 24"
       >
-        <path d="M12 16V4m0 12l-4-4m4 4l4-4M4 18v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+        <path
+          d="M12 16V4m0 12l-4-4m4 4l4-4M4 18v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+        />
       </svg>
     </div>
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium leading-snug text-foreground">
         {{ t('install.promptTitle') }}
       </p>
-      <p v-if="!showIosInstructions" class="mt-0.5 text-xs text-muted-foreground">
+      <p
+        v-if="!showIosInstructions"
+        class="mt-0.5 text-xs text-muted-foreground"
+      >
         {{ t('install.promptBody') }}
       </p>
       <p v-else class="mt-0.5 text-xs text-muted-foreground">
@@ -44,7 +49,13 @@
       class="flex-shrink-0 p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
       @click="snooze"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
         <path d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>

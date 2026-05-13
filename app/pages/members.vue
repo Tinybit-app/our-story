@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
         <button
           class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -79,11 +81,15 @@
 
       <template v-else-if="data">
         <!-- Remove error -->
-        <p v-if="removeError" class="-mb-4 text-xs text-destructive">{{ removeError }}</p>
+        <p v-if="removeError" class="-mb-4 text-xs text-destructive">
+          {{ removeError }}
+        </p>
 
         <!-- Active members -->
         <section>
-          <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p
+            class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+          >
             {{ t('members.count', data.members.length) }}
           </p>
           <ul class="space-y-1">
@@ -102,13 +108,17 @@
                   :src="member.avatarUrl"
                   class="h-full w-full object-cover"
                 />
-                <span v-else class="text-xs font-bold text-foreground">{{ initials(member) }}</span>
+                <span v-else class="text-xs font-bold text-foreground">{{
+                  initials(member)
+                }}</span>
               </div>
 
               <!-- Name + role -->
               <div class="flex min-w-0 flex-1 items-center gap-3">
                 <div class="min-w-0">
-                  <p class="truncate text-sm font-medium leading-none text-foreground">
+                  <p
+                    class="truncate text-sm font-medium leading-none text-foreground"
+                  >
                     {{ displayName(member) }}
                     <span
                       v-if="member.userId === authUser?.sub"
@@ -135,7 +145,11 @@
                 "
                 class="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-foreground"
                 @click.stop="openRoleDialog(member)"
-                :title="member.role === 'admin' ? t('members.removeAdmin') : t('members.makeAdmin')"
+                :title="
+                  member.role === 'admin'
+                    ? t('members.removeAdmin')
+                    : t('members.makeAdmin')
+                "
               >
                 <svg
                   class="h-4 w-4"
@@ -152,7 +166,11 @@
 
               <!-- Remove button -->
               <button
-                v-if="canManage && member.role !== 'owner' && !(member.userId === authUser?.sub)"
+                v-if="
+                  canManage &&
+                  member.role !== 'owner' &&
+                  !(member.userId === authUser?.sub)
+                "
                 class="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-destructive"
                 @click.stop="openRemoveDialog(member)"
               >
@@ -175,7 +193,9 @@
 
         <!-- Pending invites (owner/admin only) -->
         <section v-if="canManage && data.invites.length > 0">
-          <p class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p
+            class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+          >
             {{ t('members.pendingInvites') }}
           </p>
           <ul class="space-y-1">
@@ -202,12 +222,21 @@
 
               <!-- Email + expiry -->
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium leading-none text-foreground">
+                <p
+                  class="truncate text-sm font-medium leading-none text-foreground"
+                >
                   {{ invite.email }}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">
-                  {{ t('members.invited', { time: timeAgo(invite.created_at) }) }} ·
-                  {{ t('members.expires', { time: timeAgo(invite.expires_at, true) }) }}
+                  {{
+                    t('members.invited', { time: timeAgo(invite.created_at) })
+                  }}
+                  ·
+                  {{
+                    t('members.expires', {
+                      time: timeAgo(invite.expires_at, true),
+                    })
+                  }}
                 </p>
               </div>
 
@@ -218,7 +247,9 @@
                   :disabled="resendingEmail === invite.email"
                   @click="resendInvite(invite)"
                 >
-                  {{ resendingEmail === invite.email ? '…' : t('members.resend') }}
+                  {{
+                    resendingEmail === invite.email ? '…' : t('members.resend')
+                  }}
                 </button>
                 <button
                   class="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-destructive"
@@ -256,14 +287,21 @@
         v-if="roleDialog"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="roleDialog = null" />
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="roleDialog = null"
+        />
         <div
           class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl"
         >
           <!-- Header -->
           <div class="border-b border-border px-6 pb-4 pt-6">
-            <p class="text-sm font-semibold text-foreground">{{ displayName(roleDialog) }}</p>
-            <p class="mt-0.5 text-xs text-muted-foreground">{{ roleLabel(roleDialog.role) }}</p>
+            <p class="text-sm font-semibold text-foreground">
+              {{ displayName(roleDialog) }}
+            </p>
+            <p class="mt-0.5 text-xs text-muted-foreground">
+              {{ roleLabel(roleDialog.role) }}
+            </p>
           </div>
 
           <!-- Actions -->
@@ -303,8 +341,14 @@
                 v-else
                 class="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 pt-1 dark:border-amber-800/50 dark:bg-amber-900/20"
               >
-                <p class="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                  {{ t('members.transferOwnershipTitle', { name: roleDialog.firstName }) }}
+                <p
+                  class="text-sm font-semibold text-amber-700 dark:text-amber-300"
+                >
+                  {{
+                    t('members.transferOwnershipTitle', {
+                      name: roleDialog.firstName,
+                    })
+                  }}
                 </p>
                 <p class="text-xs text-amber-600 dark:text-amber-400">
                   {{ t('members.transferOwnershipDesc') }}
@@ -357,13 +401,18 @@
         v-if="removeDialog"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="removeDialog = null" />
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="removeDialog = null"
+        />
         <div
           class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl"
         >
           <!-- Header -->
           <div class="border-b border-border px-6 pb-4 pt-6">
-            <p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive">
+            <p
+              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive"
+            >
               {{ t('members.removeAction') }}
             </p>
             <h2 class="text-base font-bold leading-snug text-foreground">
@@ -456,8 +505,12 @@
 
           <!-- Footer -->
           <div class="space-y-2.5 px-6 pb-6">
-            <p class="text-xs text-muted-foreground">{{ t('members.removeNotification') }}</p>
-            <p v-if="removeError" class="text-xs text-destructive">{{ removeError }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('members.removeNotification') }}
+            </p>
+            <p v-if="removeError" class="text-xs text-destructive">
+              {{ removeError }}
+            </p>
             <div class="flex gap-2 pt-1">
               <button
                 type="button"
@@ -471,7 +524,11 @@
                 class="flex-1 rounded-[10px] bg-destructive py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 @click="removeMember(removeDialog)"
               >
-                {{ removingId ? t('members.removing') : t('members.removeConfirm') }}
+                {{
+                  removingId
+                    ? t('members.removing')
+                    : t('members.removeConfirm')
+                }}
               </button>
             </div>
           </div>
@@ -492,7 +549,10 @@
         v-if="inviteOpen"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="closeInvite"
+        />
         <div
           class="relative w-full max-w-sm rounded-[20px] border border-border bg-card p-6 shadow-2xl"
         >
@@ -512,8 +572,13 @@
               :disabled="inviteSending"
               class="mb-3 w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             />
-            <p v-if="inviteError" class="mb-3 text-xs text-destructive">{{ inviteError }}</p>
-            <p v-if="inviteSentTo" class="mb-3 text-xs text-green-600 dark:text-green-400">
+            <p v-if="inviteError" class="mb-3 text-xs text-destructive">
+              {{ inviteError }}
+            </p>
+            <p
+              v-if="inviteSentTo"
+              class="mb-3 text-xs text-green-600 dark:text-green-400"
+            >
               {{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
             </p>
 
@@ -556,7 +621,12 @@ const circleId = computed<string | null>(() => circle.value?.id ?? null)
 const circleName = computed(() => circle.value?.name ?? 'your circle')
 
 // ── Members data ───────────────────────────────────────────
-type MembersResponse = { members: any[]; invites: any[]; myRole: string; memoryCount: number }
+type MembersResponse = {
+  members: any[]
+  invites: any[]
+  myRole: string
+  memoryCount: number
+}
 const { data, pending, refresh } = await useAsyncData<MembersResponse>(
   'circle-members',
   () =>
@@ -566,12 +636,16 @@ const { data, pending, refresh } = await useAsyncData<MembersResponse>(
   { watch: [circleId] },
 )
 
-const canManage = computed(() => data.value?.myRole === 'owner' || data.value?.myRole === 'admin')
+const canManage = computed(
+  () => data.value?.myRole === 'owner' || data.value?.myRole === 'admin',
+)
 
 // ── Display helpers ────────────────────────────────────────
 function displayName(member: any): string {
   const parts = [member.firstName, member.lastName].filter(Boolean)
-  return parts.length ? parts.join(' ') : member.firstName || t('common.unknown')
+  return parts.length
+    ? parts.join(' ')
+    : member.firstName || t('common.unknown')
 }
 
 function initials(member: any): string {
@@ -636,7 +710,10 @@ function openRoleDialog(member: any) {
   transferConfirming.value = false
 }
 
-async function changeRole(member: { userId: string; role: string } | null, newRole: string) {
+async function changeRole(
+  member: { userId: string; role: string } | null,
+  newRole: string,
+) {
   if (!circleId.value || !member) return
   roleChangingId.value = member.userId
   roleChangeError.value = ''
@@ -692,7 +769,9 @@ async function cancelInvite(invite: any) {
   if (!circleId.value) return
   cancellingId.value = invite.id
   try {
-    await $fetch(`/api/circles/${circleId.value}/invites/${invite.id}`, { method: 'DELETE' })
+    await $fetch(`/api/circles/${circleId.value}/invites/${invite.id}`, {
+      method: 'DELETE',
+    })
     await refresh()
   } catch (err: any) {
     alert(err?.data?.message ?? t('members.cancelInviteError'))
@@ -757,8 +836,10 @@ async function sendInvite() {
     await refresh()
   } catch (err: any) {
     const msg = err?.data?.message ?? ''
-    if (msg.includes('already been sent')) inviteError.value = t('nav.inviteAlreadySent')
-    else if (msg.includes('Max 10')) inviteError.value = t('nav.inviteMaxPending')
+    if (msg.includes('already been sent'))
+      inviteError.value = t('nav.inviteAlreadySent')
+    else if (msg.includes('Max 10'))
+      inviteError.value = t('nav.inviteMaxPending')
     else inviteError.value = t('nav.inviteFailed')
   } finally {
     inviteSending.value = false

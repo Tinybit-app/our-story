@@ -8,7 +8,8 @@ export default defineEventHandler(async (event) => {
 
   const circleId = getRouterParam(event, 'id')
   const inviteId = getRouterParam(event, 'inviteId')
-  if (!circleId || !inviteId) throw createError({ statusCode: 400, message: 'Missing parameters' })
+  if (!circleId || !inviteId)
+    throw createError({ statusCode: 400, message: 'Missing parameters' })
 
   // Must be owner or admin
   const { data: myMembership } = await supabase
@@ -19,7 +20,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) {
-    throw createError({ statusCode: 403, message: 'Only owners and admins can cancel invites' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only owners and admins can cancel invites',
+    })
   }
 
   const { error } = await supabase
@@ -31,7 +35,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[cancel-invite] update failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to cancel invite. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to cancel invite. Please try again.',
+    })
   }
 
   return { ok: true }

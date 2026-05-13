@@ -46,11 +46,36 @@ const MULTI_ITEM_MEMORY = {
 }
 
 const MULTI_ITEM_SLIDES = [
-  { id: 'media-cover', mediaType: 'photo', url: 'https://example.com/cover.jpg', displayOrder: 0 },
-  { id: 'media-2', mediaType: 'photo', url: 'https://example.com/photo2.jpg', displayOrder: 1 },
-  { id: 'media-3', mediaType: 'text', textContent: 'And then she smiled', displayOrder: 2 },
-  { id: 'media-4', mediaType: 'photo', url: 'https://example.com/photo3.jpg', displayOrder: 3 },
-  { id: 'media-5', mediaType: 'video', url: 'https://example.com/video.mp4', displayOrder: 4 },
+  {
+    id: 'media-cover',
+    mediaType: 'photo',
+    url: 'https://example.com/cover.jpg',
+    displayOrder: 0,
+  },
+  {
+    id: 'media-2',
+    mediaType: 'photo',
+    url: 'https://example.com/photo2.jpg',
+    displayOrder: 1,
+  },
+  {
+    id: 'media-3',
+    mediaType: 'text',
+    textContent: 'And then she smiled',
+    displayOrder: 2,
+  },
+  {
+    id: 'media-4',
+    mediaType: 'photo',
+    url: 'https://example.com/photo3.jpg',
+    displayOrder: 3,
+  },
+  {
+    id: 'media-5',
+    mediaType: 'video',
+    url: 'https://example.com/video.mp4',
+    displayOrder: 4,
+  },
 ]
 
 function mockMembership(page: any) {
@@ -58,7 +83,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -90,7 +119,12 @@ function mockTimeline(page: any, memories: any[]) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories,
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
@@ -118,7 +152,9 @@ function mockComments(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Multi-item memories (5.4)', () => {
-  test('PolaroidCard shows count badge for multi-item memory', async ({ page }) => {
+  test('PolaroidCard shows count badge for multi-item memory', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [MULTI_ITEM_MEMORY])
@@ -128,7 +164,9 @@ test.describe('Multi-item memories (5.4)', () => {
     await page.goto('/timeline')
 
     // The cover card should be visible
-    await expect(page.getByText('Birthday party')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Birthday party')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // A count badge (⊕5 or similar) should appear on multi-item memory cards
     await expect(page.getByText('⊕5')).toBeVisible({ timeout: 10_000 })
@@ -147,7 +185,9 @@ test.describe('Multi-item memories (5.4)', () => {
     await mockComments(page)
 
     await page.goto('/timeline')
-    await expect(page.getByText('Birthday party')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Birthday party')).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page.getByText('⊕')).not.toBeVisible()
   })
 })

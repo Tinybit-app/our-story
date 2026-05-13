@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = querySchema.safeParse(getQuery(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'circleId is required' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'circleId is required' })
   const { circleId } = result.data
 
   const supabase = serverSupabaseServiceRole(event)

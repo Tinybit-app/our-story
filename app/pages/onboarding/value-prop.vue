@@ -1,5 +1,7 @@
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+  <div
+    class="flex min-h-screen flex-col items-center justify-center bg-background px-6"
+  >
     <div class="w-full max-w-sm">
       <p
         class="mb-10 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
@@ -27,18 +29,25 @@
               class="relative mb-8 space-y-3 overflow-hidden rounded-2xl border border-border bg-card px-5 py-5"
             >
               <div class="mb-4 flex items-center justify-between">
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-foreground/60">
+                <p
+                  class="text-[11px] font-semibold uppercase tracking-widest text-foreground/60"
+                >
                   {{ t('valueProp.screen1.chatLabel') }}
                 </p>
-                <span class="text-[10px] font-semibold tracking-wide text-accent/70">{{
-                  t('valueProp.screen1.circleTypeTag')
-                }}</span>
+                <span
+                  class="text-[10px] font-semibold tracking-wide text-accent/70"
+                  >{{ t('valueProp.screen1.circleTypeTag') }}</span
+                >
               </div>
               <div class="space-y-2.5">
                 <div class="flex items-start gap-2.5 opacity-40">
-                  <div class="w-[2px] shrink-0 self-stretch rounded-full bg-accent" />
+                  <div
+                    class="w-[2px] shrink-0 self-stretch rounded-full bg-accent"
+                  />
                   <div>
-                    <p class="mb-0.5 text-[10px] font-medium text-muted-foreground">
+                    <p
+                      class="mb-0.5 text-[10px] font-medium text-muted-foreground"
+                    >
                       {{ t('valueProp.screen1.chatName1') }}
                     </p>
                     <p class="text-xs leading-snug text-foreground/70">
@@ -47,9 +56,13 @@
                   </div>
                 </div>
                 <div class="flex items-start gap-2.5 opacity-60">
-                  <div class="w-[2px] shrink-0 self-stretch rounded-full bg-accent" />
+                  <div
+                    class="w-[2px] shrink-0 self-stretch rounded-full bg-accent"
+                  />
                   <div>
-                    <p class="mb-0.5 text-[10px] font-medium text-muted-foreground">
+                    <p
+                      class="mb-0.5 text-[10px] font-medium text-muted-foreground"
+                    >
                       {{ t('valueProp.screen1.chatName2') }}
                     </p>
                     <p class="text-xs leading-snug text-foreground/70">
@@ -58,22 +71,32 @@
                   </div>
                 </div>
                 <div class="flex items-start gap-2.5">
-                  <div class="w-[2px] shrink-0 self-stretch rounded-full bg-border" />
+                  <div
+                    class="w-[2px] shrink-0 self-stretch rounded-full bg-border"
+                  />
                   <div>
-                    <p class="mb-0.5 text-[10px] font-medium text-muted-foreground">
+                    <p
+                      class="mb-0.5 text-[10px] font-medium text-muted-foreground"
+                    >
                       {{ t('valueProp.screen1.chatName3') }}
                     </p>
-                    <p class="text-xs italic leading-snug text-muted-foreground">
+                    <p
+                      class="text-xs italic leading-snug text-muted-foreground"
+                    >
                       {{ t('valueProp.screen1.chatMsg3') }}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <h1 class="mb-3 text-[1.6rem] font-bold leading-[1.25] tracking-tight text-foreground">
+            <h1
+              class="mb-3 text-[1.6rem] font-bold leading-[1.25] tracking-tight text-foreground"
+            >
               {{ t('valueProp.screen1.heading1') }}<br />
               {{ t('valueProp.screen1.heading2') }}<br />
-              <span class="text-accent">{{ t('valueProp.screen1.heading3') }}</span>
+              <span class="text-accent">{{
+                t('valueProp.screen1.heading3')
+              }}</span>
             </h1>
             <p class="text-sm leading-relaxed text-muted-foreground">
               {{ t('valueProp.screen1.body') }}
@@ -82,24 +105,33 @@
 
           <!-- Screen 2: The solution — Friends & Travel -->
           <template v-else-if="currentScreen === 2">
-            <div class="mb-8 rounded-2xl border border-border bg-card px-5 py-5">
+            <div
+              class="mb-8 rounded-2xl border border-border bg-card px-5 py-5"
+            >
               <div class="mb-4 flex items-center justify-between">
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-foreground/60">
+                <p
+                  class="text-[11px] font-semibold uppercase tracking-widest text-foreground/60"
+                >
                   {{ t('valueProp.screen2.milestoneLabel') }}
                 </p>
-                <span class="text-[10px] font-semibold tracking-wide text-accent/70">{{
-                  t('valueProp.screen2.circleTypeTag')
-                }}</span>
+                <span
+                  class="text-[10px] font-semibold tracking-wide text-accent/70"
+                  >{{ t('valueProp.screen2.circleTypeTag') }}</span
+                >
               </div>
               <div class="flex items-stretch gap-4">
                 <div class="flex flex-col items-center pb-1 pt-1.5">
                   <div class="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                  <div class="my-1 w-[1px] flex-1 bg-gradient-to-b from-accent/40 to-border/30" />
+                  <div
+                    class="my-1 w-[1px] flex-1 bg-gradient-to-b from-accent/40 to-border/30"
+                  />
                   <div class="h-1.5 w-1.5 shrink-0 rounded-full bg-border" />
                 </div>
                 <div class="flex-1 space-y-4">
                   <div>
-                    <p class="mb-0.5 font-['Caveat'] text-base leading-none text-accent">
+                    <p
+                      class="mb-0.5 font-['Caveat'] text-base leading-none text-accent"
+                    >
                       {{ t('valueProp.screen2.date1') }}
                     </p>
                     <p class="text-sm font-semibold text-foreground">
@@ -110,7 +142,9 @@
                     </p>
                   </div>
                   <div class="opacity-55">
-                    <p class="mb-0.5 font-['Caveat'] text-base leading-none text-muted-foreground">
+                    <p
+                      class="mb-0.5 font-['Caveat'] text-base leading-none text-muted-foreground"
+                    >
                       {{ t('valueProp.screen2.date2') }}
                     </p>
                     <p class="text-sm font-semibold text-foreground">
@@ -123,9 +157,13 @@
                 </div>
               </div>
             </div>
-            <h1 class="mb-3 text-[1.6rem] font-bold leading-[1.25] tracking-tight text-foreground">
+            <h1
+              class="mb-3 text-[1.6rem] font-bold leading-[1.25] tracking-tight text-foreground"
+            >
               {{ t('valueProp.screen2.heading1') }}<br />
-              <span class="text-accent">{{ t('valueProp.screen2.heading2') }}</span>
+              <span class="text-accent">{{
+                t('valueProp.screen2.heading2')
+              }}</span>
             </h1>
             <p class="text-sm leading-relaxed text-muted-foreground">
               {{ t('valueProp.screen2.body') }}
@@ -134,24 +172,33 @@
 
           <!-- Screen 3: The promise — Couple -->
           <template v-else>
-            <div class="mb-8 rounded-2xl border border-border bg-card px-5 py-5">
+            <div
+              class="mb-8 rounded-2xl border border-border bg-card px-5 py-5"
+            >
               <div class="mb-4 flex items-center justify-between">
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-foreground/60">
+                <p
+                  class="text-[11px] font-semibold uppercase tracking-widest text-foreground/60"
+                >
                   {{ t('valueProp.screen2.milestoneLabel') }}
                 </p>
-                <span class="text-[10px] font-semibold tracking-wide text-accent/70">{{
-                  t('valueProp.screen3.circleTypeTag')
-                }}</span>
+                <span
+                  class="text-[10px] font-semibold tracking-wide text-accent/70"
+                  >{{ t('valueProp.screen3.circleTypeTag') }}</span
+                >
               </div>
               <div class="flex items-stretch gap-4">
                 <div class="flex flex-col items-center pb-1 pt-1.5">
                   <div class="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                  <div class="my-1 w-[1px] flex-1 bg-gradient-to-b from-accent/40 to-border/30" />
+                  <div
+                    class="my-1 w-[1px] flex-1 bg-gradient-to-b from-accent/40 to-border/30"
+                  />
                   <div class="h-1.5 w-1.5 shrink-0 rounded-full bg-border" />
                 </div>
                 <div class="flex-1 space-y-4">
                   <div>
-                    <p class="mb-0.5 font-['Caveat'] text-base leading-none text-accent">
+                    <p
+                      class="mb-0.5 font-['Caveat'] text-base leading-none text-accent"
+                    >
                       {{ t('valueProp.screen3.date1') }}
                     </p>
                     <p class="text-sm font-semibold text-foreground">
@@ -162,7 +209,9 @@
                     </p>
                   </div>
                   <div class="opacity-55">
-                    <p class="mb-0.5 font-['Caveat'] text-base leading-none text-muted-foreground">
+                    <p
+                      class="mb-0.5 font-['Caveat'] text-base leading-none text-muted-foreground"
+                    >
                       {{ t('valueProp.screen3.date2') }}
                     </p>
                     <p class="text-sm font-semibold text-foreground">
@@ -175,9 +224,13 @@
                 </div>
               </div>
             </div>
-            <h1 class="mb-3 text-[1.6rem] font-bold leading-[1.25] tracking-tight text-foreground">
+            <h1
+              class="mb-3 text-[1.6rem] font-bold leading-[1.25] tracking-tight text-foreground"
+            >
               {{ t('valueProp.screen3.heading1') }}<br />
-              <span class="text-accent">{{ t('valueProp.screen3.heading2') }}</span>
+              <span class="text-accent">{{
+                t('valueProp.screen3.heading2')
+              }}</span>
             </h1>
             <p class="text-sm leading-relaxed text-muted-foreground">
               {{ t('valueProp.screen3.body') }}

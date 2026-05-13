@@ -8,7 +8,8 @@ export default defineEventHandler(async (event) => {
 
   const circleId = getRouterParam(event, 'id')
   const childId = getRouterParam(event, 'childId')
-  if (!circleId || !childId) throw createError({ statusCode: 400, message: 'Missing IDs' })
+  if (!circleId || !childId)
+    throw createError({ statusCode: 400, message: 'Missing IDs' })
 
   // Owner-only
   const { data: membership } = await supabase
@@ -19,7 +20,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership || membership.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the circle owner can manage children.' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the circle owner can manage children.',
+    })
   }
 
   const { error } = await supabase

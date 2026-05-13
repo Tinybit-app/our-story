@@ -24,7 +24,9 @@
           @click="onAdd"
         >
           {{
-            milestone.phase === 'T+3' ? t('milestoneBanner.addNow') : t('milestoneBanner.addMemory')
+            milestone.phase === 'T+3'
+              ? t('milestoneBanner.addNow')
+              : t('milestoneBanner.addMemory')
           }}
         </button>
         <button
@@ -40,7 +42,13 @@
       class="flex-shrink-0 p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
       @click="onDismiss"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
         <path d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
@@ -70,7 +78,9 @@ const { t } = useI18n()
 const dismissed = ref(false)
 
 const dismissKey = computed(() =>
-  props.milestone ? `milestone-banner-dismissed-${props.milestone.milestoneKey}` : null,
+  props.milestone
+    ? `milestone-banner-dismissed-${props.milestone.milestoneKey}`
+    : null,
 )
 
 watch(
@@ -81,13 +91,18 @@ watch(
       return
     }
     dismissed.value =
-      import.meta.client && localStorage.getItem(`milestone-banner-dismissed-${key}`) === 'true'
+      import.meta.client &&
+      localStorage.getItem(`milestone-banner-dismissed-${key}`) === 'true'
   },
   { immediate: true },
 )
 
 const shouldShow = computed(
-  () => import.meta.client && props.enabled && props.milestone !== null && !dismissed.value,
+  () =>
+    import.meta.client &&
+    props.enabled &&
+    props.milestone !== null &&
+    !dismissed.value,
 )
 
 const headline = computed(() => {
@@ -95,7 +110,11 @@ const headline = computed(() => {
   const m = props.milestone
   const key = `milestoneBanner.${m.scopeType}${m.phase}`
   if (m.scopeType === 'child') {
-    return t(key, { name: m.name, label: m.milestoneLabelSuggestion, days: Math.abs(m.daysUntil) })
+    return t(key, {
+      name: m.name,
+      label: m.milestoneLabelSuggestion,
+      days: Math.abs(m.daysUntil),
+    })
   }
   return t(key, {
     years: m.milestoneLabelSuggestion.replace(/\D/g, ''),

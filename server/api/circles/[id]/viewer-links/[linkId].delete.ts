@@ -32,7 +32,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[viewer-links.delete] failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to revoke viewer link.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to revoke viewer link.',
+    })
   }
 
   return { ok: true }

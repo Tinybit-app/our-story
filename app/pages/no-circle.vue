@@ -1,8 +1,12 @@
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+  <div
+    class="flex min-h-screen flex-col items-center justify-center bg-background px-6"
+  >
     <div class="w-full max-w-sm">
       <!-- Wordmark -->
-      <p class="mb-12 text-center text-xs font-bold uppercase tracking-widest text-foreground">
+      <p
+        class="mb-12 text-center text-xs font-bold uppercase tracking-widest text-foreground"
+      >
         Our Story
       </p>
 
@@ -25,7 +29,9 @@
       </div>
 
       <!-- Heading -->
-      <h1 class="mb-2 text-center text-xl font-bold leading-snug text-foreground">
+      <h1
+        class="mb-2 text-center text-xl font-bold leading-snug text-foreground"
+      >
         {{ t('noCircle.title') }}
       </h1>
       <p class="mb-8 text-center text-sm leading-relaxed text-muted-foreground">
@@ -49,8 +55,12 @@
 
       <!-- Waiting for invite -->
       <div class="rounded-2xl border border-border bg-secondary/40 px-5 py-4">
-        <p class="mb-1 text-xs font-semibold text-foreground">{{ t('noCircle.waitingTitle') }}</p>
-        <p class="text-xs leading-relaxed text-muted-foreground">{{ t('noCircle.waitingDesc') }}</p>
+        <p class="mb-1 text-xs font-semibold text-foreground">
+          {{ t('noCircle.waitingTitle') }}
+        </p>
+        <p class="text-xs leading-relaxed text-muted-foreground">
+          {{ t('noCircle.waitingDesc') }}
+        </p>
       </div>
 
       <!-- Pending circle deletion notice -->
@@ -73,7 +83,9 @@
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
         <div>
-          <p class="mb-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+          <p
+            class="mb-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
+          >
             {{ t('noCircle.pendingDeletionTitle') }}
           </p>
           <p class="text-xs leading-relaxed text-amber-600 dark:text-amber-400">
@@ -95,5 +107,7 @@ definePageMeta({ auth: false })
 const { t } = useI18n()
 
 const { data } = await useFetch<{ circles: unknown[] }>('/api/circles/deleted')
-const hasPendingDeletions = computed(() => (data.value?.circles?.length ?? 0) > 0)
+const hasPendingDeletions = computed(
+  () => (data.value?.circles?.length ?? 0) > 0,
+)
 </script>

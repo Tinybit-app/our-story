@@ -72,7 +72,9 @@ describe('computeBabyAge', () => {
   })
 
   it("returns '11 months, 3 weeks' close to first birthday", () => {
-    expect(computeBabyAge('2024-01-01', '2024-12-22')).toBe('11 months, 3 weeks')
+    expect(computeBabyAge('2024-01-01', '2024-12-22')).toBe(
+      '11 months, 3 weeks',
+    )
   })
 
   // ── years (2+ years) ─────────────────────────────────────────────────────────

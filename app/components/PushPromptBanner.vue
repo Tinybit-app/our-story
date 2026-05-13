@@ -42,7 +42,13 @@
       class="flex-shrink-0 p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
       @click="snooze"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
         <path d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
@@ -51,7 +57,8 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
-const { isSupported, permissionState, requestPermission } = usePushNotifications()
+const { isSupported, permissionState, requestPermission } =
+  usePushNotifications()
 
 const dismissed = ref(false)
 

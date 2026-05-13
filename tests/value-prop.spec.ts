@@ -12,7 +12,11 @@ test.describe('Value proposition screens', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: false, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({
+          hasMembership: false,
+          needsProfile: false,
+          deletedAt: null,
+        }),
       }),
     )
     // Clear the "seen" flag so each test starts fresh
@@ -35,12 +39,16 @@ test.describe('Value proposition screens', () => {
 
   test('screen 1 shows the "photos get buried" pain copy', async ({ page }) => {
     await page.goto('/onboarding/value-prop')
-    await expect(page.getByText(/photos get buried/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/photos get buried/i)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
   test('a skip button is visible on screen 1', async ({ page }) => {
     await page.goto('/onboarding/value-prop')
-    await expect(page.getByRole('button', { name: /skip/i })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: /skip/i })).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
   test('progress indicator shows 3 steps', async ({ page }) => {
@@ -54,7 +62,9 @@ test.describe('Value proposition screens', () => {
   test('clicking Next on screen 1 advances to screen 2', async ({ page }) => {
     await page.goto('/onboarding/value-prop')
     await page.getByRole('button', { name: /next/i }).click()
-    await expect(page.getByText(/beautifully kept/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText(/beautifully kept/i)).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   test('clicking Next twice reaches screen 3', async ({ page }) => {
@@ -64,7 +74,9 @@ test.describe('Value proposition screens', () => {
     await expect(page.getByText(/works for/i)).toBeVisible({ timeout: 5_000 })
   })
 
-  test('"Start your story" CTA on screen 3 navigates to /onboarding', async ({ page }) => {
+  test('"Start your story" CTA on screen 3 navigates to /onboarding', async ({
+    page,
+  }) => {
     await page.goto('/onboarding/value-prop')
     await page.getByRole('button', { name: /next/i }).click()
     await page.getByRole('button', { name: /next/i }).click()
@@ -84,12 +96,18 @@ test.describe('Value proposition screens', () => {
 
   // ── Existing member creating a second circle ────────────────────────────────
 
-  test('existing member navigating to /onboarding is redirected to /timeline', async ({ page }) => {
+  test('existing member navigating to /onboarding is redirected to /timeline', async ({
+    page,
+  }) => {
     await page.route('**/api/auth/membership**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({
+          hasMembership: true,
+          needsProfile: false,
+          deletedAt: null,
+        }),
       }),
     )
     await page.goto('/onboarding')

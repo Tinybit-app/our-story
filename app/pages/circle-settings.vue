@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
         <button
           class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -58,10 +60,14 @@
                 </svg>
               </div>
               <div class="min-w-0">
-                <p class="truncate text-base font-semibold leading-tight text-foreground">
+                <p
+                  class="truncate text-base font-semibold leading-tight text-foreground"
+                >
                   {{ circle.name }}
                 </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">{{ circleTypeLabel }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">
+                  {{ circleTypeLabel }}
+                </p>
               </div>
             </div>
           </div>
@@ -70,7 +76,9 @@
 
           <!-- Circle name — owner only -->
           <div v-if="isOwner">
-            <h2 class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <h2
+              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{ t('circleSettings.circleName') }}
             </h2>
             <div class="flex gap-2">
@@ -103,7 +111,9 @@
 
           <!-- Circle type picker — owner only -->
           <div v-if="isOwner">
-            <h2 class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <h2
+              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{ t('circleSettings.circleType') }}
             </h2>
             <p class="mb-4 text-xs text-muted-foreground">
@@ -122,14 +132,20 @@
                 "
                 @click="selectedCircleType = type.value"
               >
-                <p class="text-sm font-medium leading-snug text-foreground">{{ type.label }}</p>
-                <p class="mt-0.5 text-xs text-muted-foreground">{{ type.description }}</p>
+                <p class="text-sm font-medium leading-snug text-foreground">
+                  {{ type.label }}
+                </p>
+                <p class="mt-0.5 text-xs text-muted-foreground">
+                  {{ type.description }}
+                </p>
               </button>
             </div>
 
             <div class="mt-3 flex items-center gap-2">
               <button
-                :disabled="savingCircleType || selectedCircleType === circle.circle_type"
+                :disabled="
+                  savingCircleType || selectedCircleType === circle.circle_type
+                "
                 class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                 @click="saveCircleType"
               >
@@ -145,7 +161,9 @@
 
           <!-- Children (baby age stamps) — owner only -->
           <div v-if="isOwner">
-            <h2 class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <h2
+              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{ t('circleSettings.children') }}
             </h2>
             <p class="mb-4 text-xs text-muted-foreground">
@@ -165,7 +183,9 @@
                   class="flex items-center justify-between gap-3 px-4 py-2.5"
                 >
                   <div class="min-w-0">
-                    <p class="truncate text-sm font-medium text-foreground">{{ child.name }}</p>
+                    <p class="truncate text-sm font-medium text-foreground">
+                      {{ child.name }}
+                    </p>
                     <p class="text-xs text-muted-foreground">
                       {{ formatDob(child.date_of_birth) }}
                     </p>
@@ -183,8 +203,12 @@
                         stroke-width="2"
                         viewBox="0 0 24 24"
                       >
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        <path
+                          d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                        />
+                        <path
+                          d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                        />
                       </svg>
                     </button>
                     <!-- Remove -->
@@ -236,7 +260,9 @@
                   <div class="flex items-center gap-2">
                     <button
                       :disabled="
-                        savingChildId === child.id || !editChildName.trim() || !editChildDob
+                        savingChildId === child.id ||
+                        !editChildName.trim() ||
+                        !editChildDob
                       "
                       class="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                       @click="saveEditChild(child.id)"
@@ -284,17 +310,29 @@
               {{ t('circleSettings.childrenMax') }}
             </p>
 
-            <p v-if="childrenError" class="mt-2 text-xs text-destructive">{{ childrenError }}</p>
+            <p v-if="childrenError" class="mt-2 text-xs text-destructive">
+              {{ childrenError }}
+            </p>
           </div>
 
           <div
-            v-if="isOwner && ['couple', 'friends', 'travel'].includes(circle.circle_type)"
+            v-if="
+              isOwner &&
+              ['couple', 'friends', 'travel'].includes(circle.circle_type)
+            "
             class="h-px bg-border"
           />
 
           <!-- Anniversary / Trip date — couple/friends/travel circles, owner only -->
-          <div v-if="isOwner && ['couple', 'friends', 'travel'].includes(circle.circle_type)">
-            <h2 class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <div
+            v-if="
+              isOwner &&
+              ['couple', 'friends', 'travel'].includes(circle.circle_type)
+            "
+          >
+            <h2
+              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{
                 circle.circle_type === 'couple'
                   ? t('circleSettings.anniversary')
@@ -312,13 +350,18 @@
               <input
                 v-model="anniversaryDateInput"
                 type="date"
-                :aria-label="circle.circle_type === 'couple' ? 'Anniversary date' : 'Trip date'"
+                :aria-label="
+                  circle.circle_type === 'couple'
+                    ? 'Anniversary date'
+                    : 'Trip date'
+                "
                 class="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 :style="{ colorScheme: isDark ? 'dark' : 'light' }"
               />
               <button
                 :disabled="
-                  savingAnniversary || anniversaryDateInput === (circle.anniversary_date ?? '')
+                  savingAnniversary ||
+                  anniversaryDateInput === (circle.anniversary_date ?? '')
                 "
                 class="flex-shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                 @click="saveAnniversary"
@@ -350,7 +393,9 @@
 
           <!-- Danger zone (owner only) -->
           <div v-if="isOwner">
-            <h2 class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <h2
+              class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
               {{ t('members.dangerZone') }}
             </h2>
             <div
@@ -389,14 +434,19 @@
         v-if="deleteDialogOpen"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeDeleteDialog" />
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="closeDeleteDialog"
+        />
         <div
           class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl"
         >
           <!-- Step 1: Warning -->
           <template v-if="deleteStep === 1">
             <div class="border-b border-border px-6 pb-4 pt-6">
-              <p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive">
+              <p
+                class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive"
+              >
                 {{ t('members.deleteCircle') }}
               </p>
               <h2 class="text-base font-bold leading-snug text-foreground">
@@ -452,14 +502,20 @@
           <!-- Step 2: Type-to-confirm -->
           <template v-else>
             <div class="border-b border-border px-6 pb-4 pt-6">
-              <p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive">
+              <p
+                class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive"
+              >
                 {{ t('members.deleteCircle') }}
               </p>
               <h2 class="text-base font-bold leading-snug text-foreground">
                 {{ t('members.deleteCircleConfirmTitle') }}
               </h2>
               <p class="mt-1 text-xs text-muted-foreground">
-                {{ t('members.deleteCircleConfirmDesc', { name: circle?.name ?? '' }) }}
+                {{
+                  t('members.deleteCircleConfirmDesc', {
+                    name: circle?.name ?? '',
+                  })
+                }}
               </p>
             </div>
             <div class="px-6 py-4">
@@ -470,7 +526,9 @@
                 class="w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-destructive/40"
                 @keyup.enter="confirmDeleteCircle"
               />
-              <p v-if="deleteError" class="mt-2 text-xs text-destructive">{{ deleteError }}</p>
+              <p v-if="deleteError" class="mt-2 text-xs text-destructive">
+                {{ deleteError }}
+              </p>
             </div>
             <div class="flex gap-2 px-6 pb-6">
               <button
@@ -503,7 +561,9 @@ const { t } = useI18n()
 const router = useRouter()
 const colorMode = useColorMode()
 const isDark = computed(() =>
-  colorMode.preference === 'system' ? colorMode.value === 'dark' : colorMode.preference === 'dark',
+  colorMode.preference === 'system'
+    ? colorMode.value === 'dark'
+    : colorMode.preference === 'dark',
 )
 
 // ── Circle ─────────────────────────────────────────────────
@@ -595,7 +655,8 @@ async function saveCircleName() {
     })
     await refreshNuxtData()
   } catch (err: any) {
-    circleNameError.value = err?.data?.message ?? t('circleSettings.errorSaveCircleName')
+    circleNameError.value =
+      err?.data?.message ?? t('circleSettings.errorSaveCircleName')
   } finally {
     savingCircleName.value = false
   }
@@ -624,14 +685,20 @@ async function saveCircleType() {
     })
     await refreshNuxtData()
   } catch (err: any) {
-    circleTypeError.value = err?.data?.message ?? t('circleSettings.errorSaveCircleType')
+    circleTypeError.value =
+      err?.data?.message ?? t('circleSettings.errorSaveCircleType')
   } finally {
     savingCircleType.value = false
   }
 }
 
 // ── Members + memory count (for deletion warning) ──────────
-type MembersResponse = { members: any[]; invites: any[]; myRole: string; memoryCount: number }
+type MembersResponse = {
+  members: any[]
+  invites: any[]
+  myRole: string
+  memoryCount: number
+}
 const { data: membersData } = await useAsyncData<MembersResponse>(
   'circle-settings-members',
   () =>
@@ -661,7 +728,9 @@ const { data: childrenData, refresh: refreshChildren } = await useAsyncData<{
   'circle-settings-children',
   () =>
     circleId.value
-      ? $fetch<{ children: ChildProfile[] }>(`/api/circles/${circleId.value}/children`)
+      ? $fetch<{ children: ChildProfile[] }>(
+          `/api/circles/${circleId.value}/children`,
+        )
       : Promise.resolve({ children: [] }),
   { watch: [circleId] },
 )
@@ -691,18 +760,23 @@ function cancelEditChild() {
 }
 
 async function saveEditChild(childId: string) {
-  if (!circleId.value || !editChildName.value.trim() || !editChildDob.value) return
+  if (!circleId.value || !editChildName.value.trim() || !editChildDob.value)
+    return
   savingChildId.value = childId
   childrenError.value = ''
   try {
     await $fetch(`/api/circles/${circleId.value}/children/${childId}`, {
       method: 'PATCH',
-      body: { name: editChildName.value.trim(), dateOfBirth: editChildDob.value },
+      body: {
+        name: editChildName.value.trim(),
+        dateOfBirth: editChildDob.value,
+      },
     })
     await refreshChildren()
     cancelEditChild()
   } catch (err: any) {
-    childrenError.value = err?.data?.message ?? t('circleSettings.errorUpdateChild')
+    childrenError.value =
+      err?.data?.message ?? t('circleSettings.errorUpdateChild')
   } finally {
     savingChildId.value = null
   }
@@ -717,7 +791,8 @@ function formatDob(dob: string) {
 }
 
 async function addChild() {
-  if (!circleId.value || !newChildName.value.trim() || !newChildDob.value) return
+  if (!circleId.value || !newChildName.value.trim() || !newChildDob.value)
+    return
   addingChild.value = true
   childrenError.value = ''
   try {
@@ -729,7 +804,8 @@ async function addChild() {
     newChildDob.value = ''
     await refreshChildren()
   } catch (err: any) {
-    childrenError.value = err?.data?.message ?? t('circleSettings.errorAddChild')
+    childrenError.value =
+      err?.data?.message ?? t('circleSettings.errorAddChild')
   } finally {
     addingChild.value = false
   }
@@ -740,10 +816,13 @@ async function removeChild(childId: string) {
   removingChildId.value = childId
   childrenError.value = ''
   try {
-    await $fetch(`/api/circles/${circleId.value}/children/${childId}`, { method: 'DELETE' })
+    await $fetch(`/api/circles/${circleId.value}/children/${childId}`, {
+      method: 'DELETE',
+    })
     await refreshChildren()
   } catch (err: any) {
-    childrenError.value = err?.data?.message ?? t('circleSettings.errorRemoveChild')
+    childrenError.value =
+      err?.data?.message ?? t('circleSettings.errorRemoveChild')
   } finally {
     removingChildId.value = null
   }
@@ -772,7 +851,8 @@ async function saveAnniversary() {
     })
     await refreshNuxtData()
   } catch (err: any) {
-    anniversaryError.value = err?.data?.message ?? t('circleSettings.errorSaveAnniversary')
+    anniversaryError.value =
+      err?.data?.message ?? t('circleSettings.errorSaveAnniversary')
   } finally {
     savingAnniversary.value = false
   }
@@ -806,7 +886,10 @@ function closeDeleteDialog() {
 
 async function confirmDeleteCircle() {
   if (!circleId.value || !circle.value) return
-  if (deleteConfirmInput.value.trim().toLowerCase() !== circle.value.name.trim().toLowerCase()) {
+  if (
+    deleteConfirmInput.value.trim().toLowerCase() !==
+    circle.value.name.trim().toLowerCase()
+  ) {
     deleteError.value = t('members.deleteCircleNameMismatch')
     return
   }

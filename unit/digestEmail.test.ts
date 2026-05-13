@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { buildWeeklyDigestEmail, buildMonthlyDigestEmail } from '../server/utils/email'
+import {
+  buildWeeklyDigestEmail,
+  buildMonthlyDigestEmail,
+} from '../server/utils/email'
 
 const baseOpts = {
   recipientFirstName: 'Dao',
@@ -30,7 +33,11 @@ describe('buildWeeklyDigestEmail — subject line', () => {
   })
 
   it('uses child name when child exists', () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, childName: 'Mia', totalCount: 3 })
+    const { subject } = buildWeeklyDigestEmail({
+      ...baseOpts,
+      childName: 'Mia',
+      totalCount: 3,
+    })
     expect(subject).toContain('Mia')
     expect(subject).toContain('3')
   })
@@ -41,12 +48,20 @@ describe('buildWeeklyDigestEmail — subject line', () => {
   })
 
   it('renders zh-CN', () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: 'zh-CN', totalCount: 4 })
+    const { subject } = buildWeeklyDigestEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+      totalCount: 4,
+    })
     expect(subject).toMatch(/[一-鿿]/) // contains Chinese chars
   })
 
   it('renders fr', () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: 'fr', totalCount: 4 })
+    const { subject } = buildWeeklyDigestEmail({
+      ...baseOpts,
+      locale: 'fr',
+      totalCount: 4,
+    })
     expect(subject.toLowerCase()).not.toMatch(/^the smiths added/) // not English
   })
 })
@@ -59,7 +74,11 @@ describe('buildMonthlyDigestEmail — subject line', () => {
   })
 
   it('uses child name when child exists', () => {
-    const { subject } = buildMonthlyDigestEmail({ ...baseOpts, childName: 'Mia', totalCount: 12 })
+    const { subject } = buildMonthlyDigestEmail({
+      ...baseOpts,
+      childName: 'Mia',
+      totalCount: 12,
+    })
     expect(subject).toContain('Mia')
   })
 })
@@ -116,6 +135,8 @@ describe('digest body — content', () => {
 
   it('contains main CTA linking to circle timeline', () => {
     const { html } = buildWeeklyDigestEmail(baseOpts)
-    expect(html).toContain('href="https://our-story.tinybit.app/timeline?circle=c1"')
+    expect(html).toContain(
+      'href="https://our-story.tinybit.app/timeline?circle=c1"',
+    )
   })
 })

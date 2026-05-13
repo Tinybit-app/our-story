@@ -24,7 +24,11 @@ const DEFAULT_EXPIRY_SECONDS = 30 * 24 * 60 * 60
 
 function b64url(input: string | Buffer): string {
   const buf = typeof input === 'string' ? Buffer.from(input, 'utf8') : input
-  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  return buf
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
 }
 
 function sign(data: string, secret: string): string {
@@ -52,7 +56,10 @@ export function signViewerToken(
   return `${header}.${payload}.${sig}`
 }
 
-export function verifyViewerToken(token: string, secret: string): ViewerPayload {
+export function verifyViewerToken(
+  token: string,
+  secret: string,
+): ViewerPayload {
   const parts = token.split('.')
   if (parts.length !== 3) throw new Error('Invalid token format')
 
@@ -61,11 +68,16 @@ export function verifyViewerToken(token: string, secret: string): ViewerPayload 
   const expectedSig = sign(`${header}.${payloadB64}`, secret)
   const expectedBuf = Buffer.from(expectedSig, 'utf8')
   const actualBuf = Buffer.from(sig, 'utf8')
-  if (expectedBuf.length !== actualBuf.length || !timingSafeEqual(expectedBuf, actualBuf)) {
+  if (
+    expectedBuf.length !== actualBuf.length ||
+    !timingSafeEqual(expectedBuf, actualBuf)
+  ) {
     throw new Error('Invalid token signature')
   }
 
-  const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8')) as ViewerPayload
+  const payload = JSON.parse(
+    Buffer.from(payloadB64, 'base64url').toString('utf8'),
+  ) as ViewerPayload
 
   if (payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error('Token expired')

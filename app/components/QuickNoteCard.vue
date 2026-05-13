@@ -1,5 +1,8 @@
 <template>
-  <div class="relative inline-block flex-shrink-0" :style="{ zIndex: isHovered ? 10 : 1 }">
+  <div
+    class="relative inline-block flex-shrink-0"
+    :style="{ zIndex: isHovered ? 10 : 1 }"
+  >
     <!-- Stack silhouettes when media_count > 1 (stacked postcards) -->
     <div
       v-if="(memory.media_count ?? 1) > 1"
@@ -17,7 +20,9 @@
       class="quick-note-card relative cursor-pointer select-none bg-card"
       :style="{
         width: '210px',
-        transform: isHovered ? 'rotate(0deg) scale(1.04) translateY(-3px)' : `rotate(${tilt}deg)`,
+        transform: isHovered
+          ? 'rotate(0deg) scale(1.04) translateY(-3px)'
+          : `rotate(${tilt}deg)`,
         boxShadow: isHovered
           ? '0 14px 44px rgba(44,36,32,.22)'
           : '0 4px 16px rgba(44,36,32,.14), 0 1px 3px rgba(44,36,32,.08)',
@@ -34,7 +39,10 @@
       <div class="px-4 pb-4 pt-3">
         <!-- Note type indicator — pencil icon + italic label, clearly separate from milestone stamp -->
         <div class="mb-2.5 flex items-center gap-2">
-          <span class="flex-shrink-0 text-[10px] italic text-muted-foreground/70">Quick note</span>
+          <span
+            class="flex-shrink-0 text-[10px] italic text-muted-foreground/70"
+            >Quick note</span
+          >
           <div class="h-px flex-1 bg-border" />
         </div>
 
@@ -48,7 +56,9 @@
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
           "
         >
-          <span class="text-[9px] font-bold uppercase leading-none tracking-[.18em] text-white/90">
+          <span
+            class="text-[9px] font-bold uppercase leading-none tracking-[.18em] text-white/90"
+          >
             ✦ {{ memory.milestone_label }}
           </span>
         </div>
@@ -83,7 +93,11 @@
               <span class="text-[10px] text-muted-foreground">·</span>
               <span
                 class="truncate text-[10px]"
-                :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'"
+                :class="
+                  isFormerMember
+                    ? 'text-muted-foreground/40'
+                    : 'text-muted-foreground'
+                "
                 >{{ authorName }}</span
               >
             </template>
@@ -117,10 +131,7 @@
                   :key="e"
                   class="flex h-7 w-7 items-center justify-center rounded-lg text-base transition-colors hover:bg-secondary"
                   :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
-                  @click.stop="
-                    toggleReaction(e)
-                    pickerOpen = false
-                  "
+                  @click.stop="(toggleReaction(e), (pickerOpen = false))"
                 >
                   {{ e }}
                 </button>
@@ -157,9 +168,14 @@
             v-for="child in childAges"
             :key="child.name"
             class="inline-flex items-center gap-[3px] rounded-full px-[6px] py-[2px] text-[9px] font-medium leading-none"
-            style="background: hsl(var(--accent) / 0.14); color: hsl(var(--accent))"
+            style="
+              background: hsl(var(--accent) / 0.14);
+              color: hsl(var(--accent));
+            "
           >
-            <span style="font-size: 8px; flex-shrink: 0; line-height: 1">👶</span>
+            <span style="font-size: 8px; flex-shrink: 0; line-height: 1"
+              >👶</span
+            >
             <span>{{ child.name }}</span>
             <template v-if="child.age">
               <span style="opacity: 0.5">·</span>
@@ -169,10 +185,16 @@
         </div>
 
         <!-- Tagged member avatars -->
-        <div v-if="taggedMembers.length" class="mt-[5px] flex items-center gap-[5px]">
+        <div
+          v-if="taggedMembers.length"
+          class="mt-[5px] flex items-center gap-[5px]"
+        >
           <span
             class="text-[9px] leading-none"
-            style="color: hsl(var(--muted-foreground) / 0.55); letter-spacing: 0.04em"
+            style="
+              color: hsl(var(--muted-foreground) / 0.55);
+              letter-spacing: 0.04em;
+            "
             >with</span
           >
           <div class="flex items-center">
@@ -193,11 +215,14 @@
               />
               <span v-else>{{
                 (
-                  (mm.user?.first_name?.[0] ?? '') + (mm.user?.last_name?.[0] ?? '')
+                  (mm.user?.first_name?.[0] ?? '') +
+                  (mm.user?.last_name?.[0] ?? '')
                 ).toUpperCase() || '?'
               }}</span>
             </div>
-            <span v-if="taggedMembersOverflow > 0" class="ml-1 text-[9px] text-muted-foreground"
+            <span
+              v-if="taggedMembersOverflow > 0"
+              class="ml-1 text-[9px] text-muted-foreground"
               >+{{ taggedMembersOverflow }}</span
             >
           </div>
@@ -237,7 +262,20 @@ function onCardClick() {
   })
 }
 
-const PRESET_EMOJIS = ['❤️', '😂', '😍', '🥹', '👏', '🔥', '😮', '🥰', '😭', '✨', '🎉', '👍']
+const PRESET_EMOJIS = [
+  '❤️',
+  '😂',
+  '😍',
+  '🥹',
+  '👏',
+  '🔥',
+  '😮',
+  '🥰',
+  '😭',
+  '✨',
+  '🎉',
+  '👍',
+]
 
 const isHovered = ref(false)
 const pickerOpen = ref(false)
@@ -254,19 +292,27 @@ const formattedDate = computed(() =>
 const childAges = computed(() =>
   (props.memory.memory_children ?? []).map((mc) => ({
     name: mc.childprofile.name,
-    age: computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date),
+    age: computeBabyAge(
+      mc.childprofile.date_of_birth,
+      props.memory.memory_date,
+    ),
   })),
 )
 
 const MAX_AVATARS = 4
 const taggedMembers = computed(() => props.memory.memory_members ?? [])
-const taggedMembersVisible = computed(() => taggedMembers.value.slice(0, MAX_AVATARS))
-const taggedMembersOverflow = computed(() => Math.max(0, taggedMembers.value.length - MAX_AVATARS))
+const taggedMembersVisible = computed(() =>
+  taggedMembers.value.slice(0, MAX_AVATARS),
+)
+const taggedMembersOverflow = computed(() =>
+  Math.max(0, taggedMembers.value.length - MAX_AVATARS),
+)
 
 const isFormerMember = computed(() => props.memory.owner_user_id === null)
 const authorName = computed(() => {
   if (props.memory.user?.first_name) return props.memory.user.first_name
-  if (isFormerMember.value && props.memory.former_owner_name) return props.memory.former_owner_name
+  if (isFormerMember.value && props.memory.former_owner_name)
+    return props.memory.former_owner_name
   return null
 })
 
@@ -301,11 +347,14 @@ const reactionGroups = computed(() => {
 
 async function toggleReaction(emoji: string) {
   const userId =
-    currentUserId.value ?? (await supabaseClient.auth.getSession()).data.session?.user?.id
+    currentUserId.value ??
+    (await supabaseClient.auth.getSession()).data.session?.user?.id
   if (!userId) return
   currentUserId.value = userId
 
-  const existing = localReactions.value.find((r) => r.emoji === emoji && r.user_id === userId)
+  const existing = localReactions.value.find(
+    (r) => r.emoji === emoji && r.user_id === userId,
+  )
 
   if (existing) {
     localReactions.value = localReactions.value.filter((r) => r !== existing)

@@ -49,7 +49,11 @@ export interface Memory {
   milestone_is_custom: boolean
   created_at: string
   memorymedia: MediaItem[]
-  user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null
+  user: {
+    first_name: string | null
+    last_name: string | null
+    avatar_url: string | null
+  } | null
   memoryreaction: { id: string; emoji: string; user_id: string }[]
   memorycomment: { id: string }[]
 }
@@ -188,7 +192,11 @@ import { ref } from 'vue'
 import { useTimeline } from '~/composables/useTimeline'
 import type { Memory } from '~/composables/useTimeline'
 
-function makeMemory(id: string, dateStr: string, overrides: Partial<Memory> = {}): Memory {
+function makeMemory(
+  id: string,
+  dateStr: string,
+  overrides: Partial<Memory> = {},
+): Memory {
   return {
     id,
     owner_user_id: 'user-1',
@@ -224,7 +232,10 @@ describe('useTimeline', () => {
   it('caps each month at 12 memories and sets hasMore = true when exceeded', () => {
     const memories = ref<Memory[]>(
       Array.from({ length: 15 }, (_, i) =>
-        makeMemory(`id-${i}`, `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`),
+        makeMemory(
+          `id-${i}`,
+          `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        ),
       ),
     )
     const { monthGroups } = useTimeline(memories)
@@ -247,7 +258,10 @@ describe('useTimeline', () => {
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value[0].memories).toHaveLength(1)
 
-    memories.value = [...memories.value, makeMemory('2', '2025-03-15T10:00:00Z')]
+    memories.value = [
+      ...memories.value,
+      makeMemory('2', '2025-03-15T10:00:00Z'),
+    ]
     expect(monthGroups.value[0].memories).toHaveLength(2)
   })
 
@@ -317,7 +331,11 @@ export interface Memory {
   milestone_is_custom: boolean
   created_at: string
   memorymedia: MediaItem[]
-  user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null
+  user: {
+    first_name: string | null
+    last_name: string | null
+    avatar_url: string | null
+  } | null
   memoryreaction: { id: string; emoji: string; user_id: string }[]
   memorycomment: { id: string }[]
 }
@@ -448,7 +466,9 @@ The tilt is deterministic based on `index` prop — no random, so SSR is safe an
     @mouseleave="isHovered = false"
   >
     <!-- Photo area -->
-    <div class="aspect-[4/3] overflow-hidden rounded-[2px] bg-zinc-100 dark:bg-zinc-700">
+    <div
+      class="aspect-[4/3] overflow-hidden rounded-[2px] bg-zinc-100 dark:bg-zinc-700"
+    >
       <!-- Photo / video -->
       <img
         v-if="firstMedia?.thumbnailUrl || firstMedia?.url"
@@ -508,7 +528,9 @@ The tilt is deterministic based on `index` prop — no random, so SSR is safe an
 
     <!-- Author + date pin -->
     <div class="absolute bottom-2 left-2.5 right-2.5 flex items-center gap-1.5">
-      <div class="h-4 w-4 flex-shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-600">
+      <div
+        class="h-4 w-4 flex-shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-600"
+      >
         <img
           v-if="memory.user?.avatar_url"
           :src="memory.user.avatar_url"
@@ -520,9 +542,10 @@ The tilt is deterministic based on `index` prop — no random, so SSR is safe an
           >{{ initials }}</span
         >
       </div>
-      <span class="truncate font-['Caveat'] text-[10px] text-zinc-400 dark:text-zinc-500">{{
-        formattedDate
-      }}</span>
+      <span
+        class="truncate font-['Caveat'] text-[10px] text-zinc-400 dark:text-zinc-500"
+        >{{ formattedDate }}</span
+      >
     </div>
   </article>
 </template>
@@ -545,12 +568,21 @@ const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
 const initials = computed(() => {
   const u = props.memory.user
   if (!u) return '?'
-  return [u.first_name?.[0], u.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
+  return (
+    [u.first_name?.[0], u.last_name?.[0]]
+      .filter(Boolean)
+      .join('')
+      .toUpperCase() || '?'
+  )
 })
 
 const formattedDate = computed(() => {
   const d = new Date(props.memory.memory_date)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 })
 </script>
 ```
@@ -597,7 +629,9 @@ This component:
       v-if="monthGroups.length === 0 && !loading"
       class="flex flex-col items-center justify-center py-32 text-center"
     >
-      <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+      <div
+        class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary"
+      >
         <svg
           class="h-7 w-7 text-muted-foreground"
           fill="none"
@@ -611,14 +645,19 @@ This component:
           <circle cx="12" cy="13" r="3" />
         </svg>
       </div>
-      <p class="mb-2 text-base font-semibold text-foreground">Your story starts here</p>
+      <p class="mb-2 text-base font-semibold text-foreground">
+        Your story starts here
+      </p>
       <p class="max-w-xs text-sm leading-relaxed text-muted-foreground">
         Add your first photo or video to start building your shared timeline.
       </p>
     </div>
 
     <!-- Loading skeleton (first load) -->
-    <div v-else-if="loading && monthGroups.length === 0" class="flex justify-center py-32">
+    <div
+      v-else-if="loading && monthGroups.length === 0"
+      class="flex justify-center py-32"
+    >
       <div class="flex flex-col items-center gap-3">
         <div
           class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"
@@ -647,12 +686,19 @@ This component:
         </div>
 
         <!-- Month sections within this year -->
-        <div v-for="group in yearSection.months" :key="group.label" class="mb-12">
+        <div
+          v-for="group in yearSection.months"
+          :key="group.label"
+          class="mb-12"
+        >
           <!-- Month header -->
           <div class="mb-4 flex items-baseline gap-3">
-            <h2 class="font-['Caveat'] text-xl font-semibold text-foreground">{{ group.label }}</h2>
+            <h2 class="font-['Caveat'] text-xl font-semibold text-foreground">
+              {{ group.label }}
+            </h2>
             <span class="text-xs text-muted-foreground"
-              >{{ group.memories.length }}{{ group.hasMore ? '+' : '' }} memories</span
+              >{{ group.memories.length
+              }}{{ group.hasMore ? '+' : '' }} memories</span
             >
           </div>
 
@@ -680,7 +726,9 @@ This component:
               >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
-              <span class="font-['Caveat'] text-sm leading-snug text-muted-foreground">
+              <span
+                class="font-['Caveat'] text-sm leading-snug text-muted-foreground"
+              >
                 See all in<br />{{ group.label }}
               </span>
             </NuxtLink>
@@ -692,7 +740,10 @@ This component:
       <div ref="loadMoreEl" class="mt-2 h-4" />
 
       <!-- Pagination loading -->
-      <div v-if="loading && monthGroups.length > 0" class="flex justify-center py-6">
+      <div
+        v-if="loading && monthGroups.length > 0"
+        class="flex justify-center py-6"
+      >
         <div
           class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
         />
@@ -730,11 +781,14 @@ const yearSections = computed(() => {
 
 // Infinite scroll
 const loadMoreEl = ref<HTMLElement>()
-const { stop: stopLoadMore } = useIntersectionObserver(loadMoreEl, ([entry]) => {
-  if (entry?.isIntersecting && props.hasNextPage && !props.loading) {
-    emit('loadMore')
-  }
-})
+const { stop: stopLoadMore } = useIntersectionObserver(
+  loadMoreEl,
+  ([entry]) => {
+    if (entry?.isIntersecting && props.hasNextPage && !props.loading) {
+      emit('loadMore')
+    }
+  },
+)
 
 // Year badge tracking via IntersectionObserver
 let yearObserver: IntersectionObserver | null = null
@@ -752,7 +806,9 @@ function setupYearObserver() {
     },
     { rootMargin: '-10% 0px -85% 0px', threshold: 0 },
   )
-  document.querySelectorAll('[data-year]').forEach((el) => yearObserver!.observe(el))
+  document
+    .querySelectorAll('[data-year]')
+    .forEach((el) => yearObserver!.observe(el))
 }
 
 // Re-run observer when new year sections appear
@@ -841,14 +897,21 @@ const { data: profile } = await useFetch<{
 const userAvatarUrl = computed(() => profile.value?.avatarUrl ?? null)
 
 const userDisplayName = computed(() => {
-  const parts = [profile.value?.firstName, profile.value?.lastName].filter(Boolean)
-  return parts.length ? parts.join(' ') : (authUser.value?.email?.split('@')[0] ?? 'You')
+  const parts = [profile.value?.firstName, profile.value?.lastName].filter(
+    Boolean,
+  )
+  return parts.length
+    ? parts.join(' ')
+    : (authUser.value?.email?.split('@')[0] ?? 'You')
 })
 
 const userInitials = computed(() => {
   const first = profile.value?.firstName?.[0] ?? ''
   const last = profile.value?.lastName?.[0] ?? ''
-  return (first + last).toUpperCase() || userDisplayName.value.slice(0, 2).toUpperCase()
+  return (
+    (first + last).toUpperCase() ||
+    userDisplayName.value.slice(0, 2).toUpperCase()
+  )
 })
 
 // ── Dropdown ───────────────────────────────────────────────
@@ -863,7 +926,9 @@ onClickOutside(menuRef, () => {
 const colorMode = useColorMode()
 const prefersDark = usePreferredDark()
 const isDark = computed(() =>
-  colorMode.preference === 'system' ? prefersDark.value : colorMode.preference === 'dark',
+  colorMode.preference === 'system'
+    ? prefersDark.value
+    : colorMode.preference === 'dark',
 )
 function toggleTheme() {
   colorMode.preference = isDark.value ? 'light' : 'dark'
@@ -908,10 +973,15 @@ async function fetchTimeline(cursor?: string) {
   if (loading.value || !circleId.value) return
   loading.value = true
   try {
-    const data = await $fetch<{ memories: Memory[]; nextCursor: string | null }>('/api/timeline', {
+    const data = await $fetch<{
+      memories: Memory[]
+      nextCursor: string | null
+    }>('/api/timeline', {
       query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
     })
-    memoriesFlat.value = cursor ? [...memoriesFlat.value, ...data.memories] : data.memories
+    memoriesFlat.value = cursor
+      ? [...memoriesFlat.value, ...data.memories]
+      : data.memories
     nextCursor.value = data.nextCursor
   } catch (err) {
     console.error('[timeline] fetch error:', err)
@@ -1025,7 +1095,8 @@ async function sendInvite() {
     if (msg.includes('already been sent'))
       inviteError.value = 'An invite was already sent to this email.'
     else if (msg.includes('Max 10'))
-      inviteError.value = 'You have 10 pending invites. Wait for some to be accepted first.'
+      inviteError.value =
+        'You have 10 pending invites. Wait for some to be accepted first.'
     else inviteError.value = 'Failed to send invite. Please try again.'
   } finally {
     inviteSending.value = false
@@ -1041,7 +1112,9 @@ Replace the entire `<template>` block with:
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex max-w-5xl items-center gap-3 px-5 py-3">
         <!-- Circle identity -->
         <div class="min-w-0 flex-1">
@@ -1051,7 +1124,9 @@ Replace the entire `<template>` block with:
             Our Story
           </p>
           <div class="flex-wrap-nowrap flex items-center gap-2">
-            <p class="truncate text-sm font-semibold leading-none text-foreground">
+            <p
+              class="truncate text-sm font-semibold leading-none text-foreground"
+            >
               {{ circle?.name ?? '…' }}
             </p>
             <span class="flex-shrink-0 text-xs text-border">·</span>
@@ -1060,7 +1135,8 @@ Replace the entire `<template>` block with:
               to="/members"
               class="flex-shrink-0 whitespace-nowrap text-[11px] leading-none text-muted-foreground transition-colors hover:text-foreground"
             >
-              {{ circle.memberCount }} {{ circle.memberCount === 1 ? 'member' : 'members' }}
+              {{ circle.memberCount }}
+              {{ circle.memberCount === 1 ? 'member' : 'members' }}
             </NuxtLink>
 
             <!-- Year badge -->
@@ -1090,8 +1166,14 @@ Replace the entire `<template>` block with:
             class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-ring"
             @click="menuOpen = !menuOpen"
           >
-            <img v-if="userAvatarUrl" :src="userAvatarUrl" class="h-full w-full object-cover" />
-            <span v-else class="text-[10px] font-bold text-foreground">{{ userInitials }}</span>
+            <img
+              v-if="userAvatarUrl"
+              :src="userAvatarUrl"
+              class="h-full w-full object-cover"
+            />
+            <span v-else class="text-[10px] font-bold text-foreground">{{
+              userInitials
+            }}</span>
           </button>
 
           <!-- Dropdown -->
@@ -1108,8 +1190,12 @@ Replace the entire `<template>` block with:
               class="absolute right-0 top-full mt-2 w-56 origin-top-right overflow-hidden rounded-[14px] border border-border bg-card shadow-xl"
             >
               <div class="border-b border-border px-4 py-3">
-                <p class="truncate text-sm font-semibold text-foreground">{{ userDisplayName }}</p>
-                <p class="mt-0.5 truncate text-xs text-muted-foreground">{{ authUser?.email }}</p>
+                <p class="truncate text-sm font-semibold text-foreground">
+                  {{ userDisplayName }}
+                </p>
+                <p class="mt-0.5 truncate text-xs text-muted-foreground">
+                  {{ authUser?.email }}
+                </p>
               </div>
               <div class="py-1">
                 <button
@@ -1231,7 +1317,10 @@ Replace the entire `<template>` block with:
         class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-20"
         @click.self="jumpOpen = false"
       >
-        <div class="absolute inset-0 bg-black/45 backdrop-blur-sm" @click="jumpOpen = false" />
+        <div
+          class="absolute inset-0 bg-black/45 backdrop-blur-sm"
+          @click="jumpOpen = false"
+        />
         <div
           class="relative w-full max-w-lg -translate-y-0 rounded-2xl border border-border bg-card p-5 shadow-2xl transition-transform duration-200"
         >
@@ -1254,9 +1343,16 @@ Replace the entire `<template>` block with:
             </button>
           </div>
 
-          <div v-for="info in yearInfos" :key="info.year" class="mb-4 last:mb-0">
+          <div
+            v-for="info in yearInfos"
+            :key="info.year"
+            class="mb-4 last:mb-0"
+          >
             <!-- Year row -->
-            <div class="grid gap-1.5" style="grid-template-columns: 44px repeat(12, 1fr);">
+            <div
+              class="grid gap-1.5"
+              style="grid-template-columns: 44px repeat(12, 1fr);"
+            >
               <!-- Year label -->
               <button
                 class="py-1 text-left text-xs font-bold text-foreground transition-colors hover:text-accent"
@@ -1298,13 +1394,19 @@ Replace the entire `<template>` block with:
         v-if="inviteOpen"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
+        <div
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          @click="closeInvite"
+        />
         <div
           class="relative w-full max-w-sm rounded-[20px] border border-border bg-card p-6 shadow-2xl"
         >
-          <h2 class="mb-1 font-display text-lg font-bold text-foreground">Invite someone</h2>
+          <h2 class="mb-1 font-display text-lg font-bold text-foreground">
+            Invite someone
+          </h2>
           <p class="mb-5 text-xs text-muted-foreground">
-            They'll get an email with a link to join {{ circle?.name ?? 'your circle' }}.
+            They'll get an email with a link to join
+            {{ circle?.name ?? 'your circle' }}.
           </p>
           <form @submit.prevent="sendInvite">
             <input
@@ -1315,8 +1417,13 @@ Replace the entire `<template>` block with:
               :disabled="inviteSending"
               class="mb-3 w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             />
-            <p v-if="inviteError" class="mb-3 text-xs text-destructive">{{ inviteError }}</p>
-            <p v-if="inviteSentTo" class="mb-3 text-xs text-green-600 dark:text-green-400">
+            <p v-if="inviteError" class="mb-3 text-xs text-destructive">
+              {{ inviteError }}
+            </p>
+            <p
+              v-if="inviteSentTo"
+              class="mb-3 text-xs text-green-600 dark:text-green-400"
+            >
               Invite sent to {{ inviteSentTo }}.
             </p>
             <div class="flex gap-2">
@@ -1478,7 +1585,9 @@ describe('GET /api/timeline — yearMonth param validation', () => {
   })
 
   it('accepts request without yearMonth (normal cursor pagination)', () => {
-    const r = timelineQuerySchema.safeParse({ circleId: '00000000-0000-0000-0000-000000000001' })
+    const r = timelineQuerySchema.safeParse({
+      circleId: '00000000-0000-0000-0000-000000000001',
+    })
     expect(r.success).toBe(true)
   })
 })
@@ -1517,7 +1626,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = querySchema.safeParse(getQuery(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'circleId is required' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'circleId is required' })
   const { circleId, cursor, authorId, yearMonth } = result.data
 
   // Verify the requesting user belongs to this circle
@@ -1542,7 +1652,9 @@ export default defineEventHandler(async (event) => {
     `,
     )
     .eq('circle_id', circleId)
-    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
+    .or(
+      `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`,
+    )
     .order('memory_date', { ascending: false })
     .order('id', { ascending: false })
 
@@ -1560,9 +1672,15 @@ export default defineEventHandler(async (event) => {
     const { data: memories, error } = await query
     if (error) {
       console.error('[timeline] month query failed:', error.message)
-      throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to load timeline.',
+      })
     }
-    return { memories: await attachSignedUrls(supabase, memories ?? []), nextCursor: null }
+    return {
+      memories: await attachSignedUrls(supabase, memories ?? []),
+      nextCursor: null,
+    }
   }
 
   // Cursor-based pagination for the main timeline
@@ -1595,19 +1713,32 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
       const mediaWithUrls = await Promise.all(
         ((memory.memorymedia as any[]) ?? []).map(async (media) => {
           const { storage_path, ...safeMedia } = media
-          if (!storage_path) return { ...safeMedia, url: null, thumbnailUrl: null }
+          if (!storage_path)
+            return { ...safeMedia, url: null, thumbnailUrl: null }
 
           const [fullResult, thumbResult] = await Promise.allSettled([
-            supabase.storage.from('memories-private').createSignedUrl(storage_path, 3600),
-            supabase.storage.from('memories-private').createSignedUrl(storage_path, 86400, {
-              transform: { width: 800, format: 'webp' as 'origin', quality: 85 },
-            }),
+            supabase.storage
+              .from('memories-private')
+              .createSignedUrl(storage_path, 3600),
+            supabase.storage
+              .from('memories-private')
+              .createSignedUrl(storage_path, 86400, {
+                transform: {
+                  width: 800,
+                  format: 'webp' as 'origin',
+                  quality: 85,
+                },
+              }),
           ])
 
           const url =
-            fullResult.status === 'fulfilled' ? (fullResult.value.data?.signedUrl ?? null) : null
+            fullResult.status === 'fulfilled'
+              ? (fullResult.value.data?.signedUrl ?? null)
+              : null
           const thumbnailUrl =
-            thumbResult.status === 'fulfilled' ? (thumbResult.value.data?.signedUrl ?? url) : url
+            thumbResult.status === 'fulfilled'
+              ? (thumbResult.value.data?.signedUrl ?? url)
+              : url
 
           return { ...safeMedia, url, thumbnailUrl }
         }),
@@ -1649,7 +1780,9 @@ This page shows all memories for one specific month when the main timeline caps 
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex max-w-5xl items-center gap-3 px-5 py-3.5">
         <NuxtLink
           to="/"
@@ -1672,7 +1805,9 @@ This page shows all memories for one specific month when the main timeline caps 
           >
             Our Story
           </p>
-          <p class="text-sm font-semibold leading-none text-foreground">{{ monthLabel }}</p>
+          <p class="text-sm font-semibold leading-none text-foreground">
+            {{ monthLabel }}
+          </p>
         </div>
       </div>
     </header>
@@ -1690,13 +1825,16 @@ This page shows all memories for one specific month when the main timeline caps 
 
       <!-- Empty -->
       <div v-else-if="memories.length === 0" class="py-32 text-center">
-        <p class="text-sm text-muted-foreground">No memories found for {{ monthLabel }}.</p>
+        <p class="text-sm text-muted-foreground">
+          No memories found for {{ monthLabel }}.
+        </p>
       </div>
 
       <!-- Polaroid grid (uncapped) -->
       <div v-else>
         <p class="mb-6 text-xs text-muted-foreground">
-          {{ memories.length }} {{ memories.length === 1 ? 'memory' : 'memories' }}
+          {{ memories.length }}
+          {{ memories.length === 1 ? 'memory' : 'memories' }}
         </p>
         <div class="flex flex-wrap gap-5">
           <PolaroidCard
@@ -1724,11 +1862,16 @@ if (!year || !month || month < 1 || month > 12 || year < 2000 || year > 2100) {
 }
 
 const monthLabel = computed(() =>
-  new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+  new Date(year, month - 1).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  }),
 )
 
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
-const circleId = computed<string | null>(() => circlesData.value?.circles?.[0]?.id ?? null)
+const circleId = computed<string | null>(
+  () => circlesData.value?.circles?.[0]?.id ?? null,
+)
 
 const memories = ref<Memory[]>([])
 const loading = ref(false)
@@ -1738,9 +1881,12 @@ onMounted(async () => {
   loading.value = true
   try {
     const yearMonth = `${year}-${String(month).padStart(2, '0')}`
-    const data = await $fetch<{ memories: Memory[]; nextCursor: null }>('/api/timeline', {
-      query: { circleId: circleId.value, yearMonth },
-    })
+    const data = await $fetch<{ memories: Memory[]; nextCursor: null }>(
+      '/api/timeline',
+      {
+        query: { circleId: circleId.value, yearMonth },
+      },
+    )
     memories.value = data.memories
   } catch (err) {
     console.error('[month-page] fetch error:', err)

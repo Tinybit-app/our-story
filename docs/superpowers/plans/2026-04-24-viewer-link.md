@@ -129,19 +129,37 @@ const TEST_NONCE = 'eeeeeeee-5555-4555-8555-555555555555'
 
 describe('signViewerToken — extended payload with viewer_link_id + nonce', () => {
   it('embeds viewer_link_id in the token payload', () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, TEST_LINK_ID, TEST_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      undefined,
+      TEST_LINK_ID,
+      TEST_NONCE,
+    )
     const payload = verifyViewerToken(token, TEST_SECRET)
     expect(payload.viewer_link_id).toBe(TEST_LINK_ID)
   })
 
   it('embeds nonce in the token payload', () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, TEST_LINK_ID, TEST_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      undefined,
+      TEST_LINK_ID,
+      TEST_NONCE,
+    )
     const payload = verifyViewerToken(token, TEST_SECRET)
     expect(payload.nonce).toBe(TEST_NONCE)
   })
 
   it('verifies correctly when viewer_link_id and nonce are present', () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, TEST_LINK_ID, TEST_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      undefined,
+      TEST_LINK_ID,
+      TEST_NONCE,
+    )
     expect(() => verifyViewerToken(token, TEST_SECRET)).not.toThrow()
   })
 })
@@ -186,7 +204,11 @@ const DEFAULT_EXPIRY_SECONDS = 30 * 24 * 60 * 60
 
 function b64url(input: string | Buffer): string {
   const buf = typeof input === 'string' ? Buffer.from(input, 'utf8') : input
-  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  return buf
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
 }
 
 function sign(data: string, secret: string): string {
@@ -214,7 +236,10 @@ export function signViewerToken(
   return `${header}.${payload}.${sig}`
 }
 
-export function verifyViewerToken(token: string, secret: string): ViewerPayload {
+export function verifyViewerToken(
+  token: string,
+  secret: string,
+): ViewerPayload {
   const parts = token.split('.')
   if (parts.length !== 3) throw new Error('Invalid token format')
 
@@ -223,11 +248,16 @@ export function verifyViewerToken(token: string, secret: string): ViewerPayload 
   const expectedSig = sign(`${header}.${payloadB64}`, secret)
   const expectedBuf = Buffer.from(expectedSig, 'utf8')
   const actualBuf = Buffer.from(sig, 'utf8')
-  if (expectedBuf.length !== actualBuf.length || !timingSafeEqual(expectedBuf, actualBuf)) {
+  if (
+    expectedBuf.length !== actualBuf.length ||
+    !timingSafeEqual(expectedBuf, actualBuf)
+  ) {
     throw new Error('Invalid token signature')
   }
 
-  const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8')) as ViewerPayload
+  const payload = JSON.parse(
+    Buffer.from(payloadB64, 'base64url').toString('utf8'),
+  ) as ViewerPayload
 
   if (payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error('Token expired')
@@ -272,7 +302,8 @@ export default defineEventHandler(async (event) => {
 
   const circleId = getRouterParam(event, 'id')!
   const secret = useRuntimeConfig(event).jwtSecret as string
-  if (!secret) throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
+  if (!secret)
+    throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
 
   const supabase = await serverSupabaseClient(event)
 
@@ -293,23 +324,37 @@ export default defineEventHandler(async (event) => {
 
   const { data: links, error } = await supabase
     .from('viewer_link')
-    .select('id, nonce, mode, memory_ids, date_from, date_to, label, expires_at, created_at')
+    .select(
+      'id, nonce, mode, memory_ids, date_from, date_to, label, expires_at, created_at',
+    )
     .eq('circle_id', circleId)
     .order('created_at', { ascending: false })
 
   if (error) {
     console.error('[viewer-links.get] query failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to load viewer links.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to load viewer links.',
+    })
   }
 
   const now = Math.floor(Date.now() / 1000)
 
   return (links ?? []).map((link) => {
-    const token = signViewerToken(circleId, secret, undefined, link.id, link.nonce)
+    const token = signViewerToken(
+      circleId,
+      secret,
+      undefined,
+      link.id,
+      link.nonce,
+    )
     const isExpired = new Date(link.expires_at).getTime() < Date.now()
-    const memoryCount = link.mode === 'selection' ? (link.memory_ids?.length ?? 0) : null
+    const memoryCount =
+      link.mode === 'selection' ? (link.memory_ids?.length ?? 0) : null
     const dateRange =
-      link.mode === 'date_range' || link.mode === 'selection' ? deriveDisplayDateRange(link) : null
+      link.mode === 'date_range' || link.mode === 'selection'
+        ? deriveDisplayDateRange(link)
+        : null
 
     return {
       id: link.id,
@@ -386,7 +431,10 @@ const bodySchema = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.mode === 'selection' && (!data.memoryIds || data.memoryIds.length === 0)) {
+    if (
+      data.mode === 'selection' &&
+      (!data.memoryIds || data.memoryIds.length === 0)
+    ) {
       ctx.addIssue({
         code: 'custom',
         message: 'memoryIds required for selection mode',
@@ -408,10 +456,12 @@ export default defineEventHandler(async (event) => {
 
   const circleId = getRouterParam(event, 'id')!
   const secret = useRuntimeConfig(event).jwtSecret as string
-  if (!secret) throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
+  if (!secret)
+    throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
 
   const parsed = bodySchema.safeParse(await readBody(event))
-  if (!parsed.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!parsed.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
 
   const { mode, label, memoryIds, dateFrom, dateTo } = parsed.data
 
@@ -446,19 +496,32 @@ export default defineEventHandler(async (event) => {
       label: label ?? defaultLabel,
       expires_at: expiresAt,
     })
-    .select('id, nonce, mode, memory_ids, date_from, date_to, label, expires_at, created_at')
+    .select(
+      'id, nonce, mode, memory_ids, date_from, date_to, label, expires_at, created_at',
+    )
     .single()
 
   if (error || !link) {
     console.error('[viewer-links.post] insert failed:', error?.message)
-    throw createError({ statusCode: 500, message: 'Failed to create viewer link.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to create viewer link.',
+    })
   }
 
-  const token = signViewerToken(circleId, secret, THIRTY_DAYS_S, link.id, link.nonce)
+  const token = signViewerToken(
+    circleId,
+    secret,
+    THIRTY_DAYS_S,
+    link.id,
+    link.nonce,
+  )
   const isExpired = false
   const memoryCount = mode === 'selection' ? (memoryIds?.length ?? 0) : null
   const dateRange =
-    mode === 'date_range' && dateFrom && dateTo ? { from: dateFrom, to: dateTo } : null
+    mode === 'date_range' && dateFrom && dateTo
+      ? { from: dateFrom, to: dateTo }
+      : null
 
   return {
     id: link.id,
@@ -481,7 +544,9 @@ function buildDefaultLabel(
   if (mode === 'full') return 'Full timeline'
   if (mode === 'date_range' && dateFrom && dateTo) {
     const fmt = (d: string) =>
-      new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(new Date(d))
+      new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(
+        new Date(d),
+      )
     return `${fmt(dateFrom)} – ${fmt(dateTo)}`
   }
   if (mode === 'selection') return `${memoryIds?.length ?? 0} memories`
@@ -550,7 +615,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[viewer-links.delete] failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to revoke viewer link.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to revoke viewer link.',
+    })
   }
 
   return { ok: true }
@@ -588,10 +656,12 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const { token } = getQuery(event) as { token?: string }
-  if (!token) throw createError({ statusCode: 400, message: 'Missing viewer token.' })
+  if (!token)
+    throw createError({ statusCode: 400, message: 'Missing viewer token.' })
 
   const secret = useRuntimeConfig(event).jwtSecret as string
-  if (!secret) throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
+  if (!secret)
+    throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
 
   let circleId: string
   let viewerLinkId: string
@@ -614,7 +684,9 @@ export default defineEventHandler(async (event) => {
   // Verify the viewer_link row exists and nonce matches (revocation check)
   const { data: viewerLink } = await supabase
     .from('viewer_link')
-    .select('id, nonce, mode, memory_ids, date_from, date_to, label, expires_at')
+    .select(
+      'id, nonce, mode, memory_ids, date_from, date_to, label, expires_at',
+    )
     .eq('id', viewerLinkId)
     .maybeSingle()
 
@@ -634,7 +706,8 @@ export default defineEventHandler(async (event) => {
     .is('deleted_at', null)
     .maybeSingle()
 
-  if (!circle) throw createError({ statusCode: 404, message: 'Circle not found.' })
+  if (!circle)
+    throw createError({ statusCode: 404, message: 'Circle not found.' })
 
   const { data: owner } = await supabase
     .from('user')
@@ -678,15 +751,21 @@ export default defineEventHandler(async (event) => {
       }
       const isVideo = media.media_type === 'video'
       const mediaType: 'video' | 'image' = isVideo ? 'video' : 'image'
-      const { data } = await supabase.storage.from('memories-private').createSignedUrl(
-        media.storage_path,
-        3600,
-        isVideo
-          ? undefined
-          : {
-              transform: { width: 800, format: 'webp' as 'origin', quality: 85 },
-            },
-      )
+      const { data } = await supabase.storage
+        .from('memories-private')
+        .createSignedUrl(
+          media.storage_path,
+          3600,
+          isVideo
+            ? undefined
+            : {
+                transform: {
+                  width: 800,
+                  format: 'webp' as 'origin',
+                  quality: 85,
+                },
+              },
+        )
       return {
         id: m.id,
         memory_date: m.memory_date,
@@ -702,7 +781,11 @@ export default defineEventHandler(async (event) => {
   if (mode === 'selection' && memoriesWithUrls.length > 0) {
     const dates = memoriesWithUrls.map((m) => m.memory_date).sort()
     selectionDateRange = { from: dates[0], to: dates[dates.length - 1] }
-  } else if (mode === 'date_range' && viewerLink.date_from && viewerLink.date_to) {
+  } else if (
+    mode === 'date_range' &&
+    viewerLink.date_from &&
+    viewerLink.date_to
+  ) {
     selectionDateRange = { from: viewerLink.date_from, to: viewerLink.date_to }
   }
 
@@ -755,18 +838,22 @@ const schema = z.object({
   viewerToken: z.string().min(1),
   memoryId: z
     .string()
-    .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
+    .regex(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    ),
   emoji: z.enum(VALID_EMOJIS),
   guestName: z.string().max(100).optional(),
 })
 
 export default defineEventHandler(async (event) => {
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
 
   const { viewerToken, memoryId, emoji, guestName } = result.data
   const secret = useRuntimeConfig(event).jwtSecret as string
-  if (!secret) throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
+  if (!secret)
+    throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
 
   let circleId: string
   let viewerLinkId: string
@@ -809,7 +896,8 @@ export default defineEventHandler(async (event) => {
     .eq('visibility', 'circle')
     .maybeSingle()
 
-  if (!memory) throw createError({ statusCode: 404, message: 'Memory not found.' })
+  if (!memory)
+    throw createError({ statusCode: 404, message: 'Memory not found.' })
 
   const { error } = await (supabase.from('memoryreaction') as any).insert({
     memory_id: memoryId,
@@ -1201,7 +1289,9 @@ git commit -m "feat(i18n): add viewerLink.* keys to en, zh-CN, fr locales"
       <div class="px-5 pb-8">
         <!-- Header -->
         <div class="flex items-center justify-between py-4">
-          <h2 class="text-base font-bold text-foreground">{{ t('viewerLink.shareButton') }}</h2>
+          <h2 class="text-base font-bold text-foreground">
+            {{ t('viewerLink.shareButton') }}
+          </h2>
           <button
             @click="$emit('close')"
             class="p-1 text-muted-foreground transition-colors hover:text-foreground"
@@ -1235,8 +1325,12 @@ git commit -m "feat(i18n): add viewerLink.* keys to en, zh-CN, fr locales"
               stroke-width="1.5"
               viewBox="0 0 24 24"
             >
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              <path
+                d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+              />
+              <path
+                d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+              />
             </svg>
           </div>
           <p class="mb-1 text-sm font-semibold text-foreground">
@@ -1255,10 +1349,16 @@ git commit -m "feat(i18n): add viewerLink.* keys to en, zh-CN, fr locales"
 
         <!-- Link list -->
         <div v-else class="flex flex-col gap-3">
-          <div v-for="link in links" :key="link.id" class="rounded-[16px] border border-border p-4">
+          <div
+            v-for="link in links"
+            :key="link.id"
+            class="rounded-[16px] border border-border p-4"
+          >
             <!-- Label + mode badge -->
             <div class="mb-2 flex items-start justify-between gap-2">
-              <p class="text-sm font-semibold leading-snug text-foreground">{{ link.label }}</p>
+              <p class="text-sm font-semibold leading-snug text-foreground">
+                {{ link.label }}
+              </p>
               <span
                 class="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                 :class="
@@ -1272,7 +1372,10 @@ git commit -m "feat(i18n): add viewerLink.* keys to en, zh-CN, fr locales"
             </div>
 
             <!-- Date range / count -->
-            <p v-if="linkSubline(link)" class="mb-2 text-xs text-muted-foreground">
+            <p
+              v-if="linkSubline(link)"
+              class="mb-2 text-xs text-muted-foreground"
+            >
               {{ linkSubline(link) }}
             </p>
 
@@ -1281,7 +1384,9 @@ git commit -m "feat(i18n): add viewerLink.* keys to en, zh-CN, fr locales"
               {{
                 link.isExpired
                   ? t('viewerLink.expired')
-                  : t('viewerLink.expires', { date: formatExpiry(link.expiresAt) })
+                  : t('viewerLink.expires', {
+                      date: formatExpiry(link.expiresAt),
+                    })
               }}
             </p>
 
@@ -1301,9 +1406,13 @@ git commit -m "feat(i18n): add viewerLink.* keys to en, zh-CN, fr locales"
                   viewBox="0 0 24 24"
                 >
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  />
                 </svg>
-                <span>{{ copiedId === link.id ? t('viewerLink.copied') : 'Copy link' }}</span>
+                <span>{{
+                  copiedId === link.id ? t('viewerLink.copied') : 'Copy link'
+                }}</span>
               </button>
               <button
                 v-else
@@ -1423,9 +1532,10 @@ function linkSubline(link: ViewerLink): string | null {
 }
 
 function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(
-    new Date(dateStr),
-  )
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(dateStr))
 }
 
 function formatExpiry(isoStr: string): string {
@@ -1512,7 +1622,9 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
       <div
         class="flex flex-shrink-0 items-center justify-between border-b border-border px-5 pb-3 pt-2"
       >
-        <h2 class="text-base font-bold text-foreground">{{ t('viewerLink.createLink') }}</h2>
+        <h2 class="text-base font-bold text-foreground">
+          {{ t('viewerLink.createLink') }}
+        </h2>
         <button
           @click="$emit('close')"
           class="p-1 text-muted-foreground transition-colors hover:text-foreground"
@@ -1532,7 +1644,9 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
       <div class="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-4">
         <!-- Mode selector -->
         <div>
-          <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p
+            class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
             Mode
           </p>
           <div class="flex gap-2">
@@ -1554,7 +1668,9 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
 
         <!-- Date range picker -->
         <div v-if="selectedMode === 'date_range'" class="flex flex-col gap-3">
-          <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p
+            class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
             Date range
           </p>
           <!-- Quick picks -->
@@ -1576,7 +1692,9 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
           <!-- Custom from/to -->
           <div class="flex gap-2">
             <div class="flex-1">
-              <label class="mb-1 block text-xs text-muted-foreground">From</label>
+              <label class="mb-1 block text-xs text-muted-foreground"
+                >From</label
+              >
               <input
                 v-model="dateFrom"
                 type="date"
@@ -1597,14 +1715,24 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
         <!-- Memory picker -->
         <div v-if="selectedMode === 'selection'" class="flex flex-col gap-3">
           <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p
+              class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
               {{ t('viewerLink.modeSelection') }}
             </p>
-            <span v-if="selectedMemoryIds.size > 0" class="text-xs font-semibold text-accent">
-              {{ t('viewerLink.selectedCount', { count: selectedMemoryIds.size }) }}
+            <span
+              v-if="selectedMemoryIds.size > 0"
+              class="text-xs font-semibold text-accent"
+            >
+              {{
+                t('viewerLink.selectedCount', { count: selectedMemoryIds.size })
+              }}
             </span>
           </div>
-          <div v-if="memoriesLoading" class="py-6 text-center text-sm text-muted-foreground">
+          <div
+            v-if="memoriesLoading"
+            class="py-6 text-center text-sm text-muted-foreground"
+          >
             Loading…
           </div>
           <div v-else class="grid grid-cols-3 gap-1.5">
@@ -1613,7 +1741,11 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
               :key="memory.id"
               @click="toggleMemory(memory.id)"
               class="relative aspect-square overflow-hidden rounded-[8px] border-2 transition-all"
-              :class="selectedMemoryIds.has(memory.id) ? 'border-primary' : 'border-transparent'"
+              :class="
+                selectedMemoryIds.has(memory.id)
+                  ? 'border-primary'
+                  : 'border-transparent'
+              "
             >
               <img
                 v-if="memory.signedUrl && memory.mediaType === 'image'"
@@ -1625,11 +1757,18 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
                 v-else-if="memory.mediaType === 'video'"
                 class="flex h-full w-full items-center justify-center bg-secondary"
               >
-                <svg class="h-5 w-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="h-5 w-5 text-muted-foreground"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
-              <div v-else class="flex h-full w-full items-center justify-center bg-secondary">
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-secondary"
+              >
                 <svg
                   class="h-5 w-5 text-muted-foreground"
                   fill="none"
@@ -1646,7 +1785,9 @@ git commit -m "feat(ui): ShareLinksSheet — owner viewer link management bottom
                   v-if="selectedMemoryIds.has(memory.id)"
                   class="absolute inset-0 flex items-center justify-center bg-primary/30"
                 >
-                  <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                  <div
+                    class="flex h-6 w-6 items-center justify-center rounded-full bg-primary"
+                  >
                     <svg
                       class="h-3.5 w-3.5 text-primary-foreground"
                       fill="none"
@@ -1733,8 +1874,10 @@ const availableYears = computed(() => {
 })
 
 const isValid = computed(() => {
-  if (selectedMode.value === 'date_range') return !!(dateFrom.value && dateTo.value)
-  if (selectedMode.value === 'selection') return selectedMemoryIds.value.size > 0
+  if (selectedMode.value === 'date_range')
+    return !!(dateFrom.value && dateTo.value)
+  if (selectedMode.value === 'selection')
+    return selectedMemoryIds.value.size > 0
   return true
 })
 
@@ -1746,7 +1889,8 @@ watch(
 )
 
 watch(selectedMode, async (val) => {
-  if (val === 'selection' && allMemories.value.length === 0) await loadMemories()
+  if (val === 'selection' && allMemories.value.length === 0)
+    await loadMemories()
 })
 
 async function loadMemories() {
@@ -1788,8 +1932,12 @@ async function handleCreate() {
       body: {
         mode: selectedMode.value,
         label: label.value || undefined,
-        memoryIds: selectedMode.value === 'selection' ? [...selectedMemoryIds.value] : undefined,
-        dateFrom: selectedMode.value === 'date_range' ? dateFrom.value : undefined,
+        memoryIds:
+          selectedMode.value === 'selection'
+            ? [...selectedMemoryIds.value]
+            : undefined,
+        dateFrom:
+          selectedMode.value === 'date_range' ? dateFrom.value : undefined,
         dateTo: selectedMode.value === 'date_range' ? dateTo.value : undefined,
       },
     })
@@ -1864,7 +2012,9 @@ async function loadViewerLinks() {
   if (!circleId.value) return
   viewerLinksLoading.value = true
   try {
-    viewerLinks.value = await $fetch(`/api/circles/${circleId.value}/viewer-links`)
+    viewerLinks.value = await $fetch(
+      `/api/circles/${circleId.value}/viewer-links`,
+    )
   } catch {
     viewerLinks.value = []
   } finally {
@@ -1874,7 +2024,9 @@ async function loadViewerLinks() {
 
 async function revokeViewerLink(linkId: string) {
   if (!circleId.value) return
-  await $fetch(`/api/circles/${circleId.value}/viewer-links/${linkId}`, { method: 'DELETE' })
+  await $fetch(`/api/circles/${circleId.value}/viewer-links/${linkId}`, {
+    method: 'DELETE',
+  })
   await loadViewerLinks()
 }
 
@@ -1896,7 +2048,13 @@ In the template header section, after the "Add memory" button and before `<Local
   class="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
   @click="openShareSheet"
 >
-  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+  <svg
+    class="h-3.5 w-3.5"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 24 24"
+  >
     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </svg>
@@ -1974,7 +2132,9 @@ Add referral CTA state after existing state refs:
 ```ts
 const memoriesSeenCount = ref(0)
 const referralDismissed = ref(false)
-const showReferral = computed(() => memoriesSeenCount.value >= 3 && !referralDismissed.value)
+const showReferral = computed(
+  () => memoriesSeenCount.value >= 3 && !referralDismissed.value,
+)
 ```
 
 - [ ] **Step 2: Replace the timeline view section of the template**
@@ -2014,14 +2174,20 @@ Replace everything inside `<template v-else-if="timeline">` with:
       </div>
 
       <!-- Mode banner -->
-      <p v-if="modeBanner" class="mt-1 text-xs text-muted-foreground">{{ modeBanner }}</p>
+      <p v-if="modeBanner" class="mt-1 text-xs text-muted-foreground">
+        {{ modeBanner }}
+      </p>
     </header>
 
     <main class="px-4 py-6">
       <!-- Empty state -->
       <div v-if="timeline.memories.length === 0" class="py-20 text-center">
-        <p class="mb-1 text-sm font-semibold text-foreground">{{ t('viewerLink.emptyState') }}</p>
-        <p class="text-xs text-muted-foreground">{{ t('viewerLink.emptyStateBody') }}</p>
+        <p class="mb-1 text-sm font-semibold text-foreground">
+          {{ t('viewerLink.emptyState') }}
+        </p>
+        <p class="text-xs text-muted-foreground">
+          {{ t('viewerLink.emptyStateBody') }}
+        </p>
       </div>
 
       <!-- Memory list -->
@@ -2047,8 +2213,13 @@ Replace everything inside `<template v-else-if="timeline">` with:
             class="aspect-[4/3] w-full object-cover"
           />
           <div class="px-4 py-4">
-            <p class="mb-1 text-xs text-muted-foreground">{{ formatDate(memory.memory_date) }}</p>
-            <p v-if="memory.note" class="text-base leading-relaxed text-foreground">
+            <p class="mb-1 text-xs text-muted-foreground">
+              {{ formatDate(memory.memory_date) }}
+            </p>
+            <p
+              v-if="memory.note"
+              class="text-base leading-relaxed text-foreground"
+            >
               {{ memory.note }}
             </p>
             <!-- Reaction button -->
@@ -2076,12 +2247,15 @@ Replace everything inside `<template v-else-if="timeline">` with:
                   />
                 </svg>
                 <span class="text-xs font-medium">
-                  {{ reactedIds.has(memory.id) ? t('viewerLink.viewerReactSent') :
-                  t('viewerLink.viewerReact') }}
+                  {{ reactedIds.has(memory.id) ? t('viewerLink.viewerReactSent')
+                  : t('viewerLink.viewerReact') }}
                 </span>
               </button>
               <Transition name="fade">
-                <span v-if="justReactedId === memory.id" class="text-xs font-medium text-rose-500">
+                <span
+                  v-if="justReactedId === memory.id"
+                  class="text-xs font-medium text-rose-500"
+                >
                   {{ t('viewerLink.viewerReactionConfirm') }}
                 </span>
               </Transition>
@@ -2098,7 +2272,10 @@ Replace everything inside `<template v-else-if="timeline">` with:
             <p class="mb-1 text-sm font-semibold text-foreground">
               {{ t('viewerLink.referralHeadline') }}
             </p>
-            <button @click="shareApp" class="text-sm text-accent hover:underline">
+            <button
+              @click="shareApp"
+              class="text-sm text-accent hover:underline"
+            >
               {{ t('viewerLink.referralBody') }}
             </button>
             <button
@@ -2154,7 +2331,10 @@ const modeBanner = computed(() => {
   const { mode, selectionDateRange, memories } = timeline.value
   if (mode === 'date_range' && selectionDateRange) {
     const fmt = (d: string) =>
-      new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
+      new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        year: 'numeric',
+      }).format(new Date(d))
     return t('viewerLink.dateRangeBanner', {
       from: fmt(selectionDateRange.from),
       to: fmt(selectionDateRange.to),
@@ -2162,7 +2342,10 @@ const modeBanner = computed(() => {
   }
   if (mode === 'selection' && selectionDateRange) {
     const fmt = (d: string) =>
-      new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(d))
+      new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        year: 'numeric',
+      }).format(new Date(d))
     return t('viewerLink.selectionBanner', {
       count: memories.length,
       from: fmt(selectionDateRange.from),
@@ -2244,7 +2427,10 @@ test.describe('viewer link management', () => {
     await page.waitForURL('/timeline**')
   })
 
-  test('owner sees Share button; member does not', async ({ page, browser }) => {
+  test('owner sees Share button; member does not', async ({
+    page,
+    browser,
+  }) => {
     // Owner sees Share button
     await expect(page.getByRole('button', { name: /share/i })).toBeVisible()
 
@@ -2254,11 +2440,15 @@ test.describe('viewer link management', () => {
     await memberPage.getByTestId('magic-link-input').fill('member@test.com')
     await memberPage.getByTestId('magic-link-submit').click()
     await memberPage.waitForURL('/timeline**')
-    await expect(memberPage.getByRole('button', { name: /share/i })).not.toBeVisible()
+    await expect(
+      memberPage.getByRole('button', { name: /share/i }),
+    ).not.toBeVisible()
     await memberPage.close()
   })
 
-  test('create full-timeline link → copy URL → /view loads', async ({ page }) => {
+  test('create full-timeline link → copy URL → /view loads', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: /share/i }).click()
     await expect(page.getByText(/share your circle/i)).toBeVisible()
 
@@ -2277,7 +2467,9 @@ test.describe('viewer link management', () => {
     await expect(page.getByText(/copied/i)).toBeVisible()
 
     // Navigate to the viewer URL
-    const handle = await page.evaluateHandle(() => navigator.clipboard.readText())
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    )
     const url = (await handle.jsonValue()) as string
     expect(url).toContain('/view?token=')
 
@@ -2288,7 +2480,9 @@ test.describe('viewer link management', () => {
     await viewerPage.close()
   })
 
-  test('create date_range link → viewer sees date range banner', async ({ page }) => {
+  test('create date_range link → viewer sees date range banner', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: /share/i }).click()
     await page.getByRole('button', { name: /create a link/i }).click()
 
@@ -2305,7 +2499,9 @@ test.describe('viewer link management', () => {
 
     // Get token from clipboard
     await page.getByRole('button', { name: /copy link/i }).click()
-    const handle = await page.evaluateHandle(() => navigator.clipboard.readText())
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    )
     const url = (await handle.jsonValue()) as string
 
     const viewerPage = await page.context().newPage()
@@ -2316,7 +2512,9 @@ test.describe('viewer link management', () => {
     await viewerPage.close()
   })
 
-  test('create selection link → viewer sees only selected memories', async ({ page }) => {
+  test('create selection link → viewer sees only selected memories', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: /share/i }).click()
     await page.getByRole('button', { name: /create a link/i }).click()
 
@@ -2343,7 +2541,9 @@ test.describe('viewer link management', () => {
       .click()
 
     await page.getByRole('button', { name: /copy link/i }).click()
-    const handle = await page.evaluateHandle(() => navigator.clipboard.readText())
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    )
     const url = (await handle.jsonValue()) as string
 
     // Revoke it
@@ -2366,7 +2566,9 @@ test.describe('viewer link management', () => {
       .last()
       .click()
     await page.getByRole('button', { name: /copy link/i }).click()
-    const handle = await page.evaluateHandle(() => navigator.clipboard.readText())
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    )
     const url = (await handle.jsonValue()) as string
 
     const viewerPage = await page.context().newPage()
@@ -2375,7 +2577,9 @@ test.describe('viewer link management', () => {
 
     // Scroll down past 3 memories
     await viewerPage.locator('article').nth(2).scrollIntoViewIfNeeded()
-    await expect(viewerPage.getByText(/know someone/i)).toBeVisible({ timeout: 3000 })
+    await expect(viewerPage.getByText(/know someone/i)).toBeVisible({
+      timeout: 3000,
+    })
     await viewerPage.close()
   })
 
@@ -2393,7 +2597,9 @@ test.describe('viewer link management', () => {
       .click()
 
     await page.getByRole('button', { name: /copy link/i }).click()
-    const handle = await page.evaluateHandle(() => navigator.clipboard.readText())
+    const handle = await page.evaluateHandle(() =>
+      navigator.clipboard.readText(),
+    )
     const url = (await handle.jsonValue()) as string
 
     const viewerPage = await page.context().newPage()
@@ -2403,7 +2609,9 @@ test.describe('viewer link management', () => {
     await viewerPage.close()
   })
 
-  test('expired link badge shown in sheet; Renew opens create sheet', async ({ page }) => {
+  test('expired link badge shown in sheet; Renew opens create sheet', async ({
+    page,
+  }) => {
     // This test relies on a DB fixture with a pre-expired viewer_link row.
     // The fixture is set up in the test seed via pnpm db:seed:test.
     // If no expired fixture exists, skip gracefully.

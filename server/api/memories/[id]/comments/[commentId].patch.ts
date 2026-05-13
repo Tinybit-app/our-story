@@ -13,10 +13,12 @@ export default defineEventHandler(async (event) => {
 
   const memoryId = getRouterParam(event, 'id')
   const commentId = getRouterParam(event, 'commentId')
-  if (!memoryId || !commentId) throw createError({ statusCode: 400, message: 'Missing id' })
+  if (!memoryId || !commentId)
+    throw createError({ statusCode: 400, message: 'Missing id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Comment body is required.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Comment body is required.' })
   const { body } = result.data
 
   // Verify ownership — only the comment author may edit

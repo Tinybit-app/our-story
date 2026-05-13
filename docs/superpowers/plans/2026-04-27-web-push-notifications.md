@@ -212,16 +212,18 @@ self.addEventListener('notificationclick', (event) => {
   const url = event.notification.data?.url || '/timeline'
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if (client.url.includes(self.location.origin)) {
-          client.focus()
-          client.navigate(url)
-          return
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windowClients) => {
+        for (const client of windowClients) {
+          if (client.url.includes(self.location.origin)) {
+            client.focus()
+            client.navigate(url)
+            return
+          }
         }
-      }
-      return clients.openWindow(url)
-    }),
+        return clients.openWindow(url)
+      }),
   )
 })
 ```
@@ -320,7 +322,11 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid subscription data.' })
+  if (!result.success)
+    throw createError({
+      statusCode: 400,
+      message: 'Invalid subscription data.',
+    })
 
   const { endpoint, keys } = result.data
 
@@ -334,7 +340,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[push/subscribe] upsert error:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to save subscription.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to save subscription.',
+    })
   }
 
   return { ok: true }
@@ -360,7 +369,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request.' })
 
   const { error } = await supabase
     .from('pushsubscription')
@@ -370,7 +380,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[push/unsubscribe] delete error:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to remove subscription.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to remove subscription.',
+    })
   }
 
   return { ok: true }
@@ -420,7 +433,9 @@ export function usePushNotifications() {
   )
 
   const permissionState = ref<NotificationPermission>(
-    import.meta.client && 'Notification' in window ? Notification.permission : 'default',
+    import.meta.client && 'Notification' in window
+      ? Notification.permission
+      : 'default',
   )
 
   async function requestPermission(): Promise<boolean> {
@@ -436,7 +451,9 @@ export function usePushNotifications() {
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(config.public.vapidPublicKey as string),
+        applicationServerKey: urlBase64ToUint8Array(
+          config.public.vapidPublicKey as string,
+        ),
       })
 
       const raw = subscription.toJSON()
@@ -665,7 +682,10 @@ export function buildPushPayload(input: PushPayloadInput): PushPayload {
     case 'upload': {
       const count = input.recentUploadCount ?? 1
       renotify = count <= 1
-      title = count > 1 ? `${actorName} added ${count} memories` : `${actorName} added a memory`
+      title =
+        count > 1
+          ? `${actorName} added ${count} memories`
+          : `${actorName} added a memory`
       body =
         count > 1
           ? "Check out what's new"
@@ -723,7 +743,9 @@ export async function sendPushToCircle(
   // 2. Check notification preferences — skip muted or push-disabled
   const { data: prefs } = await supabase
     .from('notificationpreference')
-    .select('user_id, push_enabled, circle_muted, quiet_hours_start, quiet_hours_end')
+    .select(
+      'user_id, push_enabled, circle_muted, quiet_hours_start, quiet_hours_end',
+    )
     .eq('circle_id', circleId)
     .in('user_id', memberIds)
 
@@ -739,7 +761,8 @@ export async function sendPushToCircle(
     if (pref.circle_muted) return false
     if (!pref.push_enabled) return false
     if (pref.quiet_hours_start && pref.quiet_hours_end) {
-      if (isWithinQuietHours(pref.quiet_hours_start, pref.quiet_hours_end)) return false
+      if (isWithinQuietHours(pref.quiet_hours_start, pref.quiet_hours_end))
+        return false
     }
     return true
   })
@@ -829,7 +852,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request.' })
   const { memoryId } = result.data
 
   // Verify the memory exists and the caller is the owner
@@ -909,7 +933,11 @@ After the comment insert succeeds and before the fresh comments query (after lin
 
 ```ts
 // Push notification (fire-and-forget)
-const { data: actor } = await supabase.from('user').select('first_name').eq('id', user.sub).single()
+const { data: actor } = await supabase
+  .from('user')
+  .select('first_name')
+  .eq('id', user.sub)
+  .single()
 
 const payload = buildPushPayload({
   type: 'comment',
@@ -937,7 +965,11 @@ Inside the `else` block after a new reaction is inserted (after line 56), add:
 
 ```ts
 // Push notification for new reaction (fire-and-forget)
-const { data: actor } = await supabase.from('user').select('first_name').eq('id', user.sub).single()
+const { data: actor } = await supabase
+  .from('user')
+  .select('first_name')
+  .eq('id', user.sub)
+  .single()
 
 const reactionPayload = buildPushPayload({
   type: 'reaction',
@@ -948,8 +980,8 @@ const reactionPayload = buildPushPayload({
   emoji,
 })
 
-sendPushToCircle(supabase, memory.circle_id, user.sub, reactionPayload).catch((err) =>
-  console.error('[push] reaction notify error:', err),
+sendPushToCircle(supabase, memory.circle_id, user.sub, reactionPayload).catch(
+  (err) => console.error('[push] reaction notify error:', err),
 )
 ```
 
@@ -965,7 +997,11 @@ After the memory is created and children/members are tagged (before the final re
 
 ```ts
 // Push notification (fire-and-forget)
-const { data: actor } = await supabase.from('user').select('first_name').eq('id', user.sub).single()
+const { data: actor } = await supabase
+  .from('user')
+  .select('first_name')
+  .eq('id', user.sub)
+  .single()
 
 // Count recent uploads for coalescing
 const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
@@ -1073,7 +1109,13 @@ Create `app/components/PushPromptBanner.vue`:
       class="flex-shrink-0 p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
       @click="snooze"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
         <path d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
@@ -1082,7 +1124,8 @@ Create `app/components/PushPromptBanner.vue`:
 
 <script setup lang="ts">
 const { t } = useI18n()
-const { isSupported, permissionState, requestPermission } = usePushNotifications()
+const { isSupported, permissionState, requestPermission } =
+  usePushNotifications()
 
 const dismissed = ref(false)
 
@@ -1271,7 +1314,10 @@ async function loadNotificationPrefs() {
   loadingPrefs.value = false
 }
 
-async function saveNotificationPref(field: 'push_enabled' | 'circle_muted', value: boolean) {
+async function saveNotificationPref(
+  field: 'push_enabled' | 'circle_muted',
+  value: boolean,
+) {
   if (!circle.value) return
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()

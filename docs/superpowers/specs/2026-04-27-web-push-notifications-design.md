@@ -105,7 +105,9 @@ Generated once via `web-push generate-vapid-keys`, stored as env vars:
 ```ts
 // app/composables/usePushNotifications.ts
 export function usePushNotifications() {
-  const isSupported = computed(() => 'serviceWorker' in navigator && 'PushManager' in window)
+  const isSupported = computed(
+    () => 'serviceWorker' in navigator && 'PushManager' in window,
+  )
 
   const permissionState = ref<PermissionState>('default')
 

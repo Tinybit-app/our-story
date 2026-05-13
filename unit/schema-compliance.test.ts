@@ -239,13 +239,21 @@ describe('Step 2.2 — RLS policies', () => {
   })
 
   it('NotificationPreference has read and upsert policies', () => {
-    expect(allMigrations).toContain('users can read own notification preferences')
-    expect(allMigrations).toContain('users can upsert own notification preferences')
+    expect(allMigrations).toContain(
+      'users can read own notification preferences',
+    )
+    expect(allMigrations).toContain(
+      'users can upsert own notification preferences',
+    )
   })
 
   it('ChildProfile and NewsletterRecipient have RLS policies', () => {
-    expect(allMigrations).toContain('members can read child profiles in their circles')
-    expect(allMigrations).toContain('owner and admin can manage newsletter recipients')
+    expect(allMigrations).toContain(
+      'members can read child profiles in their circles',
+    )
+    expect(allMigrations).toContain(
+      'owner and admin can manage newsletter recipients',
+    )
   })
 })
 
@@ -273,7 +281,9 @@ describe('Step 2.4 — Storage bucket setup', () => {
   })
 
   it('FeatureFlag has RLS enabled with no authenticated user SELECT policy', () => {
-    expect(storage).toContain('ALTER TABLE public.FeatureFlag ENABLE ROW LEVEL SECURITY')
+    expect(storage).toContain(
+      'ALTER TABLE public.FeatureFlag ENABLE ROW LEVEL SECURITY',
+    )
     // The only SELECT policy is the "no direct reads" deny-all on storage.objects.
     // There must be no permissive SELECT policy granting authenticated users access to FeatureFlag.
     expect(storage).not.toMatch(/ON public\.FeatureFlag[\s\S]*?FOR SELECT/)
@@ -372,7 +382,9 @@ describe('Step 5.4 — Multi-item memories', () => {
   })
 
   it('extends media_type CHECK to include text', () => {
-    expect(m029).toMatch(/CHECK \(media_type IN \('photo', 'video', 'live_photo', 'text'\)\)/)
+    expect(m029).toMatch(
+      /CHECK \(media_type IN \('photo', 'video', 'live_photo', 'text'\)\)/,
+    )
   })
 
   it('adds content_check constraint', () => {
@@ -391,7 +403,9 @@ describe('Migration 030 — draft visibility', () => {
   const m030 = sql('030_draft_visibility.sql')
 
   it('extends visibility CHECK to include draft', () => {
-    expect(m030).toMatch(/CHECK \(visibility IN \('private', 'circle', 'draft'\)\)/)
+    expect(m030).toMatch(
+      /CHECK \(visibility IN \('private', 'circle', 'draft'\)\)/,
+    )
   })
 })
 
@@ -409,12 +423,16 @@ describe('Migration 031 — MilestoneNudge table', () => {
   })
 
   it('has nudge_phase CHECK with three values', () => {
-    expect(m).toContain("nudge_phase TEXT NOT NULL CHECK (nudge_phase IN ('T-3', 'T0', 'T+3'))")
+    expect(m).toContain(
+      "nudge_phase TEXT NOT NULL CHECK (nudge_phase IN ('T-3', 'T0', 'T+3'))",
+    )
   })
 
   it('has unique dedupe index', () => {
     expect(m).toContain('CREATE UNIQUE INDEX idx_milestone_nudge_dedupe')
-    expect(m).toContain('(user_id, scope_type, scope_id, milestone_key, nudge_phase)')
+    expect(m).toContain(
+      '(user_id, scope_type, scope_id, milestone_key, nudge_phase)',
+    )
   })
 
   it('enables RLS', () => {
@@ -430,7 +448,9 @@ describe('Migration 032 — milestone_nudges_enabled preference', () => {
   const m = sql('032_milestone_nudges_enabled.sql')
 
   it('adds milestone_nudges_enabled with default true', () => {
-    expect(m).toContain('ADD COLUMN milestone_nudges_enabled BOOLEAN NOT NULL DEFAULT true')
+    expect(m).toContain(
+      'ADD COLUMN milestone_nudges_enabled BOOLEAN NOT NULL DEFAULT true',
+    )
   })
 })
 
@@ -438,6 +458,8 @@ describe('Migration 034 — On This Day tracking', () => {
   const m = sql('034_on_this_day_tracking.sql')
 
   it('adds last_first_month_memory_sent_at column to Circle', () => {
-    expect(m).toContain('ADD COLUMN last_first_month_memory_sent_at TIMESTAMPTZ')
+    expect(m).toContain(
+      'ADD COLUMN last_first_month_memory_sent_at TIMESTAMPTZ',
+    )
   })
 })

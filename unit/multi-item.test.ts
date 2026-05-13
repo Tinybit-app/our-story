@@ -3,7 +3,10 @@ import { z } from 'zod'
 
 const itemSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('draft'), draftMemoryId: z.uuid() }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 const uploadBatchSchema = z.object({
@@ -22,8 +25,14 @@ describe('upload-batch schema', () => {
     circleId: '11111111-2222-4333-8444-555555555555',
     memoryDate: '2026-05-09',
     items: [
-      { type: 'draft' as const, draftMemoryId: '11111111-2222-4333-8444-555555555556' },
-      { type: 'draft' as const, draftMemoryId: '11111111-2222-4333-8444-555555555557' },
+      {
+        type: 'draft' as const,
+        draftMemoryId: '11111111-2222-4333-8444-555555555556',
+      },
+      {
+        type: 'draft' as const,
+        draftMemoryId: '11111111-2222-4333-8444-555555555557',
+      },
     ],
   }
 
@@ -35,7 +44,10 @@ describe('upload-batch schema', () => {
     const r = uploadBatchSchema.safeParse({
       ...baseValid,
       items: [
-        { type: 'draft', draftMemoryId: '11111111-2222-4333-8444-555555555556' },
+        {
+          type: 'draft',
+          draftMemoryId: '11111111-2222-4333-8444-555555555556',
+        },
         { type: 'text', textContent: 'And then she smiled.' },
       ],
     })
@@ -43,9 +55,10 @@ describe('upload-batch schema', () => {
   })
 
   it('rejects fewer than 2 items', () => {
-    expect(uploadBatchSchema.safeParse({ ...baseValid, items: [baseValid.items[0]] }).success).toBe(
-      false,
-    )
+    expect(
+      uploadBatchSchema.safeParse({ ...baseValid, items: [baseValid.items[0]] })
+        .success,
+    ).toBe(false)
   })
 
   it('rejects more than 20 items', () => {
@@ -53,7 +66,9 @@ describe('upload-batch schema', () => {
       type: 'text' as const,
       textContent: `Slide ${i}`,
     }))
-    expect(uploadBatchSchema.safeParse({ ...baseValid, items }).success).toBe(false)
+    expect(uploadBatchSchema.safeParse({ ...baseValid, items }).success).toBe(
+      false,
+    )
   })
 
   it('rejects invalid coverIndex (negative)', () => {
@@ -77,7 +92,10 @@ const itemsPostSchema = z.discriminatedUnion('type', [
     fileSize: z.number().int().positive(),
     mediaType: z.enum(['photo', 'video', 'live_photo']),
   }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 const orderPatchSchema = z.object({ orderedIds: z.array(z.uuid()).min(1) })
@@ -93,7 +111,9 @@ describe('items.post schema', () => {
     expect(r.success).toBe(true)
   })
   it('accepts text item', () => {
-    expect(itemsPostSchema.safeParse({ type: 'text', textContent: 'hi' }).success).toBe(true)
+    expect(
+      itemsPostSchema.safeParse({ type: 'text', textContent: 'hi' }).success,
+    ).toBe(true)
   })
   it('rejects unknown mediaType', () => {
     const r = itemsPostSchema.safeParse({
@@ -109,7 +129,9 @@ describe('items.post schema', () => {
 describe('items/order schema', () => {
   it('accepts non-empty orderedIds', () => {
     expect(
-      orderPatchSchema.safeParse({ orderedIds: ['12345678-1234-4234-8234-123456789012'] }).success,
+      orderPatchSchema.safeParse({
+        orderedIds: ['12345678-1234-4234-8234-123456789012'],
+      }).success,
     ).toBe(true)
   })
   it('rejects empty orderedIds', () => {

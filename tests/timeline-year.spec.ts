@@ -22,7 +22,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -86,7 +90,9 @@ function makeMemory(id: string, date: string) {
 }
 
 test.describe('Main timeline — year-at-a-time loading', () => {
-  test('first load fetches the latest year without a year param', async ({ page }) => {
+  test('first load fetches the latest year without a year param', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockProfile(page)
@@ -119,7 +125,9 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await page.goto('/timeline')
 
     // Timeline should render with memories from the (mocked) latest year
-    await expect(page.getByText(/Memory m-2025-1/).first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Memory m-2025-1/).first()).toBeVisible({
+      timeout: 10_000,
+    })
 
     // First call should NOT send a year param (auto-detect)
     expect(firstCallYear).toBeNull()
@@ -173,19 +181,26 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     })
 
     await page.goto('/timeline')
-    await expect(page.getByText(/Memory m-2025-0/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Memory m-2025-0/)).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Scroll to bottom to trigger IntersectionObserver sentinel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for 2024 memories to be appended
-    await page.waitForFunction(() => document.querySelectorAll('article').length >= 6, {
-      timeout: 10_000,
-    })
+    await page.waitForFunction(
+      () => document.querySelectorAll('article').length >= 6,
+      {
+        timeout: 10_000,
+      },
+    )
 
     // Verify the second call was made with year=2024
     expect(secondCallYear).toBe('2024')
-    await expect(page.getByText(/Memory m-2024-0/)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText(/Memory m-2024-0/)).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   test('no further loads when prevYear is null', async ({ page }) => {
@@ -202,19 +217,27 @@ test.describe('Main timeline — year-at-a-time loading', () => {
         status: 200,
         contentType: 'application/json',
         // prevYear null — no more years to load
-        body: JSON.stringify({ memories, prevYear: null, children: [], members: [] }),
+        body: JSON.stringify({
+          memories,
+          prevYear: null,
+          children: [],
+          members: [],
+        }),
       })
     })
 
     await page.goto('/timeline')
-    await expect(page.getByText(/Memory m-2025-1/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Memory m-2025-1/)).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Scroll to trigger the sentinel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for the IntersectionObserver to have had a chance to fire (one animation frame)
     await page.evaluate(
-      () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+      () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
     )
 
     expect(callCount).toBe(1)

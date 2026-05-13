@@ -30,8 +30,16 @@ export function computeAnniversaryDisplay(
   today.setHours(0, 0, 0, 0)
 
   // Use UTC arithmetic for totalDays to avoid DST-induced off-by-one errors
-  const sinceUtc = Date.UTC(since.getFullYear(), since.getMonth(), since.getDate())
-  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const sinceUtc = Date.UTC(
+    since.getFullYear(),
+    since.getMonth(),
+    since.getDate(),
+  )
+  const todayUtc = Date.UTC(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  )
   const totalDays = Math.floor((todayUtc - sinceUtc) / 86_400_000)
   if (totalDays < 0) return null // anniversary date is in the future
 

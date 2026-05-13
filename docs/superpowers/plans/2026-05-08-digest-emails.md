@@ -124,7 +124,10 @@ Create `unit/digestEmail.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest'
-import { buildWeeklyDigestEmail, buildMonthlyDigestEmail } from '../server/utils/email'
+import {
+  buildWeeklyDigestEmail,
+  buildMonthlyDigestEmail,
+} from '../server/utils/email'
 
 const baseOpts = {
   recipientFirstName: 'Dao',
@@ -155,7 +158,11 @@ describe('buildWeeklyDigestEmail — subject line', () => {
   })
 
   it('uses child name when child exists', () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, childName: 'Mia', totalCount: 3 })
+    const { subject } = buildWeeklyDigestEmail({
+      ...baseOpts,
+      childName: 'Mia',
+      totalCount: 3,
+    })
     expect(subject).toContain('Mia')
     expect(subject).toContain('3')
   })
@@ -166,12 +173,20 @@ describe('buildWeeklyDigestEmail — subject line', () => {
   })
 
   it('renders zh-CN', () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: 'zh-CN', totalCount: 4 })
+    const { subject } = buildWeeklyDigestEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+      totalCount: 4,
+    })
     expect(subject).toMatch(/[一-鿿]/) // contains Chinese chars
   })
 
   it('renders fr', () => {
-    const { subject } = buildWeeklyDigestEmail({ ...baseOpts, locale: 'fr', totalCount: 4 })
+    const { subject } = buildWeeklyDigestEmail({
+      ...baseOpts,
+      locale: 'fr',
+      totalCount: 4,
+    })
     expect(subject.toLowerCase()).not.toMatch(/^the smiths added/) // not English
   })
 })
@@ -184,7 +199,11 @@ describe('buildMonthlyDigestEmail — subject line', () => {
   })
 
   it('uses child name when child exists', () => {
-    const { subject } = buildMonthlyDigestEmail({ ...baseOpts, childName: 'Mia', totalCount: 12 })
+    const { subject } = buildMonthlyDigestEmail({
+      ...baseOpts,
+      childName: 'Mia',
+      totalCount: 12,
+    })
     expect(subject).toContain('Mia')
   })
 })
@@ -241,7 +260,9 @@ describe('digest body — content', () => {
 
   it('contains main CTA linking to circle timeline', () => {
     const { html } = buildWeeklyDigestEmail(baseOpts)
-    expect(html).toContain('href="https://our-story.tinybit.app/timeline?circle=c1"')
+    expect(html).toContain(
+      'href="https://our-story.tinybit.app/timeline?circle=c1"',
+    )
   })
 })
 ```
@@ -349,7 +370,10 @@ function digestBody(
   `
 }
 
-export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string; html: string } {
+export function buildWeeklyDigestEmail(opts: DigestEmailOpts): {
+  subject: string
+  html: string
+} {
   const { circleName, childName, totalCount, locale } = opts
 
   const subject = (() => {
@@ -372,7 +396,10 @@ export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string
   return { subject, html: layout(digestBody(opts, periodLabel)) }
 }
 
-export function buildMonthlyDigestEmail(opts: DigestEmailOpts): { subject: string; html: string } {
+export function buildMonthlyDigestEmail(opts: DigestEmailOpts): {
+  subject: string
+  html: string
+} {
   const { circleName, childName, totalCount, locale } = opts
 
   // Use the previous month name (the digest covers the trailing 30 days but is sent on the 1st)
@@ -510,7 +537,10 @@ Deno.serve(async (req) => {
   const url = new URL(req.url)
   const frequency = url.searchParams.get('frequency')
   if (frequency !== 'weekly' && frequency !== 'monthly') {
-    return Response.json({ error: "frequency must be 'weekly' or 'monthly'" }, { status: 400 })
+    return Response.json(
+      { error: "frequency must be 'weekly' or 'monthly'" },
+      { status: 400 },
+    )
   }
 
   const supabase = createClient(
@@ -523,9 +553,13 @@ Deno.serve(async (req) => {
   const idempotencyCutoff = new Date(
     Date.now() - idempotencyDays * 24 * 60 * 60 * 1000,
   ).toISOString()
-  const periodStart = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString()
+  const periodStart = new Date(
+    Date.now() - periodDays * 24 * 60 * 60 * 1000,
+  ).toISOString()
   const tracker =
-    frequency === 'weekly' ? 'last_weekly_digest_sent_at' : 'last_monthly_digest_sent_at'
+    frequency === 'weekly'
+      ? 'last_weekly_digest_sent_at'
+      : 'last_monthly_digest_sent_at'
 
   // Find candidate circles (not soft-deleted, not sent recently)
   const { data: circles, error: circlesErr } = await supabase
@@ -555,7 +589,9 @@ Deno.serve(async (req) => {
       // for Phase 1, recency works fine and avoids needing a custom RPC.)
       const { data: memories } = await supabase
         .from('memory')
-        .select('id, note, milestone_label, memorymedia(storage_path, media_type)')
+        .select(
+          'id, note, milestone_label, memorymedia(storage_path, media_type)',
+        )
         .eq('circle_id', c.id)
         .gte('created_at', periodStart)
         .order('created_at', { ascending: false })
@@ -596,8 +632,12 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: true })
         .limit(1)
       const child = children?.[0] ?? null
-      const periodMidpoint = new Date(Date.now() - (periodDays / 2) * 24 * 60 * 60 * 1000)
-      const childAge = child ? computeAge(child.date_of_birth, periodMidpoint) : null
+      const periodMidpoint = new Date(
+        Date.now() - (periodDays / 2) * 24 * 60 * 60 * 1000,
+      )
+      const childAge = child
+        ? computeAge(child.date_of_birth, periodMidpoint)
+        : null
 
       // Recipients — joined to NotificationPreference, filtered by frequency match
       const { data: recipients } = await supabase
@@ -643,7 +683,9 @@ Deno.serve(async (req) => {
           locale: (u.locale as 'en' | 'zh-CN' | 'fr') ?? 'en',
         }
         const { subject, html } =
-          frequency === 'weekly' ? buildWeeklyDigestEmail(opts) : buildMonthlyDigestEmail(opts)
+          frequency === 'weekly'
+            ? buildWeeklyDigestEmail(opts)
+            : buildMonthlyDigestEmail(opts)
 
         await sendEmail(u.email, subject, html)
       }
@@ -666,7 +708,11 @@ Deno.serve(async (req) => {
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] digest email to ${to}: ${subject}`)
@@ -675,7 +721,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         from: 'Our Story <hello@our-story.tinybit.app>',
         to,
@@ -691,7 +740,9 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
 function computeAge(dob: string, at: Date): string {
   // Mirrors useBabyAge composable's logic (basic version — months/years only)
   const birth = new Date(dob)
-  const months = (at.getFullYear() - birth.getFullYear()) * 12 + (at.getMonth() - birth.getMonth())
+  const months =
+    (at.getFullYear() - birth.getFullYear()) * 12 +
+    (at.getMonth() - birth.getMonth())
   if (months < 1) return 'newborn'
   if (months < 12) return `${months} month${months === 1 ? '' : 's'}`
   const years = Math.floor(months / 12)

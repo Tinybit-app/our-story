@@ -36,7 +36,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -68,14 +72,21 @@ function mockTimeline(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories: [], nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories: [],
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
 
 async function goToTimeline(page: any) {
   await page.goto('/timeline')
-  await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    timeout: 15_000,
+  })
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -92,7 +103,9 @@ test.describe('Quick note (7.3)', () => {
     await expect(page.getByText('Add a memory')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('choice sheet has "Photo or video" and "Quick note" options', async ({ page }) => {
+  test('choice sheet has "Photo or video" and "Quick note" options', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimeline(page)
@@ -100,11 +113,17 @@ test.describe('Quick note (7.3)', () => {
     await goToTimeline(page)
     await page.getByRole('button', { name: /add memory/i }).click()
 
-    await expect(page.getByRole('button', { name: /photo or video/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /quick note/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /photo or video/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /quick note/i }),
+    ).toBeVisible()
   })
 
-  test('choosing "Photo or video" closes the choice sheet', async ({ page }) => {
+  test('choosing "Photo or video" closes the choice sheet', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimeline(page)
@@ -116,7 +135,9 @@ test.describe('Quick note (7.3)', () => {
     await page.getByRole('button', { name: /photo or video/i }).click()
 
     // Choice sheet should close
-    await expect(page.getByText('Add a memory')).not.toBeVisible({ timeout: 3_000 })
+    await expect(page.getByText('Add a memory')).not.toBeVisible({
+      timeout: 3_000,
+    })
   })
 
   test('choosing "Quick note" opens the quick note form', async ({ page }) => {
@@ -128,7 +149,9 @@ test.describe('Quick note (7.3)', () => {
     await page.getByRole('button', { name: /add memory/i }).click()
     await page.getByText('Quick note').click()
 
-    await expect(page.getByRole('heading', { name: 'Quick note' })).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: 'Quick note' })).toBeVisible(
+      { timeout: 5_000 },
+    )
     // Textarea should be present and focused
     await expect(page.locator('textarea')).toBeVisible()
   })
@@ -142,7 +165,9 @@ test.describe('Quick note (7.3)', () => {
     await page.getByRole('button', { name: /add memory/i }).click()
     await page.getByText('Quick note').click()
 
-    await expect(page.getByRole('button', { name: /save note/i })).toBeDisabled({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: /save note/i })).toBeDisabled(
+      { timeout: 5_000 },
+    )
   })
 
   test('submitting a note calls POST /api/memories/quick-note with correct payload', async ({
@@ -255,15 +280,21 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
     await goToTimeline(page)
 
     // Wait for the card to appear and click it
-    const card = page.locator('article').filter({ hasText: 'First word today: dada' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
     // Modal should appear
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
-  test('QuickNoteModal displays the note text and "Quick note" label', async ({ page }) => {
+  test('QuickNoteModal displays the note text and "Quick note" label', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimelineWithNote(page)
@@ -271,14 +302,20 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
 
     await goToTimeline(page)
 
-    const card = page.locator('article').filter({ hasText: 'First word today: dada' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
     // Note text appears in the editorial quote area
-    await expect(page.getByText('First word today: dada').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('First word today: dada').first()).toBeVisible({
+      timeout: 5_000,
+    })
     // "Quick note" label in top-right of quote area
-    await expect(page.getByText('Quick note', { exact: true }).first()).toBeVisible()
+    await expect(
+      page.getByText('Quick note', { exact: true }).first(),
+    ).toBeVisible()
   })
 
   test('Escape key closes QuickNoteModal', async ({ page }) => {
@@ -289,38 +326,54 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
 
     await goToTimeline(page)
 
-    const card = page.locator('article').filter({ hasText: 'First word today: dada' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+      timeout: 5_000,
+    })
 
     await page.keyboard.press('Escape')
 
-    await expect(page.locator('[style*="max-width: 520px"]')).not.toBeVisible({ timeout: 3_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).not.toBeVisible({
+      timeout: 3_000,
+    })
   })
 
-  test('QuickNoteModal shows edit form when edit button is clicked (owner)', async ({ page }) => {
+  test('QuickNoteModal shows edit form when edit button is clicked (owner)', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimelineWithNote(page)
     await mockComments(page)
 
     await goToTimeline(page)
-    const card = page.locator('article').filter({ hasText: 'First word today: dada' })
+    const card = page
+      .locator('article')
+      .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+      timeout: 5_000,
+    })
 
     // If the authenticated user owns this memory, an edit pencil is shown.
     // Click it if present and verify the NOTE field label appears.
     const editBtnCount = await page.locator('[title="Edit note"]').count()
     if (editBtnCount > 0) {
       await page.locator('[title="Edit note"]').click()
-      await expect(page.getByText('NOTE', { exact: true })).toBeVisible({ timeout: 3_000 })
+      await expect(page.getByText('NOTE', { exact: true })).toBeVisible({
+        timeout: 3_000,
+      })
     } else {
       // Non-owner: verify the modal at minimum shows the note text
-      await expect(page.getByText('First word today: dada').first()).toBeVisible()
+      await expect(
+        page.getByText('First word today: dada').first(),
+      ).toBeVisible()
     }
   })
 })

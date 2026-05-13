@@ -12,10 +12,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const memoryId = getRouterParam(event, 'id')
-  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
+  if (!memoryId)
+    throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const { childIds } = result.data
 
   // Verify the caller owns this memory
@@ -38,7 +40,10 @@ export default defineEventHandler(async (event) => {
 
     const validSet = new Set((validChildren ?? []).map((c: any) => c.id))
     if (!childIds.every((id) => validSet.has(id))) {
-      throw createError({ statusCode: 400, message: 'One or more child IDs are invalid.' })
+      throw createError({
+        statusCode: 400,
+        message: 'One or more child IDs are invalid.',
+      })
     }
   }
 
@@ -50,13 +55,18 @@ export default defineEventHandler(async (event) => {
 
   if (deleteError) {
     console.error('[memory children] delete failed:', deleteError.message)
-    throw createError({ statusCode: 500, message: 'Failed to update child tags.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to update child tags.',
+    })
   }
 
   if (childIds.length > 0) {
     const { error: insertError } = await (supabase as any)
       .from('memory_children')
-      .insert(childIds.map((childId) => ({ memory_id: memoryId, child_id: childId })))
+      .insert(
+        childIds.map((childId) => ({ memory_id: memoryId, child_id: childId })),
+      )
 
     if (insertError) {
       console.error('[memory children] insert failed:', insertError.message)

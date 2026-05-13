@@ -17,8 +17,10 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
-  const { circleId, note, memoryDate, milestoneLabel, childIds, memberIds } = result.data
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  const { circleId, note, memoryDate, milestoneLabel, childIds, memberIds } =
+    result.data
 
   // Verify user is a member of the circle
   const { data: membership } = await supabase
@@ -29,7 +31,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership)
-    throw createError({ statusCode: 403, message: 'You are not a member of this circle.' })
+    throw createError({
+      statusCode: 403,
+      message: 'You are not a member of this circle.',
+    })
 
   // Create the memory row (no MemoryMedia — text-only)
   const { data: memory, error } = await supabase
@@ -47,7 +52,10 @@ export default defineEventHandler(async (event) => {
 
   if (error || !memory) {
     console.error('[quick-note] insert error:', error?.message)
-    throw createError({ statusCode: 500, message: 'Failed to save note. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to save note. Please try again.',
+    })
   }
 
   // Tag children

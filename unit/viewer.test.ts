@@ -84,14 +84,22 @@ describe('verifyViewerToken — wrong secret', () => {
       BASE_VIEWER_LINK_ID,
       BASE_NONCE,
     )
-    expect(() => verifyViewerToken(token, 'wrong-secret-that-is-long-enough!!')).toThrow()
+    expect(() =>
+      verifyViewerToken(token, 'wrong-secret-that-is-long-enough!!'),
+    ).toThrow()
   })
 })
 
 describe('verifyViewerToken — expired token', () => {
   it('throws when the token is past its expiry', () => {
     // Sign with exp already in the past
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, -1, BASE_VIEWER_LINK_ID, BASE_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      -1,
+      BASE_VIEWER_LINK_ID,
+      BASE_NONCE,
+    )
     expect(() => verifyViewerToken(token, TEST_SECRET)).toThrow(/expired/i)
   })
 })
@@ -114,7 +122,9 @@ describe('verifyViewerToken — tampered token', () => {
         exp: Math.floor(Date.now() / 1000) + 3600,
       }),
     ).toString('base64url')
-    expect(() => verifyViewerToken(`${header}.${fakePart}.${sig}`, TEST_SECRET)).toThrow()
+    expect(() =>
+      verifyViewerToken(`${header}.${fakePart}.${sig}`, TEST_SECRET),
+    ).toThrow()
   })
 })
 
@@ -126,7 +136,9 @@ const guestReactionSchema = z.object({
   viewerToken: z.string().min(1),
   memoryId: z
     .string()
-    .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
+    .regex(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    ),
   emoji: z.enum(VALID_EMOJIS),
 })
 
@@ -209,19 +221,37 @@ const TEST_NONCE = 'eeeeeeee-5555-4555-8555-555555555555'
 
 describe('signViewerToken — extended payload with viewer_link_id + nonce', () => {
   it('embeds viewer_link_id in the token payload', () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, TEST_LINK_ID, TEST_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      undefined,
+      TEST_LINK_ID,
+      TEST_NONCE,
+    )
     const payload = verifyViewerToken(token, TEST_SECRET)
     expect(payload.viewer_link_id).toBe(TEST_LINK_ID)
   })
 
   it('embeds nonce in the token payload', () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, TEST_LINK_ID, TEST_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      undefined,
+      TEST_LINK_ID,
+      TEST_NONCE,
+    )
     const payload = verifyViewerToken(token, TEST_SECRET)
     expect(payload.nonce).toBe(TEST_NONCE)
   })
 
   it('verifies correctly when viewer_link_id and nonce are present', () => {
-    const token = signViewerToken(TEST_CIRCLE_ID, TEST_SECRET, undefined, TEST_LINK_ID, TEST_NONCE)
+    const token = signViewerToken(
+      TEST_CIRCLE_ID,
+      TEST_SECRET,
+      undefined,
+      TEST_LINK_ID,
+      TEST_NONCE,
+    )
     expect(() => verifyViewerToken(token, TEST_SECRET)).not.toThrow()
   })
 })

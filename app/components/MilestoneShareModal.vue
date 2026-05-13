@@ -4,20 +4,27 @@
       class="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
     >
       <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
+      <div
+        class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        @click="emit('close')"
+      />
 
       <!-- Sheet -->
       <div
         class="relative w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl sm:max-w-sm sm:rounded-[24px]"
       >
         <!-- Accent stripe -->
-        <div class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60" />
+        <div
+          class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60"
+        />
 
         <div class="px-5 pb-5 pt-4">
           <!-- Header -->
           <div class="mb-4 flex items-start justify-between gap-2">
             <div>
-              <p class="mb-0.5 text-[10px] font-bold uppercase tracking-[.18em] text-accent">
+              <p
+                class="mb-0.5 text-[10px] font-bold uppercase tracking-[.18em] text-accent"
+              >
                 ✦ {{ t('milestone.shareLabel') }}
               </p>
               <h2 class="text-sm font-semibold leading-snug text-foreground">
@@ -81,13 +88,17 @@
                     d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
                   />
                 </svg>
-                <p class="text-[11px] leading-snug text-white/70">{{ t('milestone.corsError') }}</p>
+                <p class="text-[11px] leading-snug text-white/70">
+                  {{ t('milestone.corsError') }}
+                </p>
               </div>
             </div>
           </div>
 
           <!-- Format toggle -->
-          <div class="mb-3.5 flex rounded-[10px] border border-border bg-secondary p-0.5">
+          <div
+            class="mb-3.5 flex rounded-[10px] border border-border bg-secondary p-0.5"
+          >
             <button
               class="flex-1 rounded-[8px] py-1.5 text-[11px] font-medium transition-colors"
               :class="
@@ -127,10 +138,16 @@
                 stroke-width="2"
                 viewBox="0 0 24 24"
               >
-                <path d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
+                <path
+                  d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"
+                />
                 <rect x="8" y="10" width="12" height="12" rx="2" />
               </svg>
-              {{ format === '9:16' ? t('milestone.saveInstagram') : t('milestone.saveWhatsapp') }}
+              {{
+                format === '9:16'
+                  ? t('milestone.saveInstagram')
+                  : t('milestone.saveWhatsapp')
+              }}
             </button>
 
             <!-- Secondary row: copy + download -->
@@ -273,7 +290,9 @@ async function drawCard(
 
   // --- Milestone label (italic serif) ---
   const labelSize =
-    format.value === '9:16' ? Math.round(targetW * 0.072) : Math.round(targetW * 0.06)
+    format.value === '9:16'
+      ? Math.round(targetW * 0.072)
+      : Math.round(targetW * 0.06)
   ctx.font = `italic bold ${labelSize}px Georgia, "Times New Roman", serif`
   ctx.fillStyle = 'rgba(255,255,255,0.97)'
 
@@ -282,7 +301,8 @@ async function drawCard(
   const labelLineH = labelSize * 1.25
 
   // Start text block at 58% from top for 9:16, 50% for 1:1
-  const textBlockStart = format.value === '9:16' ? targetH * 0.58 : targetH * 0.5
+  const textBlockStart =
+    format.value === '9:16' ? targetH * 0.58 : targetH * 0.5
   let y = textBlockStart
 
   for (const line of labelLines) {
@@ -293,12 +313,17 @@ async function drawCard(
 
   // --- Date ---
   const dateSize =
-    format.value === '9:16' ? Math.round(targetW * 0.035) : Math.round(targetW * 0.03)
-  const dateLabel = new Date(props.memoryDate).toLocaleDateString(locale.value, {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+    format.value === '9:16'
+      ? Math.round(targetW * 0.035)
+      : Math.round(targetW * 0.03)
+  const dateLabel = new Date(props.memoryDate).toLocaleDateString(
+    locale.value,
+    {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    },
+  )
   ctx.font = `${dateSize}px system-ui, -apple-system, sans-serif`
   ctx.fillStyle = 'rgba(255,255,255,0.80)'
   ctx.fillText(dateLabel, targetW / 2, y)
@@ -318,7 +343,9 @@ async function drawCard(
   // --- Wordmark ---
   const brandY = format.value === '9:16' ? targetH * 0.915 : targetH * 0.893
   const brandSize =
-    format.value === '9:16' ? Math.round(targetW * 0.03) : Math.round(targetW * 0.026)
+    format.value === '9:16'
+      ? Math.round(targetW * 0.03)
+      : Math.round(targetW * 0.026)
   ctx.font = `bold ${brandSize}px Georgia, "Times New Roman", serif`
   ctx.fillStyle = 'rgba(255,255,255,0.45)'
   ctx.fillText('Our Story', targetW / 2, brandY)
@@ -329,7 +356,11 @@ async function drawCard(
   ctx.fillText('ourstory.tinybit.app', targetW / 2, brandY + brandSize * 1.5)
 }
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string[] {
   const words = text.split(' ')
   const lines: string[] = []
   let line = ''
@@ -378,7 +409,9 @@ async function buildBlob(): Promise<Blob | null> {
   const offscreen = document.createElement('canvas')
   try {
     await drawCard(offscreen, fullW, fullH)
-    return await new Promise<Blob | null>((res) => offscreen.toBlob(res, 'image/png'))
+    return await new Promise<Blob | null>((res) =>
+      offscreen.toBlob(res, 'image/png'),
+    )
   } catch {
     return null
   }
@@ -393,7 +426,10 @@ async function shareOrDownload() {
     const filename = `milestone-${format.value === '9:16' ? 'stories' : 'square'}.png`
     const file = new File([blob], filename, { type: 'image/png' })
 
-    if (typeof navigator !== 'undefined' && navigator.canShare?.({ files: [file] })) {
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.canShare?.({ files: [file] })
+    ) {
       await navigator.share({ files: [file], title: props.milestoneLabel })
     } else {
       const url = URL.createObjectURL(blob)

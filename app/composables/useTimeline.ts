@@ -34,7 +34,11 @@ export interface Memory {
     } | null
   }[]
   memorymedia: MediaItem[]
-  user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null
+  user: {
+    first_name: string | null
+    last_name: string | null
+    avatar_url: string | null
+  } | null
   memoryreaction: {
     id: string
     emoji: string

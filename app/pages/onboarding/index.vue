@@ -1,7 +1,11 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
-      <p class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <!-- Step indicator -->
       <div class="mb-8 flex items-center gap-1.5">
@@ -10,7 +14,9 @@
         <div class="h-1 w-6 rounded-full bg-border" />
       </div>
 
-      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
+      <h1
+        class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground"
+      >
         {{ t('onboarding.whoIsThis') }}
       </h1>
       <p class="mb-8 text-sm text-muted-foreground">
@@ -29,8 +35,12 @@
               : 'border-border bg-card hover:border-foreground/30'
           "
         >
-          <p class="text-sm font-medium leading-snug text-foreground">{{ type.label }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">{{ type.description }}</p>
+          <p class="text-sm font-medium leading-snug text-foreground">
+            {{ type.label }}
+          </p>
+          <p class="mt-0.5 text-xs text-muted-foreground">
+            {{ type.description }}
+          </p>
         </button>
       </div>
 
@@ -51,7 +61,9 @@ const { t } = useI18n()
 
 const selected = ref('')
 const router = useRouter()
-const circleTypeCookie = useCookie('onboarding_circle_type', { maxAge: 60 * 60 * 2 })
+const circleTypeCookie = useCookie('onboarding_circle_type', {
+  maxAge: 60 * 60 * 2,
+})
 
 // Clear any stale cookies from a previous partial flow
 onMounted(() => {

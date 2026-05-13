@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Header -->
-    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+    <header
+      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
+    >
       <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <NuxtLink
           to="/timeline"
@@ -24,7 +26,9 @@
           >
             Our Story
           </p>
-          <p class="truncate text-sm font-semibold leading-none text-foreground">
+          <p
+            class="truncate text-sm font-semibold leading-none text-foreground"
+          >
             {{ monthLabel }}
           </p>
         </div>
@@ -38,7 +42,9 @@
           <div
             class="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"
           />
-          <p class="text-xs text-muted-foreground">{{ t('timeline.loading') }}</p>
+          <p class="text-xs text-muted-foreground">
+            {{ t('timeline.loading') }}
+          </p>
         </div>
       </div>
 
@@ -118,7 +124,10 @@ if (!year || !month || month < 1 || month > 12 || year < 2000 || year > 2100) {
 }
 
 const monthLabel = computed(() =>
-  new Date(year, month - 1).toLocaleDateString(locale.value, { month: 'long', year: 'numeric' }),
+  new Date(year, month - 1).toLocaleDateString(locale.value, {
+    month: 'long',
+    year: 'numeric',
+  }),
 )
 
 function isWideMemory(id: string): boolean {
@@ -128,7 +137,9 @@ function isWideMemory(id: string): boolean {
 }
 
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
-const circleId = computed<string | null>(() => circlesData.value?.circles?.[0]?.id ?? null)
+const circleId = computed<string | null>(
+  () => circlesData.value?.circles?.[0]?.id ?? null,
+)
 
 interface ChildProfile {
   id: string
@@ -173,9 +184,19 @@ function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
   if (i !== -1) memories.value[i] = { ...memories.value[i], ...patch } as Memory
 }
 
-function onReactionUpdate({ memoryId, reactions }: { memoryId: string; reactions: any[] }) {
+function onReactionUpdate({
+  memoryId,
+  reactions,
+}: {
+  memoryId: string
+  reactions: any[]
+}) {
   const i = memories.value.findIndex((m) => m.id === memoryId)
-  if (i !== -1) memories.value[i] = { ...memories.value[i], memoryreaction: reactions } as Memory
+  if (i !== -1)
+    memories.value[i] = {
+      ...memories.value[i],
+      memoryreaction: reactions,
+    } as Memory
 }
 
 async function fetchPage(cursor?: string) {
@@ -185,7 +206,10 @@ async function fetchPage(cursor?: string) {
   else loadingMore.value = true
   try {
     const yearMonth = `${year}-${String(month).padStart(2, '0')}`
-    const query: Record<string, string> = { circleId: circleId.value, yearMonth }
+    const query: Record<string, string> = {
+      circleId: circleId.value,
+      yearMonth,
+    }
     if (cursor) query.cursor = cursor
     const data = await $fetch<{
       memories: Memory[]

@@ -37,7 +37,9 @@
           );
         "
       >
-        <p class="text-center text-[15px] leading-7 text-foreground">{{ memory.note }}</p>
+        <p class="text-center text-[15px] leading-7 text-foreground">
+          {{ memory.note }}
+        </p>
       </div>
       <div
         v-else
@@ -57,7 +59,10 @@
       </div>
 
       <!-- Download / share action buttons (photo or video only) -->
-      <div v-if="firstMedia?.url" class="absolute right-2 top-2 z-10 flex gap-1.5">
+      <div
+        v-if="firstMedia?.url"
+        class="absolute right-2 top-2 z-10 flex gap-1.5"
+      >
         <!-- Share with watermark (images only) -->
         <button
           v-if="firstMedia.media_type !== 'video'"
@@ -105,7 +110,10 @@
     </div>
 
     <!-- Photo / video — multi-item carousel -->
-    <div v-if="(memory.media_count ?? 1) > 1" class="relative flex-shrink-0 bg-border">
+    <div
+      v-if="(memory.media_count ?? 1) > 1"
+      class="relative flex-shrink-0 bg-border"
+    >
       <!-- Loading skeleton -->
       <div v-if="slidesLoading" class="skeleton-shimmer aspect-[4/3]" />
       <!-- Carousel -->
@@ -115,7 +123,11 @@
           class="no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
           @scroll="onCarouselScroll"
         >
-          <div v-for="slide in slides" :key="slide.id" class="w-full flex-shrink-0 snap-center">
+          <div
+            v-for="slide in slides"
+            :key="slide.id"
+            class="w-full flex-shrink-0 snap-center"
+          >
             <div class="relative aspect-[4/3] overflow-hidden bg-border">
               <img
                 v-if="slide.mediaType === 'photo'"
@@ -134,7 +146,11 @@
                 v-else
                 class="absolute inset-0 flex h-full w-full items-center justify-center p-8"
                 style="
-                  background-color: color-mix(in srgb, var(--accent) 12%, var(--card));
+                  background-color: color-mix(
+                    in srgb,
+                    var(--accent) 12%,
+                    var(--card)
+                  );
                   background-image: repeating-linear-gradient(
                     transparent,
                     transparent 23px,
@@ -161,7 +177,9 @@
               :class="idx === currentSlideIdx ? 'bg-white' : 'bg-white/40'"
             />
           </div>
-          <span class="text-[10px] font-medium tabular-nums text-white/70 drop-shadow">
+          <span
+            class="text-[10px] font-medium tabular-nums text-white/70 drop-shadow"
+          >
             {{ currentSlideIdx + 1 }} / {{ slides.length }}
           </span>
         </div>
@@ -193,9 +211,11 @@
           @click="activeTab = 'comments'"
         >
           {{ t('modal.tabComments') }}
-          <span v-if="comments.length > 0" class="ml-1 font-normal opacity-50">{{
-            comments.length
-          }}</span>
+          <span
+            v-if="comments.length > 0"
+            class="ml-1 font-normal opacity-50"
+            >{{ comments.length }}</span
+          >
         </button>
       </div>
 
@@ -212,7 +232,9 @@
                 v-if="memory.milestone_label"
                 class="group/milestone mb-1.5 flex items-center gap-1.5"
               >
-                <p class="text-[10px] font-bold uppercase leading-none tracking-[.2em] text-accent">
+                <p
+                  class="text-[10px] font-bold uppercase leading-none tracking-[.2em] text-accent"
+                >
                   ✦ {{ memory.milestone_label }}
                 </p>
                 <button
@@ -242,7 +264,10 @@
               >
                 {{ memory.note }}
               </p>
-              <p v-else class="mb-2 text-[13px] italic text-muted-foreground/50">
+              <p
+                v-else
+                class="mb-2 text-[13px] italic text-muted-foreground/50"
+              >
                 {{ isOwner ? t('modal.noNoteOwner') : t('modal.noNote') }}
               </p>
             </div>
@@ -260,8 +285,12 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                <path
+                  d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                />
+                <path
+                  d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                />
               </svg>
             </button>
           </div>
@@ -270,7 +299,11 @@
             <template v-if="authorName">
               <span class="text-muted-foreground"> · </span>
               <span
-                :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'"
+                :class="
+                  isFormerMember
+                    ? 'text-muted-foreground/40'
+                    : 'text-muted-foreground'
+                "
                 >{{ authorName }}</span
               >
             </template>
@@ -280,9 +313,14 @@
               v-for="child in childAges"
               :key="child.name"
               class="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[11px] font-medium leading-none"
-              style="background: hsl(var(--accent) / 0.13); color: hsl(var(--accent))"
+              style="
+                background: hsl(var(--accent) / 0.13);
+                color: hsl(var(--accent));
+              "
             >
-              <span style="font-size: 10px; flex-shrink: 0; line-height: 1">👶</span>
+              <span style="font-size: 10px; flex-shrink: 0; line-height: 1"
+                >👶</span
+              >
               <span>{{ child.name }}</span>
               <template v-if="child.age">
                 <span style="opacity: 0.45">·</span>
@@ -290,7 +328,10 @@
               </template>
             </span>
           </div>
-          <div v-if="memory.memory_members?.length" class="mt-2 flex flex-wrap items-center gap-2">
+          <div
+            v-if="memory.memory_members?.length"
+            class="mt-2 flex flex-wrap items-center gap-2"
+          >
             <span
               class="text-[10px] font-semibold uppercase tracking-[.08em]"
               style="color: hsl(var(--muted-foreground) / 0.55)"
@@ -311,7 +352,8 @@
                 />
                 <span v-else>{{
                   (
-                    (mm.user?.first_name?.[0] ?? '') + (mm.user?.last_name?.[0] ?? '')
+                    (mm.user?.first_name?.[0] ?? '') +
+                    (mm.user?.last_name?.[0] ?? '')
                   ).toUpperCase() || '?'
                 }}</span>
               </div>
@@ -335,7 +377,9 @@
               type="date"
               :max="new Date().toLocaleDateString('en-CA')"
               class="mb-3 w-full rounded-lg bg-secondary px-3 py-1.5 text-base text-foreground outline-none focus:ring-1 focus:ring-accent/40"
-              :style="{ colorScheme: $colorMode.value === 'dark' ? 'dark' : 'light' }"
+              :style="{
+                colorScheme: $colorMode.value === 'dark' ? 'dark' : 'light',
+              }"
             />
             <div class="mb-1 flex items-baseline justify-between">
               <label
@@ -344,7 +388,11 @@
               >
               <span
                 class="text-[10px]"
-                :class="editMilestone.length >= 40 ? 'text-destructive' : 'text-muted-foreground'"
+                :class="
+                  editMilestone.length >= 40
+                    ? 'text-destructive'
+                    : 'text-muted-foreground'
+                "
                 >{{ editMilestone.length }} / 40</span
               >
             </div>
@@ -362,7 +410,11 @@
               >
               <span
                 class="text-[10px]"
-                :class="editNote.length >= 500 ? 'text-destructive' : 'text-muted-foreground'"
+                :class="
+                  editNote.length >= 500
+                    ? 'text-destructive'
+                    : 'text-muted-foreground'
+                "
                 >{{ editNote.length }} / 500</span
               >
             </div>
@@ -375,7 +427,10 @@
               class="w-full resize-none rounded-lg bg-secondary px-3 py-2 text-base leading-relaxed text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-accent/40"
               style="max-height: 140px; overflow-y: auto"
             />
-            <div v-if="props.members?.length || props.children?.length" class="mt-3">
+            <div
+              v-if="props.members?.length || props.children?.length"
+              class="mt-3"
+            >
               <p
                 class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
               >
@@ -423,7 +478,10 @@
               </div>
             </div>
             <!-- Slides editor (multi-item only) -->
-            <div v-if="(memory.media_count ?? 1) > 1" class="mt-4 border-t border-border pt-4">
+            <div
+              v-if="(memory.media_count ?? 1) > 1"
+              class="mt-4 border-t border-border pt-4"
+            >
               <p
                 class="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground"
               >
@@ -459,7 +517,9 @@
                     >
                   </div>
                   <!-- Type label -->
-                  <span class="min-w-0 flex-1 text-[11px] text-muted-foreground">
+                  <span
+                    class="min-w-0 flex-1 text-[11px] text-muted-foreground"
+                  >
                     {{
                       slide.mediaType === 'text'
                         ? t('modal.slideTypeText')
@@ -511,7 +571,10 @@
                   </button>
                   <!-- Set cover (photo/video only) -->
                   <button
-                    v-if="slide.mediaType !== 'text' && slide.id !== memory.cover_media_id"
+                    v-if="
+                      slide.mediaType !== 'text' &&
+                      slide.id !== memory.cover_media_id
+                    "
                     type="button"
                     class="flex-shrink-0 px-1 text-[10px] text-accent hover:opacity-70"
                     @click="setCover(slide.id)"
@@ -562,8 +625,7 @@
                     type="button"
                     class="text-[12px] text-muted-foreground hover:text-foreground"
                     @click="
-                      showAddTextSlide = false
-                      newTextSlideContent = ''
+                      ((showAddTextSlide = false), (newTextSlideContent = ''))
                     "
                   >
                     {{ t('modal.cancel') }}
@@ -603,7 +665,11 @@
             <template v-if="authorName">
               <span class="text-muted-foreground"> · </span>
               <span
-                :class="isFormerMember ? 'text-muted-foreground/40' : 'text-muted-foreground'"
+                :class="
+                  isFormerMember
+                    ? 'text-muted-foreground/40'
+                    : 'text-muted-foreground'
+                "
                 >{{ authorName }}</span
               >
             </template>
@@ -613,9 +679,14 @@
               v-for="child in childAges"
               :key="child.name"
               class="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[11px] font-medium leading-none"
-              style="background: hsl(var(--accent) / 0.13); color: hsl(var(--accent))"
+              style="
+                background: hsl(var(--accent) / 0.13);
+                color: hsl(var(--accent));
+              "
             >
-              <span style="font-size: 10px; flex-shrink: 0; line-height: 1">👶</span>
+              <span style="font-size: 10px; flex-shrink: 0; line-height: 1"
+                >👶</span
+              >
               <span>{{ child.name }}</span>
               <template v-if="child.age">
                 <span style="opacity: 0.45">·</span>
@@ -628,7 +699,11 @@
 
         <!-- Reactions -->
         <div class="flex flex-wrap items-center gap-1.5">
-          <div v-for="(group, emoji) in reactionGroups" :key="emoji" class="group/rxn relative">
+          <div
+            v-for="(group, emoji) in reactionGroups"
+            :key="emoji"
+            class="group/rxn relative"
+          >
             <button
               class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] transition-all duration-150"
               :class="
@@ -675,10 +750,7 @@
                   :key="e"
                   class="flex h-7 w-7 items-center justify-center rounded-lg text-base transition-colors hover:bg-secondary"
                   :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
-                  @click.stop="
-                    toggleReaction(e)
-                    pickerOpen = false
-                  "
+                  @click.stop="(toggleReaction(e), (pickerOpen = false))"
                 >
                   {{ e }}
                 </button>
@@ -689,7 +761,10 @@
       </div>
 
       <!-- Comments tab -->
-      <div v-show="activeTab === 'comments'" class="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        v-show="activeTab === 'comments'"
+        class="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
         <div class="flex-shrink-0 border-b border-border px-3 py-3">
           <div class="flex items-center gap-2">
             <div
@@ -702,7 +777,9 @@
               />
               <span v-else>{{ props.selfInitials }}</span>
             </div>
-            <div class="flex flex-1 items-end gap-2 rounded-2xl bg-secondary px-3 py-2">
+            <div
+              class="flex flex-1 items-end gap-2 rounded-2xl bg-secondary px-3 py-2"
+            >
               <textarea
                 ref="textareaEl"
                 v-model="commentDraft"
@@ -723,9 +800,15 @@
             </div>
           </div>
         </div>
-        <div class="scroll-styled min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3">
+        <div
+          class="scroll-styled min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3"
+        >
           <div v-if="comments.length > 0" class="space-y-3">
-            <div v-for="c in visibleComments" :key="c.id" class="group/comment flex gap-2.5">
+            <div
+              v-for="c in visibleComments"
+              :key="c.id"
+              class="group/comment flex gap-2.5"
+            >
               <div
                 class="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[10px] font-bold text-foreground"
               >
@@ -739,11 +822,16 @@
               <div class="min-w-0 flex-1">
                 <template v-if="editingCommentId !== c.id">
                   <div class="relative">
-                    <div class="rounded-2xl rounded-tl-sm bg-secondary px-3 py-2">
-                      <span class="mr-1.5 text-[11px] font-semibold text-foreground">{{
-                        commentDisplayName(c.user)
+                    <div
+                      class="rounded-2xl rounded-tl-sm bg-secondary px-3 py-2"
+                    >
+                      <span
+                        class="mr-1.5 text-[11px] font-semibold text-foreground"
+                        >{{ commentDisplayName(c.user) }}</span
+                      >
+                      <span class="text-[13px] leading-snug text-foreground">{{
+                        c.body
                       }}</span>
-                      <span class="text-[13px] leading-snug text-foreground">{{ c.body }}</span>
                     </div>
                     <div
                       v-if="c.user_id === props.currentUserId"
@@ -762,8 +850,12 @@
                           stroke="currentColor"
                           stroke-width="2.5"
                         >
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          <path
+                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                          />
+                          <path
+                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                          />
                         </svg>
                       </button>
                       <button
@@ -780,7 +872,9 @@
                           stroke-width="2.5"
                         >
                           <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path
+                            d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                          />
                           <path d="M10 11v6M14 11v6" />
                           <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                         </svg>
@@ -795,7 +889,10 @@
                     >
                   </p>
                   <!-- Inline delete confirmation -->
-                  <div v-if="confirmDeleteId === c.id" class="ml-3 mt-1 flex items-center gap-2">
+                  <div
+                    v-if="confirmDeleteId === c.id"
+                    class="ml-3 mt-1 flex items-center gap-2"
+                  >
                     <span class="text-[11px] text-muted-foreground">{{
                       t('modal.confirmDelete')
                     }}</span>
@@ -815,9 +912,10 @@
                 </template>
                 <template v-else>
                   <div class="rounded-2xl rounded-tl-sm bg-secondary px-3 py-2">
-                    <span class="mb-1 mr-1.5 block text-[11px] font-semibold text-foreground">{{
-                      commentDisplayName(c.user)
-                    }}</span>
+                    <span
+                      class="mb-1 mr-1.5 block text-[11px] font-semibold text-foreground"
+                      >{{ commentDisplayName(c.user) }}</span
+                    >
                     <textarea
                       ref="commentEditEl"
                       v-model="commentEditDraft"
@@ -910,7 +1008,20 @@ const emit = defineEmits<{
   update: [Pick<Memory, 'id'> & Partial<Memory>]
 }>()
 
-const PRESET_EMOJIS = ['❤️', '😂', '😍', '🥹', '👏', '🔥', '😮', '🥰', '😭', '✨', '🎉', '👍']
+const PRESET_EMOJIS = [
+  '❤️',
+  '😂',
+  '😍',
+  '🥹',
+  '👏',
+  '🔥',
+  '😮',
+  '🥰',
+  '😭',
+  '✨',
+  '🎉',
+  '👍',
+]
 
 const pickerOpen = ref(false)
 const modalImgLoaded = ref(false)
@@ -942,7 +1053,9 @@ watch(
     }
     slidesLoading.value = true
     try {
-      const data = await $fetch<{ slides: Slide[] }>(`/api/memories/${id}/slides`)
+      const data = await $fetch<{ slides: Slide[] }>(
+        `/api/memories/${id}/slides`,
+      )
       slides.value = data.slides
     } finally {
       slidesLoading.value = false
@@ -953,7 +1066,9 @@ watch(
 
 function onCarouselScroll() {
   if (!carouselRef.value) return
-  const idx = Math.round(carouselRef.value.scrollLeft / carouselRef.value.clientWidth)
+  const idx = Math.round(
+    carouselRef.value.scrollLeft / carouselRef.value.clientWidth,
+  )
   currentSlideIdx.value = idx
 }
 
@@ -968,19 +1083,24 @@ const formattedDate = computed(() =>
 const childAges = computed(() =>
   (props.memory.memory_children ?? []).map((mc) => ({
     name: mc.childprofile.name,
-    age: computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date),
+    age: computeBabyAge(
+      mc.childprofile.date_of_birth,
+      props.memory.memory_date,
+    ),
   })),
 )
 
 const isFormerMember = computed(() => props.memory.owner_user_id === null)
 const authorName = computed(() => {
   if (props.memory.user?.first_name) return props.memory.user.first_name
-  if (isFormerMember.value && props.memory.former_owner_name) return props.memory.former_owner_name
+  if (isFormerMember.value && props.memory.former_owner_name)
+    return props.memory.former_owner_name
   return null
 })
 
 const isOwner = computed(
-  () => !!props.currentUserId && props.memory.owner_user_id === props.currentUserId,
+  () =>
+    !!props.currentUserId && props.memory.owner_user_id === props.currentUserId,
 )
 
 // ── Edit ───────────────────────────────────────────────────
@@ -1002,8 +1122,12 @@ const showAddTextSlide = ref(false)
 watch(editing, async (isEditing) => {
   if (isEditing && (props.memory.media_count ?? 1) > 1) {
     try {
-      const data = await $fetch<{ slides: Slide[] }>(`/api/memories/${props.memory.id}/slides`)
-      slidesEdit.value = data.slides.slice().sort((a, b) => a.displayOrder - b.displayOrder)
+      const data = await $fetch<{ slides: Slide[] }>(
+        `/api/memories/${props.memory.id}/slides`,
+      )
+      slidesEdit.value = data.slides
+        .slice()
+        .sort((a, b) => a.displayOrder - b.displayOrder)
     } catch (err) {
       console.error('[MemoryModal] failed to load slides for edit:', err)
     }
@@ -1018,10 +1142,13 @@ async function addTextSlide() {
   const content = newTextSlideContent.value.trim()
   if (!content) return
   try {
-    const { itemId } = await $fetch<{ itemId: string }>(`/api/memories/${props.memory.id}/items`, {
-      method: 'POST',
-      body: { type: 'text', textContent: content },
-    })
+    const { itemId } = await $fetch<{ itemId: string }>(
+      `/api/memories/${props.memory.id}/items`,
+      {
+        method: 'POST',
+        body: { type: 'text', textContent: content },
+      },
+    )
     slidesEdit.value.push({
       id: itemId,
       mediaType: 'text',
@@ -1030,7 +1157,10 @@ async function addTextSlide() {
     })
     showAddTextSlide.value = false
     newTextSlideContent.value = ''
-    emit('update', { id: props.memory.id, media_count: slidesEdit.value.length })
+    emit('update', {
+      id: props.memory.id,
+      media_count: slidesEdit.value.length,
+    })
   } catch (err) {
     console.error('[edit] add text slide failed:', err)
   }
@@ -1038,9 +1168,14 @@ async function addTextSlide() {
 
 async function removeSlide(itemId: string) {
   try {
-    await $fetch(`/api/memories/${props.memory.id}/items/${itemId}`, { method: 'DELETE' })
+    await $fetch(`/api/memories/${props.memory.id}/items/${itemId}`, {
+      method: 'DELETE',
+    })
     slidesEdit.value = slidesEdit.value.filter((s) => s.id !== itemId)
-    emit('update', { id: props.memory.id, media_count: slidesEdit.value.length })
+    emit('update', {
+      id: props.memory.id,
+      media_count: slidesEdit.value.length,
+    })
   } catch (err) {
     console.error('[edit] remove slide failed:', err)
   }
@@ -1078,8 +1213,12 @@ function startEditing() {
   editNote.value = props.memory.note ?? ''
   editMilestone.value = props.memory.milestone_label ?? ''
   editDate.value = props.memory.memory_date?.slice(0, 10) ?? ''
-  editChildIds.value = (props.memory.memory_children ?? []).map((mc) => mc.child_id)
-  editMemberIds.value = (props.memory.memory_members ?? []).map((mm) => mm.user_id)
+  editChildIds.value = (props.memory.memory_children ?? []).map(
+    (mc) => mc.child_id,
+  )
+  editMemberIds.value = (props.memory.memory_members ?? []).map(
+    (mm) => mm.user_id,
+  )
   editing.value = true
   nextTick(() => editTextareaEl.value?.focus())
 }
@@ -1101,7 +1240,11 @@ function toggleEditMember(userId: string) {
 }
 
 function memberInitials(member: CircleMember): string {
-  return ((member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')).toUpperCase() || '?'
+  return (
+    (
+      (member.firstName?.[0] ?? '') + (member.lastName?.[0] ?? '')
+    ).toUpperCase() || '?'
+  )
 }
 
 async function saveEdit() {
@@ -1140,7 +1283,11 @@ async function saveEdit() {
         return child
           ? {
               child_id: childId,
-              childprofile: { id: child.id, name: child.name, date_of_birth: child.date_of_birth },
+              childprofile: {
+                id: child.id,
+                name: child.name,
+                date_of_birth: child.date_of_birth,
+              },
             }
           : null
       })
@@ -1179,11 +1326,16 @@ async function saveEdit() {
         circle_id: props.memory.circle_id,
         milestone_type: classifyMilestone(updated.milestone_label ?? ''),
       })
-      const firstPhoto = props.memory.memorymedia.find((m) => m.media_type !== 'video')
+      const firstPhoto = props.memory.memorymedia.find(
+        (m) => m.media_type !== 'video',
+      )
       if (firstPhoto?.url) {
         const ages = updatedMemoryChildren
           .map((mc) => {
-            const age = computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date)
+            const age = computeBabyAge(
+              mc.childprofile.date_of_birth,
+              props.memory.memory_date,
+            )
             return age ? { name: mc.childprofile.name, age } : null
           })
           .filter(Boolean) as Array<{ name: string; age: string }>
@@ -1214,11 +1366,16 @@ const shareCardData = ref<ShareCardData | null>(null)
 
 function openShareCard() {
   if (!props.memory.milestone_label) return
-  const firstPhoto = props.memory.memorymedia.find((m) => m.media_type !== 'video')
+  const firstPhoto = props.memory.memorymedia.find(
+    (m) => m.media_type !== 'video',
+  )
   if (!firstPhoto?.url) return
   const ages = (props.memory.memory_children ?? [])
     .map((mc) => {
-      const age = computeBabyAge(mc.childprofile.date_of_birth, props.memory.memory_date)
+      const age = computeBabyAge(
+        mc.childprofile.date_of_birth,
+        props.memory.memory_date,
+      )
       return age ? { name: mc.childprofile.name, age } : null
     })
     .filter(Boolean) as Array<{ name: string; age: string }>
@@ -1241,7 +1398,8 @@ async function downloadMedia() {
   try {
     const res = await fetch(media.url)
     const blob = await res.blob()
-    const ext = media.media_type === 'video' ? 'mp4' : blob.type.split('/')[1] || 'jpg'
+    const ext =
+      media.media_type === 'video' ? 'mp4' : blob.type.split('/')[1] || 'jpg'
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `our-story-${props.memory.memory_date}.${ext}`
@@ -1286,7 +1444,10 @@ async function shareMedia() {
     if (!blob) return
     const filename = `our-story-${props.memory.memory_date}.jpg`
     const file = new File([blob], filename, { type: 'image/jpeg' })
-    if (typeof navigator !== 'undefined' && navigator.canShare?.({ files: [file] })) {
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.canShare?.({ files: [file] })
+    ) {
       await navigator.share({ files: [file] })
     } else {
       const a = document.createElement('a')
@@ -1314,10 +1475,15 @@ type Reaction = {
 const supabaseClient = useSupabaseClient()
 
 // Initialized from prop — :key on this component resets it per-memory
-const localReactions = ref<Reaction[]>([...(props.memory.memoryreaction ?? [])] as Reaction[])
+const localReactions = ref<Reaction[]>([
+  ...(props.memory.memoryreaction ?? []),
+] as Reaction[])
 
 const reactionGroups = computed(() => {
-  const groups: Record<string, { count: number; mine: boolean; names: string[] }> = {}
+  const groups: Record<
+    string,
+    { count: number; mine: boolean; names: string[] }
+  > = {}
   for (const r of localReactions.value) {
     if (!r.emoji) continue
     if (!groups[r.emoji]) groups[r.emoji] = { count: 0, mine: false, names: [] }
@@ -1339,14 +1505,24 @@ function reactionTooltip(names: string[]): string {
 
 async function toggleReaction(emoji: string) {
   const userId =
-    props.currentUserId ?? (await supabaseClient.auth.getSession()).data.session?.user?.id
+    props.currentUserId ??
+    (await supabaseClient.auth.getSession()).data.session?.user?.id
   if (!userId) return
-  const existing = localReactions.value.find((r) => r.emoji === emoji && r.user_id === userId)
-  if (existing) localReactions.value = localReactions.value.filter((r) => r !== existing)
+  const existing = localReactions.value.find(
+    (r) => r.emoji === emoji && r.user_id === userId,
+  )
+  if (existing)
+    localReactions.value = localReactions.value.filter((r) => r !== existing)
   else
     localReactions.value = [
       ...localReactions.value,
-      { id: 'optimistic', emoji, user_id: userId, guest_name: null, user: null },
+      {
+        id: 'optimistic',
+        emoji,
+        user_id: userId,
+        guest_name: null,
+        user: null,
+      },
     ]
 
   const memoryId = props.memory.id
@@ -1367,7 +1543,9 @@ async function toggleReaction(emoji: string) {
     }
   } catch (err) {
     console.error('[MemoryModal] reaction error:', err)
-    localReactions.value = [...(props.memory.memoryreaction ?? [])] as Reaction[]
+    localReactions.value = [
+      ...(props.memory.memoryreaction ?? []),
+    ] as Reaction[]
   }
 }
 
@@ -1378,7 +1556,11 @@ type Comment = {
   created_at: string
   updated_at: string | null
   user_id: string
-  user: { first_name: string | null; last_name: string | null; avatar_url: string | null } | null
+  user: {
+    first_name: string | null
+    last_name: string | null
+    avatar_url: string | null
+  } | null
 }
 const comments = ref<Comment[]>([])
 const commentDraft = ref('')
@@ -1386,9 +1568,13 @@ const allCommentsVisible = ref(false)
 const COMMENT_LIMIT = 5
 const sortedComments = computed(() => [...comments.value].reverse())
 const visibleComments = computed(() =>
-  allCommentsVisible.value ? sortedComments.value : sortedComments.value.slice(0, COMMENT_LIMIT),
+  allCommentsVisible.value
+    ? sortedComments.value
+    : sortedComments.value.slice(0, COMMENT_LIMIT),
 )
-const hiddenCommentCount = computed(() => Math.max(0, comments.value.length - COMMENT_LIMIT))
+const hiddenCommentCount = computed(() =>
+  Math.max(0, comments.value.length - COMMENT_LIMIT),
+)
 const submitting = ref(false)
 const textareaEl = ref<HTMLTextAreaElement>()
 
@@ -1439,7 +1625,11 @@ function commentDisplayName(user: Comment['user']): string {
 }
 
 function commentInitials(user: Comment['user']): string {
-  return ((user?.first_name?.[0] ?? '') + (user?.last_name?.[0] ?? '')).toUpperCase() || '?'
+  return (
+    (
+      (user?.first_name?.[0] ?? '') + (user?.last_name?.[0] ?? '')
+    ).toUpperCase() || '?'
+  )
 }
 
 // ── Comment editing & delete confirmation ──────────────────
@@ -1471,7 +1661,11 @@ async function saveCommentEdit(commentId: string) {
     })
     const idx = comments.value.findIndex((c) => c.id === commentId)
     if (idx !== -1)
-      comments.value[idx] = { ...comments.value[idx]!, body, updated_at: new Date().toISOString() }
+      comments.value[idx] = {
+        ...comments.value[idx]!,
+        body,
+        updated_at: new Date().toISOString(),
+      }
     editingCommentId.value = null
     commentEditDraft.value = ''
   } catch (err) {
@@ -1491,7 +1685,9 @@ function cancelDeleteComment() {
 
 async function deleteComment(commentId: string) {
   try {
-    await $fetch(`/api/memories/${props.memory.id}/comments/${commentId}`, { method: 'DELETE' })
+    await $fetch(`/api/memories/${props.memory.id}/comments/${commentId}`, {
+      method: 'DELETE',
+    })
     comments.value = comments.value.filter((c) => c.id !== commentId)
   } catch (err) {
     console.error('[MemoryModal] failed to delete comment:', err)
@@ -1509,7 +1705,10 @@ function timeAgo(iso: string): string {
   if (hrs < 24) return t('common.hoursAgo', { n: hrs })
   const days = Math.floor(hrs / 24)
   if (days < 7) return t('common.daysAgo', { n: days })
-  return new Date(iso).toLocaleDateString(locale.value, { month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(locale.value, {
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 // Load comments when the component mounts (triggered by :key change on navigation)

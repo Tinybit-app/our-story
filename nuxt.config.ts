@@ -76,7 +76,15 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
-      exclude: ['/invite/*', '/view', '/view/*', '/', '/pricing', '/privacy', '/terms'],
+      exclude: [
+        '/invite/*',
+        '/view',
+        '/view/*',
+        '/',
+        '/pricing',
+        '/privacy',
+        '/terms',
+      ],
     },
   },
 
@@ -95,7 +103,8 @@ export default defineNuxtConfig({
     '/api/**': {
       cors: false, // handled manually in security-headers middleware
       headers: {
-        'Access-Control-Allow-Origin': process.env.APP_URL ?? 'https://our-story.tinybit.app',
+        'Access-Control-Allow-Origin':
+          process.env.APP_URL ?? 'https://our-story.tinybit.app',
         'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       },
@@ -117,7 +126,8 @@ export default defineNuxtConfig({
       sentryDsn: process.env.SENTRY_DSN,
       vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
       posthogKey: process.env.NUXT_PUBLIC_POSTHOG_KEY,
-      posthogHost: process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com',
+      posthogHost:
+        process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com',
     },
   },
 })

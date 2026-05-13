@@ -21,12 +21,18 @@ describe('buildFirstMonthMemoryEmail — subject', () => {
   })
 
   it('zh-CN is in Chinese', () => {
-    const { subject } = buildFirstMonthMemoryEmail({ ...baseOpts, locale: 'zh-CN' })
+    const { subject } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
   })
 
   it('fr is not English', () => {
-    const { subject } = buildFirstMonthMemoryEmail({ ...baseOpts, locale: 'fr' })
+    const { subject } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      locale: 'fr',
+    })
     expect(subject.toLowerCase()).not.toMatch(/^a memory from/)
   })
 })
@@ -50,7 +56,9 @@ describe('buildFirstMonthMemoryEmail — body', () => {
 
   it('includes appUrl as primary CTA', () => {
     const { html } = buildFirstMonthMemoryEmail(baseOpts)
-    expect(html).toContain('https://our-story.tinybit.app/timeline?circle=c1&memory=m1')
+    expect(html).toContain(
+      'https://our-story.tinybit.app/timeline?circle=c1&memory=m1',
+    )
   })
 
   it('includes unsubscribe link', () => {
@@ -59,12 +67,18 @@ describe('buildFirstMonthMemoryEmail — body', () => {
   })
 
   it("handles null memoryNote without rendering 'null'", () => {
-    const { html } = buildFirstMonthMemoryEmail({ ...baseOpts, memoryNote: null })
+    const { html } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      memoryNote: null,
+    })
     expect(html).not.toContain('null')
   })
 
   it("handles null memoryThumbnailUrl without rendering 'null'", () => {
-    const { html } = buildFirstMonthMemoryEmail({ ...baseOpts, memoryThumbnailUrl: null })
+    const { html } = buildFirstMonthMemoryEmail({
+      ...baseOpts,
+      memoryThumbnailUrl: null,
+    })
     expect(html).not.toContain('null')
   })
 })

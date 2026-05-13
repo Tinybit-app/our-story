@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request' })
   const { circleId, email } = result.data
 
   // Verify sender is owner or admin
@@ -26,7 +27,10 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (!membership || !['owner', 'admin'].includes(membership.role)) {
-    throw createError({ statusCode: 403, message: 'Only owners and admins can invite' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only owners and admins can invite',
+    })
   }
 
   // Check max pending invites (10 per circle)
@@ -37,7 +41,10 @@ export default defineEventHandler(async (event) => {
     .eq('status', 'pending')
 
   if ((count ?? 0) >= 10) {
-    throw createError({ statusCode: 429, message: 'Max 10 pending invites per circle' })
+    throw createError({
+      statusCode: 429,
+      message: 'Max 10 pending invites per circle',
+    })
   }
 
   // Expire any existing pending invites for this email before issuing a fresh one.
@@ -71,7 +78,9 @@ export default defineEventHandler(async (event) => {
       .single(),
   ])
 
-  const senderName = [sender?.first_name, sender?.last_name].filter(Boolean).join(' ') || 'Someone'
+  const senderName =
+    [sender?.first_name, sender?.last_name].filter(Boolean).join(' ') ||
+    'Someone'
 
   const config = useRuntimeConfig()
 
@@ -89,7 +98,9 @@ export default defineEventHandler(async (event) => {
       }),
     })
   } else {
-    console.log(`[dev] invite link for ${email}: ${config.appUrl}/invite/${invite.token}`)
+    console.log(
+      `[dev] invite link for ${email}: ${config.appUrl}/invite/${invite.token}`,
+    )
   }
 
   return { ok: true }

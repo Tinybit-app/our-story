@@ -16,7 +16,8 @@ import webpush from 'https://esm.sh/web-push@3.6.7'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
+const VAPID_SUBJECT =
+  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
@@ -48,10 +49,15 @@ Deno.serve(async (req) => {
     .not('first_memory_at', 'is', null)
     .lt('last_memory_at', quietSince)
     .lt('quiet_nudge_count', 3)
-    .or(`quiet_nudge_last_sent_at.is.null,quiet_nudge_last_sent_at.lt.${lastSentBefore}`)
+    .or(
+      `quiet_nudge_last_sent_at.is.null,quiet_nudge_last_sent_at.lt.${lastSentBefore}`,
+    )
 
   if (circlesErr) {
-    console.error('[send-quiet-circle-nudges] circles query failed:', circlesErr.message)
+    console.error(
+      '[send-quiet-circle-nudges] circles query failed:',
+      circlesErr.message,
+    )
     return Response.json({ error: 'circles query failed' }, { status: 500 })
   }
 
@@ -63,7 +69,9 @@ Deno.serve(async (req) => {
     try {
       const { data: ownerRow } = await supabase
         .from('circlemember')
-        .select(`user_id, user!inner(id, email, first_name, locale, deletion_requested_at)`)
+        .select(
+          `user_id, user!inner(id, email, first_name, locale, deletion_requested_at)`,
+        )
         .eq('circle_id', c.id)
         .eq('role', 'owner')
         .maybeSingle()
@@ -93,7 +101,10 @@ Deno.serve(async (req) => {
       )
 
       const pushEnabled = prefs?.push_enabled !== false
-      const inQuiet = isInQuietHours(prefs?.quiet_hours_start, prefs?.quiet_hours_end)
+      const inQuiet = isInQuietHours(
+        prefs?.quiet_hours_start,
+        prefs?.quiet_hours_end,
+      )
 
       let delivered = false
 
@@ -103,7 +114,10 @@ Deno.serve(async (req) => {
           .select('id, endpoint, p256dh, auth')
           .eq('user_id', userId)
         if ((subs ?? []).length > 0 && VAPID_PUBLIC && VAPID_PRIVATE) {
-          const { title, body } = pushTextForCount(nudgeCount, owner.locale ?? 'en')
+          const { title, body } = pushTextForCount(
+            nudgeCount,
+            owner.locale ?? 'en',
+          )
           const payload = JSON.stringify({
             title,
             body,
@@ -114,7 +128,10 @@ Deno.serve(async (req) => {
           for (const s of subs as any[]) {
             try {
               await webpush.sendNotification(
-                { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                {
+                  endpoint: s.endpoint,
+                  keys: { p256dh: s.p256dh, auth: s.auth },
+                },
                 payload,
               )
             } catch (err: any) {
@@ -155,7 +172,10 @@ Deno.serve(async (req) => {
 
       sent++
     } catch (err) {
-      console.error(`[send-quiet-circle-nudges] failed for circle ${c.id}:`, err)
+      console.error(
+        `[send-quiet-circle-nudges] failed for circle ${c.id}:`,
+        err,
+      )
       errors++
     }
   }
@@ -163,7 +183,10 @@ Deno.serve(async (req) => {
   return Response.json({ ok: true, sent, skipped, errors })
 })
 
-function isInQuietHours(start: string | null | undefined, end: string | null | undefined): boolean {
+function isInQuietHours(
+  start: string | null | undefined,
+  end: string | null | undefined,
+): boolean {
   if (!start || !end) return false
   const now = new Date()
   const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
@@ -171,11 +194,22 @@ function isInQuietHours(start: string | null | undefined, end: string | null | u
   return hhmm >= start || hhmm < end
 }
 
-function pushTextForCount(count: 1 | 2 | 3, locale: string): { title: string; body: string } {
+function pushTextForCount(
+  count: 1 | 2 | 3,
+  locale: string,
+): { title: string; body: string } {
   if (locale === 'zh-CN') {
-    if (count === 1) return { title: '你的故事有点安静了 🕰', body: '添加一条记忆让它继续吧 →' }
-    if (count === 2) return { title: '圈子在等你', body: '已经有一阵子了 — 这周添加点什么？' }
-    return { title: '最后一次提醒', body: '我们不会再打扰你了 — 添加一条记忆？' }
+    if (count === 1)
+      return {
+        title: '你的故事有点安静了 🕰',
+        body: '添加一条记忆让它继续吧 →',
+      }
+    if (count === 2)
+      return { title: '圈子在等你', body: '已经有一阵子了 — 这周添加点什么？' }
+    return {
+      title: '最后一次提醒',
+      body: '我们不会再打扰你了 — 添加一条记忆？',
+    }
   }
   if (locale === 'fr') {
     if (count === 1)
@@ -188,16 +222,32 @@ function pushTextForCount(count: 1 | 2 | 3, locale: string): { title: string; bo
         title: 'Votre cercle attend',
         body: 'Cela fait un moment — ajoutez quelque chose cette semaine ?',
       }
-    return { title: 'Dernier rappel', body: 'On ne vous embêtera plus — ajoutez un souvenir ?' }
+    return {
+      title: 'Dernier rappel',
+      body: 'On ne vous embêtera plus — ajoutez un souvenir ?',
+    }
   }
   if (count === 1)
-    return { title: 'Your story has been quiet 🕰', body: 'Add a memory to keep it alive →' }
+    return {
+      title: 'Your story has been quiet 🕰',
+      body: 'Add a memory to keep it alive →',
+    }
   if (count === 2)
-    return { title: 'Your circle is waiting', body: "It's been a while — add something this week?" }
-  return { title: 'One last reminder', body: "We won't ask again — add a memory?" }
+    return {
+      title: 'Your circle is waiting',
+      body: "It's been a while — add something this week?",
+    }
+  return {
+    title: 'One last reminder',
+    body: "We won't ask again — add a memory?",
+  }
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] quiet-nudge to ${to}: ${subject}`)
@@ -206,7 +256,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         from: 'Our Story <hello@our-story.tinybit.app>',
         to,

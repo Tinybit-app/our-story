@@ -12,7 +12,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = querySchema.safeParse(getQuery(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request.' })
   const { circleId } = result.data
 
   // Verify user is a member of this circle
@@ -23,11 +24,17 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .maybeSingle()
 
-  if (!membership) throw createError({ statusCode: 403, message: 'Not a member of this circle.' })
+  if (!membership)
+    throw createError({
+      statusCode: 403,
+      message: 'Not a member of this circle.',
+    })
 
   const { data } = await supabase
     .from('notificationpreference')
-    .select('push_enabled, circle_muted, email_digest_frequency, milestone_nudges_enabled')
+    .select(
+      'push_enabled, circle_muted, email_digest_frequency, milestone_nudges_enabled',
+    )
     .eq('user_id', user.sub)
     .eq('circle_id', circleId)
     .maybeSingle()

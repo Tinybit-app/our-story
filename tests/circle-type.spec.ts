@@ -27,12 +27,20 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
 
-function mockCirclesList(page: any, role: string = 'owner', circle_type: string = 'parents') {
+function mockCirclesList(
+  page: any,
+  role: string = 'owner',
+  circle_type: string = 'parents',
+) {
   return page.route('**/api/circles**', (route: any) => {
     if (route.request().method() !== 'GET') return route.continue()
     route.fulfill({
@@ -54,7 +62,11 @@ function mockCirclesList(page: any, role: string = 'owner', circle_type: string 
   })
 }
 
-function mockCircleDetail(page: any, role: string = 'owner', circle_type: string = 'parents') {
+function mockCircleDetail(
+  page: any,
+  role: string = 'owner',
+  circle_type: string = 'parents',
+) {
   return page.route(`**/api/circles/${CIRCLE_ID}**`, (route: any) => {
     if (route.request().method() !== 'GET') return route.continue()
     route.fulfill({
@@ -78,7 +90,12 @@ function mockCircleMembers(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ members: [], invites: [], myRole: 'owner', memoryCount: 0 }),
+      body: JSON.stringify({
+        members: [],
+        invites: [],
+        myRole: 'owner',
+        memoryCount: 0,
+      }),
     })
   })
 }
@@ -103,7 +120,9 @@ async function goToSettings(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Circle type picker (4.10.5)', () => {
-  test('circle type picker is visible to owners in circle settings', async ({ page }) => {
+  test('circle type picker is visible to owners in circle settings', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockCircleDetail(page)
@@ -112,17 +131,27 @@ test.describe('Circle type picker (4.10.5)', () => {
 
     await goToSettings(page)
     // All 8 options should be rendered
-    await expect(page.getByRole('button', { name: /New parents/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /New parents/i }),
+    ).toBeVisible()
     await expect(page.getByRole('button', { name: /Couple/i })).toBeVisible()
     await expect(page.getByRole('button', { name: /Family/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Friend group/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Caregiving/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Travel group/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Friend group/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Caregiving/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Travel group/i }),
+    ).toBeVisible()
     await expect(page.getByRole('button', { name: /Just me/i })).toBeVisible()
     await expect(page.getByRole('button', { name: /Other/i })).toBeVisible()
   })
 
-  test('current circle type is pre-selected (highlighted)', async ({ page }) => {
+  test('current circle type is pre-selected (highlighted)', async ({
+    page,
+  }) => {
     await mockMembership(page)
     // circle_type = 'couple'
     await mockCirclesList(page, 'owner', 'couple')
@@ -136,7 +165,9 @@ test.describe('Circle type picker (4.10.5)', () => {
     await expect(coupleBtn).toHaveClass(/border-foreground/)
   })
 
-  test('Save button is disabled when selection matches the current type', async ({ page }) => {
+  test('Save button is disabled when selection matches the current type', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'owner', 'parents')
     await mockCircleDetail(page, 'owner', 'parents')
@@ -149,7 +180,9 @@ test.describe('Circle type picker (4.10.5)', () => {
     await expect(saveBtn).toBeDisabled()
   })
 
-  test('Save button enables when a different type is selected', async ({ page }) => {
+  test('Save button enables when a different type is selected', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'owner', 'parents')
     await mockCircleDetail(page, 'owner', 'parents')
@@ -164,7 +197,9 @@ test.describe('Circle type picker (4.10.5)', () => {
     await expect(saveBtn).toBeEnabled()
   })
 
-  test('saving calls PATCH /api/circles/:id with circleType', async ({ page }) => {
+  test('saving calls PATCH /api/circles/:id with circleType', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'owner', 'parents')
     await mockCircleDetail(page, 'owner', 'parents')
@@ -178,7 +213,10 @@ test.describe('Circle type picker (4.10.5)', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ id: CIRCLE_ID, circle_type: patchBody.circleType }),
+          body: JSON.stringify({
+            id: CIRCLE_ID,
+            circle_type: patchBody.circleType,
+          }),
         })
       } else {
         await route.continue()

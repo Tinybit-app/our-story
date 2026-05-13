@@ -38,7 +38,11 @@
           :key="loc.code"
           @click="pick(loc.code)"
           class="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-secondary"
-          :class="locale === loc.code ? 'font-medium text-foreground' : 'text-muted-foreground'"
+          :class="
+            locale === loc.code
+              ? 'font-medium text-foreground'
+              : 'text-muted-foreground'
+          "
         >
           <span>{{ loc.name }}</span>
           <!-- Checkmark for active locale -->
@@ -91,7 +95,9 @@ async function pick(code: string) {
     const cookie = useCookie('viewer_locale', { maxAge: 365 * 24 * 60 * 60 })
     cookie.value = code
   } else {
-    $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(() => {})
+    $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(
+      () => {},
+    )
   }
 }
 </script>

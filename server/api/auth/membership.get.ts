@@ -11,12 +11,18 @@ export default defineEventHandler(async (event) => {
       .from('circlemember')
       .select('circle_id, circle:circle_id(deleted_at)')
       .eq('user_id', user.sub),
-    supabase.from('user').select('first_name, deleted_at').eq('id', user.sub).maybeSingle(),
+    supabase
+      .from('user')
+      .select('first_name, deleted_at')
+      .eq('id', user.sub)
+      .maybeSingle(),
   ])
 
   // Exclude memberships in soft-deleted or missing circles — service role bypasses
   // RLS so we must filter deleted_at manually here.
-  const hasMembership = (memberships ?? []).some((m: any) => m.circle && !m.circle.deleted_at)
+  const hasMembership = (memberships ?? []).some(
+    (m: any) => m.circle && !m.circle.deleted_at,
+  )
 
   return {
     hasMembership,

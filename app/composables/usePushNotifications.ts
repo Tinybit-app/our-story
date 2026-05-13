@@ -10,7 +10,9 @@ export function usePushNotifications() {
   )
 
   const permissionState = ref<NotificationPermission>(
-    import.meta.client && 'Notification' in window ? Notification.permission : 'default',
+    import.meta.client && 'Notification' in window
+      ? Notification.permission
+      : 'default',
   )
 
   async function requestPermission(): Promise<boolean> {
@@ -26,7 +28,9 @@ export function usePushNotifications() {
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(config.public.vapidPublicKey as string),
+        applicationServerKey: urlBase64ToUint8Array(
+          config.public.vapidPublicKey as string,
+        ),
       })
 
       const raw = subscription.toJSON()

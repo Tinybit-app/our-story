@@ -42,18 +42,22 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
 
   const subject = (() => {
     if (locale === 'zh-CN') {
-      if (nudgeCount === 1) return `「${circleName}」已经 ${daysSinceLastMemory} 天没有新动态了`
+      if (nudgeCount === 1)
+        return `「${circleName}」已经 ${daysSinceLastMemory} 天没有新动态了`
       if (nudgeCount === 2) return `「${circleName}」已经有一段时间没人上传了`
       return `最后一次提醒 — 「${circleName}」`
     }
     if (locale === 'fr') {
       if (nudgeCount === 1)
         return `${circleName} est silencieux depuis ${daysSinceLastMemory} jours`
-      if (nudgeCount === 2) return `Cela fait un moment que personne n'a ajouté à ${circleName}`
+      if (nudgeCount === 2)
+        return `Cela fait un moment que personne n'a ajouté à ${circleName}`
       return `Dernier rappel — ${circleName}`
     }
-    if (nudgeCount === 1) return `${circleName} has been quiet for ${daysSinceLastMemory} days`
-    if (nudgeCount === 2) return `It's been a while since anyone added to ${circleName}`
+    if (nudgeCount === 1)
+      return `${circleName} has been quiet for ${daysSinceLastMemory} days`
+    if (nudgeCount === 2)
+      return `It's been a while since anyone added to ${circleName}`
     return `One last reminder — ${circleName}`
   })()
 
@@ -74,12 +78,15 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
 
   const tone = (() => {
     if (locale === 'zh-CN') {
-      if (nudgeCount === 1) return `哪怕只是一条短短的文字记录，也能让故事活下去。`
-      if (nudgeCount === 2) return `照片堆积在手机里。当你把它们放到这里，故事才真正存在。`
+      if (nudgeCount === 1)
+        return `哪怕只是一条短短的文字记录，也能让故事活下去。`
+      if (nudgeCount === 2)
+        return `照片堆积在手机里。当你把它们放到这里，故事才真正存在。`
       return `这是最后一次提醒 — 我们不想打扰你。无论你是继续记录还是暂停一下，这个圈子随时为你保留着。`
     }
     if (locale === 'fr') {
-      if (nudgeCount === 1) return `Même une petite note garde l'histoire vivante.`
+      if (nudgeCount === 1)
+        return `Même une petite note garde l'histoire vivante.`
       if (nudgeCount === 2)
         return `Les photos s'accumulent sur les téléphones. L'histoire vit ici quand vous les ajoutez.`
       return `C'est le dernier rappel — nous ne voulons pas vous embêter. Que vous continuiez à construire ou que vous fassiez une pause, ce cercle vous attendra.`
@@ -91,7 +98,11 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')

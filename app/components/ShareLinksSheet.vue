@@ -66,8 +66,12 @@
               stroke-width="1.5"
               viewBox="0 0 24 24"
             >
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              <path
+                d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+              />
+              <path
+                d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+              />
             </svg>
           </div>
           <p class="mb-1 text-sm font-semibold text-foreground">
@@ -86,10 +90,17 @@
 
         <!-- Link list -->
         <div v-else class="flex flex-col gap-3">
-          <div v-for="link in links" :key="link.id" class="rounded-[16px] border border-border p-4">
+          <div
+            v-for="link in links"
+            :key="link.id"
+            class="rounded-[16px] border border-border p-4"
+          >
             <!-- Label (editable) + mode badge -->
             <div class="mb-2 flex items-start justify-between gap-2">
-              <div v-if="editingLabelId === link.id" class="flex flex-1 items-center gap-1.5">
+              <div
+                v-if="editingLabelId === link.id"
+                class="flex flex-1 items-center gap-1.5"
+              >
                 <input
                   v-model="editingLabelValue"
                   type="text"
@@ -146,7 +157,10 @@
             </div>
 
             <!-- Count subline -->
-            <p v-if="linkSubline(link)" class="mb-2 text-xs text-muted-foreground">
+            <p
+              v-if="linkSubline(link)"
+              class="mb-2 text-xs text-muted-foreground"
+            >
               {{ linkSubline(link) }}
             </p>
 
@@ -167,7 +181,9 @@
                 />
                 <!-- Video -->
                 <template v-else-if="preview.type === 'video'">
-                  <div class="flex h-full w-full items-center justify-center bg-muted">
+                  <div
+                    class="flex h-full w-full items-center justify-center bg-muted"
+                  >
                     <svg
                       class="h-3.5 w-3.5 text-muted-foreground"
                       fill="currentColor"
@@ -197,7 +213,9 @@
                 </template>
               </div>
               <div
-                v-if="link.memoryCount && link.memoryCount > link.previews.length"
+                v-if="
+                  link.memoryCount && link.memoryCount > link.previews.length
+                "
                 class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary"
               >
                 <span class="text-[10px] font-semibold text-muted-foreground"
@@ -229,7 +247,10 @@
             </p>
 
             <!-- Inline revoke confirmation -->
-            <div v-if="revokingId === link.id" class="mt-2 rounded-md bg-muted p-3">
+            <div
+              v-if="revokingId === link.id"
+              class="mt-2 rounded-md bg-muted p-3"
+            >
               <p class="mb-1 text-sm font-medium">
                 {{ t('viewerLink.revokeConfirm') }}
               </p>
@@ -269,10 +290,14 @@
                   viewBox="0 0 24 24"
                 >
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  />
                 </svg>
                 <span>{{
-                  copiedId === link.id ? t('viewerLink.copied') : t('viewerLink.copyLink')
+                  copiedId === link.id
+                    ? t('viewerLink.copied')
+                    : t('viewerLink.copyLink')
                 }}</span>
               </button>
               <button
@@ -385,7 +410,9 @@ async function fetchLinks() {
   loading.value = true
   error.value = null
   try {
-    links.value = await $fetch<ViewerLink[]>(`/api/circles/${props.circleId}/viewer-links`)
+    links.value = await $fetch<ViewerLink[]>(
+      `/api/circles/${props.circleId}/viewer-links`,
+    )
   } catch {
     error.value = t('viewerLink.loadError')
   } finally {
@@ -438,7 +465,9 @@ function linkSubline(link: ViewerLink): string | null {
 }
 
 function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(dateStr))
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+    new Date(dateStr),
+  )
 }
 
 function formatExpiry(isoStr: string): string {

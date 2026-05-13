@@ -23,9 +23,13 @@ const schema = z
       .optional(),
   })
   .refine(
-    (d) => d.name !== undefined || d.circleType !== undefined || d.anniversaryDate !== undefined,
+    (d) =>
+      d.name !== undefined ||
+      d.circleType !== undefined ||
+      d.anniversaryDate !== undefined,
     {
-      message: 'At least one field (name, circleType, or anniversaryDate) must be provided.',
+      message:
+        'At least one field (name, circleType, or anniversaryDate) must be provided.',
     },
   )
 
@@ -36,10 +40,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const circleId = getRouterParam(event, 'id')
-  if (!circleId) throw createError({ statusCode: 400, message: 'Missing circle ID' })
+  if (!circleId)
+    throw createError({ statusCode: 400, message: 'Missing circle ID' })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const { name, circleType, anniversaryDate } = result.data
 
   // Requesting user must be the owner
@@ -57,7 +63,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const updates: { name?: string; circle_type?: string; anniversary_date?: string | null } = {}
+  const updates: {
+    name?: string
+    circle_type?: string
+    anniversary_date?: string | null
+  } = {}
   if (name !== undefined) updates.name = name
   if (circleType !== undefined) updates.circle_type = circleType
   if (anniversaryDate !== undefined) updates.anniversary_date = anniversaryDate
@@ -69,7 +79,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[circle-patch] update failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to update circle. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to update circle. Please try again.',
+    })
   }
 
   return { ok: true }

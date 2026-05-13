@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const circleId = getRouterParam(event, 'id')
-  if (!circleId) throw createError({ statusCode: 400, message: 'Missing circle ID' })
+  if (!circleId)
+    throw createError({ statusCode: 400, message: 'Missing circle ID' })
 
   // Verify membership
   const { data: membership } = await supabase

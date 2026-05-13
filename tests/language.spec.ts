@@ -29,7 +29,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -61,7 +65,12 @@ function mockTimeline(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories: [], nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories: [],
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
@@ -79,7 +88,9 @@ async function goToTimeline(page: any) {
   await mockTimeline(page)
   await mockProfile(page)
   await page.goto(`/timeline?circle=${CIRCLE_ID}`)
-  await page.waitForSelector('[data-testid="locale-picker"]', { timeout: 10000 })
+  await page.waitForSelector('[data-testid="locale-picker"]', {
+    timeout: 10000,
+  })
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -91,7 +102,9 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
     await page.context().clearCookies({ name: 'i18n_locale' })
   })
 
-  test('1. language picker is visible in the timeline header', async ({ page }) => {
+  test('1. language picker is visible in the timeline header', async ({
+    page,
+  }) => {
     await goToTimeline(page)
     await expect(page.getByTestId('locale-picker')).toBeVisible()
   })
@@ -101,7 +114,9 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
     await expect(page.getByTestId('locale-picker')).toContainText('EN')
   })
 
-  test('3. clicking the picker opens a dropdown with all three locales', async ({ page }) => {
+  test('3. clicking the picker opens a dropdown with all three locales', async ({
+    page,
+  }) => {
     await goToTimeline(page)
     await page.getByTestId('locale-picker').click()
     await expect(page.getByRole('button', { name: 'English' })).toBeVisible()
@@ -114,12 +129,16 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
     await page.getByTestId('locale-picker').click()
     await page.getByRole('button', { name: 'Français' }).click()
     // "Add memory" button becomes "Ajouter un souvenir"
-    await expect(page.getByRole('button', { name: /Ajouter un souvenir/i })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: /Ajouter un souvenir/i }),
+    ).toBeVisible({
       timeout: 5000,
     })
   })
 
-  test('5. after switching to French, picker label shows FR', async ({ page }) => {
+  test('5. after switching to French, picker label shows FR', async ({
+    page,
+  }) => {
     await goToTimeline(page)
     await page.getByTestId('locale-picker').click()
     await page.getByRole('button', { name: 'Français' }).click()
@@ -143,7 +162,9 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
 
     await page.getByTestId('locale-picker').click()
     await page.getByRole('button', { name: 'English' }).click()
-    await expect(page.getByRole('button', { name: /Add memory/i })).toBeVisible({ timeout: 5000 })
+    await expect(page.getByRole('button', { name: /Add memory/i })).toBeVisible(
+      { timeout: 5000 },
+    )
     await expect(page.getByTestId('locale-picker')).toContainText('EN')
   })
 
@@ -163,8 +184,10 @@ test.describe('Language switching (8.5.4 + 8.5.5)', () => {
 
     // Wait briefly for the fire-and-forget PATCH to fire
     await page.waitForTimeout(500)
-    expect(profileRequests.some((body) => body.includes('"fr"') || body.includes("'fr'"))).toBe(
-      true,
-    )
+    expect(
+      profileRequests.some(
+        (body) => body.includes('"fr"') || body.includes("'fr'"),
+      ),
+    ).toBe(true)
   })
 })

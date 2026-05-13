@@ -141,12 +141,16 @@ describe('Migration 031 — MilestoneNudge table', () => {
   })
 
   it('has nudge_phase CHECK with three values', () => {
-    expect(m).toContain("nudge_phase TEXT NOT NULL CHECK (nudge_phase IN ('T-3', 'T0', 'T+3'))")
+    expect(m).toContain(
+      "nudge_phase TEXT NOT NULL CHECK (nudge_phase IN ('T-3', 'T0', 'T+3'))",
+    )
   })
 
   it('has unique dedupe index on (user_id, scope_type, scope_id, milestone_key, nudge_phase)', () => {
     expect(m).toContain('CREATE UNIQUE INDEX idx_milestone_nudge_dedupe')
-    expect(m).toContain('(user_id, scope_type, scope_id, milestone_key, nudge_phase)')
+    expect(m).toContain(
+      '(user_id, scope_type, scope_id, milestone_key, nudge_phase)',
+    )
   })
 
   it('enables RLS', () => {
@@ -162,7 +166,9 @@ describe('Migration 032 — milestone_nudges_enabled preference', () => {
   const m = sql('032_milestone_nudges_enabled.sql')
 
   it('adds milestone_nudges_enabled with default true', () => {
-    expect(m).toContain('ADD COLUMN milestone_nudges_enabled BOOLEAN NOT NULL DEFAULT true')
+    expect(m).toContain(
+      'ADD COLUMN milestone_nudges_enabled BOOLEAN NOT NULL DEFAULT true',
+    )
   })
 })
 ```
@@ -347,7 +353,10 @@ export const YEAR_MILESTONES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18] as const
  * "Exactly N months" means: same day-of-month and (target_year * 12 + target_month) - (dob_year * 12 + dob_month) === N.
  * "Exactly N years" means: same MM-DD and year diff === N.
  */
-export function getMilestoneKeyForAge(dob: string, targetDate: string): string | null {
+export function getMilestoneKeyForAge(
+  dob: string,
+  targetDate: string,
+): string | null {
   const d = new Date(dob + 'T00:00:00Z')
   const t = new Date(targetDate + 'T00:00:00Z')
   if (Number.isNaN(d.getTime()) || Number.isNaN(t.getTime())) return null
@@ -391,7 +400,10 @@ export function getMilestoneKeyForAge(dob: string, targetDate: string): string |
  * Leap-year Feb 29 special case: if anchor is Feb 29 and target year is non-leap,
  * accept Feb 28 as the matching day.
  */
-export function getAnniversaryYear(anniversaryDate: string, targetDate: string): number | null {
+export function getAnniversaryYear(
+  anniversaryDate: string,
+  targetDate: string,
+): number | null {
   const a = new Date(anniversaryDate + 'T00:00:00Z')
   const t = new Date(targetDate + 'T00:00:00Z')
   if (Number.isNaN(a.getTime()) || Number.isNaN(t.getTime())) return null
@@ -410,7 +422,8 @@ export function getAnniversaryYear(anniversaryDate: string, targetDate: string):
   if (am === tm && ad === td) return yearDiff
 
   // Feb 29 special case: anchor is Feb 29 → match Feb 28 in non-leap years
-  const isLeapYear = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
+  const isLeapYear = (y: number) =>
+    (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
   if (am === 1 && ad === 29 && tm === 1 && td === 28 && !isLeapYear(ty)) {
     return yearDiff
   }
@@ -447,7 +460,10 @@ Create `unit/milestoneEmail.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest'
-import { buildChildMilestoneEmail, buildAnniversaryEmail } from '../server/utils/email'
+import {
+  buildChildMilestoneEmail,
+  buildAnniversaryEmail,
+} from '../server/utils/email'
 
 const baseChild = {
   recipientFirstName: 'Dao',
@@ -469,19 +485,30 @@ describe('buildChildMilestoneEmail — subjects', () => {
   })
 
   it('T+0 says today', () => {
-    const { subject } = buildChildMilestoneEmail({ ...baseChild, phase: 'T0', daysUntil: 0 })
+    const { subject } = buildChildMilestoneEmail({
+      ...baseChild,
+      phase: 'T0',
+      daysUntil: 0,
+    })
     expect(subject.toLowerCase()).toMatch(/today|🎉/)
     expect(subject).toContain('Mia')
   })
 
   it('T+3 asks if captured', () => {
-    const { subject } = buildChildMilestoneEmail({ ...baseChild, phase: 'T+3', daysUntil: -3 })
+    const { subject } = buildChildMilestoneEmail({
+      ...baseChild,
+      phase: 'T+3',
+      daysUntil: -3,
+    })
     expect(subject.toLowerCase()).toMatch(/capture|did you/)
     expect(subject).toContain('Mia')
   })
 
   it('renders zh-CN subject with Chinese characters', () => {
-    const { subject } = buildChildMilestoneEmail({ ...baseChild, locale: 'zh-CN' })
+    const { subject } = buildChildMilestoneEmail({
+      ...baseChild,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
   })
 
@@ -598,8 +625,10 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
       return `${childName}的 ${milestoneLabel} 你拍到了吗？`
     }
     if (locale === 'fr') {
-      if (phase === 'T-3') return `${childName} aura ${milestoneLabel} dans 3 jours`
-      if (phase === 'T0') return `${childName} a ${milestoneLabel} aujourd'hui 🎉`
+      if (phase === 'T-3')
+        return `${childName} aura ${milestoneLabel} dans 3 jours`
+      if (phase === 'T0')
+        return `${childName} a ${milestoneLabel} aujourd'hui 🎉`
       return `Avez-vous capturé les ${milestoneLabel} de ${childName} ?`
     }
     if (phase === 'T-3') return `${childName} turns ${milestoneLabel} in 3 days`
@@ -618,7 +647,8 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
     if (locale === 'zh-CN') {
       if (phase === 'T-3')
         return `${childName} 还有 3 天就 ${milestoneLabel} 了 — 准备好记录这一刻了吗？`
-      if (phase === 'T0') return `今天是 ${childName} ${milestoneLabel} 的日子！添加一条记忆吧。`
+      if (phase === 'T0')
+        return `今天是 ${childName} ${milestoneLabel} 的日子！添加一条记忆吧。`
       return `${childName} 的 ${milestoneLabel} 已经过去了 — 在这一刻消逝前添加一条记忆吧。`
     }
     if (locale === 'fr') {
@@ -636,7 +666,11 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')
@@ -699,7 +733,8 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
         if (phase === 'T0') return `Joyeux ${years} ans ensemble 🥂`
         return `Avez-vous célébré votre anniversaire ?`
       }
-      if (phase === 'T-3') return `L'anniversaire de votre voyage est dans 3 jours`
+      if (phase === 'T-3')
+        return `L'anniversaire de votre voyage est dans 3 jours`
       if (phase === 'T0') return `${years} ans depuis votre voyage 🌍`
       return `Avez-vous célébré l'anniversaire du voyage ?`
     }
@@ -723,11 +758,14 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
   const intro = (() => {
     if (locale === 'zh-CN') {
       if (isCouple) {
-        if (phase === 'T-3') return `你们的 ${years} 周年还有 3 天 — 准备好捕捉这一刻吗？`
-        if (phase === 'T0') return `今天是你们 ${years} 周年纪念日 🥂 添加一条记忆吧。`
+        if (phase === 'T-3')
+          return `你们的 ${years} 周年还有 3 天 — 准备好捕捉这一刻吗？`
+        if (phase === 'T0')
+          return `今天是你们 ${years} 周年纪念日 🥂 添加一条记忆吧。`
         return `你们的 ${years} 周年纪念日刚过 — 添加一条记忆吧。`
       }
-      if (phase === 'T-3') return `这次旅行的 ${years} 周年还有 3 天 — 准备好回顾了吗？`
+      if (phase === 'T-3')
+        return `这次旅行的 ${years} 周年还有 3 天 — 准备好回顾了吗？`
       if (phase === 'T0') return `这次旅行已经 ${years} 年了 — 添加一条回忆吧。`
       return `旅行 ${years} 周年刚过 — 添加一条回忆吧。`
     }
@@ -735,17 +773,21 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
       if (isCouple) {
         if (phase === 'T-3')
           return `Vos ${years} ans approchent dans 3 jours — prêt à capturer le moment ?`
-        if (phase === 'T0') return `Aujourd'hui c'est vos ${years} ans 🥂 Ajoutez un souvenir.`
+        if (phase === 'T0')
+          return `Aujourd'hui c'est vos ${years} ans 🥂 Ajoutez un souvenir.`
         return `Votre anniversaire de ${years} ans vient de passer — ajoutez un souvenir.`
       }
-      if (phase === 'T-3') return `L'anniversaire de votre voyage de ${years} ans est dans 3 jours.`
-      if (phase === 'T0') return `${years} ans depuis votre voyage — ajoutez un souvenir.`
+      if (phase === 'T-3')
+        return `L'anniversaire de votre voyage de ${years} ans est dans 3 jours.`
+      if (phase === 'T0')
+        return `${years} ans depuis votre voyage — ajoutez un souvenir.`
       return `L'anniversaire du voyage de ${years} ans vient de passer — ajoutez un souvenir.`
     }
     if (isCouple) {
       if (phase === 'T-3')
         return `Your ${years}-year anniversary is in 3 days — ready to capture the moment?`
-      if (phase === 'T0') return `Today is your ${years}-year anniversary 🥂 Add a memory.`
+      if (phase === 'T0')
+        return `Today is your ${years}-year anniversary 🥂 Add a memory.`
       return `Your ${years}-year anniversary just passed — add a memory before the moment fades.`
     }
     if (phase === 'T-3')
@@ -755,7 +797,11 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')
@@ -813,7 +859,10 @@ Create `supabase/functions/send-milestone-nudges/index.ts`:
 ```ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getMilestoneKeyForAge, getAnniversaryYear } from './milestoneCron.ts'
-import { buildChildMilestoneEmail, buildAnniversaryEmail } from './milestoneEmail.ts'
+import {
+  buildChildMilestoneEmail,
+  buildAnniversaryEmail,
+} from './milestoneEmail.ts'
 import webpush from 'https://esm.sh/web-push@3.6.7'
 
 // Triggered daily by pg_cron at 9am UTC.
@@ -830,7 +879,8 @@ import webpush from 'https://esm.sh/web-push@3.6.7'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
+const VAPID_SUBJECT =
+  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
@@ -864,8 +914,12 @@ Deno.serve(async (req) => {
 
   const today = new Date()
   const todayISO = today.toISOString().slice(0, 10)
-  const plus3 = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-  const minus3 = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const plus3 = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10)
+  const minus3 = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10)
 
   const phaseTargets: Array<['T-3' | 'T0' | 'T+3', string]> = [
     ['T-3', plus3],
@@ -913,7 +967,9 @@ Deno.serve(async (req) => {
         scope_type: isCouple ? 'couple' : 'trip',
         scope_id: c.id,
         circle_id: c.id,
-        milestone_key: isCouple ? `anniversary_${year}` : `trip_anniversary_${year}`,
+        milestone_key: isCouple
+          ? `anniversary_${year}`
+          : `trip_anniversary_${year}`,
         phase,
         display_name: c.name,
         years_or_label: String(year),
@@ -948,7 +1004,9 @@ Deno.serve(async (req) => {
       // Recipients: owner + admins of the circle
       const { data: members } = await supabase
         .from('circlemember')
-        .select(`user_id, role, user!inner(id, email, first_name, locale, deletion_requested_at)`)
+        .select(
+          `user_id, role, user!inner(id, email, first_name, locale, deletion_requested_at)`,
+        )
         .eq('circle_id', cand.circle_id)
         .in('role', ['owner', 'admin'])
       const recipients = (members ?? []).filter(
@@ -999,7 +1057,10 @@ Deno.serve(async (req) => {
         }
 
         const pushEnabled = prefs?.push_enabled !== false
-        const inQuiet = isInQuietHours(prefs?.quiet_hours_start, prefs?.quiet_hours_end)
+        const inQuiet = isInQuietHours(
+          prefs?.quiet_hours_start,
+          prefs?.quiet_hours_end,
+        )
 
         // Try push first
         if (pushEnabled && !inQuiet) {
@@ -1018,12 +1079,18 @@ Deno.serve(async (req) => {
             for (const s of subs as any[]) {
               try {
                 await webpush.sendNotification(
-                  { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                  {
+                    endpoint: s.endpoint,
+                    keys: { p256dh: s.p256dh, auth: s.auth },
+                  },
                   payload,
                 )
               } catch (err: any) {
                 if (err?.statusCode === 410 || err?.statusCode === 404) {
-                  await supabase.from('pushsubscription').delete().eq('id', s.id)
+                  await supabase
+                    .from('pushsubscription')
+                    .delete()
+                    .eq('id', s.id)
                 }
               }
             }
@@ -1099,7 +1166,10 @@ function addDaysISO(iso: string, days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-function isInQuietHours(start: string | null | undefined, end: string | null | undefined): boolean {
+function isInQuietHours(
+  start: string | null | undefined,
+  end: string | null | undefined,
+): boolean {
   if (!start || !end) return false
   const now = new Date()
   const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
@@ -1125,8 +1195,10 @@ function humanizeMilestoneKey(key: string): string {
 
 function pushTitle(c: MilestoneCandidate): string {
   if (c.scope_type === 'child') {
-    if (c.phase === 'T-3') return `${c.display_name} turns ${c.years_or_label} in 3 days 🎉`
-    if (c.phase === 'T0') return `${c.display_name} is ${c.years_or_label} today 🎉`
+    if (c.phase === 'T-3')
+      return `${c.display_name} turns ${c.years_or_label} in 3 days 🎉`
+    if (c.phase === 'T0')
+      return `${c.display_name} is ${c.years_or_label} today 🎉`
     return `Did you capture ${c.display_name}'s ${c.years_or_label}?`
   }
   if (c.scope_type === 'couple') {
@@ -1146,7 +1218,11 @@ function pushBody(c: MilestoneCandidate): string {
   return 'Add it before the moment fades →'
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] milestone email to ${to}: ${subject}`)
@@ -1155,7 +1231,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         from: 'Our Story <hello@our-story.tinybit.app>',
         to,
@@ -1198,7 +1277,10 @@ Find where the response is assembled. The current handler returns memories + cir
 Inside the handler (after auth + circleId resolution, before returning), add:
 
 ```ts
-import { getMilestoneKeyForAge, getAnniversaryYear } from '~/server/utils/milestoneCron'
+import {
+  getMilestoneKeyForAge,
+  getAnniversaryYear,
+} from '~/server/utils/milestoneCron'
 
 // ... after circleId is known and authenticated:
 
@@ -1209,7 +1291,8 @@ const { data: prefRow } = await supabase
   .eq('user_id', user.sub)
   .eq('circle_id', circleId)
   .maybeSingle()
-const milestoneNudgesEnabledForActiveCircle = prefRow?.milestone_nudges_enabled !== false
+const milestoneNudgesEnabledForActiveCircle =
+  prefRow?.milestone_nudges_enabled !== false
 
 // Compute upcomingMilestone (look across T-3, T+0, T+3 windows; prefer the one closest to today)
 let upcomingMilestone: any = null
@@ -1262,7 +1345,9 @@ if (milestoneNudgesEnabledForActiveCircle) {
         upcomingMilestone = {
           scopeType: isCouple ? 'couple' : 'trip',
           name: isCouple ? 'your anniversary' : 'your trip anniversary',
-          milestoneKey: isCouple ? `anniversary_${year}` : `trip_anniversary_${year}`,
+          milestoneKey: isCouple
+            ? `anniversary_${year}`
+            : `trip_anniversary_${year}`,
           phase,
           daysUntil: days,
           milestoneLabelSuggestion: `${year} years`,
@@ -1414,7 +1499,11 @@ Create `app/components/MilestoneBanner.vue`:
           class="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           @click="onAdd"
         >
-          {{ milestone.phase === 'T+3' ? t('milestone.addNow') : t('milestone.addMemory') }}
+          {{
+            milestone.phase === 'T+3'
+              ? t('milestone.addNow')
+              : t('milestone.addMemory')
+          }}
         </button>
         <button
           v-if="milestone.phase === 'T+3'"
@@ -1429,7 +1518,13 @@ Create `app/components/MilestoneBanner.vue`:
       class="flex-shrink-0 p-1 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
       @click="onDismiss"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
         <path d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
@@ -1459,7 +1554,9 @@ const { t } = useI18n()
 const dismissed = ref(false)
 
 const dismissKey = computed(() =>
-  props.milestone ? `milestone-banner-dismissed-${props.milestone.milestoneKey}` : null,
+  props.milestone
+    ? `milestone-banner-dismissed-${props.milestone.milestoneKey}`
+    : null,
 )
 
 watch(
@@ -1470,13 +1567,18 @@ watch(
       return
     }
     dismissed.value =
-      import.meta.client && localStorage.getItem(`milestone-banner-dismissed-${key}`) === 'true'
+      import.meta.client &&
+      localStorage.getItem(`milestone-banner-dismissed-${key}`) === 'true'
   },
   { immediate: true },
 )
 
 const shouldShow = computed(
-  () => import.meta.client && props.enabled && props.milestone !== null && !dismissed.value,
+  () =>
+    import.meta.client &&
+    props.enabled &&
+    props.milestone !== null &&
+    !dismissed.value,
 )
 
 const headline = computed(() => {
@@ -1484,7 +1586,11 @@ const headline = computed(() => {
   const m = props.milestone
   const key = `milestone.${m.scopeType}${m.phase}`
   if (m.scopeType === 'child') {
-    return t(key, { name: m.name, label: m.milestoneLabelSuggestion, days: Math.abs(m.daysUntil) })
+    return t(key, {
+      name: m.name,
+      label: m.milestoneLabelSuggestion,
+      days: Math.abs(m.daysUntil),
+    })
   }
   // couple / trip
   return t(key, {

@@ -23,7 +23,12 @@ test.use({ storageState: 'tests/.auth/user.json' })
 const CIRCLE_ID = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa'
 const MEMORY_DATE = '2024-04-15T00:00:00.000Z'
 
-const MEMBER = { userId: 'user-2', firstName: 'Sarah', lastName: 'Lee', avatarUrl: null }
+const MEMBER = {
+  userId: 'user-2',
+  firstName: 'Sarah',
+  lastName: 'Lee',
+  avatarUrl: null,
+}
 
 function makeMemory(
   id: string,
@@ -65,7 +70,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -118,10 +127,16 @@ function mockTimeline(
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Member tagging (4.10.6)', () => {
-  test('avatar bubble appears on polaroid card when a member is tagged', async ({ page }) => {
+  test('avatar bubble appears on polaroid card when a member is tagged', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makeMemory('mem-1', { memoryMembers: [MEMBER] })], [MEMBER])
+    await mockTimeline(
+      page,
+      [makeMemory('mem-1', { memoryMembers: [MEMBER] })],
+      [MEMBER],
+    )
 
     await page.goto('/timeline')
     // The avatar bubble for Sarah should be rendered (via title or initials)
@@ -135,20 +150,26 @@ test.describe('Member tagging (4.10.6)', () => {
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 10_000,
     })
     // "SL" initials should not be present
     await expect(page.getByText('SL')).not.toBeVisible()
   })
 
-  test('upload form shows member chips when the circle has members', async ({ page }) => {
+  test('upload form shows member chips when the circle has members', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 10_000,
     })
 
@@ -164,7 +185,9 @@ test.describe('Member tagging (4.10.6)', () => {
     await expect(page.getByText('Sarah')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('tagging a member calls POST /api/memories/:id/members', async ({ page }) => {
+  test('tagging a member calls POST /api/memories/:id/members', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
@@ -181,21 +204,26 @@ test.describe('Member tagging (4.10.6)', () => {
 
     // Capture the members tag request
     let membersBody: any = null
-    await page.route(`**/api/memories/${FAKE_MEMORY_ID}/members`, async (route) => {
-      if (route.request().method() === 'POST') {
-        membersBody = JSON.parse(route.request().postData() ?? '{}')
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ ok: true }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    await page.route(
+      `**/api/memories/${FAKE_MEMORY_ID}/members`,
+      async (route) => {
+        if (route.request().method() === 'POST') {
+          membersBody = JSON.parse(route.request().postData() ?? '{}')
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ ok: true }),
+          })
+        } else {
+          await route.continue()
+        }
+      },
+    )
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 10_000,
     })
 
@@ -218,10 +246,16 @@ test.describe('Member tagging (4.10.6)', () => {
     expect(membersBody).toMatchObject({ userIds: [MEMBER.userId] })
   })
 
-  test('"with" label appears before avatar bubbles when a member is tagged', async ({ page }) => {
+  test('"with" label appears before avatar bubbles when a member is tagged', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
-    await mockTimeline(page, [makeMemory('mem-1', { memoryMembers: [MEMBER] })], [MEMBER])
+    await mockTimeline(
+      page,
+      [makeMemory('mem-1', { memoryMembers: [MEMBER] })],
+      [MEMBER],
+    )
 
     await page.goto('/timeline')
     // The "with" label is rendered immediately before the avatar row
@@ -230,14 +264,18 @@ test.describe('Member tagging (4.10.6)', () => {
     await expect(page.getByText('SL')).toBeVisible()
   })
 
-  test('"with" label is absent when no members are tagged', async ({ page }) => {
+  test('"with" label is absent when no members are tagged', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     // Memory has no tagged members
     await mockTimeline(page, [makeMemory('mem-1')], [MEMBER])
 
     await page.goto('/timeline')
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 10_000,
     })
     // No member avatars or "with" label

@@ -23,11 +23,16 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid profile data.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid profile data.' })
   const { firstName, lastName, locale } = result.data
 
   // Build update payload — only include fields that were provided
-  const patch: Record<string, unknown> = {}
+  const patch: {
+    first_name?: string
+    last_name?: string | null
+    locale?: 'en' | 'zh-CN' | 'fr'
+  } = {}
   if (firstName !== undefined) patch.first_name = firstName
   if (lastName !== undefined) patch.last_name = lastName ?? null
   if (locale !== undefined) patch.locale = locale

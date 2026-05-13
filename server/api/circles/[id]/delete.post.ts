@@ -13,10 +13,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const circleId = getRouterParam(event, 'id')
-  if (!circleId) throw createError({ statusCode: 400, message: 'Missing circle ID' })
+  if (!circleId)
+    throw createError({ statusCode: 400, message: 'Missing circle ID' })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const { confirmName } = result.data
 
   // Requesting user must be the owner
@@ -28,7 +30,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership || membership.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the circle owner can delete the circle.' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the circle owner can delete the circle.',
+    })
   }
 
   // Load circle (must exist and not already be deleted)
@@ -38,9 +43,13 @@ export default defineEventHandler(async (event) => {
     .eq('id', circleId)
     .maybeSingle()
 
-  if (!circle) throw createError({ statusCode: 404, message: 'Circle not found.' })
+  if (!circle)
+    throw createError({ statusCode: 404, message: 'Circle not found.' })
   if (circle.deleted_at)
-    throw createError({ statusCode: 409, message: 'Circle is already scheduled for deletion.' })
+    throw createError({
+      statusCode: 409,
+      message: 'Circle is already scheduled for deletion.',
+    })
 
   // Validate the typed confirmation matches the circle name
   if (confirmName.trim().toLowerCase() !== circle.name.trim().toLowerCase()) {
@@ -60,14 +69,22 @@ export default defineEventHandler(async (event) => {
     .eq('id', circleId)
 
   if (softDeleteError) {
-    console.error('[circle-delete] soft delete failed:', softDeleteError.message)
-    throw createError({ statusCode: 500, message: 'Failed to delete circle. Please try again.' })
+    console.error(
+      '[circle-delete] soft delete failed:',
+      softDeleteError.message,
+    )
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to delete circle. Please try again.',
+    })
   }
 
   // Notify all members (best-effort)
   try {
     const config = useRuntimeConfig()
-    const purgeDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en', {
+    const purgeDate = new Date(
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
+    ).toLocaleDateString('en', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
@@ -85,7 +102,9 @@ export default defineEventHandler(async (event) => {
         .maybeSingle(),
     ])
 
-    const ownerName = [owner?.first_name, owner?.last_name].filter(Boolean).join(' ') || 'The owner'
+    const ownerName =
+      [owner?.first_name, owner?.last_name].filter(Boolean).join(' ') ||
+      'The owner'
 
     for (const m of members ?? []) {
       const member = (m as any).user

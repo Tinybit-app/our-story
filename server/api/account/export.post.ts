@@ -27,7 +27,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership || (membership.circle as any)?.deleted_at) {
-    throw createError({ statusCode: 403, message: 'You are not a member of this circle.' })
+    throw createError({
+      statusCode: 403,
+      message: 'You are not a member of this circle.',
+    })
   }
 
   // One active job per user per circle
@@ -41,7 +44,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (existing) {
-    throw createError({ statusCode: 409, message: 'An export is already in progress.' })
+    throw createError({
+      statusCode: 409,
+      message: 'An export is already in progress.',
+    })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,11 +57,15 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[account/export] insert failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to start export. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to start export. Please try again.',
+    })
   }
 
   return {
     ok: true,
-    message: "Export started — you'll receive a download link by email within a few minutes.",
+    message:
+      "Export started — you'll receive a download link by email within a few minutes.",
   }
 })

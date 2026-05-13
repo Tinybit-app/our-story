@@ -11,7 +11,10 @@ const bodySchema = z
     memoryIds: z.array(z.uuid()).optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.mode === 'selection' && (!data.memoryIds || data.memoryIds.length === 0)) {
+    if (
+      data.mode === 'selection' &&
+      (!data.memoryIds || data.memoryIds.length === 0)
+    ) {
       ctx.addIssue({
         code: 'custom',
         message: 'memoryIds required for selection mode',
@@ -26,10 +29,12 @@ export default defineEventHandler(async (event) => {
 
   const circleId = getRouterParam(event, 'id')!
   const secret = useRuntimeConfig(event).jwtSecret as string
-  if (!secret) throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
+  if (!secret)
+    throw createError({ statusCode: 500, message: 'Server misconfiguration.' })
 
   const parsed = bodySchema.safeParse(await readBody(event))
-  if (!parsed.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!parsed.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
 
   const { mode, label, memoryIds } = parsed.data
 
@@ -67,10 +72,19 @@ export default defineEventHandler(async (event) => {
 
   if (error || !link) {
     console.error('[viewer-links.post] insert failed:', error?.message)
-    throw createError({ statusCode: 500, message: 'Failed to create viewer link.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to create viewer link.',
+    })
   }
 
-  const token = signViewerToken(circleId, secret, THIRTY_DAYS_S, link.id, link.nonce)
+  const token = signViewerToken(
+    circleId,
+    secret,
+    THIRTY_DAYS_S,
+    link.id,
+    link.nonce,
+  )
   const memoryCount = mode === 'selection' ? (memoryIds?.length ?? 0) : null
 
   return {

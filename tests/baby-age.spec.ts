@@ -59,7 +59,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -137,10 +141,14 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await circlesReady
     // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks", labeled with the child's name
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('3 months, 2 weeks')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('3 months, 2 weeks')).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
-  test('age stamp is not shown when no children are tagged on the memory', async ({ page }) => {
+  test('age stamp is not shown when no children are tagged on the memory', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     // Memory has no tagged children even though the circle has a child profile
@@ -150,10 +158,14 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await page.goto('/timeline')
     await circlesReady
     // No age stamp should be present (memory_children is empty)
-    await expect(page.getByText(/months|weeks|days old|year/i)).not.toBeVisible()
+    await expect(
+      page.getByText(/months|weeks|days old|year/i),
+    ).not.toBeVisible()
   })
 
-  test('circle settings shows children manager for owners', async ({ page }) => {
+  test('circle settings shows children manager for owners', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockChildrenApi(page, [])
@@ -161,16 +173,25 @@ test.describe('Baby age stamp (4.10.1)', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ members: [], invites: [], myRole: 'owner', memoryCount: 0 }),
+        body: JSON.stringify({
+          members: [],
+          invites: [],
+          myRole: 'owner',
+          memoryCount: 0,
+        }),
       }),
     )
 
     await page.goto('/circle-settings')
-    await expect(page.getByPlaceholder('Name', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByPlaceholder('Name', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page.getByRole('button', { name: /add child/i })).toBeVisible()
   })
 
-  test('adding a child calls POST /api/circles/:id/children', async ({ page }) => {
+  test('adding a child calls POST /api/circles/:id/children', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockChildrenApi(page, [])
@@ -178,7 +199,12 @@ test.describe('Baby age stamp (4.10.1)', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ members: [], invites: [], myRole: 'owner', memoryCount: 0 }),
+        body: JSON.stringify({
+          members: [],
+          invites: [],
+          myRole: 'owner',
+          memoryCount: 0,
+        }),
       }),
     )
 
@@ -190,7 +216,11 @@ test.describe('Baby age stamp (4.10.1)', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            child: { id: 'child-new', name: 'Emma', date_of_birth: '2024-01-01' },
+            child: {
+              id: 'child-new',
+              name: 'Emma',
+              date_of_birth: '2024-01-01',
+            },
           }),
         })
       } else {
@@ -208,7 +238,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
     expect(postBody).toMatchObject({ name: 'Emma', dateOfBirth: '2024-01-01' })
   })
 
-  test('upload form shows child picker when the circle has children', async ({ page }) => {
+  test('upload form shows child picker when the circle has children', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     // Pass CHILD in circleChildren — the timeline API returns this alongside memories
@@ -247,7 +279,9 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await expect(agePill).toBeVisible()
   })
 
-  test('modal caption tab shows child age pill when memory is opened', async ({ page }) => {
+  test('modal caption tab shows child age pill when memory is opened', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])

@@ -2,10 +2,16 @@
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
       <!-- Wordmark -->
-      <p class="mb-4 text-xs font-bold uppercase tracking-widest text-foreground">Our Story</p>
+      <p
+        class="mb-4 text-xs font-bold uppercase tracking-widest text-foreground"
+      >
+        Our Story
+      </p>
 
       <!-- Headline -->
-      <h1 class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground">
+      <h1
+        class="mb-2 font-display text-[1.625rem] font-bold leading-tight text-foreground"
+      >
         {{ t('login.tagline') }}
       </h1>
       <p class="mb-8 text-sm text-muted-foreground">
@@ -31,7 +37,10 @@
       </form>
 
       <!-- Error message -->
-      <p v-if="authError" class="mt-4 text-center text-sm font-medium text-destructive">
+      <p
+        v-if="authError"
+        class="mt-4 text-center text-sm font-medium text-destructive"
+      >
         {{ authError }}
       </p>
 
@@ -40,17 +49,16 @@
         v-if="sent"
         class="mt-6 rounded-[12px] border border-border bg-card px-5 py-4 text-center"
       >
-        <p class="mb-1 text-sm font-semibold text-foreground">{{ t('login.checkInbox') }}</p>
+        <p class="mb-1 text-sm font-semibold text-foreground">
+          {{ t('login.checkInbox') }}
+        </p>
         <p class="text-xs leading-relaxed text-muted-foreground">
           {{ t('login.sentLink', { email }) }}
         </p>
         <button
           type="button"
           class="mt-3 text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
-          @click="
-            sent = false
-            authError = null
-          "
+          @click="((sent = false), (authError = null))"
         >
           {{ t('login.tryDifferent') }}
         </button>

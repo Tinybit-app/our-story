@@ -5,7 +5,11 @@ import type { Memory } from '~/composables/useTimeline'
 
 vi.stubGlobal('useI18n', () => ({ locale: ref('en') }))
 
-function makeMemory(id: string, dateStr: string, overrides: Partial<Memory> = {}): Memory {
+function makeMemory(
+  id: string,
+  dateStr: string,
+  overrides: Partial<Memory> = {},
+): Memory {
   return {
     id,
     owner_user_id: 'user-1',
@@ -42,7 +46,10 @@ describe('useTimeline', () => {
   it('caps each month at 12 memories and sets hasMore = true when exceeded', () => {
     const memories = ref<Memory[]>(
       Array.from({ length: 15 }, (_, i) =>
-        makeMemory(`id-${i}`, `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`),
+        makeMemory(
+          `id-${i}`,
+          `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        ),
       ),
     )
     const { monthGroups } = useTimeline(memories)
@@ -54,7 +61,10 @@ describe('useTimeline', () => {
   it('sets hasMore = false when month has exactly 12 memories (all visible)', () => {
     const memories = ref<Memory[]>(
       Array.from({ length: 12 }, (_, i) =>
-        makeMemory(`id-${i}`, `2025-07-${String(i + 1).padStart(2, '0')}T10:00:00Z`),
+        makeMemory(
+          `id-${i}`,
+          `2025-07-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        ),
       ),
     )
     const { monthGroups } = useTimeline(memories)
@@ -76,7 +86,10 @@ describe('useTimeline', () => {
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value[0].memories).toHaveLength(1)
 
-    memories.value = [...memories.value, makeMemory('2', '2025-03-15T10:00:00Z')]
+    memories.value = [
+      ...memories.value,
+      makeMemory('2', '2025-03-15T10:00:00Z'),
+    ]
     expect(monthGroups.value[0].memories).toHaveLength(2)
   })
 

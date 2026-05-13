@@ -11,7 +11,10 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { createAnalytics, classifyMilestone } from '../app/composables/useAnalytics'
+import {
+  createAnalytics,
+  classifyMilestone,
+} from '../app/composables/useAnalytics'
 
 function makeMockPostHog() {
   return {
@@ -30,7 +33,9 @@ describe('createAnalytics', () => {
 
     it('identifyUser is a no-op', () => {
       const a = createAnalytics(null)
-      expect(() => a.identifyUser('user-123', { circle_count: 2 })).not.toThrow()
+      expect(() =>
+        a.identifyUser('user-123', { circle_count: 2 }),
+      ).not.toThrow()
     })
 
     it('resetUser is a no-op', () => {
@@ -91,7 +96,11 @@ describe('createAnalytics', () => {
     it('track passes through reaction_added event with emoji', () => {
       const ph = makeMockPostHog()
       const a = createAnalytics(ph as never)
-      a.track('reaction_added', { circle_id: 'c1', memory_id: 'm1', emoji: '❤️' })
+      a.track('reaction_added', {
+        circle_id: 'c1',
+        memory_id: 'm1',
+        emoji: '❤️',
+      })
       expect(ph.capture).toHaveBeenCalledWith('reaction_added', {
         circle_id: 'c1',
         memory_id: 'm1',

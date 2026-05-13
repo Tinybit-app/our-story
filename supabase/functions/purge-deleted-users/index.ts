@@ -29,8 +29,12 @@ Deno.serve(async (req) => {
   const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   // Day-27 warning: users whose deletion_requested_at is between 27–28 days ago
-  const warnCutoffEnd = new Date(Date.now() - 27 * 24 * 60 * 60 * 1000).toISOString()
-  const warnCutoffStart = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString()
+  const warnCutoffEnd = new Date(
+    Date.now() - 27 * 24 * 60 * 60 * 1000,
+  ).toISOString()
+  const warnCutoffStart = new Date(
+    Date.now() - 28 * 24 * 60 * 60 * 1000,
+  ).toISOString()
 
   const { data: warningUsers } = await supabase
     .from('user')
@@ -47,11 +51,14 @@ Deno.serve(async (req) => {
     const purgeDate = new Date(u.deletion_requested_at)
     purgeDate.setDate(purgeDate.getDate() + 30)
     const locale = u.locale ?? 'en'
-    const formatted = purgeDate.toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    const formatted = purgeDate.toLocaleDateString(
+      locale === 'zh-CN' ? 'zh-CN' : 'en',
+      {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      },
+    )
     const isCN = locale === 'zh-CN'
     const subject = isCN
       ? '你的账户将在 3 天后永久删除'
@@ -64,7 +71,10 @@ Deno.serve(async (req) => {
       try {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             from: 'Our Story <hello@our-story.tinybit.app>',
             to: u.email,
@@ -73,7 +83,10 @@ Deno.serve(async (req) => {
           }),
         })
       } catch (err) {
-        console.error(`[purge-deleted-users] warning email failed for ${u.email}:`, err)
+        console.error(
+          `[purge-deleted-users] warning email failed for ${u.email}:`,
+          err,
+        )
       }
     } else {
       console.log(`[dev] day-27 warning email to ${u.email}: ${subject}`)
@@ -88,7 +101,10 @@ Deno.serve(async (req) => {
 
   if (fetchError) {
     console.error('[purge-deleted-users] fetch failed:', fetchError.message)
-    return Response.json({ error: 'Failed to fetch expired users' }, { status: 500 })
+    return Response.json(
+      { error: 'Failed to fetch expired users' },
+      { status: 500 },
+    )
   }
 
   const purged: string[] = []
@@ -103,7 +119,9 @@ Deno.serve(async (req) => {
         .select('id')
         .eq('owner_user_id', user.id)
 
-      const ownedMemoryIds = (ownedMemories ?? []).map((m: { id: string }) => m.id)
+      const ownedMemoryIds = (ownedMemories ?? []).map(
+        (m: { id: string }) => m.id,
+      )
 
       if (ownedMemoryIds.length > 0) {
         const { data: media } = await supabase
@@ -138,7 +156,10 @@ Deno.serve(async (req) => {
     .lt('deleted_at', cutoff)
 
   if (circleFetchError) {
-    console.error('[purge-deleted-users] circle fetch failed:', circleFetchError.message)
+    console.error(
+      '[purge-deleted-users] circle fetch failed:',
+      circleFetchError.message,
+    )
   }
 
   const purgedCircles: string[] = []
@@ -178,9 +199,16 @@ Deno.serve(async (req) => {
 
       purgedCircles.push(circle.id)
     } catch (err) {
-      console.error(`[purge-deleted-users] circle purge failed for ${circle.id}:`, err)
+      console.error(
+        `[purge-deleted-users] circle purge failed for ${circle.id}:`,
+        err,
+      )
     }
   }
 
-  return Response.json({ ok: true, purged: purged.length, purgedCircles: purgedCircles.length })
+  return Response.json({
+    ok: true,
+    purged: purged.length,
+    purgedCircles: purgedCircles.length,
+  })
 })

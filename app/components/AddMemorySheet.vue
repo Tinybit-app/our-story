@@ -13,16 +13,23 @@
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="emit('close')" />
+        <div
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          @click="emit('close')"
+        />
 
         <!-- Sheet -->
         <div
           class="relative w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl sm:max-w-xs sm:rounded-[24px]"
         >
-          <div class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60" />
+          <div
+            class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60"
+          />
 
           <div class="px-4 pb-5 pt-4">
-            <p class="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+            <p
+              class="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground"
+            >
               {{ t('addMemory.title') }}
             </p>
 
@@ -76,8 +83,12 @@
                   stroke-width="2"
                   viewBox="0 0 24 24"
                 >
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  <path
+                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                  />
                 </svg>
               </div>
               <div class="min-w-0">

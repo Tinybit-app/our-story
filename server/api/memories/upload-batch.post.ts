@@ -3,7 +3,10 @@ import { z } from 'zod'
 
 const itemSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('draft'), draftMemoryId: z.uuid() }),
-  z.object({ type: z.literal('text'), textContent: z.string().min(1).max(2000) }),
+  z.object({
+    type: z.literal('text'),
+    textContent: z.string().min(1).max(2000),
+  }),
 ])
 
 const bodySchema = z.object({
@@ -23,9 +26,18 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
-  const { circleId, memoryDate, note, milestoneLabel, childIds, memberIds, coverIndex, items } =
-    result.data
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  const {
+    circleId,
+    memoryDate,
+    note,
+    milestoneLabel,
+    childIds,
+    memberIds,
+    coverIndex,
+    items,
+  } = result.data
 
   // Verify circle membership
   const { data: membership } = await supabase
@@ -35,11 +47,17 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .maybeSingle()
   if (!membership)
-    throw createError({ statusCode: 403, message: 'You are not a member of this circle.' })
+    throw createError({
+      statusCode: 403,
+      message: 'You are not a member of this circle.',
+    })
 
   // Verify all draft memories are owned by this user
   const draftMemoryIds = items
-    .filter((i): i is Extract<(typeof items)[number], { type: 'draft' }> => i.type === 'draft')
+    .filter(
+      (i): i is Extract<(typeof items)[number], { type: 'draft' }> =>
+        i.type === 'draft',
+    )
     .map((i) => i.draftMemoryId)
 
   if (draftMemoryIds.length > 0) {
@@ -51,7 +69,10 @@ export default defineEventHandler(async (event) => {
       .eq('circle_id', circleId)
       .eq('visibility', 'draft')
     if ((drafts?.length ?? 0) !== draftMemoryIds.length) {
-      throw createError({ statusCode: 403, message: 'Invalid draft media ownership.' })
+      throw createError({
+        statusCode: 403,
+        message: 'Invalid draft media ownership.',
+      })
     }
   }
 
@@ -101,7 +122,10 @@ export default defineEventHandler(async (event) => {
         .select('id')
         .single()
       if (insErr || !row) {
-        console.error('[upload-batch] text slide insert failed:', insErr?.message)
+        console.error(
+          '[upload-batch] text slide insert failed:',
+          insErr?.message,
+        )
         continue
       }
       insertedMediaIds.push(row.id)
@@ -110,7 +134,11 @@ export default defineEventHandler(async (event) => {
 
   // Resolve cover
   let coverMediaId: string | null = null
-  if (coverIndex !== null && coverIndex !== undefined && coverIndex < insertedMediaIds.length) {
+  if (
+    coverIndex !== null &&
+    coverIndex !== undefined &&
+    coverIndex < insertedMediaIds.length
+  ) {
     coverMediaId = insertedMediaIds[coverIndex] ?? null
   }
   if (!coverMediaId) {
@@ -124,7 +152,10 @@ export default defineEventHandler(async (event) => {
       .maybeSingle()
     coverMediaId = firstMedia?.id ?? null
   }
-  await supabase.from('memory').update({ cover_media_id: coverMediaId }).eq('id', memory.id)
+  await supabase
+    .from('memory')
+    .update({ cover_media_id: coverMediaId })
+    .eq('id', memory.id)
 
   // Tag children + members
   if (childIds?.length) {

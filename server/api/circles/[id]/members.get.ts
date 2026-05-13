@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const circleId = getRouterParam(event, 'id')
-  if (!circleId) throw createError({ statusCode: 400, message: 'Missing circle id' })
+  if (!circleId)
+    throw createError({ statusCode: 400, message: 'Missing circle id' })
 
   // Verify requesting user is a member and get their role
   const { data: myMembership } = await supabase
@@ -25,7 +26,9 @@ export default defineEventHandler(async (event) => {
   // Fetch all active members with user data
   const { data: members, error } = await supabase
     .from('circlemember')
-    .select('id, role, created_at, user:user_id(id, first_name, last_name, avatar_url)')
+    .select(
+      'id, role, created_at, user:user_id(id, first_name, last_name, avatar_url)',
+    )
     .eq('circle_id', circleId)
     .order('created_at')
 

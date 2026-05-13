@@ -4,7 +4,11 @@ import { Resend } from 'resend'
 // Core sender
 // ─────────────────────────────────────────────────────────────
 
-export async function sendEmail(opts: { to: string; subject: string; html: string }) {
+export async function sendEmail(opts: {
+  to: string
+  subject: string
+  html: string
+}) {
   const config = useRuntimeConfig()
   if (!config.resendApiKey) {
     console.log(`[dev] email to ${opts.to}: ${opts.subject}`)
@@ -401,7 +405,10 @@ function digestBody(
   `
 }
 
-export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string; html: string } {
+export function buildWeeklyDigestEmail(opts: DigestEmailOpts): {
+  subject: string
+  html: string
+} {
   const { circleName, childName, totalCount, locale } = opts
 
   const subject = (() => {
@@ -424,7 +431,10 @@ export function buildWeeklyDigestEmail(opts: DigestEmailOpts): { subject: string
   return { subject, html: layout(digestBody(opts, periodLabel)) }
 }
 
-export function buildMonthlyDigestEmail(opts: DigestEmailOpts): { subject: string; html: string } {
+export function buildMonthlyDigestEmail(opts: DigestEmailOpts): {
+  subject: string
+  html: string
+} {
   const { circleName, childName, totalCount, locale } = opts
 
   // Use the previous month name (the digest covers the trailing 30 days but is sent on the 1st)
@@ -466,7 +476,8 @@ export function buildOwnerPromotedEmail(opts: {
   appUrl: string
   locale: string
 }): { subject: string; html: string } {
-  const { newOwnerFirstName, previousOwnerName, circleName, appUrl, locale } = opts
+  const { newOwnerFirstName, previousOwnerName, circleName, appUrl, locale } =
+    opts
 
   if (locale === 'zh-CN') {
     return {
@@ -531,8 +542,10 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
       return `${childName}的 ${milestoneLabel} 你拍到了吗？`
     }
     if (locale === 'fr') {
-      if (phase === 'T-3') return `${childName} aura ${milestoneLabel} dans 3 jours`
-      if (phase === 'T0') return `${childName} a ${milestoneLabel} aujourd'hui 🎉`
+      if (phase === 'T-3')
+        return `${childName} aura ${milestoneLabel} dans 3 jours`
+      if (phase === 'T0')
+        return `${childName} a ${milestoneLabel} aujourd'hui 🎉`
       return `Avez-vous capturé les ${milestoneLabel} de ${childName} ?`
     }
     if (phase === 'T-3') return `${childName} turns ${milestoneLabel} in 3 days`
@@ -551,7 +564,8 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
     if (locale === 'zh-CN') {
       if (phase === 'T-3')
         return `${childName} 还有 3 天就 ${milestoneLabel} 了 — 准备好记录这一刻了吗？`
-      if (phase === 'T0') return `今天是 ${childName} ${milestoneLabel} 的日子！添加一条记忆吧。`
+      if (phase === 'T0')
+        return `今天是 ${childName} ${milestoneLabel} 的日子！添加一条记忆吧。`
       return `${childName} 的 ${milestoneLabel} 已经过去了 — 在这一刻消逝前添加一条记忆吧。`
     }
     if (locale === 'fr') {
@@ -569,7 +583,11 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')
@@ -632,7 +650,8 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
         if (phase === 'T0') return `Joyeux ${years} ans ensemble 🥂`
         return `Avez-vous célébré votre anniversaire ?`
       }
-      if (phase === 'T-3') return `L'anniversaire de votre voyage est dans 3 jours`
+      if (phase === 'T-3')
+        return `L'anniversaire de votre voyage est dans 3 jours`
       if (phase === 'T0') return `${years} ans depuis votre voyage 🌍`
       return `Avez-vous célébré l'anniversaire du voyage ?`
     }
@@ -656,11 +675,14 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
   const intro = (() => {
     if (locale === 'zh-CN') {
       if (isCouple) {
-        if (phase === 'T-3') return `你们的 ${years} 周年还有 3 天 — 准备好捕捉这一刻吗？`
-        if (phase === 'T0') return `今天是你们 ${years} 周年纪念日 🥂 添加一条记忆吧。`
+        if (phase === 'T-3')
+          return `你们的 ${years} 周年还有 3 天 — 准备好捕捉这一刻吗？`
+        if (phase === 'T0')
+          return `今天是你们 ${years} 周年纪念日 🥂 添加一条记忆吧。`
         return `你们的 ${years} 周年纪念日刚过 — 添加一条记忆吧。`
       }
-      if (phase === 'T-3') return `这次旅行的 ${years} 周年还有 3 天 — 准备好回顾了吗？`
+      if (phase === 'T-3')
+        return `这次旅行的 ${years} 周年还有 3 天 — 准备好回顾了吗？`
       if (phase === 'T0') return `这次旅行已经 ${years} 年了 — 添加一条回忆吧。`
       return `旅行 ${years} 周年刚过 — 添加一条回忆吧。`
     }
@@ -668,17 +690,21 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
       if (isCouple) {
         if (phase === 'T-3')
           return `Vos ${years} ans approchent dans 3 jours — prêt à capturer le moment ?`
-        if (phase === 'T0') return `Aujourd'hui c'est vos ${years} ans 🥂 Ajoutez un souvenir.`
+        if (phase === 'T0')
+          return `Aujourd'hui c'est vos ${years} ans 🥂 Ajoutez un souvenir.`
         return `Votre anniversaire de ${years} ans vient de passer — ajoutez un souvenir.`
       }
-      if (phase === 'T-3') return `L'anniversaire de votre voyage de ${years} ans est dans 3 jours.`
-      if (phase === 'T0') return `${years} ans depuis votre voyage — ajoutez un souvenir.`
+      if (phase === 'T-3')
+        return `L'anniversaire de votre voyage de ${years} ans est dans 3 jours.`
+      if (phase === 'T0')
+        return `${years} ans depuis votre voyage — ajoutez un souvenir.`
       return `L'anniversaire du voyage de ${years} ans vient de passer — ajoutez un souvenir.`
     }
     if (isCouple) {
       if (phase === 'T-3')
         return `Your ${years}-year anniversary is in 3 days — ready to capture the moment?`
-      if (phase === 'T0') return `Today is your ${years}-year anniversary 🥂 Add a memory.`
+      if (phase === 'T0')
+        return `Today is your ${years}-year anniversary 🥂 Add a memory.`
       return `Your ${years}-year anniversary just passed — add a memory before the moment fades.`
     }
     if (phase === 'T-3')
@@ -688,7 +714,11 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')
@@ -896,7 +926,8 @@ export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
 
   const subject = (() => {
     if (locale === 'zh-CN') return `「${circleName}」最初的一段回忆`
-    if (locale === 'fr') return `Un souvenir de vos premiers jours avec ${circleName}`
+    if (locale === 'fr')
+      return `Un souvenir de vos premiers jours avec ${circleName}`
     return `A memory from your first month with ${circleName}`
   })()
 
@@ -909,7 +940,8 @@ export function buildFirstMonthMemoryEmail(opts: FirstMonthMemoryEmailOpts): {
 
   const intro = (() => {
     if (locale === 'zh-CN') return `这是你们圈子最早期的一段回忆。`
-    if (locale === 'fr') return `Voici un souvenir des tout débuts de votre cercle.`
+    if (locale === 'fr')
+      return `Voici un souvenir des tout débuts de votre cercle.`
     return `Here's a memory from your circle's earliest days.`
   })()
 
@@ -986,18 +1018,22 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
 
   const subject = (() => {
     if (locale === 'zh-CN') {
-      if (nudgeCount === 1) return `「${circleName}」已经 ${daysSinceLastMemory} 天没有新动态了`
+      if (nudgeCount === 1)
+        return `「${circleName}」已经 ${daysSinceLastMemory} 天没有新动态了`
       if (nudgeCount === 2) return `「${circleName}」已经有一段时间没人上传了`
       return `最后一次提醒 — 「${circleName}」`
     }
     if (locale === 'fr') {
       if (nudgeCount === 1)
         return `${circleName} est silencieux depuis ${daysSinceLastMemory} jours`
-      if (nudgeCount === 2) return `Cela fait un moment que personne n'a ajouté à ${circleName}`
+      if (nudgeCount === 2)
+        return `Cela fait un moment que personne n'a ajouté à ${circleName}`
       return `Dernier rappel — ${circleName}`
     }
-    if (nudgeCount === 1) return `${circleName} has been quiet for ${daysSinceLastMemory} days`
-    if (nudgeCount === 2) return `It's been a while since anyone added to ${circleName}`
+    if (nudgeCount === 1)
+      return `${circleName} has been quiet for ${daysSinceLastMemory} days`
+    if (nudgeCount === 2)
+      return `It's been a while since anyone added to ${circleName}`
     return `One last reminder — ${circleName}`
   })()
 
@@ -1018,12 +1054,15 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
 
   const tone = (() => {
     if (locale === 'zh-CN') {
-      if (nudgeCount === 1) return `哪怕只是一条短短的文字记录，也能让故事活下去。`
-      if (nudgeCount === 2) return `照片堆积在手机里。当你把它们放到这里，故事才真正存在。`
+      if (nudgeCount === 1)
+        return `哪怕只是一条短短的文字记录，也能让故事活下去。`
+      if (nudgeCount === 2)
+        return `照片堆积在手机里。当你把它们放到这里，故事才真正存在。`
       return `这是最后一次提醒 — 我们不想打扰你。无论你是继续记录还是暂停一下，这个圈子随时为你保留着。`
     }
     if (locale === 'fr') {
-      if (nudgeCount === 1) return `Même une petite note garde l'histoire vivante.`
+      if (nudgeCount === 1)
+        return `Même une petite note garde l'histoire vivante.`
       if (nudgeCount === 2)
         return `Les photos s'accumulent sur les téléphones. L'histoire vit ici quand vous les ajoutez.`
       return `C'est le dernier rappel — nous ne voulons pas vous embêter. Que vous continuiez à construire ou que vous fassiez une pause, ce cercle vous attendra.`
@@ -1035,7 +1074,11 @@ export function buildQuietCircleNudgeEmail(opts: QuietCircleNudgeEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')

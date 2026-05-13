@@ -13,7 +13,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request.' })
   const { memoryId } = result.data
 
   // Verify the memory exists and the caller is the owner

@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Missing parameters' })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const { keepContent } = result.data
 
   // Requesting user must be owner or admin
@@ -29,7 +30,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) {
-    throw createError({ statusCode: 403, message: 'Only owners and admins can remove members' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only owners and admins can remove members',
+    })
   }
 
   // Cannot remove the circle owner
@@ -40,13 +44,20 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .maybeSingle()
 
-  if (!target) throw createError({ statusCode: 404, message: 'Member not found' })
+  if (!target)
+    throw createError({ statusCode: 404, message: 'Member not found' })
   if (target.role === 'owner')
-    throw createError({ statusCode: 403, message: 'Cannot remove the circle owner' })
+    throw createError({
+      statusCode: 403,
+      message: 'Cannot remove the circle owner',
+    })
 
   // Admin cannot remove another admin — only owner can
   if (target.role === 'admin' && myMembership.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the owner can remove an admin' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the owner can remove an admin',
+    })
   }
 
   // Fetch this member's memory IDs in the circle (needed for reaction + content deletion)
@@ -78,7 +89,9 @@ export default defineEventHandler(async (event) => {
       .maybeSingle()
 
     const formerName =
-      [memberProfile?.first_name, memberProfile?.last_name].filter(Boolean).join(' ') || null
+      [memberProfile?.first_name, memberProfile?.last_name]
+        .filter(Boolean)
+        .join(' ') || null
 
     await supabase
       .from('memory')
@@ -118,28 +131,37 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[remove-member] delete failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to remove member. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to remove member. Please try again.',
+    })
   }
 
   // Notify removed member by email (best-effort — don't fail the request if it errors)
   try {
-    const [{ data: removedUser }, { data: circle }, { data: remover }] = await Promise.all([
-      (supabase as any)
-        .from('user')
-        .select('email, first_name, locale')
-        .eq('id', targetUserId)
-        .maybeSingle(),
-      (supabase as any).from('circle').select('name').eq('id', circleId).maybeSingle(),
-      (supabase as any)
-        .from('user')
-        .select('first_name, last_name')
-        .eq('id', user.sub)
-        .maybeSingle(),
-    ])
+    const [{ data: removedUser }, { data: circle }, { data: remover }] =
+      await Promise.all([
+        (supabase as any)
+          .from('user')
+          .select('email, first_name, locale')
+          .eq('id', targetUserId)
+          .maybeSingle(),
+        (supabase as any)
+          .from('circle')
+          .select('name')
+          .eq('id', circleId)
+          .maybeSingle(),
+        (supabase as any)
+          .from('user')
+          .select('first_name, last_name')
+          .eq('id', user.sub)
+          .maybeSingle(),
+      ])
 
     if (removedUser?.email) {
       const removerName =
-        [remover?.first_name, remover?.last_name].filter(Boolean).join(' ') || 'Someone'
+        [remover?.first_name, remover?.last_name].filter(Boolean).join(' ') ||
+        'Someone'
       const config = useRuntimeConfig()
       const { subject, html } = buildMemberRemovedEmail({
         circleName: circle?.name ?? 'your circle',

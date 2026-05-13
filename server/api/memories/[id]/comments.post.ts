@@ -12,10 +12,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const memoryId = getRouterParam(event, 'id')
-  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
+  if (!memoryId)
+    throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Comment body is required.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Comment body is required.' })
   const { body } = result.data
 
   // Verify the user belongs to the circle that owns this memory

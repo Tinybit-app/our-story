@@ -9,7 +9,10 @@ export const YEAR_MILESTONES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18] as const
  * Given a child's date_of_birth and a target date, return the milestone key
  * (e.g., '6mo', '2yr') if the target date is exactly that age. Else null.
  */
-export function getMilestoneKeyForAge(dob: string, targetDate: string): string | null {
+export function getMilestoneKeyForAge(
+  dob: string,
+  targetDate: string,
+): string | null {
   const d = new Date(dob + 'T00:00:00Z')
   const t = new Date(targetDate + 'T00:00:00Z')
   if (Number.isNaN(d.getTime()) || Number.isNaN(t.getTime())) return null
@@ -50,7 +53,10 @@ export function getMilestoneKeyForAge(dob: string, targetDate: string): string |
  * Leap-year Feb 29 special case: if anchor is Feb 29 and target year is non-leap,
  * accept Feb 28 as the matching day.
  */
-export function getAnniversaryYear(anniversaryDate: string, targetDate: string): number | null {
+export function getAnniversaryYear(
+  anniversaryDate: string,
+  targetDate: string,
+): number | null {
   const a = new Date(anniversaryDate + 'T00:00:00Z')
   const t = new Date(targetDate + 'T00:00:00Z')
   if (Number.isNaN(a.getTime()) || Number.isNaN(t.getTime())) return null
@@ -67,7 +73,8 @@ export function getAnniversaryYear(anniversaryDate: string, targetDate: string):
 
   if (am === tm && ad === td) return yearDiff
 
-  const isLeapYear = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
+  const isLeapYear = (y: number) =>
+    (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
   if (am === 1 && ad === 29 && tm === 1 && td === 28 && !isLeapYear(ty)) {
     return yearDiff
   }

@@ -33,7 +33,11 @@
         <div
           class="flex h-14 w-14 items-center justify-center rounded-full bg-black/25 ring-1 ring-white/20 backdrop-blur-sm"
         >
-          <svg class="ml-1 h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="ml-1 h-6 w-6 text-white"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>
@@ -41,7 +45,9 @@
 
       <!-- Multiple media badge -->
       <div v-if="mediaCount > 1" class="absolute right-3 top-3">
-        <div class="flex items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 backdrop-blur-sm">
+        <div
+          class="flex items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 backdrop-blur-sm"
+        >
           <svg
             class="h-3 w-3 text-white"
             fill="none"
@@ -52,7 +58,9 @@
             <rect x="7" y="3" width="14" height="14" rx="2" />
             <path d="M3 7v11a3 3 0 0 0 3 3h11" />
           </svg>
-          <span class="text-[10px] font-semibold tracking-wide text-white">{{ mediaCount }}</span>
+          <span class="text-[10px] font-semibold tracking-wide text-white">{{
+            mediaCount
+          }}</span>
         </div>
       </div>
 
@@ -69,12 +77,17 @@
     <!-- Info strip -->
     <div class="px-4 pb-3.5 pt-3">
       <!-- Date -->
-      <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p
+        class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+      >
         {{ formattedDate }}
       </p>
 
       <!-- Note -->
-      <p v-if="memory.note" class="mb-3 line-clamp-2 text-sm leading-snug text-foreground/85">
+      <p
+        v-if="memory.note"
+        class="mb-3 line-clamp-2 text-sm leading-snug text-foreground/85"
+      >
         {{ memory.note }}
       </p>
 
@@ -89,10 +102,14 @@
             class="h-full w-full object-cover"
           />
           <div v-else class="flex h-full w-full items-center justify-center">
-            <span class="text-[8px] font-bold text-muted-foreground">{{ initials }}</span>
+            <span class="text-[8px] font-bold text-muted-foreground">{{
+              initials
+            }}</span>
           </div>
         </div>
-        <span class="truncate text-[11px] font-medium text-muted-foreground">{{ ownerName }}</span>
+        <span class="truncate text-[11px] font-medium text-muted-foreground">{{
+          ownerName
+        }}</span>
       </div>
     </div>
   </article>
@@ -108,13 +125,20 @@ const mediaCount = computed(() => props.memory.memorymedia?.length ?? 0)
 const ownerName = computed(() => {
   const u = props.memory.user
   if (!u) return t('common.unknown')
-  return [u.first_name, u.last_name].filter(Boolean).join(' ') || t('common.unknown')
+  return (
+    [u.first_name, u.last_name].filter(Boolean).join(' ') || t('common.unknown')
+  )
 })
 
 const initials = computed(() => {
   const u = props.memory.user
   if (!u) return '?'
-  return [u.first_name?.[0], u.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
+  return (
+    [u.first_name?.[0], u.last_name?.[0]]
+      .filter(Boolean)
+      .join('')
+      .toUpperCase() || '?'
+  )
 })
 
 const formattedDate = computed(() => {
@@ -124,6 +148,10 @@ const formattedDate = computed(() => {
   if (diffDays === 0) return t('card.today')
   if (diffDays === 1) return t('card.yesterday')
   if (diffDays < 7) return t('card.daysAgo', { n: diffDays })
-  return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
+  return d.toLocaleDateString(locale.value, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 })
 </script>

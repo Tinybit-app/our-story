@@ -25,10 +25,15 @@ if (fs.existsSync(envPath)) {
 //   SUPABASE_SERVICE_ROLE_KEY=<service role key>
 // Values for local dev are printed by `supabase status`.
 const SUPABASE_URL =
-  process.env.SUPABASE_URL ?? process.env.NUXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
-const SUPABASE_ANON_KEY = process.env.SUPABASE_KEY ?? process.env.NUXT_PUBLIC_SUPABASE_KEY ?? ''
+  process.env.SUPABASE_URL ??
+  process.env.NUXT_PUBLIC_SUPABASE_URL ??
+  'http://127.0.0.1:54321'
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_KEY ?? process.env.NUXT_PUBLIC_SUPABASE_KEY ?? ''
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NUXT_SUPABASE_SECRET_KEY ?? ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.NUXT_SUPABASE_SECRET_KEY ??
+  ''
 
 // Cookie name: sb-{hostname.split('.')[0]}-auth-token
 // For http://127.0.0.1:54321, hostname = '127.0.0.1', split('.')[0] = '127'
@@ -67,14 +72,17 @@ export default async function globalSetup(_config: FullConfig) {
   }
 
   // Sign in via password grant to get a real session
-  const tokenRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: SUPABASE_ANON_KEY,
+  const tokenRes = await fetch(
+    `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
     },
-    body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
-  })
+  )
 
   if (!tokenRes.ok) {
     throw new Error(

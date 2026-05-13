@@ -12,10 +12,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const memoryId = getRouterParam(event, 'id')
-  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
+  if (!memoryId)
+    throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid emoji' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid emoji' })
   const { emoji } = result.data
 
   // Verify the user is a member of the circle that owns this memory
@@ -54,7 +56,8 @@ export default defineEventHandler(async (event) => {
       emoji,
       type: 'emoji',
     })
-    if (error) throw createError({ statusCode: 500, message: 'Failed to add reaction.' })
+    if (error)
+      throw createError({ statusCode: 500, message: 'Failed to add reaction.' })
 
     // Push notification for new reaction (fire-and-forget)
     const { data: actor } = await supabase
@@ -72,15 +75,20 @@ export default defineEventHandler(async (event) => {
       emoji,
     })
 
-    sendPushToCircle(supabase, memory.circle_id, user.sub, reactionPayload).catch((err) =>
-      console.error('[push] reaction notify error:', err),
-    )
+    sendPushToCircle(
+      supabase,
+      memory.circle_id,
+      user.sub,
+      reactionPayload,
+    ).catch((err) => console.error('[push] reaction notify error:', err))
   }
 
   // Return fresh reactions for this memory
   const { data: reactions } = await supabase
     .from('memoryreaction')
-    .select('id, emoji, user_id, guest_name, user!user_id(first_name, last_name)')
+    .select(
+      'id, emoji, user_id, guest_name, user!user_id(first_name, last_name)',
+    )
     .eq('memory_id', memoryId)
 
   return { reactions: reactions ?? [] }

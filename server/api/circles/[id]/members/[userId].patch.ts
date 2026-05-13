@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Missing parameters' })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const { role: newRole } = result.data
 
   // Only the owner can change roles
@@ -29,12 +30,18 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (myMembership?.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the circle owner can change roles.' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the circle owner can change roles.',
+    })
   }
 
   // Cannot change own role
   if (targetUserId === user.sub) {
-    throw createError({ statusCode: 400, message: 'You cannot change your own role.' })
+    throw createError({
+      statusCode: 400,
+      message: 'You cannot change your own role.',
+    })
   }
 
   const { data: target } = await supabase
@@ -44,9 +51,13 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .maybeSingle()
 
-  if (!target) throw createError({ statusCode: 404, message: 'Member not found.' })
+  if (!target)
+    throw createError({ statusCode: 404, message: 'Member not found.' })
   if (target.role === 'owner')
-    throw createError({ statusCode: 400, message: "Cannot change the owner's role directly." })
+    throw createError({
+      statusCode: 400,
+      message: "Cannot change the owner's role directly.",
+    })
 
   if (newRole === 'owner') {
     // Transfer ownership: promote target to owner, demote current owner to admin
@@ -63,7 +74,10 @@ export default defineEventHandler(async (event) => {
         .eq('circle_id', circleId),
     ])
     if (e1 || e2) {
-      console.error('[role-change] transfer ownership failed:', e1?.message ?? e2?.message)
+      console.error(
+        '[role-change] transfer ownership failed:',
+        e1?.message ?? e2?.message,
+      )
       throw createError({
         statusCode: 500,
         message: 'Failed to transfer ownership. Please try again.',
@@ -78,7 +92,10 @@ export default defineEventHandler(async (event) => {
 
     if (error) {
       console.error('[role-change] update failed:', error.message)
-      throw createError({ statusCode: 500, message: 'Failed to update role. Please try again.' })
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to update role. Please try again.',
+      })
     }
   }
 

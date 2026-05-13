@@ -56,23 +56,35 @@ describe('GET /api/timeline — year param validation', () => {
   const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000'
 
   it('accepts a valid year', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 2024 })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: 2024,
+    })
     expect(r.success).toBe(true)
   })
 
   it('coerces year string to number', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: '2024' })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: '2024',
+    })
     expect(r.success).toBe(true)
     if (r.success) expect(r.data.year).toBe(2024)
   })
 
   it('rejects year below 2000', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 1999 })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: 1999,
+    })
     expect(r.success).toBe(false)
   })
 
   it('rejects year above 2100', () => {
-    const r = timelineQuerySchemaV3.safeParse({ circleId: VALID_UUID, year: 2101 })
+    const r = timelineQuerySchemaV3.safeParse({
+      circleId: VALID_UUID,
+      year: 2101,
+    })
     expect(r.success).toBe(false)
   })
 
@@ -132,7 +144,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = querySchema.safeParse(getQuery(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'circleId is required' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'circleId is required' })
   const { circleId, cursor, authorId, yearMonth, year } = result.data
 
   // Verify the requesting user belongs to this circle
@@ -152,9 +165,11 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .order('date_of_birth', { ascending: true })
 
-  if (childError) console.error('[timeline] childprofile query failed:', childError.message)
+  if (childError)
+    console.error('[timeline] childprofile query failed:', childError.message)
 
-  const children: Array<{ id: string; name: string; date_of_birth: string }> = childProfiles ?? []
+  const children: Array<{ id: string; name: string; date_of_birth: string }> =
+    childProfiles ?? []
 
   // Fetch circle members for the people picker in the upload form.
   const { data: memberRows, error: memberError } = await supabase
@@ -163,7 +178,8 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
     .order('created_at')
 
-  if (memberError) console.error('[timeline] members query failed:', memberError.message)
+  if (memberError)
+    console.error('[timeline] members query failed:', memberError.message)
 
   const memberUserIds = (memberRows ?? []).map((m: any) => m.user_id as string)
 
@@ -181,7 +197,10 @@ export default defineEventHandler(async (event) => {
       .in('id', memberUserIds)
 
     if (profileError)
-      console.error('[timeline] member profiles query failed:', profileError.message)
+      console.error(
+        '[timeline] member profiles query failed:',
+        profileError.message,
+      )
 
     const profileMap = new Map((profileRows ?? []).map((p: any) => [p.id, p]))
     members = memberUserIds.map((uid) => {
@@ -201,7 +220,9 @@ export default defineEventHandler(async (event) => {
       .from('memory')
       .select(MEMORY_SELECT)
       .eq('circle_id', circleId)
-      .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
+      .or(
+        `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`,
+      )
       .order('memory_date', { ascending: false })
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
@@ -233,7 +254,10 @@ export default defineEventHandler(async (event) => {
     const { data: memories, error } = await q
     if (error) {
       console.error('[timeline] month query failed:', error.message)
-      throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to load timeline.',
+      })
     }
 
     const raw = memories ?? []
@@ -241,7 +265,10 @@ export default defineEventHandler(async (event) => {
     const page = raw.slice(0, PAGE_SIZE)
     const withUrls = await attachSignedUrls(supabase, page)
     const last = withUrls[withUrls.length - 1]
-    const nextCursor = hasMore && last ? `${last.memory_date},${last.created_at},${last.id}` : null
+    const nextCursor =
+      hasMore && last
+        ? `${last.memory_date},${last.created_at},${last.id}`
+        : null
     return { memories: withUrls, nextCursor, children, members }
   }
 
@@ -263,12 +290,17 @@ export default defineEventHandler(async (event) => {
     const { data: memories, error } = await q
     if (error) {
       console.error('[timeline] author query failed:', error.message)
-      throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to load timeline.',
+      })
     }
 
     const withUrls = await attachSignedUrls(supabase, memories ?? [])
     const last = withUrls[withUrls.length - 1]
-    const nextCursor = last ? `${last.memory_date},${last.created_at},${last.id}` : null
+    const nextCursor = last
+      ? `${last.memory_date},${last.created_at},${last.id}`
+      : null
     return { memories: withUrls, nextCursor, children, members }
   }
 
@@ -308,7 +340,9 @@ async function getLatestYear(
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`)
+    .or(
+      `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`,
+    )
     .order('memory_date', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -326,7 +360,9 @@ async function getPrevYear(
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`)
+    .or(
+      `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`,
+    )
     .lt('memory_date', before)
     .order('memory_date', { ascending: false })
     .limit(1)
@@ -340,21 +376,32 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
       const mediaWithUrls = await Promise.all(
         ((memory.memorymedia as any[]) ?? []).map(async (media) => {
           const { storage_path, ...safeMedia } = media
-          if (!storage_path) return { ...safeMedia, url: null, thumbnailUrl: null }
+          if (!storage_path)
+            return { ...safeMedia, url: null, thumbnailUrl: null }
 
           const isVideo = media.media_type === 'video'
 
           const [fullResult, thumbResult] = await Promise.allSettled([
-            supabase.storage.from('memories-private').createSignedUrl(storage_path, 3600),
+            supabase.storage
+              .from('memories-private')
+              .createSignedUrl(storage_path, 3600),
             isVideo
               ? Promise.resolve({ data: null })
-              : supabase.storage.from('memories-private').createSignedUrl(storage_path, 86400, {
-                  transform: { width: 800, format: 'webp' as 'origin', quality: 85 },
-                }),
+              : supabase.storage
+                  .from('memories-private')
+                  .createSignedUrl(storage_path, 86400, {
+                    transform: {
+                      width: 800,
+                      format: 'webp' as 'origin',
+                      quality: 85,
+                    },
+                  }),
           ])
 
           const url =
-            fullResult.status === 'fulfilled' ? (fullResult.value.data?.signedUrl ?? null) : null
+            fullResult.status === 'fulfilled'
+              ? (fullResult.value.data?.signedUrl ?? null)
+              : null
           const thumbnailUrl = isVideo
             ? url
             : thumbResult.status === 'fulfilled'
@@ -440,7 +487,9 @@ Old:
 <!-- Infinite scroll sentinel + load-more spinner -->
 <div ref="loadMoreEl" class="mt-4 h-8" />
 <div v-if="loadingMore" class="flex justify-center py-4">
-  <div class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+  <div
+    class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
+  />
 </div>
 ```
 
@@ -561,7 +610,9 @@ Replace the final test (the scroll-trigger test) with a button-click test. Repla
 ```ts
 // ── Load-more pagination ─────────────────────────────────────────────────────
 
-test('clicking "Load more" button loads the next page and appends memories', async ({ page }) => {
+test('clicking "Load more" button loads the next page and appends memories', async ({
+  page,
+}) => {
   await mockMembership(page)
   await mockCirclesList(page)
 
@@ -647,9 +698,12 @@ test('clicking "Load more" button loads the next page and appends memories', asy
   await loadMoreBtn.click()
 
   // Wait for second-page memories to append
-  await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, {
-    timeout: 10_000,
-  })
+  await page.waitForFunction(
+    () => document.querySelectorAll('article').length >= 27,
+    {
+      timeout: 10_000,
+    },
+  )
 
   // Verify second-page memories were appended
   expect(page2Fetched).toBe(true)
@@ -707,7 +761,9 @@ async function fetchTimeline(cursor?: string) {
     }>('/api/timeline', {
       query: { circleId: circleId.value, ...(cursor ? { cursor } : {}) },
     })
-    memoriesFlat.value = cursor ? [...memoriesFlat.value, ...data.memories] : data.memories
+    memoriesFlat.value = cursor
+      ? [...memoriesFlat.value, ...data.memories]
+      : data.memories
     nextCursor.value = data.nextCursor
     if (!cursor) {
       children.value = data.children ?? []
@@ -742,7 +798,9 @@ async function fetchTimeline(year?: number) {
     }>('/api/timeline', {
       query: { circleId: circleId.value, ...(year ? { year } : {}) },
     })
-    memoriesFlat.value = year ? [...memoriesFlat.value, ...data.memories] : data.memories
+    memoriesFlat.value = year
+      ? [...memoriesFlat.value, ...data.memories]
+      : data.memories
     prevYear.value = data.prevYear
     if (!year) {
       children.value = data.children ?? []
@@ -886,7 +944,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -950,7 +1012,9 @@ function makeMemory(id: string, date: string) {
 }
 
 test.describe('Main timeline — year-at-a-time loading', () => {
-  test('first load fetches the latest year without a year param', async ({ page }) => {
+  test('first load fetches the latest year without a year param', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockProfile(page)
@@ -979,7 +1043,9 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     await page.goto('/timeline')
 
     // Timeline should render with memories from the (mocked) latest year
-    await expect(page.getByText(/Memory m-2025-1/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Memory m-2025-1/)).toBeVisible({
+      timeout: 10_000,
+    })
 
     // First call should NOT send a year param (auto-detect)
     expect(capturedYear).toBeNull()
@@ -1033,19 +1099,26 @@ test.describe('Main timeline — year-at-a-time loading', () => {
     })
 
     await page.goto('/timeline')
-    await expect(page.getByText(/Memory m-2025-0/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Memory m-2025-0/)).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Scroll to bottom to trigger IntersectionObserver sentinel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for 2024 memories to be appended
-    await page.waitForFunction(() => document.querySelectorAll('article').length >= 6, {
-      timeout: 10_000,
-    })
+    await page.waitForFunction(
+      () => document.querySelectorAll('article').length >= 6,
+      {
+        timeout: 10_000,
+      },
+    )
 
     // Verify the second call was made with year=2024
     expect(secondCallYear).toBe('2024')
-    await expect(page.getByText(/Memory m-2024-0/)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText(/Memory m-2024-0/)).toBeVisible({
+      timeout: 5_000,
+    })
   })
 
   test('no further loads when prevYear is null', async ({ page }) => {
@@ -1062,12 +1135,19 @@ test.describe('Main timeline — year-at-a-time loading', () => {
         status: 200,
         contentType: 'application/json',
         // prevYear null — no more years to load
-        body: JSON.stringify({ memories, prevYear: null, children: [], members: [] }),
+        body: JSON.stringify({
+          memories,
+          prevYear: null,
+          children: [],
+          members: [],
+        }),
       })
     })
 
     await page.goto('/timeline')
-    await expect(page.getByText(/Memory m-2025-1/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Memory m-2025-1/)).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Scroll to trigger the sentinel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))

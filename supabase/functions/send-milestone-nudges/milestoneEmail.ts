@@ -49,8 +49,10 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
       return `${childName}的 ${milestoneLabel} 你拍到了吗？`
     }
     if (locale === 'fr') {
-      if (phase === 'T-3') return `${childName} aura ${milestoneLabel} dans 3 jours`
-      if (phase === 'T0') return `${childName} a ${milestoneLabel} aujourd'hui 🎉`
+      if (phase === 'T-3')
+        return `${childName} aura ${milestoneLabel} dans 3 jours`
+      if (phase === 'T0')
+        return `${childName} a ${milestoneLabel} aujourd'hui 🎉`
       return `Avez-vous capturé les ${milestoneLabel} de ${childName} ?`
     }
     if (phase === 'T-3') return `${childName} turns ${milestoneLabel} in 3 days`
@@ -69,7 +71,8 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
     if (locale === 'zh-CN') {
       if (phase === 'T-3')
         return `${childName} 还有 3 天就 ${milestoneLabel} 了 — 准备好记录这一刻了吗？`
-      if (phase === 'T0') return `今天是 ${childName} ${milestoneLabel} 的日子！添加一条记忆吧。`
+      if (phase === 'T0')
+        return `今天是 ${childName} ${milestoneLabel} 的日子！添加一条记忆吧。`
       return `${childName} 的 ${milestoneLabel} 已经过去了 — 在这一刻消逝前添加一条记忆吧。`
     }
     if (locale === 'fr') {
@@ -87,7 +90,11 @@ export function buildChildMilestoneEmail(opts: ChildMilestoneEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')
@@ -150,7 +157,8 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
         if (phase === 'T0') return `Joyeux ${years} ans ensemble 🥂`
         return `Avez-vous célébré votre anniversaire ?`
       }
-      if (phase === 'T-3') return `L'anniversaire de votre voyage est dans 3 jours`
+      if (phase === 'T-3')
+        return `L'anniversaire de votre voyage est dans 3 jours`
       if (phase === 'T0') return `${years} ans depuis votre voyage 🌍`
       return `Avez-vous célébré l'anniversaire du voyage ?`
     }
@@ -174,11 +182,14 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
   const intro = (() => {
     if (locale === 'zh-CN') {
       if (isCouple) {
-        if (phase === 'T-3') return `你们的 ${years} 周年还有 3 天 — 准备好捕捉这一刻吗？`
-        if (phase === 'T0') return `今天是你们 ${years} 周年纪念日 🥂 添加一条记忆吧。`
+        if (phase === 'T-3')
+          return `你们的 ${years} 周年还有 3 天 — 准备好捕捉这一刻吗？`
+        if (phase === 'T0')
+          return `今天是你们 ${years} 周年纪念日 🥂 添加一条记忆吧。`
         return `你们的 ${years} 周年纪念日刚过 — 添加一条记忆吧。`
       }
-      if (phase === 'T-3') return `这次旅行的 ${years} 周年还有 3 天 — 准备好回顾了吗？`
+      if (phase === 'T-3')
+        return `这次旅行的 ${years} 周年还有 3 天 — 准备好回顾了吗？`
       if (phase === 'T0') return `这次旅行已经 ${years} 年了 — 添加一条回忆吧。`
       return `旅行 ${years} 周年刚过 — 添加一条回忆吧。`
     }
@@ -186,17 +197,21 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
       if (isCouple) {
         if (phase === 'T-3')
           return `Vos ${years} ans approchent dans 3 jours — prêt à capturer le moment ?`
-        if (phase === 'T0') return `Aujourd'hui c'est vos ${years} ans 🥂 Ajoutez un souvenir.`
+        if (phase === 'T0')
+          return `Aujourd'hui c'est vos ${years} ans 🥂 Ajoutez un souvenir.`
         return `Votre anniversaire de ${years} ans vient de passer — ajoutez un souvenir.`
       }
-      if (phase === 'T-3') return `L'anniversaire de votre voyage de ${years} ans est dans 3 jours.`
-      if (phase === 'T0') return `${years} ans depuis votre voyage — ajoutez un souvenir.`
+      if (phase === 'T-3')
+        return `L'anniversaire de votre voyage de ${years} ans est dans 3 jours.`
+      if (phase === 'T0')
+        return `${years} ans depuis votre voyage — ajoutez un souvenir.`
       return `L'anniversaire du voyage de ${years} ans vient de passer — ajoutez un souvenir.`
     }
     if (isCouple) {
       if (phase === 'T-3')
         return `Your ${years}-year anniversary is in 3 days — ready to capture the moment?`
-      if (phase === 'T0') return `Today is your ${years}-year anniversary 🥂 Add a memory.`
+      if (phase === 'T0')
+        return `Today is your ${years}-year anniversary 🥂 Add a memory.`
       return `Your ${years}-year anniversary just passed — add a memory before the moment fades.`
     }
     if (phase === 'T-3')
@@ -206,7 +221,11 @@ export function buildAnniversaryEmail(opts: AnniversaryEmailOpts): {
   })()
 
   const cta =
-    locale === 'zh-CN' ? '添加记忆 →' : locale === 'fr' ? 'Ajouter un souvenir →' : 'Add a memory →'
+    locale === 'zh-CN'
+      ? '添加记忆 →'
+      : locale === 'fr'
+        ? 'Ajouter un souvenir →'
+        : 'Add a memory →'
 
   const unsubscribe = (() => {
     if (locale === 'zh-CN')

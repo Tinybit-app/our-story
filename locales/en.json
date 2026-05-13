@@ -41,11 +41,20 @@
     "language": "Language"
   },
   "circleType": {
-    "parents": { "label": "New parents", "description": "Baby milestones & growth" },
+    "parents": {
+      "label": "New parents",
+      "description": "Baby milestones & growth"
+    },
     "couple": { "label": "Couple", "description": "Relationship milestones" },
     "family": { "label": "Family", "description": "General family memories" },
-    "friends": { "label": "Friend group", "description": "Trips, reunions, moments" },
-    "caregiving": { "label": "Caregiving", "description": "Health & life events" },
+    "friends": {
+      "label": "Friend group",
+      "description": "Trips, reunions, moments"
+    },
+    "caregiving": {
+      "label": "Caregiving",
+      "description": "Health & life events"
+    },
     "travel": { "label": "Travel group", "description": "Adventures together" },
     "solo": { "label": "Just me", "description": "Personal timeline" }
   },

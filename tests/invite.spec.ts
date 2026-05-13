@@ -18,12 +18,16 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
 
     await page.goto(`/invite/${VALID_TOKEN}`)
 
-    await expect(page.getByText('This invite has expired')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('This invite has expired')).toBeVisible({
+      timeout: 10_000,
+    })
     // User should still be on the invite page — not bounced to login
     await expect(page).not.toHaveURL(/\/login/)
   })
 
-  test('deleted-circle invite shows error without forcing login', async ({ page }) => {
+  test('deleted-circle invite shows error without forcing login', async ({
+    page,
+  }) => {
     await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
@@ -34,7 +38,9 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
 
     await page.goto(`/invite/${VALID_TOKEN}`)
 
-    await expect(page.getByText('This circle has been deleted')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('This circle has been deleted')).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page).not.toHaveURL(/\/login/)
   })
 
@@ -48,11 +54,17 @@ test.describe('Invite flow — unauthenticated pre-validation', () => {
     )
 
     await page.goto(`/invite/${VALID_TOKEN}`)
-    await expect(page.getByText('This invite has expired')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByRole('link', { name: 'Go to sign in' })).toBeVisible()
+    await expect(page.getByText('This invite has expired')).toBeVisible({
+      timeout: 10_000,
+    })
+    await expect(
+      page.getByRole('link', { name: 'Go to sign in' }),
+    ).toBeVisible()
   })
 
-  test('valid invite stores token in cookie and redirects to /login', async ({ page }) => {
+  test('valid invite stores token in cookie and redirects to /login', async ({
+    page,
+  }) => {
     await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
@@ -84,7 +96,11 @@ test.describe('Invite flow — authenticated auto-accept', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({
+          hasMembership: true,
+          needsProfile: false,
+          deletedAt: null,
+        }),
       }),
     )
   })
@@ -115,7 +131,9 @@ test.describe('Invite flow — authenticated auto-accept', () => {
     expect(url).toContain('welcome=1')
   })
 
-  test('accept failure shows an error and clears the invite cookie', async ({ page }) => {
+  test('accept failure shows an error and clears the invite cookie', async ({
+    page,
+  }) => {
     await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
       route.fulfill({
         status: 200,
@@ -134,7 +152,9 @@ test.describe('Invite flow — authenticated auto-accept', () => {
     await page.goto(`/invite/${VALID_TOKEN}`)
 
     // Error UI should be shown
-    await expect(page.getByRole('link', { name: 'Go to sign in' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('link', { name: 'Go to sign in' })).toBeVisible(
+      { timeout: 10_000 },
+    )
 
     // Cookie must be cleared on failure so the user is not trapped in a retry loop
     const cookies = await page.context().cookies()
@@ -161,7 +181,11 @@ test.describe('Invite flow — post-login cookie pickup', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+        body: JSON.stringify({
+          hasMembership: true,
+          needsProfile: false,
+          deletedAt: null,
+        }),
       }),
     )
 
@@ -180,7 +204,9 @@ test.describe('Invite flow — post-login cookie pickup', () => {
 
     await page.goto('/confirm')
 
-    await page.waitForURL(new RegExp(`/invite/${VALID_TOKEN}`), { timeout: 10_000 })
+    await page.waitForURL(new RegExp(`/invite/${VALID_TOKEN}`), {
+      timeout: 10_000,
+    })
     await expect(page).toHaveURL(new RegExp(`/invite/${VALID_TOKEN}`))
   })
 })

@@ -20,9 +20,18 @@ export type CircleType =
  */
 export type AnalyticsEvent =
   | { name: 'user_signed_up'; props: { method: 'email' } }
-  | { name: 'circle_created'; props: { circle_id: string; circle_type: CircleType } }
-  | { name: 'member_invited'; props: { circle_id: string; invite_method: 'link' } }
-  | { name: 'member_joined'; props: { circle_id: string; joined_via: 'invite' } }
+  | {
+      name: 'circle_created'
+      props: { circle_id: string; circle_type: CircleType }
+    }
+  | {
+      name: 'member_invited'
+      props: { circle_id: string; invite_method: 'link' }
+    }
+  | {
+      name: 'member_joined'
+      props: { circle_id: string; joined_via: 'invite' }
+    }
   | {
       name: 'memory_uploaded'
       props: {
@@ -32,19 +41,31 @@ export type AnalyticsEvent =
         media_count: number
       }
     }
-  | { name: 'memory_shared_to_circle'; props: { circle_id: string; memory_id: string } }
+  | {
+      name: 'memory_shared_to_circle'
+      props: { circle_id: string; memory_id: string }
+    }
   | { name: 'comment_added'; props: { circle_id: string; memory_id: string } }
-  | { name: 'reaction_added'; props: { circle_id: string; memory_id: string; emoji: string } }
+  | {
+      name: 'reaction_added'
+      props: { circle_id: string; memory_id: string; emoji: string }
+    }
   | {
       name: 'milestone_created'
       props: { circle_id: string; milestone_type: 'suggested' | 'custom' }
     }
   | { name: 'export_requested'; props: { circle_id: string; format: 'zip' } }
-  | { name: 'subscription_upgraded'; props: { tier: 'plus'; interval: 'monthly' | 'annual' } }
+  | {
+      name: 'subscription_upgraded'
+      props: { tier: 'plus'; interval: 'monthly' | 'annual' }
+    }
   | { name: 'subscription_cancelled'; props: { tier: 'plus' } }
 
 type EventName = AnalyticsEvent['name']
-type PropsFor<N extends EventName> = Extract<AnalyticsEvent, { name: N }>['props']
+type PropsFor<N extends EventName> = Extract<
+  AnalyticsEvent,
+  { name: N }
+>['props']
 
 /**
  * Pure factory — easy to unit test without Nuxt context.

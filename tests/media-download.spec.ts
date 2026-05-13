@@ -25,7 +25,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -74,7 +78,12 @@ function mockTimeline(page: any, memories: any[]) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories,
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
@@ -149,7 +158,9 @@ async function openMemoryModal(page: any, cardText: string) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Media download & share (7.5)', () => {
-  test('download button is visible when a photo memory is open', async ({ page }) => {
+  test('download button is visible when a photo memory is open', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimeline(page, [makePhotoMemory()])
@@ -158,12 +169,16 @@ test.describe('Media download & share (7.5)', () => {
     await page.goto('/timeline')
     await openMemoryModal(page, 'A beautiful moment')
 
-    await expect(page.getByRole('button', { name: 'Save to device' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Save to device' }),
+    ).toBeVisible({
       timeout: 8_000,
     })
   })
 
-  test('share button is visible when a photo memory is open', async ({ page }) => {
+  test('share button is visible when a photo memory is open', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimeline(page, [makePhotoMemory()])
@@ -172,7 +187,9 @@ test.describe('Media download & share (7.5)', () => {
     await page.goto('/timeline')
     await openMemoryModal(page, 'A beautiful moment')
 
-    await expect(page.getByRole('button', { name: 'Share photo' })).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByRole('button', { name: 'Share photo' })).toBeVisible(
+      { timeout: 8_000 },
+    )
   })
 
   test('share button is NOT present for a video memory', async ({ page }) => {
@@ -187,13 +204,19 @@ test.describe('Media download & share (7.5)', () => {
     await expect(card).toBeVisible({ timeout: 15_000 })
     await card.click()
 
-    await expect(page.getByRole('button', { name: 'Save to device' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Save to device' }),
+    ).toBeVisible({
       timeout: 8_000,
     })
-    await expect(page.getByRole('button', { name: 'Share photo' })).not.toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Share photo' }),
+    ).not.toBeVisible()
   })
 
-  test('neither download nor share button shown for a quick-note memory', async ({ page }) => {
+  test('neither download nor share button shown for a quick-note memory', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimeline(page, [makeQuickNoteMemory()])
@@ -203,7 +226,11 @@ test.describe('Media download & share (7.5)', () => {
     await openMemoryModal(page, 'She smiled at me today')
 
     // QuickNoteModal is rendered — no media action buttons
-    await expect(page.getByRole('button', { name: 'Save to device' })).not.toBeVisible()
-    await expect(page.getByRole('button', { name: 'Share photo' })).not.toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Save to device' }),
+    ).not.toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Share photo' }),
+    ).not.toBeVisible()
   })
 })

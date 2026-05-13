@@ -7,7 +7,10 @@
   </div>
 
   <!-- Empty state -->
-  <div v-else-if="picker.yearGroups.value.length === 0" class="px-5 py-12 text-center">
+  <div
+    v-else-if="picker.yearGroups.value.length === 0"
+    class="px-5 py-12 text-center"
+  >
     <div
       class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-secondary"
     >
@@ -23,8 +26,12 @@
         />
       </svg>
     </div>
-    <p class="mb-1 text-sm font-semibold text-foreground">{{ t('viewerLink.noMemoriesTitle') }}</p>
-    <p class="text-xs text-muted-foreground">{{ t('viewerLink.noMemoriesBody') }}</p>
+    <p class="mb-1 text-sm font-semibold text-foreground">
+      {{ t('viewerLink.noMemoriesTitle') }}
+    </p>
+    <p class="text-xs text-muted-foreground">
+      {{ t('viewerLink.noMemoriesBody') }}
+    </p>
   </div>
 
   <!-- Year groups -->
@@ -59,12 +66,16 @@
               class="h-px w-2 rounded-full bg-primary"
             />
           </button>
-          <span class="text-sm font-bold text-foreground">{{ group.year }}</span>
+          <span class="text-sm font-bold text-foreground">{{
+            group.year
+          }}</span>
           <span
             v-if="group.loaded && group.memories.length > 0"
             class="text-[11px] text-muted-foreground"
           >
-            {{ t('viewerLink.memoriesCount', { count: group.memories.length }) }}
+            {{
+              t('viewerLink.memoriesCount', { count: group.memories.length })
+            }}
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -74,7 +85,11 @@
           />
           <svg
             class="h-4 w-4 text-muted-foreground transition-transform duration-200"
-            :class="picker.collapsedYears.value.has(group.year) ? '-rotate-90' : 'rotate-0'"
+            :class="
+              picker.collapsedYears.value.has(group.year)
+                ? '-rotate-90'
+                : 'rotate-0'
+            "
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -89,7 +104,11 @@
       <div v-if="!picker.collapsedYears.value.has(group.year)">
         <!-- Month groups -->
         <div v-if="group.loaded" class="px-5">
-          <div v-for="mg in picker.getMonthGroups(group)" :key="mg.month" class="mb-2 mt-4">
+          <div
+            v-for="mg in picker.getMonthGroups(group)"
+            :key="mg.month"
+            class="mb-2 mt-4"
+          >
             <!-- Month header -->
             <div
               class="-mx-2 mb-2 flex cursor-pointer select-none items-center justify-between rounded-lg border border-border/15 bg-secondary/40 px-2 py-1.5 transition-colors hover:bg-secondary/70"
@@ -103,7 +122,9 @@
                   :class="picker.monthCheckboxClass(group.year, mg.month)"
                 >
                   <svg
-                    v-if="picker.isMonthSelected(group.year, mg.month) === 'full'"
+                    v-if="
+                      picker.isMonthSelected(group.year, mg.month) === 'full'
+                    "
                     class="h-2.5 w-2.5 text-white"
                     fill="none"
                     stroke="currentColor"
@@ -113,7 +134,9 @@
                     <path d="M5 13l4 4L19 7" />
                   </svg>
                   <div
-                    v-else-if="picker.isMonthSelected(group.year, mg.month) === 'partial'"
+                    v-else-if="
+                      picker.isMonthSelected(group.year, mg.month) === 'partial'
+                    "
                     class="h-px w-1.5 rounded-full bg-primary"
                   />
                 </button>
@@ -121,7 +144,9 @@
                   picker.monthName(mg.month)
                 }}</span>
                 <span class="text-[10px] tabular-nums text-muted-foreground">
-                  {{ t('viewerLink.memoriesCount', { count: mg.memories.length }) }}
+                  {{
+                    t('viewerLink.memoriesCount', { count: mg.memories.length })
+                  }}
                 </span>
               </div>
               <svg
@@ -142,7 +167,9 @@
 
             <!-- Month grid (collapsible) -->
             <div
-              v-if="!picker.collapsedMonths.value.has(`${group.year}-${mg.month}`)"
+              v-if="
+                !picker.collapsedMonths.value.has(`${group.year}-${mg.month}`)
+              "
               class="grid grid-cols-5 gap-1"
             >
               <button
@@ -159,7 +186,10 @@
               >
                 <!-- Image -->
                 <img
-                  v-if="memory.mediaType === 'image' && (memory.thumbnailUrl || memory.signedUrl)"
+                  v-if="
+                    memory.mediaType === 'image' &&
+                    (memory.thumbnailUrl || memory.signedUrl)
+                  "
                   :src="memory.thumbnailUrl || memory.signedUrl || undefined"
                   :alt="memory.memory_date"
                   class="h-full w-full object-cover"
@@ -183,8 +213,12 @@
                     class="pointer-events-none h-full w-full object-cover"
                   />
                   <div v-else class="h-full w-full bg-muted" />
-                  <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <div class="flex h-5 w-5 items-center justify-center rounded-full bg-black/50">
+                  <div
+                    class="absolute inset-0 flex items-center justify-center bg-black/20"
+                  >
+                    <div
+                      class="flex h-5 w-5 items-center justify-center rounded-full bg-black/50"
+                    >
                       <svg
                         class="ml-px h-2.5 w-2.5 text-white"
                         fill="currentColor"
@@ -242,7 +276,9 @@
                   v-if="memory.mediaType !== null"
                   class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-0.5 pb-0.5 pt-4"
                 >
-                  <p class="truncate text-center text-[7px] font-medium leading-tight text-white">
+                  <p
+                    class="truncate text-center text-[7px] font-medium leading-tight text-white"
+                  >
                     {{ picker.formatTileDate(memory.memory_date) }}
                   </p>
                 </div>
@@ -293,8 +329,14 @@
             <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div class="flex-1">
-            <p class="text-[11px] leading-snug text-amber-800 dark:text-amber-200">
-              {{ t('viewerLink.truncatedWarning', { count: group.memories.length }) }}
+            <p
+              class="text-[11px] leading-snug text-amber-800 dark:text-amber-200"
+            >
+              {{
+                t('viewerLink.truncatedWarning', {
+                  count: group.memories.length,
+                })
+              }}
             </p>
             <button
               type="button"
@@ -302,13 +344,20 @@
               @click="picker.loadYearComplete(group.year)"
               class="mt-1.5 text-[11px] font-semibold text-amber-700 underline underline-offset-2 transition-colors hover:text-amber-900 disabled:opacity-50 dark:text-amber-300 dark:hover:text-amber-100"
             >
-              {{ group.loading ? t('viewerLink.loading') : t('viewerLink.loadAll') }}
+              {{
+                group.loading
+                  ? t('viewerLink.loading')
+                  : t('viewerLink.loadAll')
+              }}
             </button>
           </div>
         </div>
 
         <!-- Year loading skeleton -->
-        <div v-else-if="group.loading" class="mb-4 mt-3 grid grid-cols-5 gap-1 px-5">
+        <div
+          v-else-if="group.loading"
+          class="mb-4 mt-3 grid grid-cols-5 gap-1 px-5"
+        >
           <div
             v-for="i in 15"
             :key="i"

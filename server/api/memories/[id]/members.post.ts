@@ -12,10 +12,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const memoryId = getRouterParam(event, 'id')
-  if (!memoryId) throw createError({ statusCode: 400, message: 'Missing memory id' })
+  if (!memoryId)
+    throw createError({ statusCode: 400, message: 'Missing memory id' })
 
   const result = bodySchema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid request body.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid request body.' })
   const { userIds } = result.data
 
   // Verify the caller uploaded this memory
@@ -51,8 +53,12 @@ export default defineEventHandler(async (event) => {
     .select('user_id')
     .eq('memory_id', memoryId)
 
-  const existingUserIds = new Set((existingTags ?? []).map((t: any) => t.user_id))
-  const newlyTaggedIds = userIds.filter((id) => !existingUserIds.has(id) && id !== user.sub)
+  const existingUserIds = new Set(
+    (existingTags ?? []).map((t: any) => t.user_id),
+  )
+  const newlyTaggedIds = userIds.filter(
+    (id) => !existingUserIds.has(id) && id !== user.sub,
+  )
 
   // Replace: delete all existing tags, then insert new ones
   const { error: deleteError } = await (supabase as any)
@@ -62,13 +68,18 @@ export default defineEventHandler(async (event) => {
 
   if (deleteError) {
     console.error('[memory members] delete failed:', deleteError.message)
-    throw createError({ statusCode: 500, message: 'Failed to update member tags.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to update member tags.',
+    })
   }
 
   if (userIds.length > 0) {
     const { error: insertError } = await (supabase as any)
       .from('memory_members')
-      .insert(userIds.map((userId) => ({ memory_id: memoryId, user_id: userId })))
+      .insert(
+        userIds.map((userId) => ({ memory_id: memoryId, user_id: userId })),
+      )
 
     if (insertError) {
       console.error('[memory members] insert failed:', insertError.message)
@@ -78,7 +89,12 @@ export default defineEventHandler(async (event) => {
 
   // Notify newly tagged members (fire-and-forget — don't block the response)
   if (newlyTaggedIds.length > 0) {
-    sendTagNotifications(supabase, user.sub, memory.circle_id, newlyTaggedIds).catch((err) =>
+    sendTagNotifications(
+      supabase,
+      user.sub,
+      memory.circle_id,
+      newlyTaggedIds,
+    ).catch((err) =>
       console.error('[memory members] notification failed:', err),
     )
   }
@@ -93,17 +109,24 @@ async function sendTagNotifications(
   newlyTaggedIds: string[],
 ) {
   const config = useRuntimeConfig()
-  const appUrl = (config.public.appUrl as string | undefined) ?? 'https://our-story.tinybit.app'
+  const appUrl =
+    (config.public.appUrl as string | undefined) ??
+    'https://our-story.tinybit.app'
 
   // Fetch tagger name and circle name in parallel
   const [taggerResult, circleResult] = await Promise.all([
-    supabase.from('user').select('first_name, last_name').eq('id', taggerUserId).maybeSingle(),
+    supabase
+      .from('user')
+      .select('first_name, last_name')
+      .eq('id', taggerUserId)
+      .maybeSingle(),
     supabase.from('circle').select('name').eq('id', circleId).maybeSingle(),
   ])
 
   const taggerName =
-    [taggerResult.data?.first_name, taggerResult.data?.last_name].filter(Boolean).join(' ') ||
-    'Someone'
+    [taggerResult.data?.first_name, taggerResult.data?.last_name]
+      .filter(Boolean)
+      .join(' ') || 'Someone'
   const circleName = circleResult.data?.name ?? 'your circle'
 
   // Fetch tagged users' profiles (locale) + their auth emails

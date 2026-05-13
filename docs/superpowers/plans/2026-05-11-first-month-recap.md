@@ -72,7 +72,10 @@ describe('buildFirstMonthRecapEmail — subject', () => {
   })
 
   it('zh-CN subject is in Chinese', () => {
-    const { subject } = buildFirstMonthRecapEmail({ ...baseOpts, locale: 'zh-CN' })
+    const { subject } = buildFirstMonthRecapEmail({
+      ...baseOpts,
+      locale: 'zh-CN',
+    })
     expect(subject).toMatch(/[一-鿿]/)
     expect(subject).toContain('The Smiths')
   })
@@ -139,7 +142,10 @@ describe('buildFirstMonthRecapEmail — body', () => {
   })
 
   it("handles null firstMemoryNote without rendering 'null'", () => {
-    const { html } = buildFirstMonthRecapEmail({ ...baseOpts, firstMemoryNote: null })
+    const { html } = buildFirstMonthRecapEmail({
+      ...baseOpts,
+      firstMemoryNote: null,
+    })
     expect(html).not.toContain('null')
   })
 })
@@ -238,10 +244,22 @@ export function buildFirstMonthRecapEmail(opts: FirstMonthRecapEmailOpts): {
 
   const statsLabels = (() => {
     if (locale === 'zh-CN')
-      return { memories: '条记忆', milestones: '个里程碑', topReaction: '最受欢迎' }
+      return {
+        memories: '条记忆',
+        milestones: '个里程碑',
+        topReaction: '最受欢迎',
+      }
     if (locale === 'fr')
-      return { memories: 'souvenirs', milestones: 'jalons', topReaction: 'Le plus aimé' }
-    return { memories: 'memories', milestones: 'milestones marked', topReaction: 'Most loved' }
+      return {
+        memories: 'souvenirs',
+        milestones: 'jalons',
+        topReaction: 'Le plus aimé',
+      }
+    return {
+      memories: 'memories',
+      milestones: 'milestones marked',
+      topReaction: 'Most loved',
+    }
   })()
 
   const statsBlock = `
@@ -380,7 +398,10 @@ Deno.serve(async (req) => {
     .is('deleted_at', null)
 
   if (circlesErr) {
-    console.error('[send-first-month-recap] circles query failed:', circlesErr.message)
+    console.error(
+      '[send-first-month-recap] circles query failed:',
+      circlesErr.message,
+    )
     return Response.json({ error: 'circles query failed' }, { status: 500 })
   }
 
@@ -508,7 +529,10 @@ Deno.serve(async (req) => {
       if (recipients.length === 0) {
         skipped++
         // Still mark the flag — circle is processed, just no recipients
-        await supabase.from('circle').update({ first_month_email_sent: true }).eq('id', c.id)
+        await supabase
+          .from('circle')
+          .update({ first_month_email_sent: true })
+          .eq('id', c.id)
         continue
       }
 
@@ -537,7 +561,10 @@ Deno.serve(async (req) => {
       }
 
       // 6. Mark sent
-      await supabase.from('circle').update({ first_month_email_sent: true }).eq('id', c.id)
+      await supabase
+        .from('circle')
+        .update({ first_month_email_sent: true })
+        .eq('id', c.id)
       sent++
     } catch (err) {
       console.error(`[send-first-month-recap] failed for circle ${c.id}:`, err)
@@ -548,7 +575,11 @@ Deno.serve(async (req) => {
   return Response.json({ ok: true, sent, skipped, errors })
 })
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.log(`[dev] first-month recap to ${to}: ${subject}`)
@@ -557,7 +588,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         from: 'Our Story <hello@our-story.tinybit.app>',
         to,

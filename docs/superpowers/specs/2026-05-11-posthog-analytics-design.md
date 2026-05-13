@@ -59,9 +59,18 @@ Typed wrapper. Event names and payload shapes enforced at compile time via a dis
 ```ts
 type AnalyticsEvent =
   | { name: 'user_signed_up'; props: { method: 'email' } }
-  | { name: 'circle_created'; props: { circle_id: string; circle_type: CircleType } }
-  | { name: 'member_invited'; props: { circle_id: string; invite_method: 'link' } }
-  | { name: 'member_joined'; props: { circle_id: string; joined_via: 'invite' } }
+  | {
+      name: 'circle_created'
+      props: { circle_id: string; circle_type: CircleType }
+    }
+  | {
+      name: 'member_invited'
+      props: { circle_id: string; invite_method: 'link' }
+    }
+  | {
+      name: 'member_joined'
+      props: { circle_id: string; joined_via: 'invite' }
+    }
   | {
       name: 'memory_uploaded'
       props: {
@@ -71,12 +80,24 @@ type AnalyticsEvent =
         media_count: number
       }
     }
-  | { name: 'memory_shared_to_circle'; props: { circle_id: string; memory_id: string } }
+  | {
+      name: 'memory_shared_to_circle'
+      props: { circle_id: string; memory_id: string }
+    }
   | { name: 'comment_added'; props: { circle_id: string; memory_id: string } }
-  | { name: 'reaction_added'; props: { circle_id: string; memory_id: string; emoji: string } }
-  | { name: 'milestone_created'; props: { circle_id: string; milestone_type: string } }
+  | {
+      name: 'reaction_added'
+      props: { circle_id: string; memory_id: string; emoji: string }
+    }
+  | {
+      name: 'milestone_created'
+      props: { circle_id: string; milestone_type: string }
+    }
   | { name: 'export_requested'; props: { circle_id: string; format: 'zip' } }
-  | { name: 'subscription_upgraded'; props: { tier: 'plus'; interval: 'monthly' | 'annual' } }
+  | {
+      name: 'subscription_upgraded'
+      props: { tier: 'plus'; interval: 'monthly' | 'annual' }
+    }
   | { name: 'subscription_cancelled'; props: { tier: 'plus' } }
 
 export function useAnalytics() {

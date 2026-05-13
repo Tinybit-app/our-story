@@ -23,7 +23,9 @@ interface MonthGroup {
 }
 
 export type MemoryPickerReturn = ReturnType<typeof useMemoryPicker>
-export const MEMORY_PICKER_KEY = Symbol('memory-picker') as InjectionKey<MemoryPickerReturn>
+export const MEMORY_PICKER_KEY = Symbol(
+  'memory-picker',
+) as InjectionKey<MemoryPickerReturn>
 
 export function useMemoryPicker(circleId: Ref<string>) {
   const { locale } = useI18n()
@@ -53,7 +55,9 @@ export function useMemoryPicker(circleId: Ref<string>) {
   }
 
   function monthName(month: number): string {
-    return new Date(2000, month - 1).toLocaleString(locale.value, { month: 'long' })
+    return new Date(2000, month - 1).toLocaleString(locale.value, {
+      month: 'long',
+    })
   }
 
   function formatTileDate(dateStr: string): string {
@@ -98,7 +102,10 @@ export function useMemoryPicker(circleId: Ref<string>) {
     return s !== undefined && s.sel > 0 && s.sel < s.total
   }
 
-  function isMonthSelected(year: number, month: number): 'full' | 'partial' | 'none' {
+  function isMonthSelected(
+    year: number,
+    month: number,
+  ): 'full' | 'partial' | 'none' {
     const s = selectionStats.value.byYM.get(`${year}-${month}`)
     if (!s || s.sel === 0) return 'none'
     return s.sel === s.total ? 'full' : 'partial'
@@ -133,7 +140,9 @@ export function useMemoryPicker(circleId: Ref<string>) {
   function toggleMonth(year: number, month: number) {
     const group = yearGroups.value.find((g) => g.year === year)
     if (!group?.loaded) return
-    const monthMems = group.memories.filter((m) => getMonth(m.memory_date) === month)
+    const monthMems = group.memories.filter(
+      (m) => getMonth(m.memory_date) === month,
+    )
     const state = isMonthSelected(year, month)
     const s = new Set(selectedMemoryIds.value)
     if (state === 'full') {
@@ -194,7 +203,11 @@ export function useMemoryPicker(circleId: Ref<string>) {
       memory_date: m.memory_date,
       signedUrl: media?.url ?? null,
       thumbnailUrl: isVideo ? null : (media?.thumbnailUrl ?? null),
-      mediaType: media ? (media.media_type === 'video' ? 'video' : 'image') : null,
+      mediaType: media
+        ? media.media_type === 'video'
+          ? 'video'
+          : 'image'
+        : null,
       note: m.note ?? null,
     }
   }
@@ -224,9 +237,12 @@ export function useMemoryPicker(circleId: Ref<string>) {
     if (!group || group.loaded || group.loading) return
     group.loading = true
     try {
-      const data = await $fetch<{ memories: any[]; truncated?: boolean }>('/api/timeline', {
-        query: { circleId: circleId.value, year, limit: 1000 },
-      })
+      const data = await $fetch<{ memories: any[]; truncated?: boolean }>(
+        '/api/timeline',
+        {
+          query: { circleId: circleId.value, year, limit: 1000 },
+        },
+      )
       group.memories = (data.memories ?? []).map(mapMemory)
       group.truncated = data.truncated === true
       group.loaded = true
@@ -243,13 +259,19 @@ export function useMemoryPicker(circleId: Ref<string>) {
     await Promise.all(yearGroups.value.map((g) => loadYearMemories(g.year)))
   }
 
-  async function loadMonthComplete(year: number, month: number): Promise<MemoryItem[]> {
+  async function loadMonthComplete(
+    year: number,
+    month: number,
+  ): Promise<MemoryItem[]> {
     const ym = `${year}-${String(month).padStart(2, '0')}`
     const all: MemoryItem[] = []
     let cursor: string | null = null
     let hasMore = true
     while (hasMore) {
-      const query: Record<string, string> = { circleId: circleId.value, yearMonth: ym }
+      const query: Record<string, string> = {
+        circleId: circleId.value,
+        yearMonth: ym,
+      }
       if (cursor) query.cursor = cursor
       const res = (await ($fetch as Function)('/api/timeline', { query })) as {
         memories: any[]
@@ -290,7 +312,9 @@ export function useMemoryPicker(circleId: Ref<string>) {
   }
 
   // ── Computed helpers ─────────────────────────────────────
-  const isAnyYearLoading = computed(() => yearGroups.value.some((g) => g.loading))
+  const isAnyYearLoading = computed(() =>
+    yearGroups.value.some((g) => g.loading),
+  )
   const hasMemories = computed(() => yearGroups.value.length > 0)
 
   return {

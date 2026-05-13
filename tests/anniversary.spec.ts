@@ -53,12 +53,20 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
 
-function mockCirclesList(page: any, circle_type: string, extra: Record<string, unknown> = {}) {
+function mockCirclesList(
+  page: any,
+  circle_type: string,
+  extra: Record<string, unknown> = {},
+) {
   return page.route('**/api/circles**', (route: any) => {
     if (route.request().method() !== 'GET') return route.continue()
     route.fulfill({
@@ -86,12 +94,21 @@ function mockTimeline(page: any, memories: ReturnType<typeof makeMemory>[]) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories,
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
 
-function mockCircleDetail(page: any, circle_type: string, extra: Record<string, unknown> = {}) {
+function mockCircleDetail(
+  page: any,
+  circle_type: string,
+  extra: Record<string, unknown> = {},
+) {
   return page.route(`**/api/circles/${CIRCLE_ID}**`, (route: any) => {
     if (route.request().method() !== 'GET') return route.continue()
     route.fulfill({
@@ -135,7 +152,9 @@ function mockChildren(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Anniversary anchoring (4.10.4)', () => {
-  test('anniversary display appears on timeline for a couple circle', async ({ page }) => {
+  test('anniversary display appears on timeline for a couple circle', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'couple', { anniversary_date: '2022-06-15' })
     await mockTimeline(page, [makeMemory('mem-1')])
@@ -143,7 +162,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     const circlesReady = page.waitForResponse('**/api/circles**')
     await page.goto('/timeline')
     await circlesReady
-    await expect(page.getByText(/together · Since/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/together · Since/)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
   test('anniversary display appears on timeline for a non-couple circle (Year N of [name])', async ({
@@ -157,10 +178,14 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await page.goto('/timeline')
     await circlesReady
     // Non-couple circles show "Year N of [name] · Since [date]"
-    await expect(page.getByText(/of Our Story · Since/)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/of Our Story · Since/)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
-  test('anniversary display is absent when no anniversary_date is set', async ({ page }) => {
+  test('anniversary display is absent when no anniversary_date is set', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'couple') // anniversary_date: null
     await mockTimeline(page, [makeMemory('mem-1')])
@@ -172,7 +197,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await expect(page.getByText(/of Our Story · Since/)).not.toBeVisible()
   })
 
-  test('circle settings shows anniversary input for couple circle owner', async ({ page }) => {
+  test('circle settings shows anniversary input for couple circle owner', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'couple')
     await mockCircleDetail(page, 'couple')
@@ -180,8 +207,12 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockChildren(page)
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(page.getByText('Anniversary', { exact: true })).toBeVisible({ timeout: 10_000 })
-    await expect(page.locator('input[aria-label="Anniversary date"]')).toBeVisible()
+    await expect(page.getByText('Anniversary', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    })
+    await expect(
+      page.locator('input[aria-label="Anniversary date"]'),
+    ).toBeVisible()
   })
 
   test('circle settings shows trip-date input for friends/travel circle owner', async ({
@@ -197,7 +228,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockChildren(page)
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(page.getByText('Trip date', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Trip date', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page.locator('input[aria-label="Trip date"]')).toBeVisible()
   })
 
@@ -225,11 +258,15 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     })
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(page.locator('input[aria-label="Anniversary date"]')).toBeVisible({
+    await expect(
+      page.locator('input[aria-label="Anniversary date"]'),
+    ).toBeVisible({
       timeout: 10_000,
     })
 
-    await page.locator('input[aria-label="Anniversary date"]').fill('2022-06-15')
+    await page
+      .locator('input[aria-label="Anniversary date"]')
+      .fill('2022-06-15')
     await page
       .locator('input[aria-label="Anniversary date"]')
       .locator('../..')
@@ -240,7 +277,9 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     expect(patchBody).toMatchObject({ anniversaryDate: '2022-06-15' })
   })
 
-  test('circle name field is visible in settings for owner', async ({ page }) => {
+  test('circle name field is visible in settings for owner', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'family')
     await mockCircleDetail(page, 'family')
@@ -248,13 +287,19 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await mockChildren(page)
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(page.getByText('Circle name', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Circle name', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    })
     await expect(page.locator('input[placeholder="Circle name"]')).toBeVisible()
     // Input is pre-filled with the current circle name
-    await expect(page.locator('input[placeholder="Circle name"]')).toHaveValue('Our Story')
+    await expect(page.locator('input[placeholder="Circle name"]')).toHaveValue(
+      'Our Story',
+    )
   })
 
-  test('saving circle name calls PATCH /api/circles/:id with name', async ({ page }) => {
+  test('saving circle name calls PATCH /api/circles/:id with name', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page, 'family')
     await mockCircleDetail(page, 'family')
@@ -280,7 +325,10 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     await expect(nameInput).toBeVisible({ timeout: 10_000 })
 
     await nameInput.fill('The Smiths')
-    await nameInput.locator('../..').getByRole('button', { name: 'Save' }).click()
+    await nameInput
+      .locator('../..')
+      .getByRole('button', { name: 'Save' })
+      .click()
 
     await page.waitForTimeout(500)
     expect(patchBody).toMatchObject({ name: 'The Smiths' })

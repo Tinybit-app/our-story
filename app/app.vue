@@ -30,7 +30,10 @@ watchEffect(async () => {
     } catch {
       circleCount = undefined
     }
-    identifyUser(u.id, circleCount !== undefined ? { circle_count: circleCount } : undefined)
+    identifyUser(
+      u.id,
+      circleCount !== undefined ? { circle_count: circleCount } : undefined,
+    )
     lastIdentifiedId.value = u.id
   } else if (!u && lastIdentifiedId.value) {
     resetUser()

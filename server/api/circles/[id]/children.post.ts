@@ -13,10 +13,12 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const circleId = getRouterParam(event, 'id')
-  if (!circleId) throw createError({ statusCode: 400, message: 'Missing circle ID' })
+  if (!circleId)
+    throw createError({ statusCode: 400, message: 'Missing circle ID' })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid name or date.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid name or date.' })
   const { name, dateOfBirth } = result.data
 
   // Owner-only
@@ -28,7 +30,10 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (!membership || membership.role !== 'owner') {
-    throw createError({ statusCode: 403, message: 'Only the circle owner can manage children.' })
+    throw createError({
+      statusCode: 403,
+      message: 'Only the circle owner can manage children.',
+    })
   }
 
   // Limit to 10 children per circle
@@ -38,7 +43,10 @@ export default defineEventHandler(async (event) => {
     .eq('circle_id', circleId)
 
   if ((count ?? 0) >= 10) {
-    throw createError({ statusCode: 422, message: 'Maximum of 10 children per circle.' })
+    throw createError({
+      statusCode: 422,
+      message: 'Maximum of 10 children per circle.',
+    })
   }
 
   const { data, error } = await supabase

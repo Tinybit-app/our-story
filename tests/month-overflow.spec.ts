@@ -29,7 +29,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -61,7 +65,12 @@ function mockTimelineEmpty(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories: [], nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories: [],
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
@@ -123,29 +132,39 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await expect(page).toHaveURL(/\/timeline$/)
   })
 
-  test('month page with no memories shows empty-state message', async ({ page }) => {
+  test('month page with no memories shows empty-state message', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimelineEmpty(page)
 
     await page.goto('/timeline/2024/06')
     // Header should show the month label
-    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    })
     // Empty state
     await expect(page.getByText(/no memories/i)).toBeVisible({ timeout: 5_000 })
   })
 
-  test('month page shows memory count label when memories exist', async ({ page }) => {
+  test('month page shows memory count label when memories exist', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimelineWithNote(page)
 
     await page.goto('/timeline/2024/06')
     // Count label: "1 memory" or "X memories"
-    await expect(page.getByText(/1 memory|memories/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/1 memory|memories/i)).toBeVisible({
+      timeout: 10_000,
+    })
   })
 
-  test('clicking a quick-note card opens MemoryShell with the note', async ({ page }) => {
+  test('clicking a quick-note card opens MemoryShell with the note', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimelineWithNote(page)
@@ -160,12 +179,18 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await card.click()
 
     // MemoryShell renders the card with inline max-width: 520px for quick notes
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+      timeout: 5_000,
+    })
     // Note content is shown inside the modal
-    await expect(page.getByText('She said mama for the first time today').first()).toBeVisible()
+    await expect(
+      page.getByText('She said mama for the first time today').first(),
+    ).toBeVisible()
   })
 
-  test('Escape key closes the modal opened from the month page', async ({ page }) => {
+  test('Escape key closes the modal opened from the month page', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
     await mockTimelineWithNote(page)
@@ -179,11 +204,15 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+      timeout: 5_000,
+    })
 
     await page.keyboard.press('Escape')
 
-    await expect(page.locator('[style*="max-width: 520px"]')).not.toBeVisible({ timeout: 3_000 })
+    await expect(page.locator('[style*="max-width: 520px"]')).not.toBeVisible({
+      timeout: 3_000,
+    })
   })
 
   test('back link returns to /timeline', async ({ page }) => {
@@ -192,7 +221,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await mockTimelineEmpty(page)
 
     await page.goto('/timeline/2024/06')
-    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    })
 
     // The back link uses NuxtLink to /timeline
     await page.getByRole('link', { name: /back/i }).click()
@@ -202,7 +233,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
   // ── Load-more pagination ─────────────────────────────────────────────────────
 
-  test('clicking "Load more" button loads the next page and appends memories', async ({ page }) => {
+  test('clicking "Load more" button loads the next page and appends memories', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCirclesList(page)
 
@@ -278,7 +311,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await page.goto('/timeline/2024/06')
 
     // Wait for first page to render — count label shows 24
-    await expect(page.getByText(/24 memories/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/24 memories/i)).toBeVisible({
+      timeout: 10_000,
+    })
 
     // "Load more" button should be visible (nextCursor is set)
     const loadMoreBtn = page.getByRole('button', { name: /load more/i })
@@ -288,9 +323,12 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await loadMoreBtn.click()
 
     // Wait for second-page memories to append
-    await page.waitForFunction(() => document.querySelectorAll('article').length >= 27, {
-      timeout: 10_000,
-    })
+    await page.waitForFunction(
+      () => document.querySelectorAll('article').length >= 27,
+      {
+        timeout: 10_000,
+      },
+    )
 
     // Verify second-page memories were appended
     expect(page2Fetched).toBe(true)

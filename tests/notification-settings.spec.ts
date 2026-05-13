@@ -72,7 +72,11 @@ function mockMembership(page: any) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasMembership: true, needsProfile: false, deletedAt: null }),
+      body: JSON.stringify({
+        hasMembership: true,
+        needsProfile: false,
+        deletedAt: null,
+      }),
     }),
   )
 }
@@ -93,13 +97,21 @@ function mockTimeline(page: any, memories: any[]) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ memories, nextCursor: null, children: [], members: [] }),
+      body: JSON.stringify({
+        memories,
+        nextCursor: null,
+        children: [],
+        members: [],
+      }),
     }),
   )
 }
 
 /** Mock GET /api/notification-preferences (server API route). */
-function mockNotificationPrefs(page: any, prefs: Record<string, any> | null = null) {
+function mockNotificationPrefs(
+  page: any,
+  prefs: Record<string, any> | null = null,
+) {
   const defaults = {
     push_enabled: true,
     circle_muted: false,
@@ -142,7 +154,9 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
 
     // Wait for the loading spinner to disappear (circles loaded)
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Push toggle visible
     await expect(page.getByText('Push notifications')).toBeVisible()
@@ -161,7 +175,9 @@ test.describe('Notification settings (10.3)', () => {
     await expect(page.getByRole('button', { name: /off/i })).toBeVisible()
   })
 
-  test('circle selector pills appear for multi-circle users', async ({ page }) => {
+  test('circle selector pills appear for multi-circle users', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE, CIRCLE_TWO])
     await mockNotificationPrefs(page, null)
@@ -169,10 +185,14 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
 
     // Both circle name pills should render
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 10_000,
     })
-    await expect(page.getByRole('button', { name: 'Weekend Crew' })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Weekend Crew' }),
+    ).toBeVisible()
   })
 
   test('circle selector hidden for single-circle users', async ({ page }) => {
@@ -183,13 +203,19 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
 
     // Circle name shown as text, not as a pill button
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // There should be no pill button for the circle (the name is rendered in a <p>, not a <button>)
-    await expect(page.getByRole('button', { name: 'Smith Family' })).not.toBeAttached()
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).not.toBeAttached()
   })
 
-  test('mute active note appears when the mute checkbox is checked', async ({ page }) => {
+  test('mute active note appears when the mute checkbox is checked', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
     // Start with mute enabled so the note is visible immediately
@@ -202,11 +228,15 @@ test.describe('Notification settings (10.3)', () => {
     await page.goto('/notification-settings')
 
     // Wait for the page to fully load
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // The mute active note should be visible because circle_muted is true
     await expect(
-      page.getByText('Push notifications and email digests from this circle are paused.'),
+      page.getByText(
+        'Push notifications and email digests from this circle are paused.',
+      ),
     ).toBeVisible({ timeout: 5_000 })
   })
 
@@ -221,15 +251,21 @@ test.describe('Notification settings (10.3)', () => {
 
     await page.goto('/notification-settings')
 
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Mute note must NOT be present
     await expect(
-      page.getByText('Push notifications and email digests from this circle are paused.'),
+      page.getByText(
+        'Push notifications and email digests from this circle are paused.',
+      ),
     ).not.toBeAttached()
   })
 
-  test('toggling push calls PATCH /api/notification-preferences', async ({ page }) => {
+  test('toggling push calls PATCH /api/notification-preferences', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
     await mockNotificationPrefs(page, {
@@ -254,7 +290,9 @@ test.describe('Notification settings (10.3)', () => {
     })
 
     await page.goto('/notification-settings')
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Click the push checkbox to toggle it off (currently on). Set up the
     // response listener BEFORE the click so we don't race past the PATCH.
@@ -262,15 +300,21 @@ test.describe('Notification settings (10.3)', () => {
     await Promise.all([
       page.waitForResponse(
         (r) =>
-          r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH',
+          r.url().includes('/api/notification-preferences') &&
+          r.request().method() === 'PATCH',
       ),
       pushCheckbox.click(),
     ])
 
-    expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, push_enabled: false })
+    expect(patchBody).toMatchObject({
+      circleId: CIRCLE_ID,
+      push_enabled: false,
+    })
   })
 
-  test('toggling mute calls PATCH /api/notification-preferences', async ({ page }) => {
+  test('toggling mute calls PATCH /api/notification-preferences', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
     await mockNotificationPrefs(page, {
@@ -295,7 +339,9 @@ test.describe('Notification settings (10.3)', () => {
     })
 
     await page.goto('/notification-settings')
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Click the mute checkbox to toggle it on (currently off). Listener
     // before click — see push test for rationale.
@@ -303,7 +349,8 @@ test.describe('Notification settings (10.3)', () => {
     await Promise.all([
       page.waitForResponse(
         (r) =>
-          r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH',
+          r.url().includes('/api/notification-preferences') &&
+          r.request().method() === 'PATCH',
       ),
       muteCheckbox.click(),
     ])
@@ -311,7 +358,9 @@ test.describe('Notification settings (10.3)', () => {
     expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, circle_muted: true })
   })
 
-  test('changing digest calls PATCH /api/notification-preferences', async ({ page }) => {
+  test('changing digest calls PATCH /api/notification-preferences', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
     await mockNotificationPrefs(page, {
@@ -336,34 +385,48 @@ test.describe('Notification settings (10.3)', () => {
     })
 
     await page.goto('/notification-settings')
-    await expect(page.getByText('Smith Family')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Smith Family')).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Click the "Weekly" button (currently on "Monthly"). Listener before
     // click — see push test for rationale.
     await Promise.all([
       page.waitForResponse(
         (r) =>
-          r.url().includes('/api/notification-preferences') && r.request().method() === 'PATCH',
+          r.url().includes('/api/notification-preferences') &&
+          r.request().method() === 'PATCH',
       ),
       page.getByRole('button', { name: /weekly/i }).click(),
     ])
 
-    expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, email_digest_frequency: 'weekly' })
+    expect(patchBody).toMatchObject({
+      circleId: CIRCLE_ID,
+      email_digest_frequency: 'weekly',
+    })
   })
 
-  test('bell icon link to /notification-settings exists in timeline header', async ({ page }) => {
+  test('bell icon link to /notification-settings exists in timeline header', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
     await mockTimeline(page, [PHOTO_MEMORY])
     // Suppress any Supabase calls from other parts of the timeline
     await page.route('**/rest/v1/**', (route: any) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      }),
     )
 
     await page.goto('/timeline')
 
     // Wait for the timeline to be ready (circle name in header)
-    await expect(page.getByRole('button', { name: 'Smith Family' })).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).toBeVisible({
       timeout: 15_000,
     })
 

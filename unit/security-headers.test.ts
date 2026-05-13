@@ -77,7 +77,9 @@ describe('Step 1.6 — Security headers (production mode)', () => {
   })
 
   it('disables camera, microphone, and geolocation via Permissions-Policy', () => {
-    expect(headers['Permissions-Policy']).toBe('camera=(), microphone=(), geolocation=()')
+    expect(headers['Permissions-Policy']).toBe(
+      'camera=(), microphone=(), geolocation=()',
+    )
   })
 
   describe('Content-Security-Policy', () => {
@@ -127,7 +129,10 @@ describe('Step 1.6 — CORS configuration (nuxt.config.ts)', () => {
   it('nuxt.config.ts sets cors: false for /api/** (manual CORS via headers)', async () => {
     const { readFileSync } = await import('fs')
     const { resolve } = await import('path')
-    const config = readFileSync(resolve(__dirname, '..', 'nuxt.config.ts'), 'utf-8')
+    const config = readFileSync(
+      resolve(__dirname, '..', 'nuxt.config.ts'),
+      'utf-8',
+    )
 
     expect(config).toContain('cors: false')
     expect(config).toContain('Access-Control-Allow-Origin')
@@ -143,7 +148,10 @@ describe('Step 1.5 — Sentry client config', () => {
   it('sentry.client.config.ts uses useRuntimeConfig() not process.env.SENTRY_DSN', async () => {
     const { readFileSync } = await import('fs')
     const { resolve } = await import('path')
-    const config = readFileSync(resolve(__dirname, '..', 'sentry.client.config.ts'), 'utf-8')
+    const config = readFileSync(
+      resolve(__dirname, '..', 'sentry.client.config.ts'),
+      'utf-8',
+    )
 
     expect(config).toContain('useRuntimeConfig()')
     expect(config).not.toContain('process.env.SENTRY_DSN')

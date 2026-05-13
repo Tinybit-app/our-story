@@ -212,7 +212,8 @@ export default defineEventHandler(async (event) => {
   if (!user?.sub) throw createError({ statusCode: 401 })
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success) throw createError({ statusCode: 400, message: 'Invalid profile data.' })
+  if (!result.success)
+    throw createError({ statusCode: 400, message: 'Invalid profile data.' })
   const { firstName, lastName, locale } = result.data
 
   // Build update payload — only include fields that were provided
@@ -227,7 +228,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     console.error('[profile] update failed:', error.message)
-    throw createError({ statusCode: 500, message: 'Failed to save profile. Please try again.' })
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to save profile. Please try again.',
+    })
   }
 
   return { ok: true }
@@ -296,11 +300,20 @@ git commit -m "feat(i18n): add locale to profile API, update DB constraint to zh
     "skipForNow": "Skip for now"
   },
   "circleType": {
-    "parents": { "label": "New parents", "description": "Baby milestones & growth" },
+    "parents": {
+      "label": "New parents",
+      "description": "Baby milestones & growth"
+    },
     "couple": { "label": "Couple", "description": "Relationship milestones" },
     "family": { "label": "Family", "description": "General family memories" },
-    "friends": { "label": "Friend group", "description": "Trips, reunions, moments" },
-    "caregiving": { "label": "Caregiving", "description": "Health & life events" },
+    "friends": {
+      "label": "Friend group",
+      "description": "Trips, reunions, moments"
+    },
+    "caregiving": {
+      "label": "Caregiving",
+      "description": "Health & life events"
+    },
     "travel": { "label": "Travel group", "description": "Adventures together" },
     "solo": { "label": "Just me", "description": "Personal timeline" }
   },
@@ -526,9 +539,16 @@ Replace template strings:
 Full updated template section (success state):
 
 ```html
-<div v-if="sent" class="mt-6 rounded-[12px] border border-border bg-card px-5 py-4 text-center">
-  <p class="mb-1 text-sm font-semibold text-foreground">{{ t('login.checkInbox') }}</p>
-  <p class="text-xs leading-relaxed text-muted-foreground">{{ t('login.sentLink', { email }) }}</p>
+<div
+  v-if="sent"
+  class="mt-6 rounded-[12px] border border-border bg-card px-5 py-4 text-center"
+>
+  <p class="mb-1 text-sm font-semibold text-foreground">
+    {{ t('login.checkInbox') }}
+  </p>
+  <p class="text-xs leading-relaxed text-muted-foreground">
+    {{ t('login.sentLink', { email }) }}
+  </p>
   <button
     type="button"
     class="mt-3 text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
@@ -729,7 +749,9 @@ async function toggleLocale() {
   await setLocale(next)
   menuOpen.value = false
   // Fire-and-forget — cookie already updated by setLocale; DB is best-effort
-  $fetch('/api/profile', { method: 'PATCH', body: { locale: next } }).catch(() => {})
+  $fetch('/api/profile', { method: 'PATCH', body: { locale: next } }).catch(
+    () => {},
+  )
 }
 ```
 
@@ -770,8 +792,8 @@ Header:
 Dropdown:
 
 ```html
-{{ t('nav.profileSettings') }} {{ t('nav.inviteMember') }} {{ isDark ? t('nav.lightMode') :
-t('nav.darkMode') }} {{ t('nav.logOut') }}
+{{ t('nav.profileSettings') }} {{ t('nav.inviteMember') }} {{ isDark ?
+t('nav.lightMode') : t('nav.darkMode') }} {{ t('nav.logOut') }}
 ```
 
 Jump modal:
@@ -785,14 +807,15 @@ Invite dialog:
 ```html
 <h2 ...>{{ t('nav.inviteSomeone') }}</h2>
 <p ...>{{ t('nav.inviteDesc', { circle: circle?.name ?? 'your circle' }) }}</p>
-{{ t('nav.cancel') }} {{ inviteSending ? t('nav.sending') : t('nav.sendInvite') }} {{
-t('nav.inviteSentTo', { email: inviteSentTo }) }}
+{{ t('nav.cancel') }} {{ inviteSending ? t('nav.sending') : t('nav.sendInvite')
+}} {{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
 ```
 
 Update `sendInvite()` error messages:
 
 ```ts
-if (msg.includes('already been sent')) inviteError.value = t('nav.inviteAlreadySent')
+if (msg.includes('already been sent'))
+  inviteError.value = t('nav.inviteAlreadySent')
 else if (msg.includes('Max 10')) inviteError.value = t('nav.inviteMaxPending')
 else inviteError.value = t('nav.inviteFailed')
 ```
@@ -834,7 +857,8 @@ Header:
 
 ```html
 <!-- h2 title -->
-{{ items.length === 1 ? t('upload.addMemory') : t('upload.addMemories', items.length) }}
+{{ items.length === 1 ? t('upload.addMemory') : t('upload.addMemories',
+items.length) }}
 
 <!-- + Add more button -->
 {{ t('upload.addMore') }}
@@ -866,7 +890,8 @@ Footer buttons:
 >
 <span v-else-if="allDone">{{ t('upload.allUploaded') }}</span>
 <span v-else
-  >{{ items.length === 1 ? t('upload.upload') : t('upload.uploadN', items.length) }}</span
+  >{{ items.length === 1 ? t('upload.upload') : t('upload.uploadN',
+  items.length) }}</span
 >
 ```
 
@@ -905,19 +930,24 @@ Replace strings in template:
 <p ...>{{ t('timeline.loading') }}</p>
 
 <!-- Month section header -->
-<span ...>{{ group.label }} &middot; {{ t('timeline.memories', group.totalCount) }}</span>
+<span ...
+  >{{ group.label }} &middot; {{ t('timeline.memories', group.totalCount)
+  }}</span
+>
 
 <!-- See more card -->
 <span
-  >+{{ group.totalCount - group.memories.length }} {{ t('timeline.memories', group.totalCount -
-  group.memories.length).replace(/^\d+ /, '') }}</span
+  >+{{ group.totalCount - group.memories.length }} {{ t('timeline.memories',
+  group.totalCount - group.memories.length).replace(/^\d+ /, '') }}</span
 >
 ```
 
 Wait — the "See more" card currently shows `+{{ n }} more` and `Open {{ group.label }} →`. For the memory count word, use `t('timeline.memories', n)` which renders as "5 memories" (including the number). Since we need just the word, do this inline:
 
 ```html
-<span class="leading-snug">+{{ group.totalCount - group.memories.length }} more</span>
+<span class="leading-snug"
+  >+{{ group.totalCount - group.memories.length }} more</span
+>
 <span class="leading-snug">Open {{ group.label }} →</span>
 ```
 
@@ -926,8 +956,14 @@ Leave "more" and "Open ... →" as-is for now (they contain dynamic content and 
 Update the `yearSummary` function to use `t()`:
 
 ```ts
-function yearSummary(yearSection: { year: number; months: MonthGroup[] }): string {
-  const totalMemories = yearSection.months.reduce((sum, g) => sum + g.totalCount, 0)
+function yearSummary(yearSection: {
+  year: number
+  months: MonthGroup[]
+}): string {
+  const totalMemories = yearSection.months.reduce(
+    (sum, g) => sum + g.totalCount,
+    0,
+  )
   const monthCount = yearSection.months.length
   return `${t('timeline.memories', totalMemories)} · ${t('timeline.months', monthCount)}`
 }
