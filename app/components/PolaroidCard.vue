@@ -213,7 +213,7 @@
                     class="flex h-7 w-7 items-center justify-center rounded-lg text-base transition-colors hover:bg-secondary"
                     :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
                     @click.stop="
-                      toggleReaction(e)
+                      toggleReaction(e);
                       pickerOpen = false
                     "
                   >
