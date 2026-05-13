@@ -17,7 +17,7 @@ const lastIdentifiedId = ref<string | null>(null)
 
 watchEffect(async () => {
   const u = user.value
-  if (u && u.id !== lastIdentifiedId.value) {
+  if (u?.id && u.id !== lastIdentifiedId.value) {
     // Fetch a lightweight property for the person profile — circle count.
     // Failure here must not block the app; analytics is best-effort.
     let circleCount: number | undefined
