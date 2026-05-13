@@ -16,6 +16,7 @@
         <div class="flex items-center gap-2">
           <!-- Theme toggle -->
           <button
+            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
             class="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             @click="toggleTheme"
           >
@@ -216,11 +217,11 @@
               <span class="step-bg-numeral" aria-hidden="true"
                 >0{{ i + 1 }}</span
               >
-              <h3
+              <h2
                 class="relative z-10 font-display text-lg font-bold text-foreground mb-2"
               >
                 {{ step.title }}
-              </h3>
+              </h2>
               <p
                 class="relative z-10 text-sm text-muted-foreground leading-relaxed"
               >

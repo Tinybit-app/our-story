@@ -4,19 +4,31 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Our Story',
+      title: "Our Story",
+      htmlAttrs: { lang: "en" },
       meta: [
-        { name: 'description', content: 'Your circle of memories.' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover' },
+        { name: "description", content: "Your circle of memories." },
+        {
+          // No maximum-scale — blocking user zoom fails Lighthouse a11y
+          // (meta-viewport audit). iOS auto-zoom is already prevented by
+          // bumping input font sizes to 16px (build-plan §11.2).
+          name: "viewport",
+          content:
+            "width=device-width, initial-scale=1, viewport-fit=cover",
+        },
       ],
       link: [
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
         {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap',
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
         },
-        { rel: 'manifest', href: '/manifest.json' },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap",
+        },
+        { rel: "manifest", href: "/manifest.json" },
       ],
     },
   },
@@ -38,26 +50,26 @@ export default defineNuxtConfig({
   ],
 
   i18n: {
-    strategy: 'no_prefix',
-    defaultLocale: 'en',
+    strategy: "no_prefix",
+    defaultLocale: "en",
     locales: [
-      { code: 'en',    name: 'English',    shortLabel: 'EN', file: 'en.json' },
-      { code: 'zh-CN', name: '中文',       shortLabel: '中', file: 'zh-CN.json' },
-      { code: 'fr',    name: 'Français',   shortLabel: 'FR', file: 'fr.json' },
+      { code: "en", name: "English", shortLabel: "EN", file: "en.json" },
+      { code: "zh-CN", name: "中文", shortLabel: "中", file: "zh-CN.json" },
+      { code: "fr", name: "Français", shortLabel: "FR", file: "fr.json" },
     ],
-    langDir: '../locales/',
+    langDir: "../locales/",
     detectBrowserLanguage: {
       useCookie: true,
-      cookieKey: 'i18n_locale',
+      cookieKey: "i18n_locale",
       alwaysRedirect: false,
-      fallbackLocale: 'en',
+      fallbackLocale: "en",
     },
   },
 
   colorMode: {
-    classSuffix: '',
-    preference: 'system',
-    fallback: 'light',
+    classSuffix: "",
+    preference: "system",
+    fallback: "light",
   },
 
   supabase: {
@@ -65,7 +77,15 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: "/login",
       callback: "/confirm",
-      exclude: ["/invite/*", "/view", "/view/*", "/", "/pricing", "/privacy", "/terms"],
+      exclude: [
+        "/invite/*",
+        "/view",
+        "/view/*",
+        "/",
+        "/pricing",
+        "/privacy",
+        "/terms",
+      ],
     },
   },
 
@@ -84,7 +104,8 @@ export default defineNuxtConfig({
     "/api/**": {
       cors: false, // handled manually in security-headers middleware
       headers: {
-        "Access-Control-Allow-Origin": process.env.APP_URL ?? "https://our-story.tinybit.app",
+        "Access-Control-Allow-Origin":
+          process.env.APP_URL ?? "https://our-story.tinybit.app",
         "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
@@ -97,7 +118,7 @@ export default defineNuxtConfig({
     upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN,
     jwtSecret: process.env.JWT_SECRET,
     sentryAuthToken: process.env.SENTRY_AUTH_TOKEN,
-    appUrl: process.env.APP_URL,  // used in invite emails and view-only links
+    appUrl: process.env.APP_URL, // used in invite emails and view-only links
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
     vapidSubject: process.env.VAPID_SUBJECT,
     public: {
@@ -106,7 +127,8 @@ export default defineNuxtConfig({
       sentryDsn: process.env.SENTRY_DSN,
       vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
       posthogKey: process.env.NUXT_PUBLIC_POSTHOG_KEY,
-      posthogHost: process.env.NUXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
+      posthogHost:
+        process.env.NUXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com",
     },
   },
 });
