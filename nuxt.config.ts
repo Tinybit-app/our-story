@@ -31,9 +31,12 @@ export default defineNuxtConfig({
         // Favicons. Modern browsers pick the SVG (scales to any DPR);
         // legacy fallbacks remain. iOS uses apple-touch-icon for the
         // home-screen tile. Regenerate via `pnpm build:favicons`.
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        // ?v= bumps cache-bust any time the design changes — browsers and the
+        // service worker key static assets by full URL, so a new query string
+        // forces a fresh fetch even past their aggressive favicon caching.
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=3' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=3' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png?v=3' },
       ],
     },
   },

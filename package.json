@@ -16,8 +16,7 @@
     "db:test": "supabase db test --local",
     "db:types": "supabase gen types typescript --local > app/types/database.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "build:favicons": "node scripts/build-favicons.mjs"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@nuxtjs/color-mode": "^4.0.0",
@@ -51,7 +50,6 @@
     "playwright": "^1.59.1",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
-    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
     "vitest": "^4.1.4"
@@ -61,7 +59,6 @@
       "@parcel/watcher",
       "@sentry/cli",
       "esbuild",
-      "sharp",
       "vue-demi"
     ],
     "ignoredBuiltDependencies": [
