@@ -28,6 +28,12 @@ export default defineNuxtConfig({
           href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap',
         },
         { rel: 'manifest', href: '/manifest.json' },
+        // Favicons. Modern browsers pick the SVG (scales to any DPR);
+        // legacy fallbacks remain. iOS uses apple-touch-icon for the
+        // home-screen tile. Regenerate via `pnpm build:favicons`.
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       ],
     },
   },
