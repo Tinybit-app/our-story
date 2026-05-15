@@ -1,6 +1,9 @@
 <template>
+  <!-- Wrapper width: mobile fills the column up to ~320px, desktop sizes by
+       the article's natural 210px width. Matches PolaroidCard's pattern so
+       both kinds of cards center cleanly on phone. -->
   <div
-    class="relative inline-block flex-shrink-0"
+    class="relative w-full max-w-[320px] flex-shrink-0 sm:inline-block sm:w-auto sm:max-w-none"
     :style="{ zIndex: isHovered ? 10 : 1 }"
   >
     <!-- Stack silhouettes when media_count > 1 (stacked postcards) -->
@@ -17,9 +20,8 @@
 
     <article
       ref="articleEl"
-      class="quick-note-card relative cursor-pointer select-none bg-card"
+      class="quick-note-card relative w-full cursor-pointer select-none bg-card sm:w-[210px]"
       :style="{
-        width: '210px',
         transform: isHovered
           ? 'rotate(0deg) scale(1.04) translateY(-3px)'
           : `rotate(${tilt}deg)`,

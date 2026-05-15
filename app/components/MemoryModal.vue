@@ -218,7 +218,7 @@
             </div>
           </div>
           <span
-            class="select-none px-1.5 text-[11px] font-medium tabular-nums text-white"
+            class="select-none whitespace-nowrap px-1.5 text-[11px] font-medium tabular-nums text-white"
           >
             {{ currentSlideIdx + 1 }} / {{ slides.length }}
           </span>

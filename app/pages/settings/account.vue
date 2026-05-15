@@ -7,7 +7,11 @@
       <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <template v-if="!pendingDeletionDate">
           <NuxtLink
-            to="/timeline"
+            :to="
+              route.query.circle
+                ? `/timeline?circle=${route.query.circle}`
+                : '/timeline'
+            "
             class="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <svg
@@ -473,6 +477,7 @@ import { useAnalytics } from '~/composables/useAnalytics'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const supabase = useSupabaseClient()
 const { track } = useAnalytics()
 

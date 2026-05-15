@@ -16,6 +16,7 @@
     "personalise": "我们将根据你的群体为你提供个性化体验。",
     "continue": "继续",
     "back": "返回",
+    "backToTimeline": "返回时间线",
     "nameCircle": "给你的圈子命名",
     "nameCircleSub": "这是你的成员将看到的名称。",
     "creating": "创建中…",
@@ -555,6 +556,8 @@
   "notificationSettings": {
     "title": "通知设置",
     "selectCircle": "选择圈子",
+    "scopeLabel": "设置范围",
+    "switchCircle": "切换圈子 →",
     "pushNotifications": "推送通知",
     "pushNotificationsDesc": "当成员分享回忆、评论或回应时收到通知。",
     "muteCircle": "静音此圈子",

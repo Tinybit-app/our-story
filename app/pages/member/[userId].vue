@@ -144,7 +144,17 @@ const userId = route.params.userId as string
 
 // ── Circle + member info ───────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
-const circle = computed(() => circlesData.value?.circles?.[0] ?? null)
+// Prefer ?circle=<id> so a member's profile page edits/views the right
+// circle (callers from members.vue / timeline pass the active circle's id).
+const circle = computed(() => {
+  const all = circlesData.value?.circles ?? []
+  const paramId = route.query.circle as string | undefined
+  if (paramId) {
+    const match = all.find((c: any) => c.id === paramId)
+    if (match) return match
+  }
+  return all[0] ?? null
+})
 const circleId = computed<string | null>(() => circle.value?.id ?? null)
 
 const { data: membersData } = await useAsyncData(

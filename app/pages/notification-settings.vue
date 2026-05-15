@@ -40,28 +40,32 @@
         </div>
 
         <template v-else>
-          <!-- Circle selector (only when 2+ circles) -->
-          <div v-if="circles.length > 1" class="flex flex-wrap gap-2">
-            <button
-              v-for="c in circles"
-              :key="c.id"
-              class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
-              :class="
-                selectedCircleId === c.id
-                  ? 'border-foreground bg-secondary text-foreground'
-                  : 'border-border text-muted-foreground hover:border-foreground/30'
+          <!-- Scope indicator: these settings apply to the active circle only.
+               Users with multiple circles switch contexts by going back to the
+               timeline, picking the circle, then re-entering this page — same
+               pattern as Circle Settings, Members, etc. -->
+          <div class="flex items-end justify-between gap-3">
+            <div>
+              <p
+                class="mb-1 select-none text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground"
+              >
+                {{ t('notificationSettings.scopeLabel') }}
+              </p>
+              <p class="text-base font-semibold text-foreground">
+                {{ selectedCircle?.name ?? '—' }}
+              </p>
+            </div>
+            <NuxtLink
+              v-if="circles.length > 1"
+              :to="
+                selectedCircleId
+                  ? `/timeline?circle=${selectedCircleId}`
+                  : '/timeline'
               "
-              @click="selectedCircleId = c.id"
+              class="flex-shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
-              {{ c.name }}
-            </button>
-          </div>
-
-          <!-- Single circle name (when only 1) -->
-          <div v-else>
-            <p class="text-sm font-semibold text-foreground">
-              {{ circles[0].name }}
-            </p>
+              {{ t('notificationSettings.switchCircle') }}
+            </NuxtLink>
           </div>
 
           <div class="h-px bg-border" />
@@ -180,23 +184,35 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
-const router = useRouter()
 
 // ── Circle list ───────────────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
 const circles = computed(() => circlesData.value?.circles ?? [])
 
 const selectedCircleId = ref('')
+const route = useRoute()
+const router = useRouter()
 
-// Auto-select first circle
+// This page edits notification prefs for one circle at a time — the one
+// passed in as ?circle=<id> from the caller (timeline header / dropdown).
+// Switching circles is done via the timeline, not in-page, so we just bind
+// once on first load and never mutate selectedCircleId again afterwards.
 watch(
   circles,
   (list) => {
     if (list.length && !selectedCircleId.value) {
-      selectedCircleId.value = list[0].id
+      const paramId = route.query.circle as string | undefined
+      const matched = paramId
+        ? list.find((c: any) => c.id === paramId)
+        : undefined
+      selectedCircleId.value = matched?.id ?? list[0].id
     }
   },
   { immediate: true },
+)
+
+const selectedCircle = computed(() =>
+  circles.value.find((c: any) => c.id === selectedCircleId.value) ?? null,
 )
 
 // ── Preferences ───────────────────────────────────────────

@@ -17,10 +17,12 @@
         @click="close"
       />
 
-      <!-- Prev arrow -->
+      <!-- Prev arrow — hidden on mobile where the card takes full viewport
+           width and the arrows would overlap modal content. Mobile users
+           close the modal and tap another card. -->
       <button
         v-if="hasPrev"
-        class="absolute left-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:left-6"
+        class="absolute left-3 z-20 hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:left-6 sm:flex"
         style="top: 50%; transform: translateY(-50%)"
         @click.stop="navigate('prev')"
       >
@@ -36,10 +38,10 @@
         </svg>
       </button>
 
-      <!-- Next arrow -->
+      <!-- Next arrow — hidden on mobile (see prev-arrow comment). -->
       <button
         v-if="hasNext"
-        class="absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:right-6"
+        class="absolute right-3 z-20 hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:right-6 sm:flex"
         style="top: 50%; transform: translateY(-50%)"
         @click.stop="navigate('next')"
       >

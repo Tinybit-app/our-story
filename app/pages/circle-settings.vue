@@ -568,7 +568,20 @@ const isDark = computed(() =>
 
 // ── Circle ─────────────────────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
-const circle = computed(() => circlesData.value?.circles?.[0] ?? null)
+const route = useRoute()
+// Prefer ?circle=<id> from the URL so settings always edits the circle the
+// user was just viewing on the timeline. Falls back to the first circle if
+// the param is missing or doesn't match (e.g. user typed /circle-settings
+// directly, or the param is stale).
+const circle = computed(() => {
+  const all = circlesData.value?.circles ?? []
+  const paramId = route.query.circle as string | undefined
+  if (paramId) {
+    const match = all.find((c: any) => c.id === paramId)
+    if (match) return match
+  }
+  return all[0] ?? null
+})
 const circleId = computed<string | null>(() => circle.value?.id ?? null)
 
 const isOwner = computed(() => circle.value?.role === 'owner')

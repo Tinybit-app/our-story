@@ -16,6 +16,7 @@
     "personalise": "We'll personalise your experience based on your group.",
     "continue": "Continue",
     "back": "Back",
+    "backToTimeline": "Back to your timeline",
     "nameCircle": "Name your circle",
     "nameCircleSub": "This is what your members will see.",
     "creating": "Creating…",
@@ -752,6 +753,8 @@
   "notificationSettings": {
     "title": "Notification settings",
     "selectCircle": "Select a circle",
+    "scopeLabel": "Settings for",
+    "switchCircle": "Switch circle →",
     "pushNotifications": "Push notifications",
     "pushNotificationsDesc": "Get notified when members share memories, comment, or react.",
     "muteCircle": "Mute this circle",

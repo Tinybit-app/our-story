@@ -1,6 +1,27 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background px-6">
     <div class="w-full max-w-sm">
+      <!-- Cancel back to timeline (only for users with an existing circle). -->
+      <button
+        v-if="canCancel"
+        type="button"
+        class="-ml-1 mb-5 inline-flex items-center gap-1 rounded-md py-1 pl-1 pr-2 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+        @click="cancelToTimeline"
+      >
+        <svg
+          class="h-3.5 w-3.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        {{ t('onboarding.backToTimeline') }}
+      </button>
+
       <p
         class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
       >
@@ -72,6 +93,15 @@ const circleTypeCookie = useCookie<string | null>('onboarding_circle_type', {
 const circleIdCookie = useCookie<string | null>('onboarding_circle_id', {
   maxAge: 60 * 60 * 2,
 })
+
+// Cancel-to-timeline option — only meaningful when the user already has a
+// circle (i.e. they're creating an additional one and want to back out).
+const { state: userState } = useUserState()
+const canCancel = computed(() => userState.value?.hasMembership === true)
+function cancelToTimeline() {
+  circleTypeCookie.value = null
+  router.push('/timeline')
+}
 
 const placeholder = computed(() => {
   const map: Record<string, string> = {

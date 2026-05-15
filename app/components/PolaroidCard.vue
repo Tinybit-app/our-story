@@ -1,5 +1,11 @@
 <template>
-  <div class="relative inline-block flex-shrink-0" :style="{ zIndex: isHovered ? 10 : 1 }">
+  <!-- Wrapper width: fills the column up to ~320px on mobile, sized by the
+       article's natural width on sm+. The flex-shrink-0 keeps it from
+       collapsing inside the desktop wrap row. -->
+  <div
+    class="relative w-full max-w-[320px] flex-shrink-0 sm:inline-block sm:w-auto sm:max-w-none"
+    :style="{ zIndex: isHovered ? 10 : 1 }"
+  >
     <!-- Stack silhouettes when media_count > 1.
          Offset is biased downward over sideways so the stack peeks out from
          beneath the polaroid (stack-on-table metaphor) without colliding
@@ -19,7 +25,12 @@
     <article
       ref="articleEl"
       class="polaroid-card relative cursor-pointer select-none bg-card p-[8px] pb-[15px] shadow-[0_4px_16px_rgba(44,36,32,.14),0_1px_3px_rgba(44,36,32,.08)]"
-      :class="wide ? 'w-[290px]' : 'w-[210px]'"
+      :class="[
+        // Mobile: card fills the wrapper (which is capped at 320px and
+        // centered by the parent). Desktop: revert to the staggered widths.
+        'w-full',
+        wide ? 'sm:w-[290px]' : 'sm:w-[210px]',
+      ]"
       :style="{
         transform: isHovered ? 'rotate(0deg) scale(1.05) translateY(-4px)' : `rotate(${tilt}deg)`,
         boxShadow: isHovered ? '0 14px 44px rgba(44,36,32,.22)' : undefined,

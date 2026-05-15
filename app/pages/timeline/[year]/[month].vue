@@ -6,7 +6,7 @@
     >
       <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
         <NuxtLink
-          to="/timeline"
+          :to="circleId ? `/timeline?circle=${circleId}` : '/timeline'"
           class="flex flex-shrink-0 items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <svg
@@ -137,9 +137,15 @@ function isWideMemory(id: string): boolean {
 }
 
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
-const circleId = computed<string | null>(
-  () => circlesData.value?.circles?.[0]?.id ?? null,
-)
+// Prefer ?circle=<id> so this month-overflow page stays on the same circle
+// the user was viewing on the main timeline. The "See more" link below
+// passes it; direct-URL visits fall back to the first circle.
+const circleId = computed<string | null>(() => {
+  const all = circlesData.value?.circles ?? []
+  const paramId = route.query.circle as string | undefined
+  if (paramId && all.some((c: any) => c.id === paramId)) return paramId
+  return all[0]?.id ?? null
+})
 
 interface ChildProfile {
   id: string

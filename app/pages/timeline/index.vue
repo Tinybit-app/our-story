@@ -4,7 +4,9 @@
     <header
       class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
     >
-      <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
+      <div
+        class="mx-auto flex max-w-[1280px] items-center gap-2 px-4 py-3 sm:gap-3 sm:px-5 sm:py-3.5"
+      >
         <!-- Circle name / member count -->
         <div class="min-w-0 flex-1">
           <p
@@ -29,11 +31,12 @@
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </button>
-            <!-- Circle settings shortcut (owner only) -->
+            <!-- Circle settings shortcut (owner only). Hidden on mobile —
+                 accessible via the avatar dropdown's profile flow instead. -->
             <NuxtLink
               v-if="circle?.role === 'owner'"
-              to="/circle-settings"
-              class="flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground"
+              :to="circleId ? `/circle-settings?circle=${circleId}` : '/circle-settings'"
+              class="hidden flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground sm:block"
               :title="t('nav.circleSettings')"
             >
               <svg
@@ -49,10 +52,10 @@
                 />
               </svg>
             </NuxtLink>
-            <!-- Notification settings (all members) -->
+            <!-- Notification settings (all members). Hidden on mobile. -->
             <NuxtLink
-              to="/notification-settings"
-              class="flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground"
+              :to="circleId ? `/notification-settings?circle=${circleId}` : '/notification-settings'"
+              class="hidden flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:text-muted-foreground sm:block"
               :title="t('notificationSettings.title')"
             >
               <svg
@@ -67,12 +70,13 @@
               </svg>
             </NuxtLink>
             <template v-if="circle?.memberCount">
-              <span class="flex-shrink-0 text-xs leading-none text-border"
+              <span
+                class="hidden flex-shrink-0 text-xs leading-none text-border sm:inline"
                 >/</span
               >
               <NuxtLink
-                to="/members"
-                class="group inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground transition-colors hover:text-foreground"
+                :to="circleId ? `/members?circle=${circleId}` : '/members'"
+                class="group hidden flex-shrink-0 items-center gap-1 whitespace-nowrap text-[11px] leading-none text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
               >
                 {{ t('nav.members', circle.memberCount) }}
                 <svg
@@ -114,14 +118,17 @@
           </svg>
         </button>
 
-        <!-- Add memory -->
+        <!-- Add memory — icon-only on mobile, icon+label on sm+ -->
         <button
           v-if="circleId"
-          class="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-full bg-primary pl-2.5 pr-3 text-[11px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+          class="flex h-8 flex-shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary text-[11px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 sm:h-7 sm:pl-2.5 sm:pr-3"
+          :class="'aspect-square sm:aspect-auto'"
+          :title="t('nav.addMemory')"
+          :aria-label="t('nav.addMemory')"
           @click="addMemorySheetOpen = true"
         >
           <svg
-            class="h-3.5 w-3.5 flex-shrink-0"
+            class="h-4 w-4 flex-shrink-0 sm:h-3.5 sm:w-3.5"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -132,18 +139,21 @@
             />
             <circle cx="12" cy="13" r="4" />
           </svg>
-          <span>{{ t('nav.addMemory') }}</span>
+          <span class="hidden sm:inline">{{ t('nav.addMemory') }}</span>
         </button>
 
-        <!-- Share link (owner only) -->
+        <!-- Share link (owner only) — icon-only on mobile -->
         <button
           v-if="circle?.role === 'owner'"
           type="button"
-          class="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          class="flex h-8 flex-shrink-0 items-center justify-center gap-1.5 rounded-full border border-border text-[11px] font-semibold text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground sm:h-7 sm:px-3"
+          :class="'aspect-square sm:aspect-auto'"
+          :title="t('viewerLink.shareButton')"
+          :aria-label="t('viewerLink.shareButton')"
           @click="openShareSheet"
         >
           <svg
-            class="h-3.5 w-3.5"
+            class="h-4 w-4 sm:h-3.5 sm:w-3.5"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -156,11 +166,13 @@
               d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
             />
           </svg>
-          <span>{{ t('viewerLink.shareButton') }}</span>
+          <span class="hidden sm:inline">{{
+            t('viewerLink.shareButton')
+          }}</span>
         </button>
 
-        <!-- Language toggle -->
-        <LocalePicker class="flex-shrink-0" />
+        <!-- Language toggle — hidden on mobile (accessible via profile settings) -->
+        <LocalePicker class="hidden flex-shrink-0 sm:flex" />
 
         <!-- Avatar + dropdown -->
         <div ref="menuRef" class="relative flex-shrink-0">
@@ -219,6 +231,69 @@
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                   </svg>
                   {{ t('nav.profileSettings') }}
+                </NuxtLink>
+
+                <!-- Members / Notifications / Circle settings: mobile-only.
+                     On sm+ the inline header icons handle these entry points,
+                     so showing them here too is redundant. -->
+                <NuxtLink
+                  v-if="circle?.memberCount"
+                  :to="circleId ? `/members?circle=${circleId}` : '/members'"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary sm:hidden"
+                  @click="menuOpen = false"
+                >
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  {{ t('nav.members', circle.memberCount) }}
+                </NuxtLink>
+
+                <NuxtLink
+                  :to="circleId ? `/notification-settings?circle=${circleId}` : '/notification-settings'"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary sm:hidden"
+                  @click="menuOpen = false"
+                >
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  {{ t('notificationSettings.title') }}
+                </NuxtLink>
+
+                <NuxtLink
+                  v-if="circle?.role === 'owner'"
+                  :to="circleId ? `/circle-settings?circle=${circleId}` : '/circle-settings'"
+                  class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary sm:hidden"
+                  @click="menuOpen = false"
+                >
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                    />
+                  </svg>
+                  {{ t('nav.circleSettings') }}
                 </NuxtLink>
 
                 <button
@@ -313,6 +388,7 @@
         :loading="loading"
         :has-next-page="!!prevYear"
         :circle-type="circle?.circle_type ?? null"
+        :circle-id="circleId"
         @load-more="fetchTimeline(prevYear ?? undefined)"
         @year-change="onYearChange"
         @open-memory="onOpenMemory"

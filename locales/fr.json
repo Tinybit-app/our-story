@@ -16,6 +16,7 @@
     "personalise": "Nous personnaliserons votre expérience selon votre groupe.",
     "continue": "Continuer",
     "back": "Retour",
+    "backToTimeline": "Retour à votre fil",
     "nameCircle": "Nommez votre cercle",
     "nameCircleSub": "C'est ce que verront vos membres.",
     "creating": "Création en cours…",
@@ -759,6 +760,8 @@
   "notificationSettings": {
     "title": "Paramètres de notification",
     "selectCircle": "Sélectionner un cercle",
+    "scopeLabel": "Paramètres pour",
+    "switchCircle": "Changer de cercle →",
     "pushNotifications": "Notifications push",
     "pushNotificationsDesc": "Soyez notifié quand les membres partagent des souvenirs, commentent ou réagissent.",
     "muteCircle": "Couper les notifications",

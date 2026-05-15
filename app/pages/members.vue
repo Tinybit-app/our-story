@@ -46,10 +46,10 @@
             </svg>
             {{ t('members.invite') }}
           </button>
-          <!-- Circle settings link (owner only) -->
+          <!-- Circle settings link (owner only) — preserves the active circle -->
           <NuxtLink
             v-if="data?.myRole === 'owner'"
-            to="/circle-settings"
+            :to="circleId ? `/circle-settings?circle=${circleId}` : '/circle-settings'"
             class="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             :title="t('nav.circleSettings')"
           >
@@ -97,7 +97,13 @@
               v-for="member in data.members"
               :key="member.id"
               class="-mx-3 flex cursor-pointer items-center gap-4 rounded-xl px-3 py-3 transition-colors hover:bg-secondary/60"
-              @click="router.push(`/member/${member.userId}`)"
+              @click="
+                router.push(
+                  circleId
+                    ? `/member/${member.userId}?circle=${circleId}`
+                    : `/member/${member.userId}`,
+                )
+              "
             >
               <!-- Avatar -->
               <div
@@ -618,7 +624,19 @@ const authUser = useSupabaseUser()
 
 // ── Circle ─────────────────────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
-const circle = computed(() => circlesData.value?.circles?.[0] ?? null)
+// Prefer ?circle=<id> from the URL so this page always reflects the circle
+// the user was viewing on the timeline. Falls back to circles[0] when the
+// param is missing or stale.
+const route = useRoute()
+const circle = computed(() => {
+  const all = circlesData.value?.circles ?? []
+  const paramId = route.query.circle as string | undefined
+  if (paramId) {
+    const match = all.find((c: any) => c.id === paramId)
+    if (match) return match
+  }
+  return all[0] ?? null
+})
 const circleId = computed<string | null>(() => circle.value?.id ?? null)
 const circleName = computed(() => circle.value?.name ?? 'your circle')
 

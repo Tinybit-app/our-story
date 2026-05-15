@@ -82,8 +82,12 @@
             <div class="h-px flex-1 bg-border" />
           </div>
 
-          <!-- Polaroid grid -->
-          <div class="flex flex-wrap items-start gap-6">
+          <!-- Polaroid grid: stacks centered on mobile (each card reads like
+               a memory-book page), wraps as the casual pinned-photo wall on
+               sm+ where the staggered widths from isWideMemory create rhythm. -->
+          <div
+            class="flex flex-col items-center gap-6 sm:flex-row sm:flex-wrap sm:items-start"
+          >
             <template v-for="(memory, i) in group.memories" :key="memory.id">
               <!-- Text-only quick notes get the postcard card -->
               <QuickNoteCard
@@ -107,7 +111,11 @@
             <!-- See more card -->
             <NuxtLink
               v-if="group.hasMore"
-              :to="`/timeline/${group.year}/${group.month}`"
+              :to="
+                props.circleId
+                  ? `/timeline/${group.year}/${group.month}?circle=${props.circleId}`
+                  : `/timeline/${group.year}/${group.month}`
+              "
               class="flex flex-shrink-0 flex-col items-center justify-center gap-1 self-center rounded-[4px] border-2 border-dashed border-muted-foreground/40 px-3 text-center text-[13px] font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
               style="
                 width: 160px;
@@ -147,6 +155,9 @@ const props = defineProps<{
   loading: boolean
   hasNextPage: boolean
   circleType?: string | null
+  // Forwarded to the "See more" link so the month-overflow page renders the
+  // same circle the user was just viewing.
+  circleId?: string | null
 }>()
 
 const typeConfig = computed(() => useCircleTypeConfig(props.circleType, t))
