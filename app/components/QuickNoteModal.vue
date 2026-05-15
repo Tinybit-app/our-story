@@ -296,11 +296,51 @@
             </div>
           </div>
           <div class="relative">
+            <!-- Add-reaction trigger — matches the smiley-with-plus pattern
+                 used on PolaroidCard + MemoryModal. Expands to a labelled
+                 button when no reactions exist yet, collapses to icon-only
+                 once chips above already teach the affordance. -->
             <button
-              class="flex h-8 w-8 items-center justify-center rounded-full border border-border text-[16px] text-muted-foreground transition-colors hover:bg-secondary"
+              class="group inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-border bg-secondary/30 text-muted-foreground transition-all hover:border-accent/50 hover:bg-secondary hover:text-foreground"
+              :class="hasAnyReaction ? 'w-8 px-0' : 'px-3'"
+              :title="t('modal.addReaction')"
+              :aria-label="t('modal.addReaction')"
               @click.stop="pickerOpen = !pickerOpen"
             >
-              +
+              <svg
+                class="h-4 w-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="10.5" cy="13.5" r="7.5" />
+                <circle
+                  cx="8"
+                  cy="12.5"
+                  r="0.6"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <circle
+                  cx="13"
+                  cy="12.5"
+                  r="0.6"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <path d="M7.8 16s.9 1.4 2.7 1.4 2.7-1.4 2.7-1.4" />
+                <path d="M18.5 3.5h4M20.5 1.5v4" />
+              </svg>
+              <span
+                v-if="!hasAnyReaction"
+                class="whitespace-nowrap text-[12px] font-medium"
+              >
+                {{ t('modal.addReaction') }}
+              </span>
             </button>
             <Transition
               enter-active-class="transition duration-100 ease-out"
@@ -956,6 +996,10 @@ const reactionGroups = computed(() => {
   }
   return groups
 })
+
+const hasAnyReaction = computed(
+  () => Object.keys(reactionGroups.value).length > 0,
+)
 
 function reactionTooltip(names: string[]): string {
   if (names.length <= 3) return names.join(', ')

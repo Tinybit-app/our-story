@@ -136,10 +136,13 @@ test.describe('Multi-circle support', () => {
 
     await page.getByText(CIRCLE_2.name).click()
 
-    // Header should now show CIRCLE_2
-    await expect(page.getByRole('button', { name: CIRCLE_2.name })).toBeVisible(
-      { timeout: 5_000 },
-    )
+    // Header should now show CIRCLE_2. exact: true disambiguates from the
+    // switcher's still-fading "C <name> Owner" row during its leave
+    // transition — only the header button has the bare circle name as its
+    // accessible name.
+    await expect(
+      page.getByRole('button', { name: CIRCLE_2.name, exact: true }),
+    ).toBeVisible({ timeout: 5_000 })
   })
 
   test('"Start new circle" button in the switcher navigates to /onboarding', async ({
