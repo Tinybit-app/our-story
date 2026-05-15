@@ -225,10 +225,11 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
       timeout: 10_000,
     })
 
-    // The back link uses NuxtLink to /timeline
+    // The back link uses NuxtLink to /timeline?circle=<id> — preserves the
+    // active circle so the user returns to where they were.
     await page.getByRole('link', { name: /back/i }).click()
-    await page.waitForURL(/\/timeline$/, { timeout: 5_000 })
-    await expect(page).toHaveURL(/\/timeline$/)
+    await page.waitForURL(/\/timeline(\?|$)/, { timeout: 5_000 })
+    await expect(page).toHaveURL(/\/timeline(\?|$)/)
   })
 
   // ── Load-more pagination ─────────────────────────────────────────────────────

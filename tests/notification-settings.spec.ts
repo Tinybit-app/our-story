@@ -175,39 +175,51 @@ test.describe('Notification settings (10.3)', () => {
     await expect(page.getByRole('button', { name: /off/i })).toBeVisible()
   })
 
-  test('circle selector pills appear for multi-circle users', async ({
-    page,
-  }) => {
+  test('multi-circle users see a "Switch circle" link', async ({ page }) => {
+    // Page now edits only the active circle (passed via ?circle=<id>); the
+    // old in-page picker pills are gone. For multi-circle users we render a
+    // "Switch circle →" link back to the timeline so they can change context.
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE, CIRCLE_TWO])
     await mockNotificationPrefs(page, null)
 
     await page.goto('/notification-settings')
 
-    // Both circle name pills should render
-    await expect(
-      page.getByRole('button', { name: 'Smith Family' }),
-    ).toBeVisible({
+    // The active circle's name is shown as a scope label, not a pill
+    await expect(page.getByText('Smith Family')).toBeVisible({
       timeout: 10_000,
     })
+    // The escape hatch link to /timeline is present
+    await expect(
+      page.getByRole('link', { name: /switch circle/i }),
+    ).toBeVisible()
+    // No pill button — picker UI is gone
+    await expect(
+      page.getByRole('button', { name: 'Smith Family' }),
+    ).not.toBeAttached()
     await expect(
       page.getByRole('button', { name: 'Weekend Crew' }),
-    ).toBeVisible()
+    ).not.toBeAttached()
   })
 
-  test('circle selector hidden for single-circle users', async ({ page }) => {
+  test('single-circle users do not see a "Switch circle" link', async ({
+    page,
+  }) => {
     await mockMembership(page)
     await mockCircles(page, [CIRCLE_ONE])
     await mockNotificationPrefs(page, null)
 
     await page.goto('/notification-settings')
 
-    // Circle name shown as text, not as a pill button
+    // Circle name is shown as a scope label
     await expect(page.getByText('Smith Family')).toBeVisible({
       timeout: 10_000,
     })
-
-    // There should be no pill button for the circle (the name is rendered in a <p>, not a <button>)
+    // No "Switch circle" link — there's nothing to switch to
+    await expect(
+      page.getByRole('link', { name: /switch circle/i }),
+    ).not.toBeAttached()
+    // No pill button for the circle
     await expect(
       page.getByRole('button', { name: 'Smith Family' }),
     ).not.toBeAttached()
@@ -430,8 +442,9 @@ test.describe('Notification settings (10.3)', () => {
       timeout: 15_000,
     })
 
-    // There should be an anchor/NuxtLink pointing to /notification-settings
-    const bellLink = page.locator('a[href="/notification-settings"]')
-    await expect(bellLink).toBeAttached({ timeout: 5_000 })
+    // There should be an anchor/NuxtLink pointing to /notification-settings.
+    // The href now includes a ?circle=<id> query so we use prefix-match.
+    const bellLink = page.locator('a[href^="/notification-settings"]')
+    await expect(bellLink.first()).toBeAttached({ timeout: 5_000 })
   })
 })

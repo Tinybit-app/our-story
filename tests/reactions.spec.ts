@@ -195,8 +195,9 @@ test.describe('Emoji reactions (8.2)', () => {
       .first()
     await card.hover()
 
-    // The + picker button should appear
-    const pickerBtn = card.locator('button', { hasText: '+' })
+    // The add-reaction button is now a smiley icon with aria-label
+    // "Add reaction" (no visible "+" text since the redesign).
+    const pickerBtn = card.getByRole('button', { name: /add reaction/i })
     await expect(pickerBtn).toBeVisible({ timeout: 5_000 })
 
     // Click to open picker
@@ -256,7 +257,7 @@ test.describe('Emoji reactions (8.2)', () => {
       .first()
     await card.hover()
 
-    const pickerBtn = card.locator('button', { hasText: '+' })
+    const pickerBtn = card.getByRole('button', { name: /add reaction/i })
     await expect(pickerBtn).toBeVisible({ timeout: 5_000 })
     await pickerBtn.evaluate((btn: HTMLButtonElement) => btn.click())
 
@@ -399,13 +400,14 @@ test.describe('Emoji reactions (8.2)', () => {
       { timeout: 5_000 },
     )
 
-    // Picker + button visible in modal
-    await expect(page.locator('button', { hasText: '+' }).first()).toBeVisible({
-      timeout: 5_000,
-    })
+    // Add-reaction button visible in modal (smiley icon + aria-label)
+    const modalPickerBtn = page
+      .getByRole('button', { name: /add reaction/i })
+      .first()
+    await expect(modalPickerBtn).toBeVisible({ timeout: 5_000 })
 
-    // Click the + to open picker and pick an emoji
-    await page.locator('button', { hasText: '+' }).first().click()
+    // Click to open picker and pick an emoji
+    await modalPickerBtn.click()
     await expect(page.locator('button', { hasText: '🎉' }).first()).toBeVisible(
       { timeout: 3_000 },
     )
@@ -517,8 +519,8 @@ test.describe('Emoji reactions (8.2)', () => {
       timeout: 5_000,
     })
 
-    // Pick a new emoji via the modal's picker (not the QuickNoteCard's always-visible + button)
-    await modal.locator('button', { hasText: '+' }).click()
+    // Pick a new emoji via the modal's add-reaction button (aria-label match)
+    await modal.getByRole('button', { name: /add reaction/i }).click()
     await expect(modal.locator('button', { hasText: '🔥' })).toBeVisible({
       timeout: 3_000,
     })

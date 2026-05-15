@@ -168,8 +168,10 @@ test.describe('Multi-item memories (5.4)', () => {
       timeout: 10_000,
     })
 
-    // A count badge (⊕5 or similar) should appear on multi-item memory cards
-    await expect(page.getByText('⊕5')).toBeVisible({ timeout: 10_000 })
+    // The count badge has aria-label="5 items" and renders a stack icon
+    // alongside the count. Match the accessible name rather than the visual
+    // text, since the visual is just "5" without a glyph prefix now.
+    await expect(page.getByLabel('5 items')).toBeVisible({ timeout: 10_000 })
   })
 
   test('Single-item memories do not show count badge', async ({ page }) => {
@@ -188,6 +190,8 @@ test.describe('Multi-item memories (5.4)', () => {
     await expect(page.getByText('Birthday party')).toBeVisible({
       timeout: 10_000,
     })
-    await expect(page.getByText('⊕')).not.toBeVisible()
+    // Single-item memories don't render a count badge (no aria-labelled
+    // "N items" badge attached).
+    await expect(page.getByLabel(/^\d+ items$/)).not.toBeVisible()
   })
 })
