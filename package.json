@@ -64,6 +64,9 @@
     "ignoredBuiltDependencies": [
       "core-js",
       "protobufjs"
-    ]
+    ],
+    "overrides": {
+      "devalue": ">=5.8.1"
+    }
   }
 }
