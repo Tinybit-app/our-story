@@ -2,11 +2,13 @@
   <div>
     <NuxtRouteAnnouncer />
     <NuxtPage />
+    <Toaster />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAnalytics } from '~/composables/useAnalytics'
+import { Toaster } from '~/components/ui/toast'
 
 const user = useSupabaseUser()
 const { identifyUser, resetUser } = useAnalytics()

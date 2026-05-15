@@ -1,14 +1,16 @@
 <template>
   <div class="relative inline-block flex-shrink-0" :style="{ zIndex: isHovered ? 10 : 1 }">
-    <!-- Stack silhouettes when media_count > 1 -->
+    <!-- Stack silhouettes when media_count > 1.
+         Alternating tilts feel hand-placed; stronger shadows give layers visible
+         depth in dark mode where bg-card otherwise melts into the background. -->
     <div
       v-if="(memory.media_count ?? 1) > 1"
-      class="pointer-events-none absolute inset-0 -z-10 -translate-y-1 translate-x-1 rotate-1 border border-border/40 bg-card shadow-md"
+      class="pointer-events-none absolute inset-0 -z-10 translate-x-2 translate-y-1 -rotate-[3deg] border border-border bg-card shadow-[0_6px_18px_rgba(0,0,0,.28)]"
       aria-hidden="true"
     />
     <div
       v-if="(memory.media_count ?? 1) > 2"
-      class="pointer-events-none absolute inset-0 -z-20 -translate-y-2 translate-x-2 rotate-2 border border-border/30 bg-card shadow-md"
+      class="pointer-events-none absolute inset-0 -z-20 -translate-x-2 translate-y-2 rotate-[4deg] border border-border bg-card shadow-[0_8px_22px_rgba(0,0,0,.26)]"
       aria-hidden="true"
     />
 

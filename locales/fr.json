@@ -101,6 +101,10 @@
     "yesterday": "Hier",
     "daysAgo": "il y a {n} jours"
   },
+  "confirmDialog": {
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
+  },
   "modal": {
     "tabCaption": "Légende",
     "tabComments": "Commentaires",
@@ -137,6 +141,16 @@
     "moveDown": "Descendre",
     "removeSlide": "Supprimer la diapositive",
     "addTextSlide": "Ajouter une diapositive texte",
+    "addMedia": "Ajouter une photo ou vidéo",
+    "adding": "Ajout…",
+    "willBeAdded": "Ajouté à l'enregistrement",
+    "added": "Ajouté",
+    "removeStaged": "Retirer",
+    "uploadFailed": "Échec de l'envoi",
+    "unsavedChanges": "Modifications non enregistrées",
+    "discardConfirm": "Vous avez des modifications non enregistrées. Les abandonner ?",
+    "discard": "Abandonner",
+    "keepEditing": "Continuer",
     "add": "Ajouter"
   },
   "upload": {

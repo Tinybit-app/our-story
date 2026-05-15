@@ -607,9 +607,11 @@
 
 <script setup lang="ts">
 import { useAnalytics } from '~/composables/useAnalytics'
+import { useToast } from '~/components/ui/toast'
 definePageMeta({})
 const { t } = useI18n()
 const { track } = useAnalytics()
+const { toast } = useToast()
 
 const router = useRouter()
 const authUser = useSupabaseUser()
@@ -774,7 +776,10 @@ async function cancelInvite(invite: any) {
     })
     await refresh()
   } catch (err: any) {
-    alert(err?.data?.message ?? t('members.cancelInviteError'))
+    toast({
+      description: err?.data?.message ?? t('members.cancelInviteError'),
+      variant: 'destructive',
+    })
   } finally {
     cancellingId.value = null
   }
@@ -797,7 +802,10 @@ async function resendInvite(invite: any) {
     })
     await refresh()
   } catch (err: any) {
-    alert(err?.data?.message ?? t('members.resendInviteError'))
+    toast({
+      description: err?.data?.message ?? t('members.resendInviteError'),
+      variant: 'destructive',
+    })
   } finally {
     resendingEmail.value = null
   }

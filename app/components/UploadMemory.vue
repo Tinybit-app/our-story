@@ -495,26 +495,26 @@
                   </div>
 
                   <!-- Date + note + milestone + error -->
-                  <div class="space-y-1.5 px-3 py-2">
+                  <div class="space-y-1 px-3 py-1.5">
                     <input
                       v-model="item.date"
                       type="date"
-                      class="w-full bg-transparent text-base text-foreground focus:outline-none"
+                      class="w-full bg-transparent text-sm text-foreground focus:outline-none"
                     />
                     <textarea
                       v-model="item.note"
                       :placeholder="t('upload.noteShort')"
                       rows="1"
                       maxlength="500"
-                      class="w-full resize-none bg-transparent text-base leading-snug text-foreground placeholder:text-muted-foreground focus:outline-none"
-                      style="max-height: 48px; overflow-y: auto"
+                      class="w-full resize-none bg-transparent text-sm leading-snug text-foreground placeholder:text-muted-foreground focus:outline-none"
+                      style="max-height: 40px; overflow-y: auto"
                     />
                     <input
                       v-model="item.milestoneLabel"
                       type="text"
                       :placeholder="typeConfig.milestoneShort"
                       maxlength="40"
-                      class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+                      class="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                     />
                     <!-- Per-item people picker -->
                     <div

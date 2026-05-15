@@ -87,6 +87,7 @@
         <!-- Content — :key resets all local state on navigation -->
         <MemoryModal
           v-if="currentMemory && !isQuickNote"
+          ref="memoryModalRef"
           :key="currentMemory.id"
           :memory="currentMemory"
           :children="children"
@@ -178,6 +179,15 @@ const backdropEl = ref<HTMLElement>()
 const visible = ref(false)
 const navigating = ref(false)
 const currentIndex = ref(0)
+// The active child modal can expose a canClose() guard so we can prompt the
+// user before discarding unsaved edits via backdrop / X / arrow navigation.
+const memoryModalRef = ref<{ canClose?: () => Promise<boolean> } | null>(null)
+
+async function confirmCloseIfNeeded(): Promise<boolean> {
+  const guard = memoryModalRef.value?.canClose
+  if (!guard) return true
+  return guard()
+}
 
 // ── Derived ────────────────────────────────────────────────
 const currentMemory = computed(() => props.memories[currentIndex.value] ?? null)
@@ -255,6 +265,10 @@ async function navigate(dir: 'prev' | 'next') {
     dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
   if (newIdx < 0 || newIdx >= props.memories.length) return
 
+  // Navigating swaps the modal's :key and remounts the child, which would
+  // silently discard in-progress edits. Let the child guard prompt first.
+  if (!(await confirmCloseIfNeeded())) return
+
   navigating.value = true
 
   const el = cardEl.value
@@ -289,6 +303,9 @@ async function navigate(dir: 'prev' | 'next') {
 
 // ── Close ──────────────────────────────────────────────────
 async function close() {
+  // Backdrop/X click also discards unsaved edits — ask the child first.
+  if (!(await confirmCloseIfNeeded())) return
+
   const el = cardEl.value
   const bd = backdropEl.value
 

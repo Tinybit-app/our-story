@@ -98,6 +98,10 @@
     "yesterday": "Yesterday",
     "daysAgo": "{n} days ago"
   },
+  "confirmDialog": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
   "modal": {
     "tabCaption": "Caption",
     "tabComments": "Comments",
@@ -134,6 +138,16 @@
     "moveDown": "Move down",
     "removeSlide": "Remove slide",
     "addTextSlide": "Add text slide",
+    "addMedia": "Add photo or video",
+    "adding": "Adding…",
+    "willBeAdded": "Will be added on save",
+    "added": "Added",
+    "removeStaged": "Remove",
+    "uploadFailed": "Upload failed",
+    "unsavedChanges": "Unsaved changes",
+    "discardConfirm": "You have unsaved changes. Discard them?",
+    "discard": "Discard",
+    "keepEditing": "Keep editing",
     "add": "Add"
   },
   "upload": {
