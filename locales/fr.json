@@ -99,7 +99,9 @@
     "photoAlt": "Souvenir",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
-    "daysAgo": "il y a {n} jours"
+    "daysAgo": "il y a {n} jours",
+    "react": "Réagir",
+    "addReaction": "Ajouter une réaction"
   },
   "confirmDialog": {
     "confirm": "Confirmer",
@@ -151,6 +153,7 @@
     "discardConfirm": "Vous avez des modifications non enregistrées. Les abandonner ?",
     "discard": "Abandonner",
     "keepEditing": "Continuer",
+    "addReaction": "Ajouter une réaction",
     "add": "Ajouter"
   },
   "upload": {

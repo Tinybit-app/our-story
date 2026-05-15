@@ -87,7 +87,9 @@
     "photoAlt": "记忆",
     "today": "今天",
     "yesterday": "昨天",
-    "daysAgo": "{n}天前"
+    "daysAgo": "{n}天前",
+    "react": "反应",
+    "addReaction": "添加表情"
   },
   "confirmDialog": {
     "confirm": "确认",
@@ -139,6 +141,7 @@
     "discardConfirm": "您有未保存的更改。是否丢弃?",
     "discard": "丢弃",
     "keepEditing": "继续编辑",
+    "addReaction": "添加表情",
     "add": "添加"
   },
   "upload": {

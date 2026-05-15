@@ -96,7 +96,9 @@
     "photoAlt": "Memory",
     "today": "Today",
     "yesterday": "Yesterday",
-    "daysAgo": "{n} days ago"
+    "daysAgo": "{n} days ago",
+    "react": "React",
+    "addReaction": "Add reaction"
   },
   "confirmDialog": {
     "confirm": "Confirm",
@@ -148,6 +150,7 @@
     "discardConfirm": "You have unsaved changes. Discard them?",
     "discard": "Discard",
     "keepEditing": "Keep editing",
+    "addReaction": "Add reaction",
     "add": "Add"
   },
   "upload": {

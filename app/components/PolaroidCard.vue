@@ -1,16 +1,18 @@
 <template>
   <div class="relative inline-block flex-shrink-0" :style="{ zIndex: isHovered ? 10 : 1 }">
     <!-- Stack silhouettes when media_count > 1.
-         Alternating tilts feel hand-placed; stronger shadows give layers visible
-         depth in dark mode where bg-card otherwise melts into the background. -->
+         Offset is biased downward over sideways so the stack peeks out from
+         beneath the polaroid (stack-on-table metaphor) without colliding
+         with neighboring cards in the grid. Tilts kept modest for the same
+         reason; the polaroid's own tilt already adds visual variety. -->
     <div
       v-if="(memory.media_count ?? 1) > 1"
-      class="pointer-events-none absolute inset-0 -z-10 translate-x-2 translate-y-1 -rotate-[3deg] border border-border bg-card shadow-[0_6px_18px_rgba(0,0,0,.28)]"
+      class="pointer-events-none absolute inset-0 -z-10 translate-x-[3px] translate-y-[5px] -rotate-[1.5deg] border border-border bg-card shadow-[0_6px_18px_rgba(0,0,0,.28)]"
       aria-hidden="true"
     />
     <div
       v-if="(memory.media_count ?? 1) > 2"
-      class="pointer-events-none absolute inset-0 -z-20 -translate-x-2 translate-y-2 rotate-[4deg] border border-border bg-card shadow-[0_8px_22px_rgba(0,0,0,.26)]"
+      class="pointer-events-none absolute inset-0 -z-20 -translate-x-[3px] translate-y-[10px] rotate-[2deg] border border-border bg-card shadow-[0_8px_22px_rgba(0,0,0,.26)]"
       aria-hidden="true"
     />
 
@@ -146,13 +148,29 @@
           >
         </div>
 
-        <!-- Count badge — bottom-right of photo area when multi-item -->
+        <!-- Count badge — top-right of photo area when multi-item.
+             Sits opposite the milestone tape (top-left) and leaves the
+             bottom edge clear for the reactions / emoji-picker overlay. -->
         <span
           v-if="(memory.media_count ?? 1) > 1"
-          class="pointer-events-none absolute bottom-2 right-2 z-10 inline-flex items-center rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm"
-          aria-label="`${memory.media_count} items`"
+          class="pointer-events-none absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm"
+          :aria-label="`${memory.media_count} items`"
         >
-          ⊕{{ memory.media_count }}
+          <!-- Two stacked squares — clearer "stack" affordance than ⊕. -->
+          <svg
+            class="h-2.5 w-2.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <rect x="8" y="8" width="13" height="13" rx="2" />
+            <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+          </svg>
+          {{ memory.media_count }}
         </span>
 
         <!-- Reaction overlay — appears on hover at bottom of photo -->
@@ -186,13 +204,52 @@
               <span class="text-[10px]">{{ group.count }}</span>
             </button>
 
-            <!-- Picker trigger -->
+            <!-- Picker trigger. Same conditional treatment as the modal:
+                 expanded with a "React" label when the memory has no
+                 reactions yet, collapsed to the smiley-plus icon once the
+                 existing chips already teach what the button does. -->
             <div class="relative ml-auto">
               <button
-                class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-[14px] text-white/80 transition-colors hover:bg-white/30"
+                class="group inline-flex h-7 items-center justify-center gap-1 rounded-full bg-white/15 text-white/90 transition-all hover:bg-white/30"
+                :class="hasAnyReaction ? 'w-7' : 'px-2.5'"
+                :title="t('card.addReaction')"
+                :aria-label="t('card.addReaction')"
                 @click.stop="pickerOpen = !pickerOpen"
               >
-                +
+                <svg
+                  class="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="10.5" cy="13.5" r="7.5" />
+                  <circle
+                    cx="8"
+                    cy="12.5"
+                    r="0.6"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <circle
+                    cx="13"
+                    cy="12.5"
+                    r="0.6"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <path d="M7.8 16s.9 1.4 2.7 1.4 2.7-1.4 2.7-1.4" />
+                  <path d="M18.5 3.5h4M20.5 1.5v4" />
+                </svg>
+                <span
+                  v-if="!hasAnyReaction"
+                  class="whitespace-nowrap text-[11px] font-medium"
+                >
+                  {{ t('card.react') }}
+                </span>
               </button>
 
               <Transition
@@ -415,6 +472,10 @@ const reactionGroups = computed(() => {
   }
   return groups
 })
+
+const hasAnyReaction = computed(
+  () => Object.keys(reactionGroups.value).length > 0,
+)
 
 async function toggleReaction(emoji: string) {
   const userId =
