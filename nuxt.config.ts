@@ -34,9 +34,9 @@ export default defineNuxtConfig({
         // ?v= bumps cache-bust any time the design changes — browsers and the
         // service worker key static assets by full URL, so a new query string
         // forces a fresh fetch even past their aggressive favicon caching.
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=3' },
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=3' },
-        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png?v=3' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=5' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=5' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png?v=5' },
       ],
     },
   },
