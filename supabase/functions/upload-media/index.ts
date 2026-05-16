@@ -3,14 +3,34 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const MAX_PHOTO_BYTES = 50 * 1024 * 1024 // 50 MB
 const MAX_VIDEO_BYTES = 500 * 1024 * 1024 // 500 MB
 
+const APP_URL = Deno.env.get('APP_URL') ?? '*'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': APP_URL,
+  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Vary': 'Origin',
+}
+
+const json = (body: unknown, init: ResponseInit = {}) =>
+  new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      ...(init.headers ?? {}),
+    },
+  })
+
+const text = (body: string, init: ResponseInit = {}) =>
+  new Response(body, {
+    ...init,
+    headers: { ...corsHeaders, ...(init.headers ?? {}) },
+  })
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, content-type',
-      },
-    })
+    return new Response(null, { headers: corsHeaders })
   }
 
   const supabase = createClient(
@@ -23,7 +43,7 @@ Deno.serve(async (req) => {
   const {
     data: { user },
   } = await supabase.auth.getUser(token)
-  if (!user) return new Response('Unauthorized', { status: 401 })
+  if (!user) return text('Unauthorized', { status: 401 })
 
   const formData = await req.formData()
   const file = formData.get('file') as File
@@ -33,17 +53,14 @@ Deno.serve(async (req) => {
   const memoryDate = formData.get('memoryDate') as string | null
 
   if (!file || !circleId) {
-    return Response.json(
-      { error: 'file and circleId are required' },
-      { status: 400 },
-    )
+    return json({ error: 'file and circleId are required' }, { status: 400 })
   }
 
   // File size check
   const isVideo = file.type.startsWith('video/')
   const maxSize = isVideo ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES
   if (file.size > maxSize) {
-    return Response.json({ error: 'file_too_large' }, { status: 413 })
+    return json({ error: 'file_too_large' }, { status: 413 })
   }
 
   // Verify user is a member of this circle
@@ -54,7 +71,7 @@ Deno.serve(async (req) => {
     .eq('circle_id', circleId)
     .maybeSingle()
 
-  if (!membership) return new Response('Forbidden', { status: 403 })
+  if (!membership) return text('Forbidden', { status: 403 })
 
   // Storage quota check (platform_admins are exempt)
   const [{ data: storage }, { data: userRecord }] = await Promise.all([
@@ -71,7 +88,7 @@ Deno.serve(async (req) => {
       (storage?.total_quota_bytes ?? 0) + (storage?.bonus_bytes ?? 0)
     const used = storage?.total_used_bytes ?? 0
     if (used + file.size > quota) {
-      return Response.json({ error: 'storage_full' }, { status: 413 })
+      return json({ error: 'storage_full' }, { status: 413 })
     }
   }
 
@@ -88,7 +105,7 @@ Deno.serve(async (req) => {
     .upload(storagePath, fileBuffer, { contentType: file.type })
 
   if (uploadError) {
-    return Response.json({ error: uploadError.message }, { status: 500 })
+    return json({ error: uploadError.message }, { status: 500 })
   }
 
   // Insert Memory row
@@ -108,7 +125,7 @@ Deno.serve(async (req) => {
   if (memoryError || !memory) {
     // Clean up uploaded file on failure
     await supabase.storage.from('memories-private').remove([storagePath])
-    return Response.json(
+    return json(
       { error: memoryError?.message ?? 'Failed to save memory' },
       { status: 500 },
     )
@@ -131,7 +148,7 @@ Deno.serve(async (req) => {
     // Clean up storage + memory on failure
     await supabase.storage.from('memories-private').remove([storagePath])
     await supabase.from('memory').delete().eq('id', memory.id)
-    return Response.json(
+    return json(
       { error: mediaError?.message ?? 'Failed to save media' },
       { status: 500 },
     )
@@ -143,5 +160,5 @@ Deno.serve(async (req) => {
     .update({ total_used_bytes: (storage?.total_used_bytes ?? 0) + file.size })
     .eq('user_id', user.id)
 
-  return Response.json({ ok: true, memoryId: memory.id, mediaId: media.id })
+  return json({ ok: true, memoryId: memory.id, mediaId: media.id })
 })
