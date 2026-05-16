@@ -15,6 +15,7 @@
     "db:reset": "supabase db reset --local",
     "db:test": "supabase db test --local",
     "db:types": "supabase gen types typescript --local > app/types/database.ts",
+    "supabase:deploy": "bash scripts/deploy-supabase.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
