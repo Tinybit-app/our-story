@@ -276,6 +276,8 @@
       "pendingDeletionDesc": "你的账户将于 {date} 永久删除。届时所有数据将被清除。你可以在此之前取消。",
       "cancelDeletion": "取消删除",
       "canceling": "取消中…",
+      "languageTitle": "语言",
+      "languageDesc": "选择应用界面和接收邮件所使用的语言。",
       "exportTitle": "导出你的数据",
       "exportDesc": "下载某个圈子中的照片、视频和备注压缩包。下载链接将在几分钟内发送至你的邮箱。",
       "exportSelectCircle": "选择圈子",

@@ -171,7 +171,8 @@
           }}</span>
         </button>
 
-        <!-- Language toggle — hidden on mobile (accessible via profile settings) -->
+        <!-- Language toggle — desktop only. Mobile users get an inline
+             pill switcher inside the user dropdown below. -->
         <LocalePicker class="hidden flex-shrink-0 sm:flex" />
 
         <!-- Avatar + dropdown -->
@@ -315,6 +316,40 @@
                   </svg>
                   {{ t('nav.inviteMember') }}
                 </button>
+
+                <!-- Language picker — mobile only.
+                     Desktop has the LocalePicker pill in the header.
+                     On mobile the header is icon-only for space, so this row
+                     gives mobile users the same control without leaving the page. -->
+                <div
+                  class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground sm:hidden"
+                >
+                  <svg
+                    class="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
+                  </svg>
+                  <div class="flex flex-1 gap-0.5 rounded-[10px] border border-border bg-card p-0.5">
+                    <button
+                      v-for="loc in locales"
+                      :key="loc.code"
+                      @click="pickLocale(loc.code)"
+                      class="flex-1 rounded-[8px] px-2 py-1 text-xs font-medium transition-colors"
+                      :class="
+                        locale === loc.code
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
+                    >
+                      {{ (loc as any).shortLabel ?? loc.code.toUpperCase() }}
+                    </button>
+                  </div>
+                </div>
 
                 <!-- Theme toggle -->
                 <button
@@ -717,7 +752,14 @@ import { useAnalytics } from '~/composables/useAnalytics'
 import { useOnboardingIntent } from '~/composables/useOnboardingIntent'
 
 // ── i18n ───────────────────────────────────────────────────
-const { t, locale, setLocale } = useI18n()
+const { t, locale, locales, setLocale } = useI18n()
+
+async function pickLocale(code: string) {
+  await setLocale(code as 'en' | 'zh-CN' | 'fr')
+  $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(
+    () => {},
+  )
+}
 const { track } = useAnalytics()
 
 // Locale-aware month abbreviation using Intl (auto-adapts to zh-CN)

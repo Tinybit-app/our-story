@@ -473,6 +473,8 @@
       "pendingDeletionDesc": "Your account is scheduled for permanent deletion on {date}. All your data will be removed. You can cancel before then.",
       "cancelDeletion": "Cancel deletion",
       "canceling": "Canceling…",
+      "languageTitle": "Language",
+      "languageDesc": "Choose the language used across the app and in emails sent to you.",
       "exportTitle": "Export your data",
       "exportDesc": "Download a zip of photos, videos, and notes from a circle. You'll receive a download link by email within a few minutes.",
       "exportSelectCircle": "Select a circle",

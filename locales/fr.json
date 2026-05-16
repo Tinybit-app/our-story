@@ -480,6 +480,8 @@
       "pendingDeletionDesc": "Votre compte est planifié pour une suppression permanente le {date}. Toutes vos données seront supprimées. Vous pouvez annuler avant cette date.",
       "cancelDeletion": "Annuler la suppression",
       "canceling": "Annulation en cours…",
+      "languageTitle": "Langue",
+      "languageDesc": "Choisissez la langue utilisée dans l'application et dans les courriels qui vous sont envoyés.",
       "exportTitle": "Exportez vos données",
       "exportDesc": "Téléchargez un fichier zip de photos, vidéos et notes d'un cercle. Vous recevrez un lien de téléchargement par courriel dans quelques minutes.",
       "exportSelectCircle": "Sélectionner un cercle",

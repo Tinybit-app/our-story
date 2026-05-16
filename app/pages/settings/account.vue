@@ -89,6 +89,35 @@
           </div>
         </div>
 
+        <!-- ── Language ─────────────────────────────────── -->
+        <div>
+          <h2 class="mb-1 text-base font-semibold text-foreground">
+            {{ t('settings.account.languageTitle') }}
+          </h2>
+          <p class="mb-4 text-sm text-muted-foreground">
+            {{ t('settings.account.languageDesc') }}
+          </p>
+          <div
+            class="inline-flex gap-0.5 rounded-[10px] border border-border bg-card p-0.5"
+          >
+            <button
+              v-for="loc in locales"
+              :key="loc.code"
+              @click="pickLocale(loc.code)"
+              class="rounded-[8px] px-4 py-1.5 text-sm font-medium transition-colors"
+              :class="
+                locale === loc.code
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+            >
+              {{ loc.name }}
+            </button>
+          </div>
+        </div>
+
+        <div class="h-px bg-border" />
+
         <!-- ── Export data ───────────────────────────────── -->
         <div>
           <h2 class="mb-1 text-base font-semibold text-foreground">
@@ -475,8 +504,15 @@
 <script setup lang="ts">
 import { useAnalytics } from '~/composables/useAnalytics'
 
-const { t } = useI18n()
+const { t, locale, locales, setLocale } = useI18n()
 const router = useRouter()
+
+async function pickLocale(code: string) {
+  await setLocale(code as 'en' | 'zh-CN' | 'fr')
+  $fetch('/api/profile', { method: 'PATCH', body: { locale: code } }).catch(
+    () => {},
+  )
+}
 const route = useRoute()
 const supabase = useSupabaseClient()
 const { track } = useAnalytics()
