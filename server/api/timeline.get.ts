@@ -1,6 +1,7 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import { z } from 'zod'
 import { getMilestoneKeyForAge, getAnniversaryYear } from '../utils/milestoneCron'
+import { signedThumbnailUrl } from '../utils/storageUrls'
 
 const YEAR_LIMIT_DEFAULT = 156 // 12 per month × 13 months (main timeline cap)
 const YEAR_LIMIT_MAX = 1000 // hard ceiling for picker use-cases
@@ -408,9 +409,11 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
           const [fullResult, thumbResult] = await Promise.allSettled([
             supabase.storage.from('memories-private').createSignedUrl(storage_path, 3600),
             isVideo
-              ? Promise.resolve({ data: null })
-              : supabase.storage.from('memories-private').createSignedUrl(storage_path, 86400, {
-                  transform: { width: 800, format: 'webp' as 'origin', quality: 85 },
+              ? Promise.resolve(null)
+              : signedThumbnailUrl(supabase, storage_path, 86400, {
+                  width: 800,
+                  format: 'webp',
+                  quality: 85,
                 }),
           ])
           const url =
@@ -418,7 +421,7 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
           const thumbnailUrl = isVideo
             ? url
             : thumbResult.status === 'fulfilled'
-              ? (thumbResult.value.data?.signedUrl ?? url)
+              ? (thumbResult.value ?? url)
               : url
           memorymedia = [{ ...safeMedia, url, thumbnailUrl }]
         }

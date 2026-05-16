@@ -1,4 +1,5 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
+import { signedThumbnailUrl } from '../../utils/storageUrls'
 
 export default defineEventHandler(async (event) => {
   const { token } = getQuery(event) as { token?: string }
@@ -121,12 +122,12 @@ export default defineEventHandler(async (event) => {
       const [fullResult, thumbResult] = await Promise.allSettled([
         supabase.storage.from('memories-private').createSignedUrl(coverRow.storage_path, 3600),
         isVideo
-          ? Promise.resolve({ data: null })
-          : supabase.storage
-              .from('memories-private')
-              .createSignedUrl(coverRow.storage_path, 86400, {
-                transform: { width: 800, format: 'webp' as 'origin', quality: 85 },
-              }),
+          ? Promise.resolve(null)
+          : signedThumbnailUrl(supabase, coverRow.storage_path, 86400, {
+              width: 800,
+              format: 'webp',
+              quality: 85,
+            }),
       ])
 
       const fullUrl =
@@ -134,7 +135,7 @@ export default defineEventHandler(async (event) => {
       const signedUrl = isVideo
         ? fullUrl
         : thumbResult.status === 'fulfilled'
-          ? (thumbResult.value.data?.signedUrl ?? fullUrl)
+          ? (thumbResult.value ?? fullUrl)
           : fullUrl
 
       return {

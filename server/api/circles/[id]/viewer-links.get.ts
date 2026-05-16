@@ -3,6 +3,7 @@ import {
   serverSupabaseClient,
   serverSupabaseServiceRole,
 } from '#supabase/server'
+import { signedThumbnailUrl } from '../../../utils/storageUrls'
 
 const PREVIEW_LIMIT = 5
 
@@ -80,21 +81,19 @@ export default defineEventHandler(async (event) => {
                   .from('memories-private')
                   .createSignedUrl(media.storage_path, 3600),
                 isVideo
-                  ? Promise.resolve({ data: null })
-                  : serviceSupabase.storage
-                      .from('memories-private')
-                      .createSignedUrl(media.storage_path, 3600, {
-                        transform: { width: 100, format: 'webp' as 'origin', quality: 60 },
-                      }),
+                  ? Promise.resolve(null)
+                  : signedThumbnailUrl(serviceSupabase, media.storage_path, 3600, {
+                      width: 100,
+                      format: 'webp',
+                      quality: 60,
+                    }),
               ])
               const fullUrl =
                 fullResult.status === 'fulfilled'
                   ? (fullResult.value.data?.signedUrl ?? null)
                   : null
               const thumbUrl =
-                thumbResult.status === 'fulfilled'
-                  ? (thumbResult.value.data?.signedUrl ?? null)
-                  : null
+                thumbResult.status === 'fulfilled' ? (thumbResult.value ?? null) : null
               return {
                 type: isVideo ? ('video' as const) : ('image' as const),
                 url: thumbUrl ?? fullUrl,
