@@ -92,8 +92,8 @@ Because the token names are unchanged, every page automatically picks up the new
 - **Viewer-link sheets** (`ShareLinksSheet`, `CreateLinkSheet`) — amber accents around link cards become monochrome.
 - **Login & invite/[token] pages** — same.
 - **PushPromptBanner, InstallPromptBanner, MilestoneBanner** — these still render above the timeline. Their amber backgrounds become `bg-secondary` (the new raised grey/black). The "primary CTA" inside each becomes foreground-flipped.
-- **Memory detail modal** (`MemoryShell`) — already uses tokens; flips automatically.
-- **Comments, reactions, member-tagging UI inside the modal** — same.
+- **Memory detail modal** (`MemoryShell`) — fully redesigned per §6 (Drawer + Hero on mobile, side-by-side panel on desktop). Not just a recolor.
+- **Comments, reactions, member-tagging UI inside the modal** — re-styled monochromatically and laid out per the new `MemoryDetail.vue` (§6.6).
 - **Avatar fallbacks** (initials on grey) — neutral, unchanged.
 - **Email templates** (`server/utils/email.ts` and components in `emails/`) — **unaffected**. Emails use inlined hex values, not the runtime tokens. Email branding intentionally stays warm — that surface lives in different inboxes and benefits from softer color than the app.
 - **Sentry / PostHog / Supabase configs** — unaffected.
@@ -118,12 +118,16 @@ These three fonts replace the current `Caveat`, `Playfair Display`, `DM Sans` se
 
 ```
 app/components/
-├── TimelineMosaic.vue       # NEW — desktop ≥ 768px primitive
-├── TimelineCards.vue        # NEW — mobile < 768px primitive
+├── TimelineMosaic.vue       # NEW — desktop ≥ 768px timeline primitive
+├── TimelineCards.vue        # NEW — mobile < 768px timeline primitive
 ├── TimelineFrame.vue        # NEW — shared parent; picks Mosaic vs Cards by viewport
 ├── MosaicCell.vue           # NEW — single grid cell (photo OR note)
-└── DiaryCard.vue            # NEW — single mobile card (photo OR note)
+├── DiaryCard.vue            # NEW — single mobile timeline card (photo OR note)
+├── MemoryViewer.vue         # NEW — photo carousel + swipe-nav (modal §6)
+└── MemoryDetail.vue         # NEW — note + reactions + comments (modal §6)
 ```
+
+`MemoryShell.vue` is **rewritten** in place (same file, replaced content) — it becomes the viewport-aware container that composes `MemoryViewer` + `MemoryDetail`. Public API preserved.
 
 ### 3.2 Components removed
 
@@ -131,7 +135,9 @@ app/components/
 app/components/
 ├── TimelinePolaroid.vue     # DELETE
 ├── PolaroidCard.vue         # DELETE
-└── QuickNoteCard.vue        # DELETE — replaced by .note variant of MosaicCell/DiaryCard
+├── QuickNoteCard.vue        # DELETE — replaced by .note variant of MosaicCell/DiaryCard
+├── MemoryModal.vue          # DELETE — content extracted into MemoryDetail.vue
+└── QuickNoteModal.vue       # DELETE — handled as a MemoryDetail variant
 ```
 
 ### 3.3 Page integration
@@ -315,27 +321,260 @@ When `memory.memorymedia.length === 0 && memory.note`:
 
 ---
 
-## 6. Year / month behavior
+## 6. Memory modal — Drawer + Hero (`MemoryShell.vue`)
 
-### 6.1 IntersectionObserver — current year
+The current modal floats as a centered card with backdrop. On mobile this wastes most of the screen and offers no swipe navigation — to see another memory you must close and re-tap. Mobile is the primary surface for this app; the modal needs to be designed mobile-first, with desktop as a layout adaptation.
+
+**Design pattern: Drawer + Hero.** Mobile-first.
+
+### 6.1 Architecture
+
+```
+app/components/
+├── MemoryShell.vue          # REWRITTEN — full-screen viewport-aware container
+├── MemoryViewer.vue         # NEW — photo carousel with horizontal swipe nav
+└── MemoryDetail.vue         # NEW — note + reactions + comments + input
+                             #       (replaces the bulk of current MemoryModal.vue + QuickNoteModal.vue)
+```
+
+`MemoryShell` decides the layout per viewport using the same `useMediaQuery('(min-width: 768px)')` helper as `TimelineFrame`. The two child components are unchanged across viewports — only their composition changes.
+
+Removed in this section's scope:
+
+```
+app/components/
+├── MemoryModal.vue          # DELETE — content moves into MemoryDetail.vue
+└── QuickNoteModal.vue       # DELETE — quick-note rendering becomes a MemoryDetail variant
+```
+
+Public API on `MemoryShell` is preserved: props `memories`, `startIndex`, `origin-rect`, `tilt`, `children`, `members`, and events `close`, `update`. Page integration in [pages/timeline/index.vue](../../app/pages/timeline/index.vue) does not change.
+
+### 6.2 Mobile layout (< 768px) — the primary design
+
+```
+┌──────────────────────────────────────────┐
+│  ╳            1 / 3            ⇪         │ <- floating chrome (close · counter · share)
+│                                          │
+│            ┌──────────────┐              │
+│         ←  │              │  →            │ <- prev/next memory hint
+│            │    PHOTO     │              │    (small arrows, fade out after 1s)
+│            │              │              │
+│            └──────────────┘              │
+│                                          │
+│           ━━━ photo-strip ━━━            │ <- 3 thumbs (multi-photo only)
+│                                          │
+├──────────────────────────────────────────┤
+│        ━━━ (grabber) ━━━                 │ <- drawer
+│                                          │
+│  12   SAT                       ❤️3 🥹1   │
+│       4:15 PM · Dao                      │
+│                                          │
+│  Dolores Park. She found a *dandelion*,  │
+│  blew it slowly, and laughed at the      │
+│  seeds.                                  │
+│                                          │
+│  ┌─ Mei ─────────────────────────┐       │
+│  │ This is the best one.         │       │
+│  │ Save it for the year-end.     │       │
+│  └───────────────────────────────┘       │
+│                                          │
+│  ┌─ Lily ────────────────────────┐       │
+│  │ Aww 🥺 print this one         │       │
+│  └───────────────────────────────┘       │
+│                                          │
+│  ┌─────────────────────────────────┐     │
+│  │ ☻ Add a comment…           😊   │     │ <- sticky input
+│  └─────────────────────────────────┘     │
+└──────────────────────────────────────────┘
+                ━━━━ (home indicator) ━━━━
+```
+
+**Photo region** (top):
+
+- Fills the area above the drawer.
+- One photo at a time. Multi-photo memories add a 3-up thumbnail strip below the photo (taps switch). Single-photo memories omit the strip.
+- Horizontal swipe on the photo → **prev / next memory** (not prev/next photo within the memory — thumb strip handles that). Spring animation with neighbor preview at the edges.
+- Vertical swipe down on the photo → dismiss the modal (with parallax).
+- Tap on the photo → toggle chrome visibility (full immersion mode hides close button and counter).
+- Floating chrome (top): close button (top-left), `"1 / 3"` photo counter (top-center), share/more (top-right). All on translucent dark pills with backdrop-blur.
+- Small ←/→ hint arrows fade in on photo-tap and fade out after 1s — they are affordances, not the primary navigation (which is swipe).
+
+**Drawer** (bottom):
+
+- Three snap points:
+  - **Peek** (`120px` tall) — grabber + day numeral + weekday + first ~10 words of note.
+  - **Default** (`50vh`) — opens here on memory load. Shows day/meta, full note, reaction summary, first 2-3 comments.
+  - **Full** (`88vh`) — covers the photo down to a `40px` peek strip. All comments scroll inside the drawer body.
+- Drag the grabber (28px hit zone above the visible 36×4px pill) to switch snap points. Drag releases respect velocity (flick to jump two snaps).
+- Surface: `--background` (full dark), top-left/top-right radius `22px`, top shadow `0 -16px 40px rgba(0,0,0,0.5)`.
+- Above the drawer in default snap, the photo remains tappable for navigation gestures — drag distinguishes from tap via VueUse's `usePointerSwipe`.
+
+**Drawer content** (top to bottom):
+
+- **Grabber** — 36×4px pill, `hsl(var(--foreground) / 0.32)`, 8px top margin, centered.
+- **Head row** (14px 18px 8px padding):
+  - Day numeral: Hanken Grotesk 800, 24px, `-0.02em`, `--foreground`.
+  - Weekday (Hanken Grotesk 700, 9px, `0.18em`, uppercase, `--muted-foreground`) + time/author (Hanken Grotesk 400, 11px, `--foreground-faint`) — stacked below numeral. Same treatment as the timeline card head row (§5.4).
+  - Right: **reaction summary pill** — `hsl(var(--foreground) / 0.07)` background, 999px radius, top-3 emojis separated by ` · `. Pill is tappable to expand into the reactor list (deferred to a sub-component reused from current `MemoryModal`).
+- **Note** (`6px 18px 16px` padding):
+  - Hanken Grotesk 400, 14.5px, line-height 1.55, `hsl(var(--foreground) / 0.9)`.
+  - Single-quote → Instrument Serif italic regex (same as §4.6 / §5.4).
+  - Long notes truncate with `line-clamp: 6` in default snap, full text in `Full` snap.
+- **Milestone label** (if `memory.milestone_label`): same pill style as §10.5, rendered above the note.
+- **Comments list**:
+  - Each comment: 24×24px avatar (or initials fallback), name (Hanken Grotesk 700, 12px), text (Hanken Grotesk 400, 13px, line-height 1.4, `hsl(var(--foreground) / 0.82)`). Time relative ("3h", "yesterday") in mono 9.5px below the name on hover/tap (collapsed by default to save space).
+  - Fade-out gradient at bottom when content is cropped by the drawer height.
+- **Sticky input bar** (always anchored to bottom of drawer):
+  - 24×24px self-avatar.
+  - Round input pill: `--secondary` background, 12.5px Hanken Grotesk, placeholder `"Add a comment…"`. Tap expands the drawer to `Full` snap and focuses the input.
+  - 24px bottom padding (account for home indicator).
+
+**Quick-note (text-only) memories on mobile:**
+
+- Drawer opens to `Full` snap by default (no photo to hero).
+- Photo region collapses to a short `bg-secondary` strip at top with the open-quote glyph centered, just enough vertical presence to anchor the chrome.
+- Or alternative (decide during implementation, default to this): no photo region at all on quick-notes — the modal is just the drawer at 100vh. Cleaner.
+
+### 6.3 Desktop layout (≥ 768px)
+
+The Drawer + Hero pattern doesn't translate well past a phone form factor — a draggable drawer at 1280px feels strange. Desktop reuses the same components but composed side-by-side:
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│  ╳                                                            │
+│                                                               │
+│                                                ┌──────────┐   │
+│                                                │ 12 SAT   │   │
+│   ┌────────────────────────────────┐           │ 4:15 PM  │   │
+│   │                                │           │ · Dao    │   │
+│   │                                │           ├──────────┤   │
+│   │                                │           │          │   │
+│   │            PHOTO               │           │  Note    │   │
+│ ←  │                                │ →         │  text…   │   │
+│   │                                │           │          │   │
+│   │                                │           ├──────────┤   │
+│   │                                │           │ ❤️ 3      │   │
+│   │                                │           │ 🥹 1      │   │
+│   └────────────────────────────────┘           ├──────────┤   │
+│                                                │ Comments │   │
+│         •  •  •  (photo dots)                   │  Mei …   │   │
+│                                                │  Lily …  │   │
+│                                                ├──────────┤   │
+│                                                │ Input…   │   │
+│                                                └──────────┘   │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
+```
+
+- **Backdrop:** `rgba(0,0,0,0.78)` + 6px backdrop-blur. Click to dismiss.
+- **Layout:** two-column flex inside a centered container. Photo `~65%`, detail `~35%` (min 360px, max 440px).
+- **Photo region** (`MemoryViewer` reused) — no drawer; rounded 12px corners, 16:10 max aspect, contained with `object-fit: contain` (letterboxed if photo is portrait — black bars match the backdrop).
+- **Detail panel** (`MemoryDetail` reused) — surface `--background`, 12px radius, scroll-y if comments overflow, sticky input at bottom. Same internal anatomy as the mobile drawer.
+- **Prev / next memory:** large 40×40px circular buttons floating outside the photo, at the vertical center of the modal (replaces the existing arrow pattern). Plus `← →` keyboard shortcuts.
+- **Close:** top-right floating button outside the photo, replaces the current corner-stuck close.
+
+The decorative "pin" element on the current `MemoryShell` (the red dot at top-center) is removed — it was part of the polaroid aesthetic.
+
+### 6.4 Shared gestures and keyboard
+
+| Gesture / key | Action | Where it works |
+|---|---|---|
+| Swipe left/right on photo | Prev / next memory | Mobile + desktop touchpads |
+| `←` / `→` arrow keys | Prev / next memory | Desktop |
+| Swipe down on photo | Dismiss with parallax | Mobile only |
+| Drag drawer grabber | Snap to peek / default / full | Mobile only |
+| Tap photo | Toggle chrome (immersion mode) | Mobile only |
+| Tap backdrop | Dismiss | Desktop only |
+| `Esc` | Dismiss | Both |
+| `Space` | Toggle drawer (mobile) / play video (both) | Both |
+| Tap thumb in strip | Switch photo within memory | Both (multi-photo) |
+
+### 6.5 Animations and motion
+
+- **Open:** zoom-in from the clicked card's `rect` (preserves current `origin-rect` prop). Spring duration 280ms, cubic-bezier `(.4, 0, .2, 1)`. Tilt becomes `0` for both mosaic and cards origins (no tilt in either timeline layout).
+- **Close:** reverse — zoom back to origin rect.
+- **Prev/next memory swipe:** photo slides out 100%, new photo slides in. 220ms spring. Drawer stays put (note/comments cross-fade with the new memory's data after the photo settles).
+- **Drawer snap:** 280ms spring. Velocity-aware — a hard flick jumps two snaps.
+
+### 6.6 Component contract — `MemoryDetail.vue`
+
+Used by both mobile drawer and desktop panel. Props:
+
+```ts
+defineProps<{
+  memory: Memory                    // from useTimeline.ts
+  children: ChildProfile[]
+  members: CircleMember[]
+  currentUserId: string | null
+  selfAvatarUrl: string | null
+  selfInitials: string
+  layout: 'drawer' | 'panel'        // affects: head padding, comment density, input position
+}>()
+
+const emit = defineEmits<{
+  update: [patch: Pick<Memory, 'id'> & Partial<Memory>]
+}>()
+```
+
+Internally renders:
+
+- Milestone label (if any).
+- Note (with single-quote serif-italic regex).
+- Reactions list + add-reaction picker.
+- Comments list + comment input + autosave draft (existing behavior in `MemoryModal`).
+- Member-tag and child-tag display.
+
+All of this exists in `MemoryModal.vue` today and is extracted as-is into `MemoryDetail.vue` with monochrome restyling per §2.
+
+### 6.7 Component contract — `MemoryViewer.vue`
+
+Photo / video viewer with internal navigation between memories' first-media items. Props:
+
+```ts
+defineProps<{
+  memories: Memory[]
+  currentIndex: number
+  fitMode: 'cover' | 'contain'      // mobile = cover, desktop = contain
+}>()
+
+const emit = defineEmits<{
+  navigate: ['prev' | 'next']        // user-initiated
+  dismiss: []                        // swipe-down on mobile
+  togglechrome: []                   // tap photo on mobile
+}>()
+```
+
+Handles:
+
+- Showing the first-media item of the current memory (or note-as-image for text-only).
+- Horizontal swipe gestures (mobile) with neighbor preview at the edges.
+- Vertical-swipe-to-dismiss (mobile, with parallax follow).
+- Multi-photo thumb strip below the main photo (mobile only — desktop shows full-size in main panel).
+- Video controls (existing behavior, preserved).
+
+---
+
+## 7. Year / month behavior
+
+### 7.1 IntersectionObserver — current year
 
 Existing pattern from `TimelinePolaroid` (lines 200+): observe year-ribbon elements, emit `year-change` with the year of the most-visible ribbon. Re-implement identically in `TimelineFrame` (the shared parent), so the year pill in the page header updates as the user scrolls regardless of which child layout is active.
 
-### 6.2 `scrollToYear()` ref method
+### 7.2 `scrollToYear()` ref method
 
 Preserved on `TimelineFrame`. Delegates to whichever child layout is mounted. Both children expose the same internal `scrollToYear` method that finds `#anchor-{year}` (year ribbon).
 
-### 6.3 Jump-to-month
+### 7.3 Jump-to-month
 
 Existing `document.getElementById('month-{year}-{month}')` selector in [pages/timeline/index.vue:1033](../../app/pages/timeline/index.vue#L1033) continues to work because both new components use the same anchor IDs.
 
-### 6.4 Infinite scroll
+### 7.4 Infinite scroll
 
 Existing `useIntersectionObserver` on a load-more sentinel ([TimelinePolaroid.vue:204](../../app/components/TimelinePolaroid.vue#L204)) is re-implemented in `TimelineFrame`. Both children render their own sentinel at the bottom; observer logic is shared.
 
 ---
 
-## 7. Breakpoint and viewport switching
+## 8. Breakpoint and viewport switching
 
 ```html
 <!-- TimelineFrame.vue -->
@@ -353,24 +592,23 @@ Where `isDesktop = useMediaQuery('(min-width: 768px)')` (VueUse). 768px because:
 
 ---
 
-## 8. Page-shell parity (no spec change)
+## 9. Page-shell parity (no spec change)
 
 These already work on the timeline page and continue working — they are listed only to confirm scope:
 
 - `MilestoneBanner` (above timeline)
 - `PushPromptBanner` / `InstallPromptBanner`
-- `MemoryShell` modal (the existing photo viewer)
-- `AddMemorySheet` / `QuickNoteForm`
+- `AddMemorySheet` / `QuickNoteForm` (the *write* surfaces)
 - Circle switcher, invite dialog, locale picker, share link sheets
 - Anniversary display in header
 
-The `MemoryShell` modal currently animates from the clicked card's rect with a tilt value. Tilt becomes `0` because mosaic cells and diary cards are not tilted; the rect-based zoom-in transition still works.
+The memory detail modal (`MemoryShell`) is **not** in this list — it is redesigned in §6.
 
 ---
 
-## 9. Edge cases
+## 10. Edge cases
 
-### 9.1 Empty state
+### 10.1 Empty state
 
 Both layouts render the existing empty state when `monthGroups.length === 0 && !loading`. Restyled monochromatically:
 
@@ -381,32 +619,32 @@ Both layouts render the existing empty state when `monthGroups.length === 0 && !
 
 No "scrapbook" iconography. No amber accents.
 
-### 9.2 Loading skeleton (first load)
+### 10.2 Loading skeleton (first load)
 
 - Centered spinner: 20px, 2px border, monochrome (`--foreground` over `transparent`).
 - Caption: Hanken Grotesk 400, 12px, `--muted-foreground`. Text from `t('timeline.loading')`.
 
-### 9.3 Loading more (pagination)
+### 10.3 Loading more (pagination)
 
 Bottom sentinel; while `loading && monthGroups.length > 0`, render a single-row spinner in the grid (desktop) or a 60px tall card-skeleton (mobile). No "Loading…" label — the spinner alone is enough.
 
-### 9.4 Single-photo memory in mobile
+### 10.4 Single-photo memory in mobile
 
 Standard `.img-block` 4:3. No grid.
 
-### 9.5 Memory with milestone label
+### 10.5 Memory with milestone label
 
 Milestone labels (e.g. "First steps") render as a small pill above the copy text, 9px JetBrains Mono uppercase, `0.18em` tracking, `--muted-foreground`, 1px `--border` border, transparent background. **Not** colored — monochrome.
 
 In the mosaic cell variant, milestone labels are hidden (they would clutter the photo). They only appear in the modal and the mobile cards.
 
-### 9.6 Memory without `user` (e.g. orphaned after member removal)
+### 10.6 Memory without `user` (e.g. orphaned after member removal)
 
 Use `memory.former_owner_name` if present, else `"Member"`. This already exists in the data shape.
 
 ---
 
-## 10. i18n
+## 11. i18n
 
 All copy uses existing i18n keys:
 
@@ -426,41 +664,41 @@ Month names continue to be locale-aware via `new Intl.DateTimeFormat(locale, { m
 
 ---
 
-## 11. Tests
+## 12. Tests
 
-### 11.1 Unit (`unit/`)
+### 12.1 Unit (`unit/`)
 
 - `unit/mosaicVariant.test.ts` — NEW. Verify `mosaicVariant()` returns deterministic values for given ids, and that distribution across 10k random ids is ~15% wide, ~13% tall, ~72% square (within 2% tolerance).
 - `unit/useTimeline.test.ts` — existing, no changes (the composable is untouched).
 
-### 11.2 E2E (`tests/`)
+### 12.2 E2E (`tests/`)
 
 - `tests/timeline-year.spec.ts` — update selectors. The test currently asserts polaroid tape labels; rewrite to check for year-ribbon elements with text `"2026 this year"` and the JetBrains Mono tally.
 - `tests/quick-note.spec.ts` — update: a circle with only a text-only memory should render a `.note` cell on desktop (with `"` glyph) and a `.note` card on mobile.
 - `tests/month-overflow.spec.ts` — selectors only (month-row class names change).
 - NEW: `tests/timeline-viewport-switch.spec.ts` — at viewport 800x600 the timeline renders `TimelineMosaic`; at 375x600 it renders `TimelineCards`. Assert the right structural markers exist.
 
-### 11.3 RLS / pgTAP
+### 12.3 RLS / pgTAP
 
 No DB changes → no new RLS tests.
 
 ---
 
-## 12. Out of scope (explicit)
+## 13. Out of scope (explicit)
 
 These are **not** changed in this work and will be handled separately if at all:
 
-- The memory detail modal (`MemoryShell` and its child components — comments, reactions input, member tagging UI). It already exists; we re-skin it in a follow-up spec if needed.
 - The `AddMemory` upload flow's *layout* (its surfaces flip color automatically via tokens; its layout is unchanged).
-- The `QuickNoteForm` modal (only the *display* of quick notes changes; the form to write one does not).
+- The `QuickNoteForm` modal — the *write* surface (where the user composes a quick note). Only the *display* of quick notes changes (§4.6, §5.5, §6 for the modal).
 - The header chrome beyond the brand kicker / year pill recoloring.
-- The Caveat handwritten font. It is dropped from the timeline. It may still appear in email templates and is **explicitly not removed** there as part of this work.
+- The Caveat handwritten font. It is dropped from the timeline and modal. It may still appear in email templates and is **explicitly not removed** there as part of this work.
 - On-this-day / digest / recap surfaces. These render memories outside the timeline and are not affected layout-wise (surfaces flip color via tokens like everything else).
 - The view-only public viewer link page (`pages/view.vue`). Uses its own simpler list; not in scope.
+- Reactor list / commenter-tagging picker UI inside the modal — extracted from current `MemoryModal` and reused as-is, restyled monochromatically. Their *contents* and *interaction* don't change in this work.
 
 ---
 
-## 13. Build sequence (high-level — detailed plan to follow)
+## 14. Build sequence (high-level — detailed plan to follow)
 
 1. **Repaint the theme tokens** in [app/assets/css/globals.css](../../app/assets/css/globals.css): replace the existing `:root` and `.dark` blocks with the Obsidian + Porcelain values from §2.1. Add `--foreground-faint` and `--photo-hover` tokens. Wire `foreground-faint` into Tailwind via the `colors` map in `tailwind.config.ts`. Verify every existing page (onboarding, settings, members, viewer link, etc.) still renders correctly in both modes before any timeline-specific work begins. Fix obvious breaks (e.g. components that hard-coded the amber accent inline rather than reading from the token).
 2. Add `mosaicVariant()` to `useTimeline.ts` + unit test.
@@ -470,20 +708,29 @@ These are **not** changed in this work and will be handled separately if at all:
 6. Build `TimelineCards.vue` consuming `monthGroups`.
 7. Build `TimelineFrame.vue` with viewport switching + IntersectionObserver + load-more sentinel + `scrollToYear` ref API.
 8. Swap `<TimelinePolaroid>` → `<TimelineFrame>` in [pages/timeline/index.vue](../../app/pages/timeline/index.vue).
-9. Update E2E tests for new selectors.
-10. Add `timeline.thisYearSuffix` / `timeline.lastYearSuffix` i18n keys.
-11. Delete `TimelinePolaroid.vue`, `PolaroidCard.vue`, `QuickNoteCard.vue`.
-12. Run `pnpm test`, `pnpm test:e2e`, `pnpm db:test` (the last for completeness — no DB changes).
-13. Manual test: load timeline with 50+ memories, multiple years, mix of photos / videos / text-only / multi-photo memories. Verify desktop ↔ mobile switch at 768px. Verify Obsidian ↔ Porcelain switch via the theme toggle in both viewports. Verify year pill updates on scroll. Verify jump-to-month from header. Verify load-more on scroll to bottom.
+9. Extract `MemoryDetail.vue` from the bulk of [MemoryModal.vue](../../app/components/MemoryModal.vue). Verify it renders standalone with a mock memory.
+10. Build `MemoryViewer.vue` — photo carousel, gestures, dismiss/navigate emit contract.
+11. Rewrite `MemoryShell.vue` — viewport-aware composition. Mobile: drawer with snap points (use a small purpose-built `useSnapDrawer` composable; reach for `@vueuse/gesture` only if friction emerges). Desktop: side-by-side flex.
+12. Manual test the modal in both viewports with a variety of memories (photos, videos, multi-photo, text-only quick notes, memories with milestones, memories with 0/1/many reactions, memories with 0/1/many comments).
+13. Delete `MemoryModal.vue` and `QuickNoteModal.vue` after `MemoryShell` rewrite is functional.
+14. Update E2E tests for new selectors. Specifically: prev/next navigation works on mobile, drawer snap behavior, swipe-to-dismiss, multi-photo thumb strip.
+15. Add `timeline.thisYearSuffix` / `timeline.lastYearSuffix` i18n keys.
+16. Delete `TimelinePolaroid.vue`, `PolaroidCard.vue`, `QuickNoteCard.vue`.
+17. Run `pnpm test`, `pnpm test:e2e`, `pnpm db:test` (the last for completeness — no DB changes).
+18. Manual test full flow: load timeline with 50+ memories, multiple years, mix of photos / videos / text-only / multi-photo memories. Open a memory in both viewports. Swipe / drag / dismiss / navigate. Verify desktop ↔ mobile switch at 768px. Verify Obsidian ↔ Porcelain switch via the theme toggle in both viewports. Verify year pill updates on scroll. Verify jump-to-month from header. Verify load-more on scroll to bottom.
 
 ---
 
-## 14. Risks
+## 15. Risks
 
 - **The `.note` cell in a tight 4-col grid can clash with photos around it.** Mitigation: the `--secondary` background and hairline border make it read as a distinct surface; the Instrument Serif quote glyph signals "text" before the eye lands on the body. If it still looks busy in practice, fallback is to force `.note` cells to row-start positions only (so they sit next to a `.tall` photo and span vertically too) — track and decide during implementation.
 - **Determinism across load-more.** The hash function only depends on memory id, so newly-fetched memories slot in with the right variant immediately. No re-shuffling.
-- **SSR / first paint flash.** Documented in §7. Acceptable.
+- **SSR / first paint flash.** Documented in §8. Acceptable.
 - **Caption text overflow in mobile cards.** `line-clamp: 6` on `.copy` prevents a 1000-word quick note from blowing out the card. (Modal shows full text on click.)
 - **Tests assume polaroid structure today.** Updating selectors is mechanical but must not be skipped (call it out in the plan as a discrete step).
 - **Hard-coded amber hex outside the token system.** Some components may have inlined `#c8a882` or referenced `text-accent` directly. The audit (`rg "c8a882"` and `rg "text-accent\|bg-accent"`) in Step 1 catches these. If the audit finds anything, decide per-instance whether the component should switch to a different token (`--primary`, `--foreground`) or genuinely needs a non-monochrome treatment (e.g. an explicit "warning amber" semantic — unlikely in this app's surfaces).
 - **Light-mode regression in pages we haven't visually re-checked.** The blast radius is everywhere. Step 1 verification must include a quick visual sweep of each route: `/login`, `/`, `/onboarding`, `/timeline`, `/settings/account`, `/members`, `/notification-settings`, `/circle-settings`, `/invite/[token]` (in both modes), in addition to `/view/[code]` to confirm scope boundary.
+- **Drawer drag gesture vs. swipe-to-navigate gesture.** Both live on the mobile modal. The drag region (drawer + grabber) and the swipe region (photo) are spatially separated, but a swipe that starts on the boundary could be ambiguous. Mitigation: prefer Y-axis gestures to consume the drawer, X-axis gestures to consume the photo navigator, decide by direction within the first 12px of movement. Keep the drawer drag start zone hit-target generous (28px above the visible grabber) so the user isn't fighting the photo's swipe target.
+- **Drawer snap implementation.** Snap-point drawers with three positions and velocity-aware flicks are non-trivial. The plan starts with a hand-rolled implementation (CSS `translateY` + `pointer events` + `requestAnimationFrame`). If unforeseen issues arise (e.g. iOS Safari scroll chaining, momentum overshoot), fall back to `@vueuse/gesture` or `motion-v`. Do not let perfect-drawer-physics block the merge — a 2-snap drawer (default + full only) is acceptable if 3-snap proves fiddly.
+- **Quick-note memories on the new modal.** A text-only memory has no photo to hero. The chosen fallback (§6.2) is "drawer at 100vh, no photo region." Verify this reads well against a memory with a 200-word note. If it feels empty, add a subtle pattern/texture behind the note text (existing `repeating-linear-gradient` notebook-line pattern from current `MemoryModal.vue:33` is a candidate — restyled monochromatically).
+- **Existing `MemoryModal.vue` is 2375 lines.** Extracting `MemoryDetail.vue` from it is the largest single mechanical change in this work. Plan must call out which parts move where (note rendering, reactions list, reaction picker, comment list, comment input, comment edit, member tagging, child tagging, milestone label, media share/download buttons) so the extraction is auditable rather than a sea of unreviewable diff. Step 9 of the build sequence should be split into ~4 sub-PRs if the diff is too large to review in one pass.
