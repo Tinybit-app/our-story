@@ -192,6 +192,8 @@
   },
   "common": {
     "back": "Retour",
+    "cancel": "Annuler",
+    "done": "Terminé",
     "justNow": "à l'instant",
     "daysAgo": "il y a {n}j",
     "hoursAgo": "il y a {n}h",
@@ -203,6 +205,12 @@
     "someone": "Quelqu'un",
     "unknown": "Inconnu",
     "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "dateField": {
+    "choose": "Choisir une date",
+    "ariaLabel": "Ouvrir le sélecteur de date",
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant"
   },
   "noCircle": {
     "title": "Vous n'êtes dans aucun cercle",

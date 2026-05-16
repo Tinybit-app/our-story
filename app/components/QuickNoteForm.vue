@@ -68,13 +68,7 @@
             >
               {{ t('quickNote.whenWas') }}
             </p>
-            <input
-              v-model="memoryDate"
-              type="date"
-              :max="todayStr"
-              class="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              :style="{ colorScheme: isDark ? 'dark' : 'light' }"
-            />
+            <DateField v-model="memoryDate" :max="todayStr" />
           </div>
 
           <!-- People picker -->
@@ -152,12 +146,6 @@ import { useAnalytics, classifyMilestone } from '~/composables/useAnalytics'
 
 const { t } = useI18n()
 const { track } = useAnalytics()
-const colorMode = useColorMode()
-const isDark = computed(() =>
-  colorMode.preference === 'system'
-    ? colorMode.value === 'dark'
-    : colorMode.preference === 'dark',
-)
 
 const props = defineProps<{
   circleId: string

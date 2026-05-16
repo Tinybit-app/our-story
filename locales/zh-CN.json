@@ -180,6 +180,8 @@
   },
   "common": {
     "back": "返回",
+    "cancel": "取消",
+    "done": "完成",
     "justNow": "刚刚",
     "daysAgo": "{n}天前",
     "hoursAgo": "{n}小时前",
@@ -191,6 +193,12 @@
     "someone": "某人",
     "unknown": "未知",
     "errorGeneric": "出现错误，请重试。"
+  },
+  "dateField": {
+    "choose": "选择日期",
+    "ariaLabel": "打开日期选择器",
+    "prevMonth": "上一月",
+    "nextMonth": "下一月"
   },
   "noCircle": {
     "title": "你还不在任何圈子里",
