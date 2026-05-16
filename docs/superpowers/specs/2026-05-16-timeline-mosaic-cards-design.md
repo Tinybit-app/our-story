@@ -2,7 +2,7 @@
 
 **Status:** Design — pending implementation plan
 **Date:** 2026-05-16
-**Scope:** Global theme repaint (cream/amber → monochrome) **+** timeline layout replacement (`TimelinePolaroid` → Mosaic-on-desktop / Cards-on-mobile)
+**Scope:** Global theme repaint (cream/amber → monochrome) **+** timeline layout replacement (`TimelinePolaroid` → unified Mosaic across viewports) **+** memory-modal redesign **+** restyling of month, settings, members, and viewer-link surfaces in the new system
 
 ---
 
@@ -23,16 +23,24 @@ This affects every surface that uses `bg-background`, `text-foreground`, `bg-car
 
 ### 1.2 Timeline layout replacement
 
-A single layout cannot serve both viewports well: desktop has horizontal real estate that rewards a packed photo grid, while mobile is intrinsically single-column and reads better as a dated journal.
+Replace `TimelinePolaroid.vue` with a **single Mosaic layout that scales across viewports**:
 
-Replace `TimelinePolaroid.vue` with **two layout primitives sharing one visual language**:
+- **Desktop (≥ 768px).** Four-column edge-to-edge grid, 3px gutters, no card chrome, photos are the design. Apple Photos / Are.na.
+- **Mobile (< 768px).** Same grid, three columns. Same cells, same `.note` quick-note treatment, same year/month markers. The only difference between viewports is column count, expressed in CSS.
 
-- **Desktop (≥ 768px) — Mosaic Tight.** Four-column edge-to-edge grid, 3px gutters, no card chrome, photos are the design. Apple Photos / Are.na.
-- **Mobile (< 768px) — Diary Cards.** Vertical stack of softly-glowing dated cards, big day numerals, mono weekday labels. Apple Journal / Day One refined.
+This is a simplification: one component (`TimelineMosaic`), one mental model. No dual-layout viewport swap, no first-paint flash.
 
-Both viewports share the same typography, the same date treatment, the same quick-note styling, the same year/month markers. Two layouts, one design system, monochromatic in both color modes.
+Note: an earlier revision of this design used a separate "Diary Cards" pattern on mobile. That was rejected because: (a) maintaining two memory-display layouts in one app is costly and creates two mental models to learn, and (b) the mosaic is the brand of Our Story — making it consistent across viewports lets the recipient of any URL (timeline, month page, viewer link) see the same visual language.
 
-The two changes are coupled: the timeline cannot be the only monochrome page (a design island would be jarring), and the theme repaint without the layout replacement would leave polaroid tape labels sitting awkwardly on pure black backgrounds.
+The new layout is applied identically across:
+
+- `/timeline` — the owner's main timeline
+- `/timeline/[year]/[month]` — the focused single-month view (with a personalized "spread" header — §5.1)
+- `/view/[token]` — the public viewer link (with a personalized "For [recipient]" header — §5.4)
+
+### 1.3 Coupling between theme + layout + other surfaces
+
+The theme repaint, the timeline replacement, the memory modal redesign (§6), and the supporting page upgrades (month, settings, members, viewer link — §5) are all coupled. Shipping any subset in isolation creates a design island. They merge as one body of work.
 
 ---
 
@@ -118,31 +126,34 @@ These three fonts replace the current `Caveat`, `Playfair Display`, `DM Sans` se
 
 ```
 app/components/
-├── TimelineMosaic.vue       # NEW — desktop ≥ 768px timeline primitive
-├── TimelineCards.vue        # NEW — mobile < 768px timeline primitive
-├── TimelineFrame.vue        # NEW — shared parent; picks Mosaic vs Cards by viewport
-├── MosaicCell.vue           # NEW — single grid cell (photo OR note)
-├── DiaryCard.vue            # NEW — single mobile timeline card (photo OR note)
-├── MemoryViewer.vue         # NEW — photo carousel + swipe-nav (modal §6)
-└── MemoryDetail.vue         # NEW — note + reactions + comments (modal §6)
+├── TimelineMosaic.vue        # NEW — the single timeline grid (responsive 3-col / 4-col)
+├── MosaicCell.vue            # NEW — single grid cell (photo, video, or .note variant)
+├── MemoryViewer.vue          # NEW — photo carousel + swipe-nav (modal §6)
+├── MemoryDetail.vue          # NEW — note + reactions + comments (modal §6)
+├── MonthSpreadHeader.vue     # NEW — italic month-title hero + sticky prev/next pill (§5.1)
+└── ViewerSpreadHeader.vue    # NEW — "For [recipient]" italic gift header (§5.4)
 ```
 
 `MemoryShell.vue` is **rewritten** in place (same file, replaced content) — it becomes the viewport-aware container that composes `MemoryViewer` + `MemoryDetail`. Public API preserved.
+
+`pages/timeline/index.vue`, `pages/timeline/[year]/[month].vue`, `pages/view.vue`, `pages/notification-settings.vue`, `pages/settings/account.vue`, `pages/circle-settings.vue`, and `pages/members.vue` are all touched. Page integration details for each are in §4 (main timeline) and §5 (other surfaces).
 
 ### 3.2 Components removed
 
 ```
 app/components/
-├── TimelinePolaroid.vue     # DELETE
-├── PolaroidCard.vue         # DELETE
-├── QuickNoteCard.vue        # DELETE — replaced by .note variant of MosaicCell/DiaryCard
-├── MemoryModal.vue          # DELETE — content extracted into MemoryDetail.vue
-└── QuickNoteModal.vue       # DELETE — handled as a MemoryDetail variant
+├── TimelinePolaroid.vue      # DELETE
+├── PolaroidCard.vue          # DELETE
+├── QuickNoteCard.vue         # DELETE — replaced by .note variant of MosaicCell
+├── MemoryModal.vue           # DELETE — content extracted into MemoryDetail.vue
+└── QuickNoteModal.vue        # DELETE — handled as a MemoryDetail variant
 ```
+
+`TimelineCards.vue`, `DiaryCard.vue`, and `TimelineFrame.vue` from an earlier revision of this spec are **not** built — the unified mosaic in §4 removes the need for them.
 
 ### 3.3 Page integration
 
-[`app/pages/timeline/index.vue`](../../app/pages/timeline/index.vue) currently renders `<TimelinePolaroid …>`. Replace with `<TimelineFrame …>`. Props, events, and ref API (`scrollToYear`, `@year-change`, `@open-memory`, `@reaction-update`, `@load-more`) are preserved 1:1 so the parent page does not change.
+[`app/pages/timeline/index.vue`](../../app/pages/timeline/index.vue) currently renders `<TimelinePolaroid …>`. Replace with `<TimelineMosaic …>`. Props, events, and ref API (`scrollToYear`, `@year-change`, `@open-memory`, `@reaction-update`, `@load-more`) are preserved 1:1 so the parent page does not change.
 
 ### 3.4 Data shape — unchanged
 
@@ -150,12 +161,14 @@ app/components/
 
 ---
 
-## 4. Desktop — Mosaic Tight (`TimelineMosaic.vue`)
+## 4. Timeline Mosaic (`TimelineMosaic.vue`)
+
+A single grid that scales by column count. **Three columns on mobile (< 768px), four columns on desktop (≥ 768px).** Same cells, same year/month markers, same `.note` treatment, same gestures. Used identically by the main timeline (`/timeline`), the month view body (`/timeline/[y]/[m]`, §5.1), and the viewer link body (`/view/[token]`, §5.4).
 
 ### 4.1 Structure
 
 ```
-Page header (existing — unchanged styling for now beyond brand-color usage)
+Page header (existing — unchanged styling beyond brand-color usage)
 
 For each year (desc):
   ┌ Year ribbon ─────────────────────────────────┐
@@ -164,7 +177,7 @@ For each year (desc):
 
   For each month in year (desc):
     Month row    May  ·  2026                07 MEMORIES
-    Photo grid (4 cols, 3px gap, mixed spans)
+    Photo grid (3 cols mobile / 4 cols desktop, 3px gap, mixed spans)
 ```
 
 ### 4.2 Year ribbon
@@ -187,11 +200,23 @@ For each year (desc):
 
 ### 4.4 Photo grid
 
-- `display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px;`
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+@media (min-width: 768px) {
+  .grid { grid-template-columns: repeat(4, 1fr); }
+}
+```
+
 - Each `MosaicCell` defaults to `aspect-ratio: 1 / 1`.
 - Variant modifiers via a class:
   - `.wide` → `grid-column: span 2; aspect-ratio: 2 / 1;`
   - `.tall` → `grid-row: span 2; aspect-ratio: 1 / 2;`
+- Span semantics are the same on mobile (in a 3-col grid) and desktop (in a 4-col grid). A `.wide` cell takes 2/3 of a row on mobile and 2/4 on desktop — both read as "this photo is the moment of the row." No row-orphan handling needed; the deterministic hash (§4.5) produces enough variety that gaps are rare and acceptable.
+- Cell minimum width: roughly 118px on a 360px viewport, roughly 320px on a 1280px viewport. Both are readable photo sizes.
 - Hover: `img { filter: brightness(var(--photo-hover)); transform: scale(1.04); transition: .3s; }`. Dark mode brightens (`1.08`); light mode darkens (`0.95`) so photos visibly respond against either background. No border or shadow change — the lift is purely photographic.
 - Click anywhere on cell → emits `openMemory` with `{ memory, rect, tilt: 0 }`. (Tilt stays in the emitted shape to satisfy the existing `MemoryShell` signature in [pages/timeline/index.vue](../../app/pages/timeline/index.vue#L777); the value is always `0` now.)
 
@@ -240,84 +265,160 @@ Avatar, "Add memory" button, share button, etc. keep their current geometry — 
 
 ---
 
-## 5. Mobile — Diary Cards (`TimelineCards.vue`)
+## 5. Other surfaces
 
-### 5.1 Structure
+Four pages adopt the same monochrome system and lean on the unified `TimelineMosaic`, but each has its own header treatment shaped by purpose. All four are mobile-first; desktop is a layout adaptation where it diverges.
 
-```
-Page header (compact — already exists, restyled per §4.7)
+### 5.1 Month view — `/timeline/[year]/[month]` (`MonthSpreadHeader`)
 
-For each year (desc):
-  Year ribbon  (same component as desktop, smaller type)
-  For each month:
-    Month anchor row    MAY 2026  · 07
-    For each memory:
-      DiaryCard
-```
+The focused single-month page. Reuses `TimelineMosaic` filtered to one month for the body. The header signals "you're somewhere intentional" with a magazine-spread treatment.
 
-### 5.2 Year ribbon (mobile variant)
-
-Same content, scaled down: year number Hanken Grotesk 800 18px, italic suffix Instrument Serif 18px, tally JetBrains Mono 9px. Bottom hairline `hsl(var(--foreground) / 0.16)`. No top margin on first ribbon.
-
-### 5.3 Month anchor
-
-- Padding `10px 0 8px`, no border below (cards have their own surfaces).
-- Month name: Hanken Grotesk 800, 12px, uppercase, `0.22em` tracking. Format: `"MAY 2026"` (locale-aware via `Intl.DateTimeFormat`).
-- Count suffix: JetBrains Mono 500, 10px, `--foreground-faint`. Format: `"· 07"`.
-- `id="month-{year}-{month}"` preserved.
-- **Not sticky** in v1. (Sticky requires a stacked offset above the existing sticky page header, and the design works fine without it. Add later if requested.)
-
-### 5.4 DiaryCard (photo or photos)
+**`MonthSpreadHeader` anatomy** (replaces the current minimal header in [pages/timeline/[year]/[month].vue:4](../../app/pages/timeline/[year]/[month].vue#L4)):
 
 ```
-┌─────────────────────────────────────────┐
-│ 25  SUN                          ❤️ 3   │  <- head
-│     6:42 PM · Dao                       │
-│                                         │
-│ ┌─────────────────────────────────┐    │  <- img-block
-│ │                                 │    │
-│ │           [photo 4:3]           │    │
-│ │                                 │    │
-│ └─────────────────────────────────┘    │
-│                                         │
-│ The garden party we almost skipped.     │  <- copy
-│ She fell asleep on Lily's shoulder      │
-│ by seven.                               │
-└─────────────────────────────────────────┘
+┌─ Back ─ Our Story · The Zheng Family · 2026 ──────────┐    <- page strip (compact)
+├─ "The Zheng Family · 2026" (kicker) ───────────────────┤
+│                                                        │
+│   April                                                │    <- Instrument Serif italic
+│                                                        │       clamp(56px, 18vw, 96px)
+│   12 Memories · 2 Milestones · 3 Members              │    <- JetBrains Mono kicker
+│                                                        │
+├─ ◀ MAR ──── APR · 2026 ──── MAY ▶ ────────────────────┤    <- sticky pill nav
+└────────────────────────────────────────────────────────┘
+[ TimelineMosaic — filtered to April 2026 ]
 ```
 
-Surface: `--card`, 18px radius, 1px `hsl(var(--foreground) / 0.04)` border, 12px bottom margin.
+- **Page strip** — same back button + brand kicker as elsewhere. The kicker becomes `"The Zheng Family"`, the title becomes `"April 2026"` (locale-aware via `Intl.DateTimeFormat`).
+- **Hero block** — padding `28px 18px 18px` mobile, `48px 32px 30px` desktop. Contains:
+  - Kicker row: `{Circle name}` (left) + `{Year}` (right), both `font: 500 9px/1 'JetBrains Mono', monospace; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted-foreground)`.
+  - Italic month name: `font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; font-size: clamp(56px, 18vw, 96px); line-height: 0.95; letter-spacing: -0.025em; color: var(--foreground)`.
+  - Meta row: `{N} Memories · {N} Milestones · {N} Members` (each separated by a dim `·`), `font: 500 10px/1.4 'JetBrains Mono'; letter-spacing: 0.16em; uppercase; color: var(--muted-foreground)`. Milestones and Members are computed server-side; if zero, the segment is omitted.
+- **Sticky month-nav pill bar** — `position: sticky; top: 60px`. Three slots: prev-month pill (`◀ MAR`), current pill (centered, filled `--secondary`, contains `APR · 2026`), next-month pill (`MAY ▶`). Each prev/next pill is a route link to the adjacent month if memories exist there (server returns adjacency in the existing API response or via a separate `/api/timeline/months-with-data` call). If no memories exist for the adjacent month, the pill is muted and non-tappable.
+- **Body** — `<TimelineMosaic :memories="filteredMemories" />`, filtered to year+month server-side. Year ribbon is suppressed in this view (the spread header is the year-and-month identifier); month row is suppressed inside the body for the only month visible.
 
-Hover/active: `translateY(-2px)`, border-color → `hsl(var(--foreground) / 0.14)`. Transition 200ms.
+**Data fetching**: existing endpoint `/api/timeline?circleId&year&month` already supports month-scoped queries. The page calls it once at mount.
 
-**Head row** (14px 16px 8px padding):
+**Sharing affordance** (header right): a `Share` icon pill (top-right, in the page strip) lets the owner copy a direct `/timeline/2026/04` deep link to clipboard. Implementation reuses the existing `useShare` composable.
 
-- Day numeral: Hanken Grotesk 800, 24px, `-0.02em`, `--foreground`. From `memory_date`.
-- Weekday: JetBrains Mono 700, 9px, uppercase, `0.18em` tracking, `--muted-foreground`. Locale-aware short form (`SUN`, `MON`, etc.).
-- Time + author: Hanken Grotesk 400, 11px, `--foreground-faint`. Format `"H:MM AM · {FirstName}"`. Time derived from `memory_date` if it has a time component; else omitted and only the name shows.
-- Reaction pill (right): only renders when `memory.memoryreaction.length > 0`. Pill = `hsl(var(--foreground) / 0.06)`, 999px radius, 4px 8px padding, 11px Hanken Grotesk 500, `--muted-foreground`. Content: top emoji + count (computed: most-frequent emoji from the array, with total count).
+### 5.2 Settings pages — Apple Rows pattern
 
-**Image block** — choose one of:
+Applies to all three settings pages: [pages/notification-settings.vue](../../app/pages/notification-settings.vue), [pages/settings/account.vue](../../app/pages/settings/account.vue), [pages/circle-settings.vue](../../app/pages/circle-settings.vue). Same pattern, different content. Owner-only restrictions on `/circle-settings` are preserved.
 
-- 1 photo → `.img-block` full-width 4:3, 14px border-radius, 16px L/R padding.
-- 2+ photos → `.img-grid` 2-col 1:1 thumbnails, 4px gap, 12px radius each. Show first 2 only with a `"+{N − 2}"` overlay on the second when more exist.
-- Video (`media_type` starting with `video/`) → same as photo, with a centered triangle play badge over the thumbnail.
+**Anatomy**:
 
-**Copy**:
+```
+┌─ Back ─ Our Story · Notifications ────────────────────┐    <- page strip
+│                                                        │
+│   How we find you                                      │    <- Instrument Serif italic
+│   When to ping, when to leave you alone.              │    <- subtitle
+│                                                        │
+├─ PUSH ─────────────────────────────────────────────────┤    <- mono section label
+│  ┌────────────────────────────────────────────────┐   │
+│  │ [🔔] Push notifications              [ON]      │   │    <- row
+│  │      New memories, comments, reactions          │   │
+│  ├────────────────────────────────────────────────┤   │
+│  │ [⏰] Quiet hours              10 – 7  ▸         │   │
+│  └────────────────────────────────────────────────┘   │
+├─ EMAIL ────────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────────┐   │
+│  │ [✉] Weekly digest                      [ON]    │   │
+│  ...
+```
 
-- Hanken Grotesk 400, 14px, line-height 1.5, `hsl(var(--foreground) / 0.86)`.
-- `note` text rendered with same single-quote → Instrument Serif italic regex as the mosaic cell.
-- 16px L/R padding, 16px bottom padding.
+- **Page title block** (`22px 18px 14px 18px` padding):
+  - Italic display title: `font: 400 30-34px/1.05 'Instrument Serif', serif; color: var(--foreground)`. Per-page text — e.g. *"How we find you"* (notifications), *"You"* (profile), *"The Zheng Family"* (circle).
+  - Subtitle: `font: 400 12.5px/1.5 'Hanken Grotesk'; color: var(--muted-foreground)`. One-line description of what the page is about.
+- **Section label** (above each group, `0 0 8px 14px` margin): `font: 700 9px/1 'JetBrains Mono'; letter-spacing: 0.22em; uppercase; color: var(--muted-foreground)`. Examples: `PUSH`, `EMAIL`, `PER-CIRCLE`, `PROFILE`, `LANGUAGE`, `CIRCLE`, `MILESTONES`, `DANGER`.
+- **Section card** (`--card`, 14px radius, 1px `var(--border)`, rows separated by `1px hsl(var(--foreground) / 0.05)` hairlines):
+  - Each row: `13px 14px` padding, `flex; align-items: center; gap: 14px`.
+  - **Icon slot** (28×28, 8px radius, `hsl(var(--foreground) / 0.06)` background): single-line stroke icon at 14px, `hsl(var(--foreground) / 0.78)`. Optional — not all rows have icons.
+  - **Label stack**: label (`font: 500 14px 'Hanken Grotesk'; color: var(--foreground)`) on top, hint (`font: 400 11px/1.35 'Hanken Grotesk'; color: var(--muted-foreground)`) below.
+  - **Control slot** (right-aligned):
+    - **Toggle**: 40×22 pill. Off = `hsl(var(--foreground) / 0.1)` track + white knob. On = `var(--foreground)` track + inverted-foreground knob. 200ms transition.
+    - **Value + chevron**: muted value text (`13px 'Hanken Grotesk'; color: var(--muted-foreground)`) + `>` chevron — indicates the row drills into a sub-page or sheet.
+    - **Segmented control**: 4–5px-padded inline pill group, `hsl(var(--foreground) / 0.06)` background, selected option `--foreground` background + `--background` text.
 
-### 5.5 DiaryCard.note (text-only quick note)
+**Per-page content** (no scope change — just visual restyling of existing forms):
 
-When `memory.memorymedia.length === 0 && memory.note`:
+- `/notification-settings`: Push (notifications toggle, quiet-hours sub-row) · Email (digest segmented daily/weekly/monthly/off, milestone-nudges toggle) · Per-Circle (one drill-row per circle the user belongs to, showing current preference).
+- `/settings/account`: Profile (first name input, last name input, avatar uploader drill-row) · Language (radio rows: English / 中文 / Français) · Account (email read-only row, password change drill-row, log out row, delete account row in red).
+- `/circle-settings` (owner only): About (circle name input, circle type segmented control, anniversary date drill-row) · Members (count summary row, drill-rows for invite + manage) · Children (one drill-row per child profile + an "add child" row) · Danger (delete circle row, destructive).
 
-- Surface: `--secondary`, 1px `hsl(var(--foreground) / 0.08)` border (slightly stronger than photo cards to give text-only weight).
-- Head row identical (day numeral, weekday, time, reaction pill).
-- No image block.
-- Body: Hanken Grotesk 400, 15px, line-height 1.55, `--foreground`. 16/18px padding.
-- Body prefixed by an Instrument Serif italic `"` glyph (28px, 0.5 line-height, `hsl(var(--foreground) / 0.35)`, 8px bottom margin) as a typographic flourish — same gesture as the mosaic quick-note cell.
+**Save behavior**: auto-save on toggle/segmented change with a brief "Saved" pill animation top-right (existing behavior in [pages/notification-settings.vue](../../app/pages/notification-settings.vue) — preserve). Text-input rows debounce-save on blur or after 800ms idle.
+
+### 5.3 Members — `/members` (Roster pattern)
+
+Same vocabulary as the Apple Rows settings (§5.2) for consistency, but with member-shaped content. Reuses no special component beyond the row primitives.
+
+```
+┌─ Back ─ The Zheng Family · Members ───────────────────┐
+├─ Hero card ────────────────────────────────────────────┤
+│  THE ZHENG FAMILY                                      │
+│  Four of us.                                           │    <- italic display title
+│  3 Members · 1 Pending · Since Aug 2024                │    <- mono meta
+│  ┌──────────────────────────────────┐                  │
+│  │ + Invite someone                 │  (primary CTA)   │
+│  └──────────────────────────────────┘                  │
+├─ ACTIVE ───────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────────┐   │
+│  │ [Av] Dao  YOU         Joined Aug '24 ·  187 m   │   │  Owner chip (filled)
+│  ├────────────────────────────────────────────────┤   │
+│  │ [Av] Mei              Joined Aug '24 ·  142 m   │   │  Admin chip (outlined)
+│  ├────────────────────────────────────────────────┤   │
+│  │ [Av] Lily             Joined Oct '24 ·   12 m   │   │  Member chip (muted)
+│  └────────────────────────────────────────────────┘   │
+├─ PENDING ──────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────────┐   │
+│  │ [+ ] grandma@…        Invited 2d ago · Resend   │   │  Pending chip (muted)
+│  └────────────────────────────────────────────────┘   │
+```
+
+- **Hero card** (`--card-elevated`, `18px` radius, `1px var(--border)`, `18px 16px` padding): kicker (the circle name in `9px mono uppercase` muted), italic display title (`Instrument Serif 30px`), mono meta line, and a full-width primary CTA pill ("Invite Someone" — opens the existing invite sheet).
+- **Section labels**: `ACTIVE` / `PENDING` in mono uppercase, same treatment as §5.2.
+- **Member row** (`12px 14px` padding, hairlines between rows):
+  - **Avatar** (36×36, 50% radius). Falls back to initials on `--secondary` background.
+  - **Name stack**: Name (`font: 600 14px 'Hanken Grotesk'`) with optional `YOU` tag inline (`font: 400 10px/1 'JetBrains Mono'; letter-spacing: 0.16em; muted; uppercase`). Hint below: `Joined {month '24} · {N} memories`.
+  - **Role chip** (right):
+    - Owner — `--foreground` background, `--background` text. Filled.
+    - Admin — `1px var(--foreground)` border, transparent. Outlined.
+    - Member — `var(--muted-foreground)` text, no chip background. Just text.
+    - Pending — same as Member but row body is `opacity: 0.7`, avatar is a dashed-circle `+` placeholder.
+  - **Chevron** (for the owner / admin viewing the row): drills into the member detail sheet (kick, change role) which already exists at [pages/member/[userId].vue](../../app/pages/member/[userId].vue). The row is non-tappable for non-admin viewers.
+
+### 5.4 Viewer link — `/view/[token]` (`ViewerSpreadHeader`)
+
+The public, non-authed surface. Reuses `TimelineMosaic` for the body. Only the header differs — it's personalized to make the link feel like a gift rather than a generic gallery.
+
+**`ViewerSpreadHeader` anatomy** (replaces the current minimal header in [pages/view.vue:88](../../app/pages/view.vue#L88)):
+
+```
+┌─ Our Story · From The Zheng Family ─────── Sign in ───┐    <- compact top strip
+│                                                        │
+│   A PRIVATE COLLECTION                                 │    <- mono uppercase label
+│                                                        │
+│   For Grandma                                          │    <- italic display title
+│                                                        │
+│   — Mei & Dao  ·  38 Memories                          │    <- italic signoff + mono meta
+│                                                        │
+└────────────────────────────────────────────────────────┘
+[ TimelineMosaic — filtered to allowed memories ]
+```
+
+- **Compact top strip** (sticky, `12px 14px` padding):
+  - Left: small brand kicker (`Our Story` mono uppercase) + italic `"From {Circle Name}"` underneath in serif italic.
+  - Right: `Sign in` pill (existing route to `/login`). Subtle, not a primary CTA.
+- **Hero block** (`26px 18px 18px` padding mobile, scales up on desktop):
+  - Italic mono label (top, muted): `"A private collection"` for `mode === 'full'`, `"A selected collection"` for `mode === 'selected'`. (Same `linkLabel` data the current page reads.) Localizable.
+  - Italic display title: `font: 400 36px/1.05 'Instrument Serif'`. Text: `"For {recipient name}"` — the recipient name is whatever the owner specified when creating the link (existing `linkLabel` field already supports this). If no recipient name, falls back to `"For you"`.
+  - Signoff row: `— {owner first name(s) of the circle, comma-joined}` in italic serif, followed by `· N Memories` in mono. E.g. `— Mei & Dao · 38 Memories`.
+- **Body**: `<TimelineMosaic :memories="signedMemories" :viewer-mode="true" />` — same grid, same cells. The `viewer-mode` prop disables the year-pill jump button (no header to host it) and emits open events to a viewer-tuned modal (see §6 desktop & mobile already work; we add a `:viewer-mode` prop that hides the owner-only actions inside).
+- **Empty state**: when `memories.length === 0`, the hero block stays; the body shows a centered "Mei is still gathering memories for you." card in `--secondary`. Reuses the existing empty-state translation key.
+- **Loading state**: same monochrome spinner as the timeline.
+- **Reactions**: viewers can already react with a guest name (existing behavior). The reaction picker inside the modal stays — the modal redesign in §6 fully supports the viewer mode (input box becomes a "react as {guestName}" affordance instead of a comment input — see §6.6).
+- **Splash, expired, invalid states**: keep current logic, restyle:
+  - Splash: full-bleed background with the latest memory's photo at 50% opacity, italic display title `"{Owner} has shared with you"`, CTA `"Open the collection"`. Same as current but in Obsidian/Porcelain palette and the new typography.
+  - Expired: monochrome icon + italic title + body + `"Ask for a fresh link"` CTA (existing behavior).
+  - Invalid: same treatment, different copy.
 
 ---
 
@@ -337,7 +438,7 @@ app/components/
                              #       (replaces the bulk of current MemoryModal.vue + QuickNoteModal.vue)
 ```
 
-`MemoryShell` decides the layout per viewport using the same `useMediaQuery('(min-width: 768px)')` helper as `TimelineFrame`. The two child components are unchanged across viewports — only their composition changes.
+`MemoryShell` decides the layout per viewport using `useMediaQuery('(min-width: 768px)')` (VueUse) — the only place the codebase swaps components by viewport (the timeline itself uses pure CSS, §8). The two child components (`MemoryViewer`, `MemoryDetail`) are unchanged across viewports — only their composition inside `MemoryShell` changes.
 
 Removed in this section's scope:
 
@@ -414,11 +515,11 @@ Public API on `MemoryShell` is preserved: props `memories`, `startIndex`, `origi
 - **Grabber** — 36×4px pill, `hsl(var(--foreground) / 0.32)`, 8px top margin, centered.
 - **Head row** (14px 18px 8px padding):
   - Day numeral: Hanken Grotesk 800, 24px, `-0.02em`, `--foreground`.
-  - Weekday (Hanken Grotesk 700, 9px, `0.18em`, uppercase, `--muted-foreground`) + time/author (Hanken Grotesk 400, 11px, `--foreground-faint`) — stacked below numeral. Same treatment as the timeline card head row (§5.4).
+  - Weekday (Hanken Grotesk 700, 9px, `0.18em`, uppercase, `--muted-foreground`) + time/author (Hanken Grotesk 400, 11px, `--foreground-faint`) — stacked below numeral.
   - Right: **reaction summary pill** — `hsl(var(--foreground) / 0.07)` background, 999px radius, top-3 emojis separated by ` · `. Pill is tappable to expand into the reactor list (deferred to a sub-component reused from current `MemoryModal`).
 - **Note** (`6px 18px 16px` padding):
   - Hanken Grotesk 400, 14.5px, line-height 1.55, `hsl(var(--foreground) / 0.9)`.
-  - Single-quote → Instrument Serif italic regex (same as §4.6 / §5.4).
+  - Single-quote → Instrument Serif italic regex (same as the mosaic `.note` cell in §4.6).
   - Long notes truncate with `line-clamp: 6` in default snap, full text in `Full` snap.
 - **Milestone label** (if `memory.milestone_label`): same pill style as §10.5, rendered above the note.
 - **Comments list**:
@@ -558,37 +659,34 @@ Handles:
 
 ### 7.1 IntersectionObserver — current year
 
-Existing pattern from `TimelinePolaroid` (lines 200+): observe year-ribbon elements, emit `year-change` with the year of the most-visible ribbon. Re-implement identically in `TimelineFrame` (the shared parent), so the year pill in the page header updates as the user scrolls regardless of which child layout is active.
+Existing pattern from `TimelinePolaroid` (lines 200+): observe year-ribbon elements, emit `year-change` with the year of the most-visible ribbon. Re-implement identically inside `TimelineMosaic`, so the year pill in the page header updates as the user scrolls.
 
 ### 7.2 `scrollToYear()` ref method
 
-Preserved on `TimelineFrame`. Delegates to whichever child layout is mounted. Both children expose the same internal `scrollToYear` method that finds `#anchor-{year}` (year ribbon).
+Preserved on `TimelineMosaic`. Implementation finds `#anchor-{year}` (year ribbon) and smooth-scrolls to it.
 
 ### 7.3 Jump-to-month
 
-Existing `document.getElementById('month-{year}-{month}')` selector in [pages/timeline/index.vue:1033](../../app/pages/timeline/index.vue#L1033) continues to work because both new components use the same anchor IDs.
+Existing `document.getElementById('month-{year}-{month}')` selector in [pages/timeline/index.vue:1033](../../app/pages/timeline/index.vue#L1033) continues to work because `TimelineMosaic` uses the same anchor IDs the polaroid version used.
 
 ### 7.4 Infinite scroll
 
-Existing `useIntersectionObserver` on a load-more sentinel ([TimelinePolaroid.vue:204](../../app/components/TimelinePolaroid.vue#L204)) is re-implemented in `TimelineFrame`. Both children render their own sentinel at the bottom; observer logic is shared.
+Existing `useIntersectionObserver` on a load-more sentinel ([TimelinePolaroid.vue:204](../../app/components/TimelinePolaroid.vue#L204)) is re-implemented inside `TimelineMosaic` at the bottom of the grid. Same emit contract (`load-more`).
 
 ---
 
-## 8. Breakpoint and viewport switching
+## 8. Breakpoint
 
-```html
-<!-- TimelineFrame.vue -->
-<TimelineMosaic v-if="isDesktop" … />
-<TimelineCards v-else … />
+The timeline layout no longer swaps components by viewport — `TimelineMosaic` is always rendered, with the column count handled in pure CSS:
+
+```css
+grid-template-columns: repeat(3, 1fr);
+@media (min-width: 768px) { grid-template-columns: repeat(4, 1fr); }
 ```
 
-Where `isDesktop = useMediaQuery('(min-width: 768px)')` (VueUse). 768px because:
+The single 768px breakpoint matches Tailwind's `md:` and is used by every "this is a desktop layout" decision elsewhere in the codebase. There is no SSR / first-paint flash because there is no component swap — only a CSS media query.
 
-- Tailwind `md:` breakpoint is the natural fit for this codebase.
-- Below 768px, four columns produce 80–90px cells, which is too small to read photos.
-- Above 768px, single-column cards waste horizontal space.
-
-**Server render:** `useMediaQuery` returns `false` on SSR, so the initial paint shows `TimelineCards`. This is acceptable because (a) Nuxt hydrates immediately, (b) we already gate the timeline behind auth so most users see it post-hydration anyway, and (c) the cards layout fits a desktop viewport without looking broken — just narrower than ideal — for the ~50ms before hydration swaps it.
+The memory modal (§6) **does** swap layout by viewport (mobile drawer vs. desktop side-by-side panel), since drawer mechanics genuinely don't work at desktop sizes. That swap is documented in §6.3.
 
 ---
 
@@ -657,10 +755,16 @@ New strings:
 
 - `timeline.thisYearSuffix` — default `"this year"`. Rendered in Instrument Serif italic next to the current year on the year ribbon.
 - `timeline.lastYearSuffix` — default `"last year"`. Rendered the same way for the previous year.
+- `viewerLink.privateCollectionLabel` — default `"A private collection"`. Mono kicker label above the "For X" title on the viewer link (§5.4).
+- `viewerLink.selectedCollectionLabel` — default `"A selected collection"`. Same slot, used when the link is for a curated subset of memories (`mode === 'selected'`).
+- `viewerLink.viewerHeroTitleFallback` — default `"For you"`. Used when the link has no explicit recipient name.
+- `viewerLink.viewerSignoffMemories` — default `"{n} Memories"`. Mono meta tail in the signoff row.
 
 Locale files updated for `en`, `zh-CN`, `fr`. Translators may render shorter forms (e.g. `zh-CN: "今年"` / `"去年"`) since the italic styling carries the typographic flourish regardless of length.
 
 Month names continue to be locale-aware via `new Intl.DateTimeFormat(locale, { month: 'long' })` (current behavior in `useTimeline`).
+
+Page-strip titles (back-button labels): the month view uses `Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })`. Settings pages reuse the existing `nav.notificationSettings`, `nav.profileSettings`, `nav.circleSettings` keys for their page-strip titles.
 
 ---
 
@@ -676,7 +780,10 @@ Month names continue to be locale-aware via `new Intl.DateTimeFormat(locale, { m
 - `tests/timeline-year.spec.ts` — update selectors. The test currently asserts polaroid tape labels; rewrite to check for year-ribbon elements with text `"2026 this year"` and the JetBrains Mono tally.
 - `tests/quick-note.spec.ts` — update: a circle with only a text-only memory should render a `.note` cell on desktop (with `"` glyph) and a `.note` card on mobile.
 - `tests/month-overflow.spec.ts` — selectors only (month-row class names change).
-- NEW: `tests/timeline-viewport-switch.spec.ts` — at viewport 800x600 the timeline renders `TimelineMosaic`; at 375x600 it renders `TimelineCards`. Assert the right structural markers exist.
+- NEW: `tests/timeline-mosaic-viewports.spec.ts` — at viewport 800×600 the timeline renders a 4-column grid; at 375×600 it renders a 3-column grid. Assert via `computedStyle.gridTemplateColumns`.
+- NEW: `tests/memory-modal-mobile.spec.ts` — at viewport 375×800, opening a memory shows the drawer at the `default` snap; dragging the grabber up snaps to `full`; swiping the photo left advances to the next memory; swiping down dismisses.
+- NEW: `tests/month-view.spec.ts` — navigate to `/timeline/2026/4`, assert the spread header renders the italic month name and the sticky prev/next pill nav, then click the next-month pill and verify URL change.
+- NEW: `tests/viewer-link-personalized.spec.ts` — open a viewer link created with recipient name "Grandma", assert the hero renders `"For Grandma"` and the signoff line, then react as a guest and verify the reaction lands.
 
 ### 12.3 RLS / pgTAP
 
@@ -689,7 +796,7 @@ No DB changes → no new RLS tests.
 These are **not** changed in this work and will be handled separately if at all:
 
 - The `AddMemory` upload flow's *layout* (its surfaces flip color automatically via tokens; its layout is unchanged).
-- The `QuickNoteForm` modal — the *write* surface (where the user composes a quick note). Only the *display* of quick notes changes (§4.6, §5.5, §6 for the modal).
+- The `QuickNoteForm` modal — the *write* surface (where the user composes a quick note). Only the *display* of quick notes changes (§4.6 for the timeline cell, §6 for the modal).
 - The header chrome beyond the brand kicker / year pill recoloring.
 - The Caveat handwritten font. It is dropped from the timeline and modal. It may still appear in email templates and is **explicitly not removed** there as part of this work.
 - On-this-day / digest / recap surfaces. These render memories outside the timeline and are not affected layout-wise (surfaces flip color via tokens like everything else).
@@ -702,35 +809,39 @@ These are **not** changed in this work and will be handled separately if at all:
 
 1. **Repaint the theme tokens** in [app/assets/css/globals.css](../../app/assets/css/globals.css): replace the existing `:root` and `.dark` blocks with the Obsidian + Porcelain values from §2.1. Add `--foreground-faint` and `--photo-hover` tokens. Wire `foreground-faint` into Tailwind via the `colors` map in `tailwind.config.ts`. Verify every existing page (onboarding, settings, members, viewer link, etc.) still renders correctly in both modes before any timeline-specific work begins. Fix obvious breaks (e.g. components that hard-coded the amber accent inline rather than reading from the token).
 2. Add `mosaicVariant()` to `useTimeline.ts` + unit test.
-3. Build `MosaicCell.vue` (photo and `.note` variants) in isolation, render in a dev sandbox page. Check both modes.
-4. Build `DiaryCard.vue` (photo, photos, note, video variants) in isolation. Check both modes.
-5. Build `TimelineMosaic.vue` consuming `monthGroups`.
-6. Build `TimelineCards.vue` consuming `monthGroups`.
-7. Build `TimelineFrame.vue` with viewport switching + IntersectionObserver + load-more sentinel + `scrollToYear` ref API.
-8. Swap `<TimelinePolaroid>` → `<TimelineFrame>` in [pages/timeline/index.vue](../../app/pages/timeline/index.vue).
-9. Extract `MemoryDetail.vue` from the bulk of [MemoryModal.vue](../../app/components/MemoryModal.vue). Verify it renders standalone with a mock memory.
-10. Build `MemoryViewer.vue` — photo carousel, gestures, dismiss/navigate emit contract.
-11. Rewrite `MemoryShell.vue` — viewport-aware composition. Mobile: drawer with snap points (use a small purpose-built `useSnapDrawer` composable; reach for `@vueuse/gesture` only if friction emerges). Desktop: side-by-side flex.
-12. Manual test the modal in both viewports with a variety of memories (photos, videos, multi-photo, text-only quick notes, memories with milestones, memories with 0/1/many reactions, memories with 0/1/many comments).
-13. Delete `MemoryModal.vue` and `QuickNoteModal.vue` after `MemoryShell` rewrite is functional.
-14. Update E2E tests for new selectors. Specifically: prev/next navigation works on mobile, drawer snap behavior, swipe-to-dismiss, multi-photo thumb strip.
-15. Add `timeline.thisYearSuffix` / `timeline.lastYearSuffix` i18n keys.
-16. Delete `TimelinePolaroid.vue`, `PolaroidCard.vue`, `QuickNoteCard.vue`.
-17. Run `pnpm test`, `pnpm test:e2e`, `pnpm db:test` (the last for completeness — no DB changes).
-18. Manual test full flow: load timeline with 50+ memories, multiple years, mix of photos / videos / text-only / multi-photo memories. Open a memory in both viewports. Swipe / drag / dismiss / navigate. Verify desktop ↔ mobile switch at 768px. Verify Obsidian ↔ Porcelain switch via the theme toggle in both viewports. Verify year pill updates on scroll. Verify jump-to-month from header. Verify load-more on scroll to bottom.
+3. Build `MosaicCell.vue` (photo, video, and `.note` variants) in isolation. Render in a dev sandbox page that shows a sample memory of each variant in both color modes.
+4. Verify `MosaicCell` against a stress dataset: text-only with 200-word note, photo-only, photo+1-comment, photo+50-reactions, memory with milestone label. Catch text-overflow / pill-overflow before the cell ships in the grid.
+5. Build `TimelineMosaic.vue` consuming `monthGroups`. Verify both column counts and both color modes.
+6. Swap `<TimelinePolaroid>` → `<TimelineMosaic>` in [pages/timeline/index.vue](../../app/pages/timeline/index.vue). Year-pill + jump menu + IntersectionObserver + load-more sentinel + `scrollToYear` ref API all live inside `TimelineMosaic` now (no separate frame component).
+7. Extract `MemoryDetail.vue` from the bulk of [MemoryModal.vue](../../app/components/MemoryModal.vue). Verify it renders standalone with a mock memory.
+8. Build `MemoryViewer.vue` — photo carousel, gestures, dismiss/navigate emit contract.
+9. Rewrite `MemoryShell.vue` — viewport-aware composition. Mobile: drawer with snap points (use a small purpose-built `useSnapDrawer` composable; reach for `@vueuse/gesture` only if friction emerges). Desktop: side-by-side flex.
+10. Manual-test the modal in both viewports with a variety of memories (photos, videos, multi-photo, text-only quick notes, memories with milestones, memories with 0/1/many reactions, memories with 0/1/many comments).
+11. Delete `MemoryModal.vue` and `QuickNoteModal.vue` after `MemoryShell` rewrite is functional.
+12. **Month view (§5.1)** — build `MonthSpreadHeader.vue`. Update `pages/timeline/[year]/[month].vue` to use it + filtered `TimelineMosaic`. Wire prev/next month links to `/api/timeline/months-with-data` (new lightweight endpoint returning `{ prevMonth, nextMonth }` for a given circle + year + month — keeps the page from needing the whole monthGroups payload). Add `Share` action that copies the deep-link to clipboard.
+13. **Settings pages (§5.2)** — rewrite the three settings pages with the Apple Rows pattern. Build a small `<SettingsRow>` component (icon slot, label, hint, control slot) so the three pages compose the same primitives. Apply to `/notification-settings`, `/settings/account`, `/circle-settings`. Auto-save behavior preserved.
+14. **Members page (§5.3)** — rewrite `pages/members.vue` with the hero card + active/pending sections. Reuse the existing member-detail navigation to [pages/member/[userId].vue](../../app/pages/member/[userId].vue) for the chevron drill.
+15. **Viewer link (§5.4)** — build `ViewerSpreadHeader.vue`. Rewrite `pages/view.vue` to compose the new top strip + spread hero + `TimelineMosaic` with `:viewer-mode="true"`. Restyle splash, expired, and invalid states. Verify the existing guest-name flow still works.
+16. Update E2E tests for new selectors. Specifically: prev/next navigation works on mobile, drawer snap behavior, swipe-to-dismiss, multi-photo thumb strip, month-view prev/next pill navigation, settings save indicators, members invite flow.
+17. Add `timeline.thisYearSuffix` / `timeline.lastYearSuffix` i18n keys. Add `viewerLink.privateCollection` / `viewerLink.selectedCollection` / `viewerLink.signoff` keys for the new viewer header.
+18. Delete `TimelinePolaroid.vue`, `PolaroidCard.vue`, `QuickNoteCard.vue`.
+19. Run `pnpm test`, `pnpm test:e2e`, `pnpm db:test` (the last for completeness — no DB changes).
+20. Manual full-flow test: load timeline with 50+ memories, multiple years, mix of photos / videos / text-only / multi-photo memories. Open a memory in both viewports. Swipe / drag / dismiss / navigate. Navigate from main timeline → month view via the year-jump menu, then prev/next-month between months. Walk through all three settings pages — toggle every control, verify auto-save indicator. Walk through members page — invite a fake address, view a member, kick. Open a viewer link with the test account, verify the "For [recipient]" header renders, react as a guest, switch to the test account's owner view and verify the same memory shows the new reaction. Verify Obsidian ↔ Porcelain switch via the theme toggle on every surface. Verify year pill updates on scroll. Verify jump-to-month from header. Verify load-more on scroll to bottom.
 
 ---
 
 ## 15. Risks
 
-- **The `.note` cell in a tight 4-col grid can clash with photos around it.** Mitigation: the `--secondary` background and hairline border make it read as a distinct surface; the Instrument Serif quote glyph signals "text" before the eye lands on the body. If it still looks busy in practice, fallback is to force `.note` cells to row-start positions only (so they sit next to a `.tall` photo and span vertically too) — track and decide during implementation.
+- **The `.note` cell can clash with photos around it** (both 3-col mobile and 4-col desktop). Mitigation: the `--secondary` background and hairline border make it read as a distinct surface; the Instrument Serif quote glyph signals "text" before the eye lands on the body. If it still looks busy in practice, fallback is to force `.note` cells to row-start positions only (so they sit next to a `.tall` photo and span vertically too) — track and decide during implementation.
 - **Determinism across load-more.** The hash function only depends on memory id, so newly-fetched memories slot in with the right variant immediately. No re-shuffling.
-- **SSR / first paint flash.** Documented in §8. Acceptable.
-- **Caption text overflow in mobile cards.** `line-clamp: 6` on `.copy` prevents a 1000-word quick note from blowing out the card. (Modal shows full text on click.)
+- **3-column mobile cells are small.** At a 360px viewport with 3px gutters, each cell is roughly 118px. That's smaller than the previous polaroid card photos but still readable for photos. The `.note` cell text at 11px / 1.4 line-height fits ~4 short lines. If usage data shows users frequently can't read note cells without tapping in, raise to `line-clamp: 5` and reduce font to 10.5px. Tap-to-modal remains the fallback.
+- **Span variety in 3-col grid.** With only 3 columns, a `.wide` cell takes 2/3 of a row and leaves a single-column gap, which can create awkward orphan slots. Mitigation: the deterministic hash produces a `.wide` rarely enough (~15%) that gaps occur in 1–2 rows per month at most, and feel intentional rather than broken. If observed in practice, an alternative is to suppress `.wide` on mobile (mobile gets only `.square` and `.tall`) — a 2-line CSS change.
+- **Long quick-note text in a cell.** A 200-word quick-note in a single mosaic cell will truncate via `line-clamp: 4`; the full text is one tap away in the modal. If users complain about losing context, raise the clamp to 6 lines (acceptable in both 3-col mobile and 4-col desktop since the cell stays square).
+- **Scope breadth.** This work touches the global theme, the timeline, the memory modal, the month view, three settings pages, the members page, and the viewer-link page. Steps 1, 5, 7–11, 12, 13, 14, 15 each touch a distinct user-facing surface. Reviewers can sequence them as a series of PRs against a feature branch rather than one mega-PR; the migration plan (separate doc) should propose the PR slicing. Skipping the migration-plan step is the main delivery risk.
 - **Tests assume polaroid structure today.** Updating selectors is mechanical but must not be skipped (call it out in the plan as a discrete step).
 - **Hard-coded amber hex outside the token system.** Some components may have inlined `#c8a882` or referenced `text-accent` directly. The audit (`rg "c8a882"` and `rg "text-accent\|bg-accent"`) in Step 1 catches these. If the audit finds anything, decide per-instance whether the component should switch to a different token (`--primary`, `--foreground`) or genuinely needs a non-monochrome treatment (e.g. an explicit "warning amber" semantic — unlikely in this app's surfaces).
 - **Light-mode regression in pages we haven't visually re-checked.** The blast radius is everywhere. Step 1 verification must include a quick visual sweep of each route: `/login`, `/`, `/onboarding`, `/timeline`, `/settings/account`, `/members`, `/notification-settings`, `/circle-settings`, `/invite/[token]` (in both modes), in addition to `/view/[code]` to confirm scope boundary.
 - **Drawer drag gesture vs. swipe-to-navigate gesture.** Both live on the mobile modal. The drag region (drawer + grabber) and the swipe region (photo) are spatially separated, but a swipe that starts on the boundary could be ambiguous. Mitigation: prefer Y-axis gestures to consume the drawer, X-axis gestures to consume the photo navigator, decide by direction within the first 12px of movement. Keep the drawer drag start zone hit-target generous (28px above the visible grabber) so the user isn't fighting the photo's swipe target.
 - **Drawer snap implementation.** Snap-point drawers with three positions and velocity-aware flicks are non-trivial. The plan starts with a hand-rolled implementation (CSS `translateY` + `pointer events` + `requestAnimationFrame`). If unforeseen issues arise (e.g. iOS Safari scroll chaining, momentum overshoot), fall back to `@vueuse/gesture` or `motion-v`. Do not let perfect-drawer-physics block the merge — a 2-snap drawer (default + full only) is acceptable if 3-snap proves fiddly.
 - **Quick-note memories on the new modal.** A text-only memory has no photo to hero. The chosen fallback (§6.2) is "drawer at 100vh, no photo region." Verify this reads well against a memory with a 200-word note. If it feels empty, add a subtle pattern/texture behind the note text (existing `repeating-linear-gradient` notebook-line pattern from current `MemoryModal.vue:33` is a candidate — restyled monochromatically).
-- **Existing `MemoryModal.vue` is 2375 lines.** Extracting `MemoryDetail.vue` from it is the largest single mechanical change in this work. Plan must call out which parts move where (note rendering, reactions list, reaction picker, comment list, comment input, comment edit, member tagging, child tagging, milestone label, media share/download buttons) so the extraction is auditable rather than a sea of unreviewable diff. Step 9 of the build sequence should be split into ~4 sub-PRs if the diff is too large to review in one pass.
+- **Existing `MemoryModal.vue` is 2375 lines.** Extracting `MemoryDetail.vue` from it is the largest single mechanical change in this work. Plan must call out which parts move where (note rendering, reactions list, reaction picker, comment list, comment input, comment edit, member tagging, child tagging, milestone label, media share/download buttons) so the extraction is auditable rather than a sea of unreviewable diff. Step 7 of the build sequence should be split into ~4 sub-PRs if the diff is too large to review in one pass.
