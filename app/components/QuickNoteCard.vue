@@ -105,13 +105,51 @@
             </template>
           </div>
 
-          <!-- Picker trigger — always right-aligned in the meta row -->
+          <!-- Picker trigger. Matches the PolaroidCard treatment: expanded
+               with a "React" label when there are no reactions yet, collapsed
+               to the smiley-plus icon once chips already explain the affordance. -->
           <div class="relative flex-shrink-0">
             <button
-              class="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-secondary text-[11px] leading-none text-muted-foreground transition-colors hover:bg-border"
+              class="group inline-flex h-6 items-center justify-center gap-1 rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:bg-border hover:text-foreground"
+              :class="hasAnyReaction ? 'w-6' : 'px-2'"
+              :title="t('card.addReaction')"
+              :aria-label="t('card.addReaction')"
               @click.stop="pickerOpen = !pickerOpen"
             >
-              +
+              <svg
+                class="h-3 w-3 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="10.5" cy="13.5" r="7.5" />
+                <circle
+                  cx="8"
+                  cy="12.5"
+                  r="0.6"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <circle
+                  cx="13"
+                  cy="12.5"
+                  r="0.6"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <path d="M7.8 16s.9 1.4 2.7 1.4 2.7-1.4 2.7-1.4" />
+                <path d="M18.5 3.5h4M20.5 1.5v4" />
+              </svg>
+              <span
+                v-if="!hasAnyReaction"
+                class="whitespace-nowrap text-[10px] font-medium"
+              >
+                {{ t('card.react') }}
+              </span>
             </button>
 
             <Transition
@@ -238,7 +276,7 @@
 import type { Memory } from '~/composables/useTimeline'
 import { computeBabyAge } from '~/composables/useBabyAge'
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   memory: Memory
@@ -333,6 +371,10 @@ watch(
   (r) => {
     localReactions.value = [...r]
   },
+)
+
+const hasAnyReaction = computed(() =>
+  localReactions.value.some((r) => !!r.emoji),
 )
 
 const reactionGroups = computed(() => {

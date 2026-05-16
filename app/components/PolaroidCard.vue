@@ -184,7 +184,9 @@
           {{ memory.media_count }}
         </span>
 
-        <!-- Reaction overlay — appears on hover at bottom of photo -->
+        <!-- Reaction overlay — appears on hover at bottom of photo.
+             Desktop-only: mobile has no hover, so the always-visible
+             reaction row in the polaroid meta strip below handles touch. -->
         <Transition
           enter-active-class="transition duration-150 ease-out"
           enter-from-class="opacity-0 translate-y-1"
@@ -195,7 +197,7 @@
         >
           <div
             v-if="isHovered"
-            class="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-1 px-2 py-1.5"
+            class="absolute inset-x-0 bottom-0 hidden flex-wrap items-center gap-1 px-2 py-1.5 sm:flex"
             style="background: linear-gradient(to top, rgba(0, 0, 0, 0.45) 0%, transparent 100%)"
             @click.stop
           >
@@ -306,6 +308,91 @@
         >
           {{ captionText || t('card.noNote') }}
         </p>
+
+        <!-- Mobile reactions row — always visible on touch devices.
+             Sits on the polaroid's white strip rather than over the photo
+             so it's discoverable without hover. Desktop hides this row
+             and uses the hover overlay above. -->
+        <div
+          class="mt-1.5 flex items-center justify-between gap-2 sm:hidden"
+          @click.stop
+        >
+          <div class="flex min-w-0 flex-wrap items-center gap-1">
+            <button
+              v-for="(group, emoji) in reactionGroups"
+              :key="emoji"
+              class="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[3px] text-[10px] transition-all duration-150"
+              :class="
+                group.mine
+                  ? 'border-accent/40 bg-accent/15 font-semibold text-foreground'
+                  : 'border-border bg-secondary text-muted-foreground'
+              "
+              @click.stop="toggleReaction(emoji as string)"
+            >
+              <span>{{ emoji }}</span>
+              <span class="text-[9px]">{{ group.count }}</span>
+            </button>
+          </div>
+
+          <div class="relative flex-shrink-0">
+            <button
+              class="group inline-flex h-6 items-center justify-center gap-1 rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:bg-border hover:text-foreground"
+              :class="hasAnyReaction ? 'w-6' : 'px-2'"
+              :title="t('card.addReaction')"
+              :aria-label="t('card.addReaction')"
+              @click.stop="pickerOpen = !pickerOpen"
+            >
+              <svg
+                class="h-3 w-3 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="10.5" cy="13.5" r="7.5" />
+                <circle cx="8" cy="12.5" r="0.6" fill="currentColor" stroke="none" />
+                <circle cx="13" cy="12.5" r="0.6" fill="currentColor" stroke="none" />
+                <path d="M7.8 16s.9 1.4 2.7 1.4 2.7-1.4 2.7-1.4" />
+                <path d="M18.5 3.5h4M20.5 1.5v4" />
+              </svg>
+              <span
+                v-if="!hasAnyReaction"
+                class="whitespace-nowrap text-[10px] font-medium"
+              >
+                {{ t('card.react') }}
+              </span>
+            </button>
+
+            <Transition
+              enter-active-class="transition duration-100 ease-out"
+              enter-from-class="opacity-0 scale-90 translate-y-1"
+              enter-to-class="opacity-100 scale-100 translate-y-0"
+              leave-active-class="transition duration-75 ease-in"
+              leave-from-class="opacity-100 scale-100 translate-y-0"
+              leave-to-class="opacity-0 scale-90 translate-y-1"
+            >
+              <div
+                v-if="pickerOpen"
+                class="absolute bottom-full right-0 z-30 mb-1.5 grid gap-0.5 rounded-xl border border-border bg-card px-2 py-1.5 shadow-xl"
+                style="grid-template-columns: repeat(6, 1fr)"
+                @click.stop
+              >
+                <button
+                  v-for="e in PRESET_EMOJIS"
+                  :key="e"
+                  class="flex h-7 w-7 items-center justify-center rounded-lg text-base transition-colors hover:bg-secondary"
+                  :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
+                  @click.stop="(toggleReaction(e), (pickerOpen = false))"
+                >
+                  {{ e }}
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </div>
 
         <!-- Date · Author (former member name shown greyed out) -->
         <p class="mt-[5px] text-[11px]">
