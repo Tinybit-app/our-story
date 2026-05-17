@@ -137,42 +137,65 @@ const noteMeta = computed(() => {
 .mosaic-cell.note {
   background: hsl(var(--secondary));
   border: 1px solid hsl(var(--border));
-  padding: 16px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+@media (min-width: 768px) {
+  .mosaic-cell.note {
+    padding: 16px;
+  }
 }
 
 .note .quote-glyph {
   font-family: 'Instrument Serif', serif;
   font-style: italic;
-  font-size: 36px;
+  font-size: 24px;
   line-height: 0.5;
   color: hsl(var(--foreground) / 0.35);
   margin-bottom: 2px;
+}
+@media (min-width: 768px) {
+  .note .quote-glyph {
+    font-size: 36px;
+  }
 }
 
 .note .note-body {
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-weight: 400;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  line-height: 1.35;
   color: hsl(var(--foreground) / 0.88);
   flex: 1;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
+}
+@media (min-width: 768px) {
+  .note .note-body {
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-line-clamp: 4;
+  }
 }
 
 .note .note-meta {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 500;
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: hsl(var(--foreground-faint));
-  margin-top: 8px;
+  margin-top: 6px;
+}
+@media (min-width: 768px) {
+  .note .note-meta {
+    font-size: 9px;
+    margin-top: 8px;
+  }
 }
 </style>
