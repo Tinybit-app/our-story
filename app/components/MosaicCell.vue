@@ -34,6 +34,8 @@
 import { computed } from 'vue'
 import type { Memory } from '~/composables/useTimeline'
 
+const { locale } = useI18n()
+
 const props = defineProps<{ memory: Memory }>()
 
 defineEmits<{
@@ -52,7 +54,7 @@ const isVideo = computed(() =>
 
 const noteMeta = computed(() => {
   const d = new Date(props.memory.memory_date)
-  const monthAbbr = new Intl.DateTimeFormat('en', { month: 'short' }).format(d)
+  const monthAbbr = new Intl.DateTimeFormat(locale.value, { month: 'short' }).format(d)
   const day = d.getUTCDate()
   const isFormerMember = props.memory.owner_user_id === null
   const author =
