@@ -92,3 +92,13 @@ describe('theme-tokens · scrollbar uses --foreground (not --accent)', () => {
     expect(css).toMatch(/scrollbar-thumb[\s\S]*?hsl\(var\(--foreground\)/)
   })
 })
+
+describe('tailwind config · foreground-faint is wired', () => {
+  test('tailwind.config.ts maps foreground-faint to the CSS variable', () => {
+    const configPath = join(__dirname, '..', 'tailwind.config.ts')
+    const config = readFileSync(configPath, 'utf-8')
+    expect(config).toMatch(
+      /['"]foreground-faint['"]:\s*['"]hsl\(var\(--foreground-faint\)\)['"]/,
+    )
+  })
+})
