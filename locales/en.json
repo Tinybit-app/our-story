@@ -90,7 +90,9 @@
     "more": "more",
     "open": "Open",
     "noMemoriesFor": "No memories found for {month}.",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "thisYearSuffix": "this year",
+    "lastYearSuffix": "last year"
   },
   "card": {
     "noNote": "No note",

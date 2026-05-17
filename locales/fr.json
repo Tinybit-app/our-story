@@ -93,7 +93,9 @@
     "more": "plus",
     "open": "Ouvrir",
     "noMemoriesFor": "Aucun souvenir trouvé pour {month}.",
-    "loadMore": "Charger plus"
+    "loadMore": "Charger plus",
+    "thisYearSuffix": "cette année",
+    "lastYearSuffix": "l'année dernière"
   },
   "card": {
     "noNote": "Aucune note",
