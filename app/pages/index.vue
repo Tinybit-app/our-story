@@ -610,8 +610,8 @@ const circleTypes = [
   height: 480px;
   background: radial-gradient(
     ellipse at 50% 0%,
-    hsl(33 40% 65% / 0.18) 0%,
-    hsl(33 40% 65% / 0.06) 40%,
+    hsl(var(--accent) / 0.18) 0%,
+    hsl(var(--accent) / 0.06) 40%,
     transparent 70%
   );
   pointer-events: none;
@@ -633,13 +633,13 @@ const circleTypes = [
 /* CTA pulse — fires once after 1.1s */
 @keyframes cta-pulse {
   0% {
-    box-shadow: 0 0 0 0 hsl(33 40% 65% / 0.55);
+    box-shadow: 0 0 0 0 hsl(var(--accent) / 0.55);
   }
   65% {
-    box-shadow: 0 0 0 14px hsl(33 40% 65% / 0);
+    box-shadow: 0 0 0 14px hsl(var(--accent) / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 hsl(33 40% 65% / 0);
+    box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
   }
 }
 .hero-cta {
@@ -657,8 +657,8 @@ const circleTypes = [
   }
 }
 .screenshot-wrapper {
-  filter: drop-shadow(0 28px 60px hsl(20 16% 14% / 0.14))
-    drop-shadow(0 6px 16px hsl(20 16% 14% / 0.08));
+  filter: drop-shadow(0 28px 60px hsl(var(--foreground) / 0.14))
+    drop-shadow(0 6px 16px hsl(var(--foreground) / 0.08));
 }
 .float-screenshot {
   animation: float 7s ease-in-out infinite;
@@ -678,8 +678,8 @@ const circleTypes = [
 }
 .feature-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 52px hsl(33 40% 65% / 0.2);
-  border-color: hsl(33 40% 65% / 0.4);
+  box-shadow: 0 20px 52px hsl(var(--accent) / 0.2);
+  border-color: hsl(var(--accent) / 0.4);
 }
 .feature-icon {
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -698,7 +698,7 @@ const circleTypes = [
   font-size: 6.5rem;
   line-height: 0.85;
   font-weight: 600;
-  color: hsl(33 40% 65% / 0.12);
+  color: hsl(var(--accent) / 0.12);
   user-select: none;
   pointer-events: none;
   letter-spacing: -0.04em;
@@ -715,8 +715,8 @@ const circleTypes = [
 }
 .circle-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 36px hsl(20 16% 14% / 0.1);
-  border-color: hsl(33 40% 65% / 0.45);
+  box-shadow: 0 14px 36px hsl(var(--foreground) / 0.1);
+  border-color: hsl(var(--accent) / 0.45);
 }
 
 /* ── Privacy pills ─────────────────────────────────────────── */
@@ -726,8 +726,8 @@ const circleTypes = [
   gap: 6px;
   padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px solid hsl(33 40% 65% / 0.3);
-  background: hsl(33 40% 65% / 0.07);
+  border: 1px solid hsl(var(--accent) / 0.3);
+  background: hsl(var(--accent) / 0.07);
   font-size: 0.8125rem;
   color: hsl(var(--foreground));
   transition:
@@ -735,8 +735,8 @@ const circleTypes = [
     border-color 0.2s ease;
 }
 .privacy-pill:hover {
-  background: hsl(33 40% 65% / 0.14);
-  border-color: hsl(33 40% 65% / 0.5);
+  background: hsl(var(--accent) / 0.14);
+  border-color: hsl(var(--accent) / 0.5);
 }
 
 /* ── Vision section ────────────────────────────────────────── */
@@ -753,7 +753,7 @@ const circleTypes = [
   inset: 0;
   background: radial-gradient(
     ellipse at 50% 0%,
-    hsl(33 40% 65% / 0.1) 0%,
+    hsl(var(--accent) / 0.1) 0%,
     transparent 65%
   );
   pointer-events: none;
@@ -762,7 +762,7 @@ const circleTypes = [
   font-family: 'Caveat', cursive;
   font-size: 7rem;
   line-height: 0.6;
-  color: hsl(33 40% 65% / 0.28);
+  color: hsl(var(--accent) / 0.28);
   user-select: none;
   pointer-events: none;
   margin-bottom: -0.5rem;

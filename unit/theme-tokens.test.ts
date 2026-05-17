@@ -129,4 +129,29 @@ describe('source-tree audit · amber hex must not be reintroduced', () => {
     }
     expect(offenders).toEqual([])
   })
+
+  test('no warm-amber HSL form (33 40% 65%) anywhere under app/', () => {
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: string[] = []
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8')
+      // Match the literal HSL triple (with optional whitespace variations)
+      if (/33\s+40%\s+65%/.test(content)) {
+        offenders.push(file.slice(appDir.length + 1))
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  test('no old warm-shadow HSL (20 16% 14%) anywhere under app/', () => {
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: string[] = []
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8')
+      if (/20\s+16%\s+14%/.test(content)) {
+        offenders.push(file.slice(appDir.length + 1))
+      }
+    }
+    expect(offenders).toEqual([])
+  })
 })

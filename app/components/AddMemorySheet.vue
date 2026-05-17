@@ -23,7 +23,7 @@
           class="relative w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl sm:max-w-xs sm:rounded-[24px]"
         >
           <div
-            class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60"
+            class="h-[3px] bg-gradient-to-r from-foreground/20 via-foreground/60 to-foreground/20"
           />
 
           <div class="px-4 pb-5 pt-4">
