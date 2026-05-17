@@ -233,10 +233,10 @@
                 <!-- Quick note -->
                 <div
                   v-else-if="memory.note"
-                  class="flex h-full w-full flex-col items-center justify-center bg-amber-50 p-1 dark:bg-amber-950/30"
+                  class="flex h-full w-full flex-col items-center justify-center bg-secondary p-1"
                 >
                   <svg
-                    class="mb-0.5 h-2.5 w-2.5 flex-shrink-0 text-amber-500"
+                    class="mb-0.5 h-2.5 w-2.5 flex-shrink-0 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
@@ -247,7 +247,7 @@
                     />
                   </svg>
                   <p
-                    class="line-clamp-3 text-center text-[6px] italic leading-tight text-amber-900 dark:text-amber-100"
+                    class="line-clamp-3 text-center text-[6px] italic leading-tight text-foreground"
                   >
                     {{ memory.note }}
                   </p>
@@ -288,7 +288,7 @@
                   class="absolute inset-x-0 bottom-0.5 flex justify-center"
                 >
                   <p
-                    class="text-[7px] font-medium leading-tight text-amber-600 dark:text-amber-400"
+                    class="text-[7px] font-medium leading-tight text-muted-foreground"
                   >
                     {{ picker.formatTileDate(memory.memory_date) }}
                   </p>
@@ -317,10 +317,10 @@
         <!-- Truncation warning -->
         <div
           v-if="group.loaded && group.truncated"
-          class="mx-5 mb-2 mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-800/40 dark:bg-amber-950/30"
+          class="mx-5 mb-2 mt-3 flex items-start gap-2 rounded-lg border border-border bg-secondary px-3 py-2.5"
         >
           <svg
-            class="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500"
+            class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -330,7 +330,7 @@
           </svg>
           <div class="flex-1">
             <p
-              class="text-[11px] leading-snug text-amber-800 dark:text-amber-200"
+              class="text-[11px] leading-snug text-foreground"
             >
               {{
                 t('viewerLink.truncatedWarning', {
@@ -342,7 +342,7 @@
               type="button"
               :disabled="group.loading"
               @click="picker.loadYearComplete(group.year)"
-              class="mt-1.5 text-[11px] font-semibold text-amber-700 underline underline-offset-2 transition-colors hover:text-amber-900 disabled:opacity-50 dark:text-amber-300 dark:hover:text-amber-100"
+              class="mt-1.5 text-[11px] font-semibold text-foreground underline underline-offset-2 transition-colors hover:text-foreground/70 disabled:opacity-50"
             >
               {{
                 group.loading

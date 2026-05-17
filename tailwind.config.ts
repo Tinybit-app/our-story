@@ -30,6 +30,9 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        // ⚠ Do not use /N opacity modifier (e.g. text-foreground-faint/50) —
+        // alpha is already baked into the variable; stacking /N produces malformed CSS.
+        'foreground-faint': 'hsl(var(--foreground-faint))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',

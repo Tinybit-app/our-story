@@ -59,7 +59,7 @@
             >
               <!-- Accent stripe -->
               <div
-                class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60"
+                class="h-[3px] bg-gradient-to-r from-foreground/60 via-accent to-border"
               />
 
               <!-- Month nav -->

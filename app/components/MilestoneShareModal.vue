@@ -15,7 +15,7 @@
       >
         <!-- Accent stripe -->
         <div
-          class="h-[3px] bg-gradient-to-r from-amber-900/80 via-accent to-amber-200/60"
+          class="h-[3px] bg-gradient-to-r from-foreground/20 via-foreground/60 to-foreground/20"
         />
 
         <div class="px-5 pb-5 pt-4">

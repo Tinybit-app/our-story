@@ -67,10 +67,10 @@
       <NuxtLink
         v-if="hasPendingDeletions"
         to="/settings/account"
-        class="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 transition-opacity hover:opacity-80 dark:border-amber-800/50 dark:bg-amber-900/20"
+        class="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-secondary px-4 py-3.5 transition-opacity hover:opacity-80"
       >
         <svg
-          class="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
+          class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
@@ -84,15 +84,15 @@
         </svg>
         <div>
           <p
-            class="mb-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
+            class="mb-0.5 text-xs font-semibold text-foreground"
           >
             {{ t('noCircle.pendingDeletionTitle') }}
           </p>
-          <p class="text-xs leading-relaxed text-amber-600 dark:text-amber-400">
+          <p class="text-xs leading-relaxed text-muted-foreground">
             {{ t('noCircle.pendingDeletionDesc') }}
           </p>
           <p
-            class="mt-1.5 text-xs font-medium text-amber-700 underline underline-offset-2 dark:text-amber-300"
+            class="mt-1.5 text-xs font-medium text-foreground underline underline-offset-2"
           >
             {{ t('noCircle.pendingDeletionAction') }}
           </p>

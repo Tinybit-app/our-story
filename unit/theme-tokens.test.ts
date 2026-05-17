@@ -1,0 +1,173 @@
+import { lstatSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, test } from 'vitest'
+
+const cssPath = join(__dirname, '..', 'app', 'assets', 'css', 'globals.css')
+const css = readFileSync(cssPath, 'utf-8')
+const porcelainBlock = css.match(/:root\s*{[^}]+}/)?.[0] ?? ''
+const darkBlock = css.match(/\.dark\s*{[^}]+}/)?.[0] ?? ''
+
+describe('theme-tokens · Porcelain (`:root`, light mode)', () => {
+
+  test('--background is the slightly-warm off-white', () => {
+    expect(porcelainBlock).toMatch(/--background:\s*60\s+14%\s+97%/)
+  })
+  test('--foreground is near-black', () => {
+    expect(porcelainBlock).toMatch(/--foreground:\s*0\s+0%\s+4%/)
+  })
+  test('--card is pure white', () => {
+    expect(porcelainBlock).toMatch(/--card:\s*0\s+0%\s+100%/)
+  })
+  test('--secondary is the raised surface grey', () => {
+    expect(porcelainBlock).toMatch(/--secondary:\s*0\s+0%\s+95%/)
+  })
+  test('--accent is foreground-flipped (no amber)', () => {
+    expect(porcelainBlock).toMatch(/--accent:\s*0\s+0%\s+4%/)
+    expect(porcelainBlock).not.toMatch(/--accent:\s*33\s+40%\s+65%/)
+  })
+  test('--ring is mid-grey (no amber)', () => {
+    expect(porcelainBlock).toMatch(/--ring:\s*0\s+0%\s+30%/)
+  })
+})
+
+describe('theme-tokens · Obsidian (`.dark`)', () => {
+  test('--background is near-pure-black', () => {
+    expect(darkBlock).toMatch(/--background:\s*0\s+0%\s+2%/)
+  })
+  test('--foreground is near-pure-white', () => {
+    expect(darkBlock).toMatch(/--foreground:\s*0\s+0%\s+96%/)
+  })
+  test('--card is the lifted dark surface', () => {
+    expect(darkBlock).toMatch(/--card:\s*0\s+0%\s+8%/)
+  })
+  test('--secondary is the raised dark surface', () => {
+    expect(darkBlock).toMatch(/--secondary:\s*0\s+0%\s+6%/)
+  })
+  test('--primary is foreground-flipped (no amber)', () => {
+    expect(darkBlock).toMatch(/--primary:\s*0\s+0%\s+96%/)
+    expect(darkBlock).not.toMatch(/--primary:\s*33\s+40%\s+65%/)
+  })
+})
+
+describe('theme-tokens · new tokens for the timeline mosaic', () => {
+  test('--foreground-faint exists in both Porcelain and Obsidian', () => {
+    expect(porcelainBlock).toMatch(/--foreground-faint:/)
+    expect(darkBlock).toMatch(/--foreground-faint:/)
+  })
+  test('--photo-hover is 0.95 in Porcelain and 1.08 in Obsidian', () => {
+    expect(porcelainBlock).toMatch(/--photo-hover:\s*0\.95/)
+    expect(darkBlock).toMatch(/--photo-hover:\s*1\.08/)
+  })
+})
+
+describe('theme-tokens · amber accent fully removed', () => {
+  test('no warm-amber HSL anywhere in globals.css', () => {
+    // 33 40% 65% = #c8a882 = the old amber. Must not appear.
+    expect(css).not.toMatch(/33\s+40%\s+65%/)
+  })
+  test('no warm-cream HSL anywhere in globals.css', () => {
+    // 33 20% 94% was the old --background. Must not appear.
+    expect(css).not.toMatch(/33\s+20%\s+94%/)
+    // 25 15% 9% was the old dark --background. Must not appear.
+    expect(css).not.toMatch(/25\s+15%\s+9%/)
+  })
+  test('no inlined #c8a882 hex anywhere in globals.css', () => {
+    expect(css.toLowerCase()).not.toContain('#c8a882')
+  })
+})
+
+describe('theme-tokens · scrollbar uses --foreground (not --accent)', () => {
+  test('no .scroll-styled rule references --accent', () => {
+    // Match every `.scroll-styled…` selector's body and assert none of them
+    // contain `--accent`. Covers the base rule AND every ::-webkit-* pseudo.
+    const ruleBodies = [...css.matchAll(/\.scroll-styled[^{]*{([^}]*)}/g)].map(
+      (m) => m[1],
+    )
+    expect(ruleBodies.length).toBeGreaterThan(0) // guard against silent empty match
+    for (const body of ruleBodies) {
+      expect(body).not.toMatch(/var\(--accent\)/)
+    }
+  })
+  test('scrollbar thumb uses --foreground at low opacity', () => {
+    expect(css).toMatch(/scrollbar-thumb[\s\S]*?hsl\(var\(--foreground\)/)
+  })
+})
+
+describe('tailwind config · foreground-faint is wired', () => {
+  test('tailwind.config.ts maps foreground-faint to the CSS variable', () => {
+    const configPath = join(__dirname, '..', 'tailwind.config.ts')
+    const config = readFileSync(configPath, 'utf-8')
+    expect(config).toMatch(
+      /['"]foreground-faint['"]:\s*['"]hsl\(var\(--foreground-faint\)\)['"]/,
+    )
+  })
+})
+
+function walkSource(dir: string, acc: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    if (entry === 'node_modules' || entry.startsWith('.')) continue
+    const full = join(dir, entry)
+    const stat = lstatSync(full)
+    if (stat.isDirectory()) {
+      walkSource(full, acc)
+    } else if (/\.(vue|ts|js|css)$/.test(entry)) {
+      acc.push(full)
+    }
+  }
+  return acc
+}
+
+describe('source-tree audit · amber hex must not be reintroduced', () => {
+  test('no #c8a882 in any .vue/.ts/.js/.css file under app/', () => {
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: string[] = []
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8').toLowerCase()
+      if (content.includes('#c8a882')) {
+        offenders.push(file.slice(appDir.length + 1))
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  test('no warm-amber HSL form (33 40% 65%) anywhere under app/', () => {
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: string[] = []
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8')
+      // Match the literal HSL triple (with optional whitespace variations)
+      if (/33\s+40%\s+65%/.test(content)) {
+        offenders.push(file.slice(appDir.length + 1))
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  test('no old warm-shadow HSL (20 16% 14%) anywhere under app/', () => {
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: string[] = []
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8')
+      if (/20\s+16%\s+14%/.test(content)) {
+        offenders.push(file.slice(appDir.length + 1))
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  test('no Tailwind amber-* utility class anywhere under app/', () => {
+    // Reserved for true destructive warnings only — and we use --destructive for those.
+    // Informational / pending / empty-state UI must use structural emphasis instead.
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: Array<{ file: string; matches: string[] }> = []
+    const amberClassPattern = /\b(text|bg|border|ring|fill|stroke|from|to|via|placeholder|caret|decoration|outline|divide|accent)-amber-\d+(\/\d+)?\b/g
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8')
+      const matches = content.match(amberClassPattern)
+      if (matches && matches.length > 0) {
+        offenders.push({ file: file.slice(appDir.length + 1), matches })
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+})
