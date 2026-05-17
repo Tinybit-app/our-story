@@ -129,3 +129,18 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
 
   return { monthGroups, yearInfos }
 }
+
+/**
+ * Maps a memory id to a deterministic grid cell variant.
+ * ~15% of ids → 'wide' (2-col span), ~13% → 'tall' (2-row span),
+ * the rest → 'square'. The hash is stable: the same id always produces
+ * the same variant, so re-renders and load-more don't shift the layout.
+ */
+export function mosaicVariant(id: string): 'square' | 'wide' | 'tall' {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  const m = h % 100
+  if (m < 15) return 'wide'
+  if (m < 28) return 'tall'
+  return 'square'
+}
