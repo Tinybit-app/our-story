@@ -75,3 +75,13 @@ describe('theme-tokens · amber accent fully removed', () => {
     expect(css.toLowerCase()).not.toContain('#c8a882')
   })
 })
+
+describe('theme-tokens · scrollbar uses --foreground (not --accent)', () => {
+  test('.scroll-styled does not reference --accent', () => {
+    const scrollblock = css.match(/\.scroll-styled\s*{[\s\S]*?}/)?.[0] ?? ''
+    expect(scrollblock).not.toMatch(/var\(--accent\)/)
+  })
+  test('scrollbar thumb uses --foreground at low opacity', () => {
+    expect(css).toMatch(/scrollbar-thumb[\s\S]*?hsl\(var\(--foreground\)/)
+  })
+})
