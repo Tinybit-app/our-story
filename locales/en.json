@@ -92,7 +92,8 @@
     "noMemoriesFor": "No memories found for {month}.",
     "loadMore": "Load more",
     "thisYearSuffix": "this year",
-    "lastYearSuffix": "last year"
+    "lastYearSuffix": "last year",
+    "seeAllInMonth": "See all {count} memories in {label}"
   },
   "card": {
     "noNote": "No note",

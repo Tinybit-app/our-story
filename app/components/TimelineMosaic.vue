@@ -83,6 +83,16 @@
               @open="(p) => $emit('openMemory', p)"
             />
           </div>
+          <NuxtLink
+            v-if="group.hasMore"
+            :to="monthLink(group)"
+            class="see-all"
+          >
+            {{ t('timeline.seeAllInMonth', { count: group.totalCount, label: monthLabel(group) }) }}
+            <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </NuxtLink>
         </div>
       </template>
 
@@ -159,6 +169,16 @@ const monthName = (g: MonthGroup): string => {
   return new Intl.DateTimeFormat(locale.value, { month: 'long' })
     .format(new Date(g.year, g.month - 1, 1))
     .toUpperCase()
+}
+
+const monthLabel = (g: MonthGroup): string => {
+  return new Intl.DateTimeFormat(locale.value, { month: 'long', year: 'numeric' })
+    .format(new Date(g.year, g.month - 1, 1))
+}
+
+const monthLink = (g: MonthGroup): string => {
+  const base = `/timeline/${g.year}/${g.month}`
+  return props.circleId ? `${base}?circle=${props.circleId}` : base
 }
 
 // Span class — .note cells never span; photo cells use the deterministic hash
@@ -303,6 +323,9 @@ defineExpose({
   }
 }
 
+.grid > :deep(.mosaic-cell) {
+  aspect-ratio: 1 / 1;
+}
 .grid > :deep(.wide) {
   grid-column: span 2;
   aspect-ratio: 2 / 1;
@@ -310,5 +333,33 @@ defineExpose({
 .grid > :deep(.tall) {
   grid-row: span 2;
   aspect-ratio: 1 / 2;
+}
+
+.see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  color: hsl(var(--foreground) / 0.86);
+  text-decoration: none;
+  transition: background 200ms, border-color 200ms, color 200ms;
+}
+.see-all:hover {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  border-color: hsl(var(--foreground));
+}
+.see-all .arrow {
+  transition: transform 200ms ease;
+}
+.see-all:hover .arrow {
+  transform: translateX(2px);
 }
 </style>

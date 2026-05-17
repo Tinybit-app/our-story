@@ -95,7 +95,8 @@
     "noMemoriesFor": "Aucun souvenir trouvé pour {month}.",
     "loadMore": "Charger plus",
     "thisYearSuffix": "cette année",
-    "lastYearSuffix": "l'année dernière"
+    "lastYearSuffix": "l'année dernière",
+    "seeAllInMonth": "Voir les {count} mémoires de {label}"
   },
   "card": {
     "noNote": "Aucune note",

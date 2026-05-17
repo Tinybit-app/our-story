@@ -19,13 +19,18 @@
         :alt="memory.note ?? ''"
         loading="lazy"
       />
-      <video
-        v-else
-        :src="firstMedia.url ?? ''"
-        muted
-        playsinline
-        preload="metadata"
-      />
+      <div v-else class="video-thumb">
+        <img
+          :src="firstMedia.thumbnailUrl ?? ''"
+          :alt="memory.note ?? ''"
+          loading="lazy"
+        />
+        <div class="play-badge" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
     </template>
   </div>
 </template>
@@ -66,7 +71,6 @@ const noteMeta = computed(() => {
 
 <style scoped>
 .mosaic-cell {
-  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: hsl(var(--card));
   cursor: pointer;
@@ -83,10 +87,41 @@ const noteMeta = computed(() => {
     transform 350ms ease;
 }
 
-.mosaic-cell:hover img,
-.mosaic-cell:hover video {
+.mosaic-cell:hover img {
   filter: brightness(var(--photo-hover));
   transform: scale(1.04);
+}
+
+.video-thumb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.video-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 300ms ease, transform 350ms ease;
+}
+.mosaic-cell:hover .video-thumb img {
+  filter: brightness(var(--photo-hover));
+  transform: scale(1.04);
+}
+.video-thumb .play-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  pointer-events: none;
 }
 
 .mosaic-cell.note {
