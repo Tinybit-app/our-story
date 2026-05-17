@@ -5,7 +5,7 @@
       :month="month"
       :circle-id="circleId"
       :circle-name="circleName"
-      :memory-count="memories.length"
+      :memory-count="totalCount"
       :prev="adjacency.prev"
       :next="adjacency.next"
       :show-share="true"
@@ -163,6 +163,7 @@ const members = ref<CircleMember[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
 const nextCursor = ref<string | null>(null)
+const totalCount = ref(0)
 
 // ── Modals ─────────────────────────────────────────────────
 const selectedIndex = ref<number | null>(null)
@@ -204,11 +205,13 @@ async function fetchPage(cursor?: string) {
     const data = await $fetch<{
       memories: Memory[]
       nextCursor: string | null
+      totalCount: number
       children: ChildProfile[]
       members: CircleMember[]
     }>('/api/timeline', { query })
     if (isFirst) {
       memories.value = data.memories
+      totalCount.value = data.totalCount
       children.value = data.children ?? []
       members.value = data.members ?? []
     } else {

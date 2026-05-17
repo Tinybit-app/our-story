@@ -123,6 +123,7 @@ test.describe('month view · /timeline/[year]/[month]', () => {
           body: JSON.stringify({
             memories: [memory],
             nextCursor: null,
+            totalCount: 1,
             children: [],
             members: [],
           }),
@@ -176,6 +177,7 @@ test.describe('month view · /timeline/[year]/[month]', () => {
           body: JSON.stringify({
             memories: [memory],
             nextCursor: null,
+            totalCount: 1,
             children: [],
             members: [],
           }),
@@ -233,6 +235,7 @@ test.describe('month view · /timeline/[year]/[month]', () => {
           body: JSON.stringify({
             memories: [memory],
             nextCursor: null,
+            totalCount: 1,
             children: [],
             members: [],
           }),
@@ -259,5 +262,58 @@ test.describe('month view · /timeline/[year]/[month]', () => {
       navigator.clipboard.readText(),
     )
     expect(clipboardText).toMatch(/\/timeline\/2026\/4/)
+  })
+
+  test('spread header memoryCount uses totalCount, not paginated length', async ({
+    page,
+  }) => {
+    await mockMembership(page)
+    await mockCirclesList(page)
+    await mockProfile(page)
+
+    // Create 3 memory objects for the paginated response
+    const memory1 = makeMemory('m-1', '2026-04-15')
+    const memory2 = makeMemory('m-2', '2026-04-14')
+    const memory3 = makeMemory('m-3', '2026-04-13')
+
+    // Mock the adjacency endpoint
+    await page.route('**/api/timeline/months-with-data**', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          prev: { year: 2026, month: 3 },
+          next: { year: 2026, month: 5 },
+        }),
+      })
+    })
+
+    // Mock the timeline endpoint with 3 paginated memories but totalCount of 47
+    await page.route('**/api/timeline**', (route) => {
+      const url = new URL(route.request().url())
+      const yearMonth = url.searchParams.get('yearMonth')
+      if (yearMonth === '2026-04') {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            memories: [memory1, memory2, memory3],
+            nextCursor: null,
+            totalCount: 47,
+            children: [],
+            members: [],
+          }),
+        })
+      } else {
+        route.continue()
+      }
+    })
+
+    await page.goto('/timeline/2026/4')
+    await page.waitForSelector('.month-spread-header', { timeout: 10_000 })
+
+    // The header should display 47 (totalCount), not 3 (memories.length)
+    const headerContent = await page.locator('.month-spread-header').textContent()
+    expect(headerContent).toContain('47')
   })
 })
