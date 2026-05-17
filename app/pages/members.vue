@@ -336,7 +336,7 @@
             <template v-if="roleDialog.role === 'admin'">
               <div v-if="!transferConfirming" class="pt-1">
                 <button
-                  class="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-300 dark:hover:bg-amber-900/30"
+                  class="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
                   :disabled="!!roleChangingId"
                   @click="transferConfirming = true"
                 >
@@ -345,10 +345,10 @@
               </div>
               <div
                 v-else
-                class="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 pt-1 dark:border-amber-800/50 dark:bg-amber-900/20"
+                class="space-y-3 rounded-xl border border-border bg-secondary p-4 pt-1"
               >
                 <p
-                  class="text-sm font-semibold text-amber-700 dark:text-amber-300"
+                  class="text-sm font-semibold text-foreground"
                 >
                   {{
                     t('members.transferOwnershipTitle', {
@@ -356,7 +356,7 @@
                     })
                   }}
                 </p>
-                <p class="text-xs text-amber-600 dark:text-amber-400">
+                <p class="text-xs text-muted-foreground">
                   {{ t('members.transferOwnershipDesc') }}
                 </p>
                 <div class="flex gap-2 pt-1">
@@ -367,7 +367,7 @@
                     {{ t('nav.cancel') }}
                   </button>
                   <button
-                    class="flex-1 rounded-lg bg-amber-600 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                    class="flex-1 rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                     :disabled="!!roleChangingId"
                     @click="changeRole(roleDialog, 'owner')"
                   >
@@ -677,7 +677,7 @@ function initials(member: any): string {
 function roleBadgeClass(role: string): string {
   switch (role) {
     case 'owner':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+      return 'bg-secondary text-foreground'
     case 'admin':
       return 'bg-secondary text-foreground'
     case 'caregiver':

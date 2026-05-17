@@ -196,10 +196,10 @@
                 <!-- Quick note -->
                 <template v-else-if="preview.type === 'note'">
                   <div
-                    class="flex h-full w-full items-center justify-center bg-amber-50 dark:bg-amber-950/30"
+                    class="flex h-full w-full items-center justify-center bg-secondary"
                   >
                     <svg
-                      class="h-3.5 w-3.5 text-amber-500"
+                      class="h-3.5 w-3.5 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"

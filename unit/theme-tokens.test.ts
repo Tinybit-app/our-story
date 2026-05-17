@@ -154,4 +154,20 @@ describe('source-tree audit · amber hex must not be reintroduced', () => {
     }
     expect(offenders).toEqual([])
   })
+
+  test('no Tailwind amber-* utility class anywhere under app/', () => {
+    // Reserved for true destructive warnings only — and we use --destructive for those.
+    // Informational / pending / empty-state UI must use structural emphasis instead.
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: Array<{ file: string; matches: string[] }> = []
+    const amberClassPattern = /\b(text|bg|border|ring|fill|stroke|from|to|via|placeholder|caret|decoration|outline|divide|accent)-amber-\d+(\/\d+)?\b/g
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8')
+      const matches = content.match(amberClassPattern)
+      if (matches && matches.length > 0) {
+        offenders.push({ file: file.slice(appDir.length + 1), matches })
+      }
+    }
+    expect(offenders).toEqual([])
+  })
 })

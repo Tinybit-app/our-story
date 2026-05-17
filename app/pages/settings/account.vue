@@ -230,14 +230,14 @@
           <!-- Needs manual ownership transfer -->
           <div
             v-if="circlesNeedingTransfer.length > 0"
-            class="overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-800/50"
+            class="overflow-hidden rounded-2xl border border-foreground/20"
           >
             <div
-              class="border-b border-amber-200 bg-amber-50 px-5 py-4 dark:border-amber-800/50 dark:bg-amber-900/20"
+              class="border-b border-foreground/20 bg-secondary px-5 py-4"
             >
               <div class="flex items-start gap-2.5">
                 <svg
-                  class="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
+                  class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
@@ -250,7 +250,7 @@
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <p
-                  class="text-sm font-medium text-amber-700 dark:text-amber-300"
+                  class="text-sm font-medium text-foreground"
                 >
                   {{ t('settings.account.needsTransferWarning') }}
                 </p>
