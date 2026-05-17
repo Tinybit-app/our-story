@@ -218,25 +218,31 @@ export default defineEventHandler(async (event) => {
       )
     }
 
-    // Build the count query (always covers the full month, ignoring cursor)
-    const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
-    const countQuery = supabase
-      .from('memory')
-      .select('id', { count: 'exact', head: true })
-      .eq('circle_id', circleId)
-      .or(visibilityFilter)
-      .gte('memory_date', from)
-      .lt('memory_date', to)
-
-    // Run both in parallel
-    const [memoryResult, countResult] = await Promise.all([q, countQuery])
+    // Run the COUNT only on the first-page request (cursor is undefined).
+    // On subsequent pages the client already has the count from the first
+    // response, so the parallel query would be wasted work.
+    let totalCount = 0
+    let memoryResult
+    if (cursor) {
+      memoryResult = await q
+    } else {
+      const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
+      const countQuery = supabase
+        .from('memory')
+        .select('id', { count: 'exact', head: true })
+        .eq('circle_id', circleId)
+        .or(visibilityFilter)
+        .gte('memory_date', from)
+        .lt('memory_date', to)
+      const [m, c] = await Promise.all([q, countQuery])
+      memoryResult = m
+      totalCount = c.count ?? 0
+    }
     const { data: memories, error } = memoryResult
     if (error) {
       console.error('[timeline] month query failed:', error.message)
       throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
     }
-
-    const totalCount = countResult.count ?? 0
 
     const raw = memories ?? []
     const hasMore = raw.length > PAGE_SIZE

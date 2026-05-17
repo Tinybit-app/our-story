@@ -316,4 +316,63 @@ test.describe('month view · /timeline/[year]/[month]', () => {
     const headerContent = await page.locator('.month-spread-header').textContent()
     expect(headerContent).toContain('47')
   })
+
+  test('clicking the next-month pill navigates to that month', async ({
+    page,
+  }) => {
+    await mockMembership(page)
+    await mockCirclesList(page)
+    await mockProfile(page)
+
+    const memory = makeMemory('m-2026-4', '2026-04-15')
+
+    // Mock the timeline endpoint for April
+    await page.route('**/api/timeline**', (route) => {
+      const url = new URL(route.request().url())
+      const yearMonth = url.searchParams.get('yearMonth')
+      if (yearMonth === '2026-04') {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            memories: [memory],
+            nextCursor: null,
+            totalCount: 1,
+            children: [],
+            members: [],
+          }),
+        })
+      } else {
+        route.continue()
+      }
+    })
+
+    // Mock the adjacency endpoint with next month available
+    // Place this AFTER the timeline mock to ensure both are registered
+    await page.route('**/api/timeline/months-with-data**', (route: any) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          prev: null,
+          next: { year: 2026, month: 5 },
+        }),
+      })
+    })
+
+    await page.goto('/timeline/2026/4')
+    await page.waitForSelector('.pill-bar-inner', { timeout: 10_000 })
+
+    // Wait for the next pill link to be visible.
+    // The next pill is a NuxtLink inside .pill-bar-inner with class "pill".
+    // Since prev is null, there will be one disabled span.pill at the start
+    // and one a.pill (NuxtLink) on the right for next month.
+    const nextPill = page.locator('.pill-bar-inner a.pill')
+    await expect(nextPill).toBeVisible({ timeout: 5_000 })
+    await nextPill.click()
+
+    // URL should now be /timeline/2026/5 (with optional ?circle= query).
+    await page.waitForURL(/\/timeline\/2026\/5(\?|$)/, { timeout: 10_000 })
+    expect(page.url()).toMatch(/\/timeline\/2026\/5/)
+  })
 })

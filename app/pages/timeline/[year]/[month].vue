@@ -34,7 +34,7 @@
       <!-- Mosaic grid -->
       <div v-else>
         <p class="mb-6 text-xs text-muted-foreground">
-          {{ t('timeline.memories', memories.length) }}
+          {{ t('timeline.memories', totalCount) }}
         </p>
         <div class="grid grid-cols-3 gap-[3px] md:grid-cols-4">
           <MosaicCell
