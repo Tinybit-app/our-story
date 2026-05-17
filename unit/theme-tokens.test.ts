@@ -4,9 +4,10 @@ import { describe, expect, test } from 'vitest'
 
 const cssPath = join(__dirname, '..', 'app', 'assets', 'css', 'globals.css')
 const css = readFileSync(cssPath, 'utf-8')
+const porcelainBlock = css.match(/:root\s*{[^}]+}/)?.[0] ?? ''
+const darkBlock = css.match(/\.dark\s*{[^}]+}/)?.[0] ?? ''
 
 describe('theme-tokens · Porcelain (`:root`, light mode)', () => {
-  const porcelainBlock = css.match(/:root\s*{[^}]+}/)?.[0] ?? ''
 
   test('--background is the slightly-warm off-white', () => {
     expect(porcelainBlock).toMatch(/--background:\s*60\s+14%\s+97%/)
@@ -30,8 +31,6 @@ describe('theme-tokens · Porcelain (`:root`, light mode)', () => {
 })
 
 describe('theme-tokens · Obsidian (`.dark`)', () => {
-  const darkBlock = css.match(/\.dark\s*{[^}]+}/)?.[0] ?? ''
-
   test('--background is near-pure-black', () => {
     expect(darkBlock).toMatch(/--background:\s*0\s+0%\s+2%/)
   })
@@ -51,9 +50,6 @@ describe('theme-tokens · Obsidian (`.dark`)', () => {
 })
 
 describe('theme-tokens · new tokens for the timeline mosaic', () => {
-  const porcelainBlock = css.match(/:root\s*{[^}]+}/)?.[0] ?? ''
-  const darkBlock = css.match(/\.dark\s*{[^}]+}/)?.[0] ?? ''
-
   test('--foreground-faint exists in both Porcelain and Obsidian', () => {
     expect(porcelainBlock).toMatch(/--foreground-faint:/)
     expect(darkBlock).toMatch(/--foreground-faint:/)
