@@ -83,16 +83,14 @@
               @open="(p) => $emit('openMemory', p)"
             />
           </div>
-          <NuxtLink
-            v-if="group.hasMore"
-            :to="monthLink(group)"
-            class="see-all"
-          >
-            {{ t('timeline.seeAllInMonth', { count: group.totalCount, label: monthLabel(group) }) }}
-            <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </NuxtLink>
+          <div v-if="group.hasMore" class="see-all-row">
+            <NuxtLink :to="monthLink(group)" class="see-all">
+              {{ t('timeline.seeAllInMonth', { count: group.totalCount, label: monthLabel(group) }) }}
+              <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </NuxtLink>
+          </div>
         </div>
       </template>
 
@@ -324,31 +322,30 @@ defineExpose({
 }
 
 
+.see-all-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 0 4px;
+}
 .see-all {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 14px;
-  padding: 9px 14px;
-  border-radius: 999px;
-  background: hsl(var(--secondary));
-  border: 1px solid hsl(var(--border));
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-weight: 500;
-  font-size: 13px;
-  color: hsl(var(--foreground) / 0.86);
+  font-size: 13.5px;
+  color: hsl(var(--foreground) / 0.78);
   text-decoration: none;
-  transition: background 200ms, border-color 200ms, color 200ms;
+  transition: color 200ms ease;
 }
 .see-all:hover {
-  background: hsl(var(--foreground));
-  color: hsl(var(--background));
-  border-color: hsl(var(--foreground));
+  color: hsl(var(--foreground));
 }
 .see-all .arrow {
   transition: transform 200ms ease;
 }
 .see-all:hover .arrow {
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 </style>

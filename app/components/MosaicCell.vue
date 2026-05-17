@@ -55,9 +55,7 @@ const isNote = computed(
   () => props.memory.memorymedia.length === 0 && Boolean(props.memory.note),
 )
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
-const isVideo = computed(() =>
-  firstMedia.value?.media_type?.startsWith('video/') ?? false,
-)
+const isVideo = computed(() => firstMedia.value?.media_type === 'video')
 
 const noteMeta = computed(() => {
   const d = new Date(props.memory.memory_date)
