@@ -77,9 +77,16 @@ describe('theme-tokens · amber accent fully removed', () => {
 })
 
 describe('theme-tokens · scrollbar uses --foreground (not --accent)', () => {
-  test('.scroll-styled does not reference --accent', () => {
-    const scrollblock = css.match(/\.scroll-styled\s*{[\s\S]*?}/)?.[0] ?? ''
-    expect(scrollblock).not.toMatch(/var\(--accent\)/)
+  test('no .scroll-styled rule references --accent', () => {
+    // Match every `.scroll-styled…` selector's body and assert none of them
+    // contain `--accent`. Covers the base rule AND every ::-webkit-* pseudo.
+    const ruleBodies = [...css.matchAll(/\.scroll-styled[^{]*{([^}]*)}/g)].map(
+      (m) => m[1],
+    )
+    expect(ruleBodies.length).toBeGreaterThan(0) // guard against silent empty match
+    for (const body of ruleBodies) {
+      expect(body).not.toMatch(/var\(--accent\)/)
+    }
   })
   test('scrollbar thumb uses --foreground at low opacity', () => {
     expect(css).toMatch(/scrollbar-thumb[\s\S]*?hsl\(var\(--foreground\)/)
