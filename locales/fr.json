@@ -82,7 +82,8 @@
     "inviteAlreadySent": "Une invitation a déjà été envoyée à ce courriel.",
     "inviteMaxPending": "Vous avez 10 invitations en attente. Attendez que certaines soient acceptées.",
     "inviteFailed": "Échec de l'envoi de l'invitation. Veuillez réessayer.",
-    "circleSettings": "Paramètres du cercle"
+    "circleSettings": "Paramètres du cercle",
+    "ourStory": "Our Story"
   },
   "timeline": {
     "emptyTitle": "Votre histoire commence ici",
@@ -96,7 +97,9 @@
     "loadMore": "Charger plus",
     "thisYearSuffix": "cette année",
     "lastYearSuffix": "l'année dernière",
-    "seeAllInMonth": "Voir les {count} mémoires de {label}"
+    "seeAllInMonth": "Voir les {count} mémoires de {label}",
+    "shareMonth": "Copier le lien",
+    "shareMonthCopied": "Lien copié"
   },
   "card": {
     "noNote": "Aucune note",

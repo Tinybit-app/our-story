@@ -200,6 +200,8 @@ export default defineEventHandler(async (event) => {
     const monthNum = Number(parts[1])
     const from = new Date(Date.UTC(yearNum, monthNum - 1, 1)).toISOString()
     const to = new Date(Date.UTC(yearNum, monthNum, 1)).toISOString()
+
+    // Build the memory fetch (paginated)
     let q = baseQuery()
       .gte('memory_date', from)
       .lt('memory_date', to)
@@ -216,7 +218,27 @@ export default defineEventHandler(async (event) => {
       )
     }
 
-    const { data: memories, error } = await q
+    // Run the COUNT only on the first-page request (cursor is undefined).
+    // On subsequent pages the client already has the count from the first
+    // response, so the parallel query would be wasted work.
+    let totalCount = 0
+    let memoryResult
+    if (cursor) {
+      memoryResult = await q
+    } else {
+      const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
+      const countQuery = supabase
+        .from('memory')
+        .select('id', { count: 'exact', head: true })
+        .eq('circle_id', circleId)
+        .or(visibilityFilter)
+        .gte('memory_date', from)
+        .lt('memory_date', to)
+      const [m, c] = await Promise.all([q, countQuery])
+      memoryResult = m
+      totalCount = c.count ?? 0
+    }
+    const { data: memories, error } = memoryResult
     if (error) {
       console.error('[timeline] month query failed:', error.message)
       throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
@@ -231,6 +253,7 @@ export default defineEventHandler(async (event) => {
     return {
       memories: withUrls,
       nextCursor,
+      totalCount,
       children,
       members,
       upcomingMilestone,

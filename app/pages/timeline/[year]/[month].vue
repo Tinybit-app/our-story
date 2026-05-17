@@ -1,39 +1,15 @@
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
-    >
-      <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
-        <NuxtLink
-          :to="circleId ? `/timeline?circle=${circleId}` : '/timeline'"
-          class="flex flex-shrink-0 items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          {{ t('common.back') }}
-        </NuxtLink>
-        <div class="min-w-0 flex-1">
-          <p
-            class="mb-1 select-none text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-accent"
-          >
-            Our Story
-          </p>
-          <p
-            class="truncate text-sm font-semibold leading-none text-foreground"
-          >
-            {{ monthLabel }}
-          </p>
-        </div>
-      </div>
-    </header>
+    <MonthSpreadHeader
+      :year="year"
+      :month="month"
+      :circle-id="circleId"
+      :circle-name="circleName"
+      :memory-count="totalCount"
+      :prev="adjacency.prev"
+      :next="adjacency.next"
+      :show-share="true"
+    />
 
     <main class="mx-auto max-w-[1280px] px-5 py-6">
       <!-- Loading -->
@@ -58,7 +34,7 @@
       <!-- Mosaic grid -->
       <div v-else>
         <p class="mb-6 text-xs text-muted-foreground">
-          {{ t('timeline.memories', memories.length) }}
+          {{ t('timeline.memories', totalCount) }}
         </p>
         <div class="grid grid-cols-3 gap-[3px] md:grid-cols-4">
           <MosaicCell
@@ -70,19 +46,13 @@
           />
         </div>
 
-        <!-- Load more button -->
-        <div v-if="nextCursor" class="mt-8 flex justify-center">
-          <button
-            :disabled="loadingMore"
-            class="flex h-9 items-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            @click="fetchPage(nextCursor!)"
-          >
+        <!-- Load-more sentinel + spinner (infinite scroll) -->
+        <div ref="loadMoreEl" class="py-8">
+          <div v-if="loadingMore" class="flex justify-center">
             <div
-              v-if="loadingMore"
-              class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+              class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
             />
-            {{ t('timeline.loadMore') }}
-          </button>
+          </div>
         </div>
       </div>
     </main>
@@ -101,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { useIntersectionObserver } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 import { mosaicVariant } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
@@ -142,6 +113,33 @@ const circleId = computed<string | null>(() => {
   return all[0]?.id ?? null
 })
 
+// Active circle's display name (used in the spread header kicker row).
+const circleName = computed(() => {
+  const all = circlesData.value?.circles ?? []
+  return all.find((c: any) => c.id === circleId.value)?.name ?? null
+})
+
+// Prev/next adjacency from /api/timeline/months-with-data
+const adjacency = ref<{
+  prev: { year: number; month: number } | null
+  next: { year: number; month: number } | null
+}>({ prev: null, next: null })
+
+async function fetchAdjacency() {
+  if (!circleId.value) return
+  try {
+    const data = await $fetch<{
+      prev: { year: number; month: number } | null
+      next: { year: number; month: number } | null
+    }>('/api/timeline/months-with-data', {
+      query: { circleId: circleId.value, year, month },
+    })
+    adjacency.value = data
+  } catch (err) {
+    console.error('[month-page] adjacency fetch error:', err)
+  }
+}
+
 interface ChildProfile {
   id: string
   name: string
@@ -160,6 +158,8 @@ const members = ref<CircleMember[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
 const nextCursor = ref<string | null>(null)
+const totalCount = ref(0)
+const loadMoreEl = ref<HTMLElement>()
 
 // ── Modals ─────────────────────────────────────────────────
 const selectedIndex = ref<number | null>(null)
@@ -185,20 +185,6 @@ function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
   if (i !== -1) memories.value[i] = { ...memories.value[i], ...patch } as Memory
 }
 
-function onReactionUpdate({
-  memoryId,
-  reactions,
-}: {
-  memoryId: string
-  reactions: any[]
-}) {
-  const i = memories.value.findIndex((m) => m.id === memoryId)
-  if (i !== -1)
-    memories.value[i] = {
-      ...memories.value[i],
-      memoryreaction: reactions,
-    } as Memory
-}
 
 async function fetchPage(cursor?: string) {
   if (!circleId.value) return
@@ -215,11 +201,13 @@ async function fetchPage(cursor?: string) {
     const data = await $fetch<{
       memories: Memory[]
       nextCursor: string | null
+      totalCount: number
       children: ChildProfile[]
       members: CircleMember[]
     }>('/api/timeline', { query })
     if (isFirst) {
       memories.value = data.memories
+      totalCount.value = data.totalCount
       children.value = data.children ?? []
       members.value = data.members ?? []
     } else {
@@ -234,7 +222,17 @@ async function fetchPage(cursor?: string) {
   }
 }
 
-onMounted(() => fetchPage())
+// Load-more sentinel
+useIntersectionObserver(loadMoreEl, ([entry]) => {
+  if (entry?.isIntersecting && nextCursor.value && !loadingMore.value && !loading.value) {
+    fetchPage(nextCursor.value)
+  }
+})
+
+onMounted(() => {
+  fetchPage()
+  fetchAdjacency()
+})
 </script>
 
 <style scoped>
