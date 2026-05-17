@@ -65,6 +65,10 @@ export default {
       fontFamily: {
         sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['Georgia', 'ui-serif', '"Times New Roman"', 'serif'],
+        // New families for the timeline mosaic + later surfaces (spec §2)
+        hanken: ['"Hanken Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        serif: ['"Instrument Serif"', 'ui-serif', 'Georgia', 'serif'],
       },
       borderRadius: {
         xl: 'calc(var(--radius) + 4px)',
