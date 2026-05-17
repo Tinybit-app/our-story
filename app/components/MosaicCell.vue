@@ -52,13 +52,13 @@ const isVideo = computed(() =>
 
 const noteMeta = computed(() => {
   const d = new Date(props.memory.memory_date)
-  const monthAbbr = new Intl.DateTimeFormat('en', { month: 'short' })
-    .format(d)
-    .toUpperCase()
+  const monthAbbr = new Intl.DateTimeFormat('en', { month: 'short' }).format(d)
   const day = d.getUTCDate()
+  const isFormerMember = props.memory.owner_user_id === null
   const author =
-    props.memory.user?.first_name ?? props.memory.former_owner_name ?? 'Member'
-  return `${monthAbbr} ${day} · ${author.toUpperCase()}`
+    props.memory.user?.first_name ??
+    (isFormerMember ? props.memory.former_owner_name : null)
+  return author ? `${monthAbbr} ${day} · ${author}` : `${monthAbbr} ${day}`
 })
 </script>
 
