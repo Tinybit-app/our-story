@@ -76,10 +76,10 @@
           </div>
           <div class="grid">
             <MosaicCell
-              v-for="memory in group.memories"
+              v-for="(memory, idx) in group.memories"
               :key="memory.id"
               :memory="memory"
-              :class="cellClass(memory.id, memory)"
+              :class="cellClass(memory.id, memory, idx, group.memories.length)"
               @open="(p) => $emit('openMemory', p)"
             />
           </div>
@@ -112,7 +112,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import type { Memory, MonthGroup } from '~/composables/useTimeline'
-import { mosaicVariant } from '~/composables/useTimeline'
+import { mosaicVariantWithBoost } from '~/composables/useTimeline'
 import MosaicCell from '~/components/MosaicCell.vue'
 
 const { t, locale } = useI18n()
@@ -182,9 +182,9 @@ const monthLink = (g: MonthGroup): string => {
 }
 
 // Span class — .note cells never span; photo cells use the deterministic hash
-const cellClass = (id: string, memory: Memory): string => {
+const cellClass = (id: string, memory: Memory, index: number, monthSize: number): string => {
   if (memory.memorymedia.length === 0 && memory.note) return ''
-  const v = mosaicVariant(id)
+  const v = mosaicVariantWithBoost(id, index, monthSize)
   if (v === 'wide') return 'wide'
   if (v === 'tall') return 'tall'
   return ''
@@ -323,17 +323,6 @@ defineExpose({
   }
 }
 
-.grid > :deep(.mosaic-cell) {
-  aspect-ratio: 1 / 1;
-}
-.grid > :deep(.wide) {
-  grid-column: span 2;
-  aspect-ratio: 2 / 1;
-}
-.grid > :deep(.tall) {
-  grid-row: span 2;
-  aspect-ratio: 1 / 2;
-}
 
 .see-all {
   display: inline-flex;

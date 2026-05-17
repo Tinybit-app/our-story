@@ -229,12 +229,5 @@ onMounted(() => fetchPage())
 </script>
 
 <style scoped>
-.wide {
-  grid-column: span 2;
-  aspect-ratio: 2 / 1;
-}
-.tall {
-  grid-row: span 2;
-  aspect-ratio: 1 / 2;
-}
+/* .wide and .tall cell shapes are owned by MosaicCell.vue */
 </style>

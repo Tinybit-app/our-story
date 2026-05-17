@@ -20,10 +20,12 @@
         loading="lazy"
       />
       <div v-else class="video-thumb">
-        <img
-          :src="firstMedia.thumbnailUrl ?? ''"
-          :alt="memory.note ?? ''"
-          loading="lazy"
+        <video
+          :src="firstMedia.url ?? ''"
+          :poster="firstMedia.thumbnailUrl !== firstMedia.url ? (firstMedia.thumbnailUrl ?? undefined) : undefined"
+          muted
+          playsinline
+          preload="metadata"
         />
         <div class="play-badge" aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -75,6 +77,15 @@ const noteMeta = computed(() => {
   background: hsl(var(--card));
   cursor: pointer;
   position: relative;
+  aspect-ratio: 1 / 1;
+}
+.mosaic-cell.wide {
+  grid-column: span 2;
+  aspect-ratio: 2 / 1;
+}
+.mosaic-cell.tall {
+  grid-row: span 2;
+  aspect-ratio: 1 / 2;
 }
 
 .mosaic-cell img,
@@ -97,13 +108,14 @@ const noteMeta = computed(() => {
   width: 100%;
   height: 100%;
 }
-.video-thumb img {
+.video-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: filter 300ms ease, transform 350ms ease;
+  background: hsl(var(--secondary));
 }
-.mosaic-cell:hover .video-thumb img {
+.mosaic-cell:hover .video-thumb video {
   filter: brightness(var(--photo-hover));
   transform: scale(1.04);
 }

@@ -144,3 +144,17 @@ export function mosaicVariant(id: string): 'square' | 'wide' | 'tall' {
   if (m < 28) return 'tall'
   return 'square'
 }
+
+/**
+ * Like mosaicVariant but guarantees the first memory in a month with 3+
+ * memories is always 'wide'. This ensures the mosaic pattern is always
+ * visible even for small datasets where probabilistic wide cells are rare.
+ */
+export function mosaicVariantWithBoost(
+  id: string,
+  index: number,
+  monthSize: number,
+): 'square' | 'wide' | 'tall' {
+  if (index === 0 && monthSize >= 3) return 'wide'
+  return mosaicVariant(id)
+}
