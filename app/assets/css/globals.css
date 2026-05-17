@@ -44,7 +44,7 @@
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 0 0% 30%;
-    --foreground-faint: 0 0% 4% / 0.42;
+    --foreground-faint: 0 0% 4% / 0.42; /* alpha baked in — do not use Tailwind /N opacity modifier */
     --photo-hover: 0.95;
     --radius: 0.75rem;
   }
@@ -70,7 +70,7 @@
     --border: 0 0% 14%;
     --input: 0 0% 14%;
     --ring: 0 0% 80%;
-    --foreground-faint: 0 0% 96% / 0.4;
+    --foreground-faint: 0 0% 96% / 0.4; /* alpha baked in — do not use Tailwind /N opacity modifier */
     --photo-hover: 1.08;
     --radius: 0.75rem;
   }
