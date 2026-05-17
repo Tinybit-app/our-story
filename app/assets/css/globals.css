@@ -24,50 +24,54 @@
 
 @layer base {
   :root {
-    /* Warm & nostalgic — light mode */
-    --background: 33 20% 94%; /* #f4f1ee warm cream */
-    --foreground: 20 16% 14%; /* #2c2420 dark espresso */
-    --card: 0 0% 100%; /* #ffffff white lift */
-    --card-foreground: 20 16% 14%;
+    /* Monochrome — Porcelain (light mode) */
+    --background: 60 14% 97%; /* #fafaf7 slightly-warm off-white */
+    --foreground: 0 0% 4%; /* #0a0a0a near-black */
+    --card: 0 0% 100%; /* #ffffff pure white surface */
+    --card-foreground: 0 0% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 20 16% 14%;
-    --primary: 20 16% 14%; /* #2c2420 dark espresso */
-    --primary-foreground: 33 20% 94%; /* #f4f1ee cream */
-    --secondary: 33 14% 88%; /* #e8e4df warm border */
-    --secondary-foreground: 20 16% 14%;
-    --muted: 33 14% 88%;
-    --muted-foreground: 26 10% 49%; /* #8a7f74 warm stone */
-    --accent: 33 40% 65%; /* #c8a882 warm amber */
-    --accent-foreground: 20 16% 14%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 0 0% 4%; /* foreground-flipped CTA */
+    --primary-foreground: 60 14% 97%;
+    --secondary: 0 0% 95%; /* #f1f1ec raised surface */
+    --secondary-foreground: 0 0% 4%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 0 0% 4%; /* no chroma — equals foreground */
+    --accent-foreground: 60 14% 97%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 30 14% 88%; /* #e8e4df */
-    --input: 30 14% 88%;
-    --ring: 33 40% 65%; /* #c8a882 amber focus ring */
-    --radius: 0.75rem; /* 12px base */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 30%;
+    --foreground-faint: 0 0% 4% / 0.42;
+    --photo-hover: 0.95;
+    --radius: 0.75rem;
   }
 
   .dark {
-    /* Warm & nostalgic — dark mode */
-    --background: 25 15% 9%; /* #1a1512 dark espresso brown */
-    --foreground: 33 30% 92%; /* #f0ebe4 warm off-white */
-    --card: 20 16% 14%; /* #2c2420 lifted dark brown */
-    --card-foreground: 33 30% 92%;
-    --popover: 20 16% 14%;
-    --popover-foreground: 33 30% 92%;
-    --primary: 33 40% 65%; /* #c8a882 amber — CTA in dark mode */
-    --primary-foreground: 25 15% 9%;
-    --secondary: 22 8% 22%; /* #3d3530 dark border */
-    --secondary-foreground: 33 30% 92%;
-    --muted: 22 8% 22%;
-    --muted-foreground: 26 10% 49%; /* #8a7f74 warm stone (shared) */
-    --accent: 33 40% 65%; /* #c8a882 amber (shared) */
-    --accent-foreground: 25 15% 9%;
+    /* Monochrome — Obsidian (dark mode) */
+    --background: 0 0% 2%; /* #050505 base */
+    --foreground: 0 0% 96%; /* #f4f4f4 primary text */
+    --card: 0 0% 8%; /* #141414 default surface */
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%; /* foreground-flipped CTA */
+    --primary-foreground: 0 0% 2%;
+    --secondary: 0 0% 6%; /* #0f0f0f raised surface */
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 96%; /* no chroma — equals foreground */
+    --accent-foreground: 0 0% 2%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 22 8% 22%; /* #3d3530 */
-    --input: 22 8% 22%;
-    --ring: 33 40% 65%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 80%;
+    --foreground-faint: 0 0% 96% / 0.4;
+    --photo-hover: 1.08;
     --radius: 0.75rem;
   }
 }
