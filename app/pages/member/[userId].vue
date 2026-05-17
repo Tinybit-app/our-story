@@ -122,17 +122,6 @@ function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
     memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
 }
 
-  memoryId: string
-  reactions: any[]
-}) {
-  const i = memoriesFlat.value.findIndex((m) => m.id === memoryId)
-  if (i !== -1)
-    memoriesFlat.value[i] = {
-      ...memoriesFlat.value[i],
-      memoryreaction: reactions,
-    } as Memory
-}
-
 definePageMeta({})
 
 const router = useRouter()
