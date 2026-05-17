@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, test } from 'vitest'
 
@@ -100,5 +100,33 @@ describe('tailwind config · foreground-faint is wired', () => {
     expect(config).toMatch(
       /['"]foreground-faint['"]:\s*['"]hsl\(var\(--foreground-faint\)\)['"]/,
     )
+  })
+})
+
+function walkSource(dir: string, acc: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    if (entry === 'node_modules' || entry.startsWith('.')) continue
+    const full = join(dir, entry)
+    const stat = statSync(full)
+    if (stat.isDirectory()) {
+      walkSource(full, acc)
+    } else if (/\.(vue|ts|js|css)$/.test(entry)) {
+      acc.push(full)
+    }
+  }
+  return acc
+}
+
+describe('source-tree audit · amber hex must not be reintroduced', () => {
+  test('no #c8a882 in any .vue/.ts/.js/.css file under app/', () => {
+    const appDir = join(__dirname, '..', 'app')
+    const offenders: string[] = []
+    for (const file of walkSource(appDir)) {
+      const content = readFileSync(file, 'utf-8').toLowerCase()
+      if (content.includes('#c8a882')) {
+        offenders.push(file.slice(appDir.length + 1))
+      }
+    }
+    expect(offenders).toEqual([])
   })
 })
