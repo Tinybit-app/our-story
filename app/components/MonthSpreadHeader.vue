@@ -17,8 +17,8 @@
         v-if="showShare"
         type="button"
         class="share-btn"
-        :title="t('timeline.shareMonth')"
-        :aria-label="t('timeline.shareMonth')"
+        :title="justCopied ? t('timeline.shareMonthCopied') : t('timeline.shareMonth')"
+        :aria-label="justCopied ? t('timeline.shareMonthCopied') : t('timeline.shareMonth')"
         @click="onShareClick"
       >
         <svg v-if="!justCopied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -48,41 +48,43 @@
 
     <!-- Row 3: sticky pill nav -->
     <div class="pill-bar">
-      <NuxtLink
-        v-if="prev"
-        :to="monthPath(prev.year, prev.month)"
-        class="pill"
-      >
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        {{ shortMonthLabel(prev.year, prev.month) }}
-      </NuxtLink>
-      <span v-else class="pill disabled">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </span>
+      <div class="pill-bar-inner">
+        <NuxtLink
+          v-if="prev"
+          :to="monthPath(prev.year, prev.month)"
+          class="pill"
+        >
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          {{ shortMonthLabel(prev.year, prev.month) }}
+        </NuxtLink>
+        <span v-else class="pill disabled">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </span>
 
-      <div class="spacer"></div>
-      <div class="current">{{ shortMonthLabel(year, month) }} · {{ year }}</div>
-      <div class="spacer"></div>
+        <div class="spacer"></div>
+        <div class="current">{{ shortMonthLabel(year, month) }} · {{ year }}</div>
+        <div class="spacer"></div>
 
-      <NuxtLink
-        v-if="next"
-        :to="monthPath(next.year, next.month)"
-        class="pill"
-      >
-        {{ shortMonthLabel(next.year, next.month) }}
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </NuxtLink>
-      <span v-else class="pill disabled">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </span>
+        <NuxtLink
+          v-if="next"
+          :to="monthPath(next.year, next.month)"
+          class="pill"
+        >
+          {{ shortMonthLabel(next.year, next.month) }}
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </NuxtLink>
+        <span v-else class="pill disabled">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </span>
+      </div>
     </div>
   </header>
 </template>
@@ -260,18 +262,20 @@ async function onShareClick() {
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
   border-top: 1px solid hsl(var(--border));
   border-bottom: 1px solid hsl(var(--border));
   background: hsl(var(--background) / 0.92);
   backdrop-filter: blur(16px);
+}
+.pill-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
   max-width: 1280px;
   margin: 0 auto;
 }
-.pill-bar .spacer {
+.pill-bar-inner .spacer {
   flex: 1;
 }
 .pill {
@@ -297,7 +301,7 @@ async function onShareClick() {
   opacity: 0.35;
   pointer-events: none;
 }
-.pill-bar .current {
+.pill-bar-inner .current {
   padding: 6px 12px;
   border-radius: 999px;
   background: hsl(var(--secondary));
