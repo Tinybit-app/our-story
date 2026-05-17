@@ -46,19 +46,13 @@
           />
         </div>
 
-        <!-- Load more button -->
-        <div v-if="nextCursor" class="mt-8 flex justify-center">
-          <button
-            :disabled="loadingMore"
-            class="flex h-9 items-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            @click="fetchPage(nextCursor!)"
-          >
+        <!-- Load-more sentinel + spinner (infinite scroll) -->
+        <div ref="loadMoreEl" class="py-8">
+          <div v-if="loadingMore" class="flex justify-center">
             <div
-              v-if="loadingMore"
-              class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+              class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
             />
-            {{ t('timeline.loadMore') }}
-          </button>
+          </div>
         </div>
       </div>
     </main>
@@ -77,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { useIntersectionObserver } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 import { mosaicVariant } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
@@ -164,6 +159,7 @@ const loading = ref(false)
 const loadingMore = ref(false)
 const nextCursor = ref<string | null>(null)
 const totalCount = ref(0)
+const loadMoreEl = ref<HTMLElement>()
 
 // ── Modals ─────────────────────────────────────────────────
 const selectedIndex = ref<number | null>(null)
@@ -225,6 +221,13 @@ async function fetchPage(cursor?: string) {
     else loadingMore.value = false
   }
 }
+
+// Load-more sentinel
+useIntersectionObserver(loadMoreEl, ([entry]) => {
+  if (entry?.isIntersecting && nextCursor.value && !loadingMore.value && !loading.value) {
+    fetchPage(nextCursor.value)
+  }
+})
 
 onMounted(() => {
   fetchPage()
