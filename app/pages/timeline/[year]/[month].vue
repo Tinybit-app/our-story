@@ -1,39 +1,15 @@
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
-    >
-      <div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-3.5">
-        <NuxtLink
-          :to="circleId ? `/timeline?circle=${circleId}` : '/timeline'"
-          class="flex flex-shrink-0 items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          {{ t('common.back') }}
-        </NuxtLink>
-        <div class="min-w-0 flex-1">
-          <p
-            class="mb-1 select-none text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-accent"
-          >
-            Our Story
-          </p>
-          <p
-            class="truncate text-sm font-semibold leading-none text-foreground"
-          >
-            {{ monthLabel }}
-          </p>
-        </div>
-      </div>
-    </header>
+    <MonthSpreadHeader
+      :year="year"
+      :month="month"
+      :circle-id="circleId"
+      :circle-name="circleName"
+      :memory-count="memories.length"
+      :prev="adjacency.prev"
+      :next="adjacency.next"
+      :show-share="true"
+    />
 
     <main class="mx-auto max-w-[1280px] px-5 py-6">
       <!-- Loading -->
@@ -142,6 +118,33 @@ const circleId = computed<string | null>(() => {
   return all[0]?.id ?? null
 })
 
+// Active circle's display name (used in the spread header kicker row).
+const circleName = computed(() => {
+  const all = circlesData.value?.circles ?? []
+  return all.find((c: any) => c.id === circleId.value)?.name ?? null
+})
+
+// Prev/next adjacency from /api/timeline/months-with-data
+const adjacency = ref<{
+  prev: { year: number; month: number } | null
+  next: { year: number; month: number } | null
+}>({ prev: null, next: null })
+
+async function fetchAdjacency() {
+  if (!circleId.value) return
+  try {
+    const data = await $fetch<{
+      prev: { year: number; month: number } | null
+      next: { year: number; month: number } | null
+    }>('/api/timeline/months-with-data', {
+      query: { circleId: circleId.value, year, month },
+    })
+    adjacency.value = data
+  } catch (err) {
+    console.error('[month-page] adjacency fetch error:', err)
+  }
+}
+
 interface ChildProfile {
   id: string
   name: string
@@ -185,20 +188,6 @@ function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
   if (i !== -1) memories.value[i] = { ...memories.value[i], ...patch } as Memory
 }
 
-function onReactionUpdate({
-  memoryId,
-  reactions,
-}: {
-  memoryId: string
-  reactions: any[]
-}) {
-  const i = memories.value.findIndex((m) => m.id === memoryId)
-  if (i !== -1)
-    memories.value[i] = {
-      ...memories.value[i],
-      memoryreaction: reactions,
-    } as Memory
-}
 
 async function fetchPage(cursor?: string) {
   if (!circleId.value) return
@@ -234,7 +223,10 @@ async function fetchPage(cursor?: string) {
   }
 }
 
-onMounted(() => fetchPage())
+onMounted(() => {
+  fetchPage()
+  fetchAdjacency()
+})
 </script>
 
 <style scoped>
