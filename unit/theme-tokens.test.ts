@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, test } from 'vitest'
 
@@ -107,7 +107,7 @@ function walkSource(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     if (entry === 'node_modules' || entry.startsWith('.')) continue
     const full = join(dir, entry)
-    const stat = statSync(full)
+    const stat = lstatSync(full)
     if (stat.isDirectory()) {
       walkSource(full, acc)
     } else if (/\.(vue|ts|js|css)$/.test(entry)) {
