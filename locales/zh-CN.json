@@ -81,7 +81,10 @@
     "more": "更多",
     "open": "打开",
     "noMemoriesFor": "{month} 暂无记忆。",
-    "loadMore": "加载更多"
+    "loadMore": "加载更多",
+    "thisYearSuffix": "今年",
+    "lastYearSuffix": "去年",
+    "seeAllInMonth": "查看 {label} 的全部 {count} 个回忆"
   },
   "card": {
     "noNote": "暂无备注",

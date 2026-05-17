@@ -71,10 +71,12 @@
 
       <!-- Timeline -->
       <div class="py-6">
-        <TimelinePolaroid
+        <TimelineMosaic
           :month-groups="monthGroups"
           :loading="loading"
           :has-next-page="!!nextCursor"
+          :circle-type="null"
+          :circle-id="circleId"
           @load-more="fetchTimeline(nextCursor ?? undefined)"
           @open-memory="onOpenMemory"
           @reaction-update="onReactionUpdate"

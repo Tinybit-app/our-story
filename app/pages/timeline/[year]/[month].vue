@@ -55,29 +55,19 @@
         </p>
       </div>
 
-      <!-- Polaroid grid -->
+      <!-- Mosaic grid -->
       <div v-else>
         <p class="mb-6 text-xs text-muted-foreground">
           {{ t('timeline.memories', memories.length) }}
         </p>
-        <div class="flex flex-wrap items-start gap-5">
-          <template v-for="(memory, i) in memories" :key="memory.id">
-            <QuickNoteCard
-              v-if="!memory.memorymedia.length && memory.note"
-              :memory="memory"
-              :index="i"
-              @open="onOpenMemory"
-              @reaction-update="onReactionUpdate"
-            />
-            <PolaroidCard
-              v-else
-              :memory="memory"
-              :index="i"
-              :wide="isWideMemory(memory.id)"
-              @open="onOpenMemory"
-              @reaction-update="onReactionUpdate"
-            />
-          </template>
+        <div class="grid grid-cols-3 gap-[3px] md:grid-cols-4">
+          <MosaicCell
+            v-for="memory in memories"
+            :key="memory.id"
+            :memory="memory"
+            :class="mosaicVariant(memory.id) === 'wide' ? 'wide' : mosaicVariant(memory.id) === 'tall' ? 'tall' : ''"
+            @open="onOpenMemory"
+          />
         </div>
 
         <!-- Load more button -->
@@ -112,6 +102,7 @@
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
+import { mosaicVariant } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
 
 const route = useRoute()
@@ -130,11 +121,6 @@ const monthLabel = computed(() =>
   }),
 )
 
-function isWideMemory(id: string): boolean {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return h % 10 < 3
-}
 
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
 // Prefer ?circle=<id> so this month-overflow page stays on the same circle
@@ -241,3 +227,7 @@ async function fetchPage(cursor?: string) {
 
 onMounted(() => fetchPage())
 </script>
+
+<style scoped>
+/* .wide and .tall cell shapes are owned by MosaicCell.vue */
+</style>

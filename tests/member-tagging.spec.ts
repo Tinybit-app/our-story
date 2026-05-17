@@ -6,11 +6,11 @@
  * Tagged members receive an email notification. Avatar bubbles appear on cards.
  *
  * Tests:
- *  1. Avatar bubble appears on polaroid card when a member is tagged
+ *  1. Avatar bubble appears on mosaic cell when a member is tagged
  *  2. No avatar bubbles when memory_members is empty
  *  3. Upload form shows member chips when the circle has members
  *  4. Tagging a member calls POST /api/memories/:id/members
- *  5. "with" label appears before avatar bubbles on the polaroid card
+ *  5. "with" label appears before avatar bubbles on the mosaic cell
  *  6. "with" label is absent when no members are tagged
  */
 
@@ -127,7 +127,7 @@ function mockTimeline(
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Member tagging (4.10.6)', () => {
-  test('avatar bubble appears on polaroid card when a member is tagged', async ({
+  test('avatar bubble appears on mosaic cell when a member is tagged', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -140,7 +140,7 @@ test.describe('Member tagging (4.10.6)', () => {
 
     await page.goto('/timeline')
     // The avatar bubble for Sarah should be rendered (via title or initials)
-    // The card shows initials "SL" when no avatar_url is set
+    // The mosaic cell shows initials "SL" when no avatar_url is set
     await expect(page.getByText('SL')).toBeVisible({ timeout: 10_000 })
   })
 
@@ -258,7 +258,7 @@ test.describe('Member tagging (4.10.6)', () => {
     )
 
     await page.goto('/timeline')
-    // The "with" label is rendered immediately before the avatar row
+    // The "with" label is rendered immediately before the avatar row on the mosaic cell
     await expect(page.getByText('with')).toBeVisible({ timeout: 10_000 })
     // Initials "SL" (Sarah Lee) appear alongside the label
     await expect(page.getByText('SL')).toBeVisible()

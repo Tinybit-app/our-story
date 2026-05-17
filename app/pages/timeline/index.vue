@@ -417,8 +417,8 @@
         @add="onMilestoneAdd"
       />
       <!-- Timeline -->
-      <TimelinePolaroid
-        ref="timelinePolaroidRef"
+      <TimelineMosaic
+        ref="timelineMosaicRef"
         :month-groups="monthGroups"
         :loading="loading"
         :has-next-page="!!prevYear"
@@ -1001,7 +1001,7 @@ const { monthGroups, yearInfos } = useTimeline(memoriesFlat)
 
 // ── Year badge ─────────────────────────────────────────────
 const currentYear = ref<number | null>(null)
-const timelinePolaroidRef = ref<{ scrollToYear: (y: number) => void }>()
+const timelineMosaicRef = ref<{ scrollToYear: (y: number) => void }>()
 
 function onYearChange(year: number) {
   currentYear.value = year
@@ -1027,7 +1027,7 @@ function openJump() {
 
 function jumpToYear(year: number) {
   jumpOpen.value = false
-  nextTick(() => timelinePolaroidRef.value?.scrollToYear(year))
+  nextTick(() => timelineMosaicRef.value?.scrollToYear(year))
 }
 
 function jumpToMonth(year: number, month: number) {

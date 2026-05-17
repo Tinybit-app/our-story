@@ -4,7 +4,7 @@
  * Feature: text-only memories with no photo required.
  * Clicking "Add memory" opens a choice sheet; choosing "Quick note"
  * opens the QuickNoteForm; submitting POSTs to /api/memories/quick-note.
- * Clicking a QuickNoteCard on the timeline opens QuickNoteModal.
+ * Clicking a quick-note mosaic cell on the timeline opens QuickNoteModal.
  *
  * Tests — creation flow:
  *  1. "Add memory" button opens the choice sheet

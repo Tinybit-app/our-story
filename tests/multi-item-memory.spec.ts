@@ -152,7 +152,7 @@ function mockComments(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Multi-item memories (5.4)', () => {
-  test('PolaroidCard shows count badge for multi-item memory', async ({
+  test('mosaic cell shows count badge for multi-item memory', async ({
     page,
   }) => {
     await mockMembership(page)
