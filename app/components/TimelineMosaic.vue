@@ -129,7 +129,6 @@ const emit = defineEmits<{
   openMemory: [
     payload: { memory: Memory; rect: DOMRect | null; tilt: number },
   ]
-  reactionUpdate: [{ memoryId: string; reactions: unknown[] }]
 }>()
 
 const rootEl = ref<HTMLElement>()

@@ -79,7 +79,6 @@
           :circle-id="circleId"
           @load-more="fetchTimeline(nextCursor ?? undefined)"
           @open-memory="onOpenMemory"
-          @reaction-update="onReactionUpdate"
         />
       </div>
     </main>
@@ -123,10 +122,6 @@ function onMemoryUpdate(patch: Pick<Memory, 'id'> & Partial<Memory>) {
     memoriesFlat.value[i] = { ...memoriesFlat.value[i], ...patch } as Memory
 }
 
-function onReactionUpdate({
-  memoryId,
-  reactions,
-}: {
   memoryId: string
   reactions: any[]
 }) {
