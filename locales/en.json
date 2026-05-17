@@ -79,7 +79,8 @@
     "inviteAlreadySent": "An invite was already sent to this email.",
     "inviteMaxPending": "You have 10 pending invites. Wait for some to be accepted first.",
     "inviteFailed": "Failed to send invite. Please try again.",
-    "circleSettings": "Circle settings"
+    "circleSettings": "Circle settings",
+    "ourStory": "Our Story"
   },
   "timeline": {
     "emptyTitle": "Your story starts here",
@@ -93,7 +94,9 @@
     "loadMore": "Load more",
     "thisYearSuffix": "this year",
     "lastYearSuffix": "last year",
-    "seeAllInMonth": "See all {count} memories in {label}"
+    "seeAllInMonth": "See all {count} memories in {label}",
+    "shareMonth": "Copy link",
+    "shareMonthCopied": "Link copied"
   },
   "card": {
     "noNote": "No note",

@@ -70,7 +70,8 @@
     "inviteAlreadySent": "此邮箱已收到邀请。",
     "inviteMaxPending": "你有 10 个待处理的邀请，请等待部分邀请被接受后再试。",
     "inviteFailed": "邀请发送失败，请重试。",
-    "circleSettings": "圈子设置"
+    "circleSettings": "圈子设置",
+    "ourStory": "Our Story"
   },
   "timeline": {
     "emptyTitle": "你的故事从这里开始",
@@ -84,7 +85,9 @@
     "loadMore": "加载更多",
     "thisYearSuffix": "今年",
     "lastYearSuffix": "去年",
-    "seeAllInMonth": "查看 {label} 的全部 {count} 个回忆"
+    "seeAllInMonth": "查看 {label} 的全部 {count} 个回忆",
+    "shareMonth": "复制链接",
+    "shareMonthCopied": "已复制链接"
   },
   "card": {
     "noNote": "暂无备注",
