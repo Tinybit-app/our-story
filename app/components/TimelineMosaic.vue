@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import type { Memory, MonthGroup } from '~/composables/useTimeline'
 import { mosaicVariant } from '~/composables/useTimeline'
@@ -194,6 +194,11 @@ watch(
   },
   { immediate: true },
 )
+
+onBeforeUnmount(() => {
+  yearRibbonObservers.forEach((stop) => stop())
+  yearRibbonObservers.length = 0
+})
 
 // Load-more sentinel
 useIntersectionObserver(loadMoreEl, ([entry]) => {
