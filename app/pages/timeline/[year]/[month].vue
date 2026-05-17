@@ -65,7 +65,7 @@
             v-for="memory in memories"
             :key="memory.id"
             :memory="memory"
-            :class="mosaicVariant(memory.id) === 'wide' ? 'wide' : mosaicVariant(memory.id) === 'tall' ? 'tall' : ''"
+            :class="cellClass(memory)"
             @open="onOpenMemory"
           />
         </div>
@@ -104,6 +104,15 @@
 import type { Memory } from '~/composables/useTimeline'
 import { mosaicVariant } from '~/composables/useTimeline'
 const { t, locale } = useI18n()
+
+function cellClass(memory: Memory): string {
+  // Note cells never span — they always render as a 1x1 square.
+  if (memory.memorymedia.length === 0 && memory.note) return ''
+  const v = mosaicVariant(memory.id)
+  if (v === 'wide') return 'wide'
+  if (v === 'tall') return 'tall'
+  return ''
+}
 
 const route = useRoute()
 const year = Number(route.params.year)
