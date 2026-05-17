@@ -2,15 +2,15 @@
  * Emoji reactions E2E tests (build plan §8.2)
  *
  * Feature: toggle emoji reactions on memories (add if absent, remove if present).
- * Reactions appear as chips on PolaroidCard, QuickNoteCard, MemoryModal, and QuickNoteModal.
+ * Reactions appear as chips on mosaic cells (photo and note), MemoryModal, and QuickNoteModal.
  *
  * Tests:
- *  1. Existing reaction chips render on PolaroidCard
+ *  1. Existing reaction chips render on photo mosaic cell
  *  2. Emoji picker opens on + button click
  *  3. Picking an emoji calls POST /api/memories/:id/reactions and chip appears
  *  4. Clicking an existing chip (own reaction) removes it (toggle off)
  *  5. MemoryModal shows reaction chips and picker
- *  6. QuickNoteCard shows existing reaction chip
+ *  6. Quick-note mosaic cell shows existing reaction chip
  *  7. QuickNoteModal shows reaction chips and picker
  */
 
@@ -139,7 +139,7 @@ function mockComments(page: any, memoryId: string) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Emoji reactions (8.2)', () => {
-  test('existing reaction chip renders on PolaroidCard when hovered', async ({
+  test('existing reaction chip renders on photo mosaic cell when hovered', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -163,7 +163,7 @@ test.describe('Emoji reactions (8.2)', () => {
       timeout: 15_000,
     })
 
-    // Reaction overlay on PolaroidCard is shown on hover only (v-if="isHovered")
+    // Reaction overlay on the mosaic cell is shown on hover only (v-if="isHovered")
     const card = page
       .locator('article')
       .filter({ hasText: 'A birthday moment' })
@@ -176,7 +176,7 @@ test.describe('Emoji reactions (8.2)', () => {
     })
   })
 
-  test('+ button opens emoji picker on PolaroidCard', async ({ page }) => {
+  test('+ button opens emoji picker on photo mosaic cell', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [makePhotoMemory()])
@@ -395,7 +395,7 @@ test.describe('Emoji reactions (8.2)', () => {
       .click()
 
     // Existing reaction chip should be visible in modal
-    // (card reaction overlay hidden - v-if="isHovered" is false when modal is open)
+    // (mosaic cell reaction overlay hidden - v-if="isHovered" is false when modal is open)
     await expect(page.locator('button', { hasText: '😍' }).first()).toBeVisible(
       { timeout: 5_000 },
     )
@@ -417,7 +417,7 @@ test.describe('Emoji reactions (8.2)', () => {
     expect(postEmoji).toBe('🎉')
   })
 
-  test('QuickNoteCard shows existing reaction chip', async ({ page }) => {
+  test('quick-note mosaic cell shows existing reaction chip', async ({ page }) => {
     await mockMembership(page)
     await mockCircles(page)
     await mockTimeline(page, [
@@ -439,7 +439,7 @@ test.describe('Emoji reactions (8.2)', () => {
       timeout: 15_000,
     })
 
-    // Reaction chip should appear on the QuickNoteCard
+    // Reaction chip should appear on the quick-note mosaic cell
     await expect(page.getByText('🥹').first()).toBeVisible({ timeout: 5_000 })
   })
 

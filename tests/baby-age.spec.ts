@@ -5,7 +5,7 @@
  * Age stamps only appear when children are explicitly tagged on a memory.
  *
  * Tests:
- *  1. Baby age stamp appears on polaroid cards when children are tagged on the memory
+ *  1. Baby age stamp appears on mosaic cells when children are tagged on the memory
  *  2. Baby age stamp is absent when no children are tagged on the memory
  *  3. Circle settings shows a children manager (owner only)
  *  4. Adding a child calls POST /api/circles/:id/children
@@ -127,7 +127,7 @@ function mockChildrenApi(page: any, children: (typeof CHILD)[]) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Baby age stamp (4.10.1)', () => {
-  test('age stamp appears on polaroid card when children are tagged on the memory', async ({
+  test('age stamp appears on mosaic cell when children are tagged on the memory', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -263,7 +263,7 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('age stamp pill shows child name and age together on the polaroid card', async ({
+  test('age stamp pill shows child name and age together on the mosaic cell', async ({
     page,
   }) => {
     await mockMembership(page)
