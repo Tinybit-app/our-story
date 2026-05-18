@@ -181,6 +181,7 @@
     "milestoneShort": "✦ Milestone… (optional)",
     "errorVideoSize": "Videos must be under 500 MB.",
     "errorPhotoSize": "Photos must be under 50 MB.",
+    "errorTooManyItems": "You can post up to {max} items at once. Please remove some and try again.",
     "errorSession": "Session expired — please sign in again.",
     "errorStorageFull": "Storage full",
     "errorVideoTooLarge": "Video too large",
