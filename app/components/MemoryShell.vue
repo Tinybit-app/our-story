@@ -163,11 +163,17 @@
 
       <!-- Media path: viewer top + drawer bottom -->
       <template v-else-if="currentMemory && !isQuickNote">
-        <!-- Photo region fills viewport above the drawer -->
+        <!-- Photo region fills viewport above the drawer.
+             touchAction: 'none' overrides VueUse usePointerSwipe's default
+             pan-y, which would otherwise let the browser cancel horizontal
+             touch sequences (suppressing the prev/next-memory swipe). -->
         <div
           ref="photoRegionEl"
           class="absolute inset-x-0 top-0 z-10 overflow-hidden"
-          :style="{ bottom: `${drawer.heightPx.value}px` }"
+          :style="{
+            bottom: `${drawer.heightPx.value}px`,
+            touchAction: 'none',
+          }"
           @pointerdown="onPhotoPointerDown"
           @pointermove="onPhotoPointerMove"
           @click="onPhotoClick"
