@@ -1,6 +1,6 @@
 <template>
-  <!-- Fills the shell's flex-col card. @click closes the emoji picker. -->
-  <div class="flex min-h-0 flex-1 flex-col" @click="pickerOpen = false">
+  <!-- Fills the shell's flex-col card. -->
+  <div class="flex min-h-0 flex-1 flex-col">
     <!-- Photo / video — single item -->
     <div
       v-if="(memory.media_count ?? 1) <= 1"
@@ -334,7 +334,6 @@ const PRESET_EMOJIS = [
   '👍',
 ]
 
-const pickerOpen = ref(false)
 const modalImgLoaded = ref(false)
 
 // MemoryDetail ref (exposes canClose for the shell)
@@ -793,12 +792,10 @@ async function cancelEditing() {
   editing.value = false
 }
 
-// Asked by MemoryShell before backdrop/X/navigation closes the modal. Returns
-// true if it's safe to close; false aborts the close so the user keeps their
-// in-progress edit.
+// Asked by MemoryShell before backdrop/X/navigation closes the modal. The
+// edit state now lives in MemoryDetail, so we forward the question there.
 async function canClose(): Promise<boolean> {
-  if (!editing.value || !hasUnsavedChanges.value) return true
-  return askDiscardConfirm()
+  return (await memoryDetailRef.value?.canClose()) ?? true
 }
 defineExpose({ canClose })
 
@@ -1398,6 +1395,4 @@ function timeAgo(iso: string): string {
   })
 }
 
-// Load comments when the component mounts (triggered by :key change on navigation)
-onMounted(() => loadComments())
 </script>
