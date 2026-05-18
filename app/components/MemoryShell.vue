@@ -173,6 +173,9 @@
           :style="{
             bottom: `${drawer.heightPx.value}px`,
             touchAction: 'none',
+            transition: drawer.isDragging.value
+              ? 'none'
+              : 'bottom 280ms cubic-bezier(0.32, 0.72, 0, 1)',
           }"
           @pointerdown="onPhotoPointerDown"
           @pointermove="onPhotoPointerMove"
@@ -191,10 +194,16 @@
         <!-- Drawer surface -->
         <div
           class="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[22px] bg-background shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
-          :style="{ height: `${drawer.heightPx.value}px` }"
+          :style="{
+            height: `${drawer.heightPx.value}px`,
+            transition: drawer.isDragging.value
+              ? 'none'
+              : 'height 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+          }"
         >
+          <!-- Grabber — generous 36px hit zone above the visible 4px pill. -->
           <div
-            class="flex h-7 flex-shrink-0 cursor-grab items-center justify-center touch-none"
+            class="flex h-9 flex-shrink-0 cursor-grab items-center justify-center touch-none"
             :class="drawer.isDragging.value && 'cursor-grabbing'"
             @pointerdown="onGrabberPointerDown"
           >
@@ -458,11 +467,9 @@ async function runEnterAnimation() {
 async function navigate(dir: 'prev' | 'next') {
   if (navigating.value) return
 
-  // Reset drawer to default snap on every navigation so a drawer left at
-  // 'full' on memory A doesn't carry over to memory B (mobile only).
-  if (!isDesktop.value) {
-    drawer.snapTo('default')
-  }
+  // Drawer snap is intentionally preserved across navigation — if the user
+  // was reading comments at 'full' on memory A, memory B opens at 'full'
+  // too. Same applies to peek / default.
 
   const newIdx =
     dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
@@ -602,28 +609,24 @@ function onMobileOpenShareCard() {
   }
 }
 
-// Grabber drag handler using pointer events.
+// Grabber drag — listen on window so the drag keeps tracking even if the
+// finger leaves the small grabber, and so re-renders during navigation
+// don't strand the listeners on a stale node.
 function onGrabberPointerDown(e: PointerEvent) {
   if (drawer.isDragging.value) return
   drawer.onDragStart(e.clientY)
-  const target = e.currentTarget as HTMLElement
-  target.setPointerCapture(e.pointerId)
+  e.preventDefault()
 
   const onMove = (ev: PointerEvent) => drawer.onDragMove(ev.clientY)
-  const onUp = (ev: PointerEvent) => {
+  const onUp = () => {
     drawer.onDragEnd()
-    try {
-      target.releasePointerCapture(ev.pointerId)
-    } catch {
-      /* already released */
-    }
-    target.removeEventListener('pointermove', onMove)
-    target.removeEventListener('pointerup', onUp)
-    target.removeEventListener('pointercancel', onUp)
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('pointercancel', onUp)
   }
-  target.addEventListener('pointermove', onMove)
-  target.addEventListener('pointerup', onUp)
-  target.addEventListener('pointercancel', onUp)
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp)
+  window.addEventListener('pointercancel', onUp)
 }
 
 // ── Keyboard ───────────────────────────────────────────────
