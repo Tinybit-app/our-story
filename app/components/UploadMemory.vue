@@ -1051,6 +1051,8 @@ const firstItem = computed(() => items.value[0] as UploadItem)
 
 const MAX_PHOTO_BYTES = 50 * 1024 * 1024
 const MAX_VIDEO_BYTES = 500 * 1024 * 1024
+// Matches the server cap in /api/memories/upload-batch.
+const MAX_BATCH_ITEMS = 30
 
 function today(): string {
   return dateFromTimestamp(Date.now())
@@ -1086,6 +1088,12 @@ async function onFilesSelected(e: Event) {
   const files = Array.from((e.target as HTMLInputElement).files ?? [])
   if (!files.length) return
   globalError.value = ''
+
+  if (items.value.length + files.length > MAX_BATCH_ITEMS) {
+    globalError.value = t('upload.errorTooManyItems', { max: MAX_BATCH_ITEMS })
+    if (fileInput.value) fileInput.value.value = ''
+    return
+  }
 
   const newItems: UploadItem[] = []
   for (const file of files) {

@@ -17,7 +17,7 @@ const bodySchema = z.object({
   childIds: z.array(z.uuid()).max(10).optional(),
   memberIds: z.array(z.uuid()).max(50).optional(),
   coverIndex: z.number().int().nonnegative().nullable().optional(),
-  items: z.array(itemSchema).min(2).max(20),
+  items: z.array(itemSchema).min(2).max(30),
 })
 
 export default defineEventHandler(async (event) => {

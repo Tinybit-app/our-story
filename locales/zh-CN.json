@@ -172,6 +172,7 @@
     "milestoneShort": "✦ 里程碑…（可选）",
     "errorVideoSize": "视频不能超过 500 MB。",
     "errorPhotoSize": "照片不能超过 50 MB。",
+    "errorTooManyItems": "一次最多发布 {max} 个项目。请删除一些后重试。",
     "errorSession": "会话已过期，请重新登录。",
     "errorStorageFull": "存储空间已满",
     "errorVideoTooLarge": "视频太大",
