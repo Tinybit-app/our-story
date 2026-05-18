@@ -1288,7 +1288,7 @@ const memory = computed(() => props.memory)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
 
 // ── Multi-item carousel ────────────────────────────────────
-interface Slide {
+export interface Slide {
   id: string
   mediaType: 'photo' | 'video' | 'text'
   url?: string | null
