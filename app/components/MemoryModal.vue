@@ -314,6 +314,13 @@ const modalImgLoaded = ref(false)
 // MemoryDetail ref (exposes canClose for the shell)
 const memoryDetailRef = ref<{ canClose: () => Promise<boolean> } | null>(null)
 
+// MemoryShell calls canClose() before backdrop/X/navigation closes the modal.
+// Forwards to MemoryDetail where the edit state and discard-confirm logic live.
+async function canClose(): Promise<boolean> {
+  return (await memoryDetailRef.value?.canClose()) ?? true
+}
+defineExpose({ canClose })
+
 const memory = computed(() => props.memory)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
 
