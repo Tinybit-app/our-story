@@ -161,7 +161,10 @@
     "discard": "Abandonner",
     "keepEditing": "Continuer",
     "addReaction": "Ajouter une réaction",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "closeAriaLabel": "Fermer le souvenir",
+    "swipeHintPrev": "Souvenir précédent",
+    "swipeHintNext": "Souvenir suivant"
   },
   "upload": {
     "addMemory": "Ajouter un souvenir",

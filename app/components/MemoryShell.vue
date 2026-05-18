@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div
-      v-if="visible"
+      v-if="visible && isDesktop"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
     >
       <!-- Backdrop -->
@@ -112,10 +112,15 @@
         />
       </div>
     </div>
+
+    <div v-else-if="visible && !isDesktop" class="fixed inset-0 z-50 bg-background">
+      <!-- TODO: Mobile drawer layout (Task 3) -->
+    </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 
 interface ChildProfile {
@@ -143,6 +148,8 @@ const emit = defineEmits<{
   close: []
   update: [Pick<Memory, 'id'> & Partial<Memory>]
 }>()
+
+const isDesktop = useMediaQuery('(min-width: 768px)')
 
 // ── Auth + profile (fetched once, passed down to content) ──
 const supabaseClient = useSupabaseClient()

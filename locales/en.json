@@ -158,7 +158,10 @@
     "discard": "Discard",
     "keepEditing": "Keep editing",
     "addReaction": "Add reaction",
-    "add": "Add"
+    "add": "Add",
+    "closeAriaLabel": "Close memory",
+    "swipeHintPrev": "Previous memory",
+    "swipeHintNext": "Next memory"
   },
   "upload": {
     "addMemory": "Add a memory",
