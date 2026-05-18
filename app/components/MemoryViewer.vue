@@ -111,13 +111,19 @@
       </div>
     </div>
 
-    <!-- Photo / video — multi-item carousel (moved from MemoryModal in Task 3) -->
+    <!-- Photo / video — multi-item carousel.
+         JS-controlled translateX strip (not native overflow-x scroll) so we
+         own the boundary behavior: swipe past the last slide → emit
+         navigate-memory='next', swipe past the first → 'prev'. -->
     <div
       v-if="(memory.media_count ?? 1) > 1"
+      ref="carouselContainerEl"
       :class="[
-        'relative bg-border',
+        'relative overflow-hidden bg-border',
         fillContainer ? 'h-full w-full' : 'flex-shrink-0',
       ]"
+      style="touch-action: none"
+      @pointerdown="onCarouselPointerDown"
     >
       <!-- Loading skeleton -->
       <div
@@ -130,19 +136,21 @@
       <!-- Carousel -->
       <template v-else-if="slides.length > 0">
         <div
-          ref="carouselRef"
-          :class="[
-            'no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth',
-            fillContainer ? 'h-full w-full' : 'w-full',
-          ]"
-          @scroll="onCarouselScroll"
+          ref="carouselStripEl"
+          :class="['flex will-change-transform', fillContainer ? 'h-full' : '']"
+          :style="{
+            transform: `translateX(${stripTranslateX}px)`,
+            transition: isCarouselDragging
+              ? 'none'
+              : 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+          }"
         >
           <div
             v-for="slide in slides"
             :key="slide.id"
             :class="[
-              'min-w-full shrink-0 snap-center',
-              fillContainer ? 'h-full w-full' : 'w-full',
+              'min-w-full shrink-0',
+              fillContainer ? 'h-full' : 'w-full',
             ]"
           >
             <div
@@ -290,6 +298,10 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   'current-slide-idx': [number]
+  // Fired when the user swipes past the first slide (left edge → 'prev')
+  // or past the last slide (right edge → 'next'). The parent decides
+  // whether/how to navigate between memories.
+  'navigate-memory': ['prev' | 'next']
 }>()
 
 const { t } = useI18n()
@@ -300,7 +312,18 @@ const downloading = ref(false)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
 
 // ── Multi-item carousel helpers ────────────────────────────────────
-const carouselRef = ref<HTMLDivElement | null>(null)
+import { useElementSize } from '@vueuse/core'
+
+const carouselContainerEl = ref<HTMLDivElement | null>(null)
+const carouselStripEl = ref<HTMLDivElement | null>(null)
+const { width: carouselWidth } = useElementSize(carouselContainerEl)
+
+const isCarouselDragging = ref(false)
+const dragOffsetX = ref(0)
+
+const stripTranslateX = computed(
+  () => -props.currentSlideIdx * carouselWidth.value + dragOffsetX.value,
+)
 
 const DOT_SLOT_PX = 14
 const DOT_RAIL_WIDTH_PX = 84
@@ -337,20 +360,8 @@ function dotStyle(idx: number) {
   return { transform: `scale(${scale})`, opacity }
 }
 
-function onCarouselScroll() {
-  if (!carouselRef.value) return
-  const idx = Math.round(
-    carouselRef.value.scrollLeft / carouselRef.value.clientWidth,
-  )
-  if (idx !== props.currentSlideIdx) emit('current-slide-idx', idx)
-}
-
 function goToSlide(idx: number) {
-  if (!carouselRef.value) return
-  carouselRef.value.scrollTo({
-    left: idx * carouselRef.value.clientWidth,
-    behavior: 'smooth',
-  })
+  if (idx !== props.currentSlideIdx) emit('current-slide-idx', idx)
 }
 
 function nextSlide() {
@@ -360,6 +371,90 @@ function nextSlide() {
 
 function prevSlide() {
   if (props.currentSlideIdx > 0) goToSlide(props.currentSlideIdx - 1)
+}
+
+// ── Carousel drag (mobile) ────────────────────────────────────
+// Direction-locked horizontal drag with boundary detection. While dragging
+// the strip follows the finger; on release we snap to the nearest slide,
+// or — if the user swiped past the first/last slide — emit navigate-memory.
+function onCarouselPointerDown(e: PointerEvent) {
+  if (props.slides.length <= 1) return
+
+  const startX = e.clientX
+  const startY = e.clientY
+  const containerWidth =
+    carouselContainerEl.value?.clientWidth ?? carouselWidth.value
+  let lockedDirection: 'horizontal' | 'vertical' | null = null
+  let didCapture = false
+
+  const onMove = (ev: PointerEvent) => {
+    const dx = ev.clientX - startX
+    const dy = ev.clientY - startY
+
+    if (lockedDirection === null) {
+      // Wait until the user has moved at least 8px to decide axis. Avoids
+      // hijacking a vertical drag (which the outer shell uses for dismiss).
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+      lockedDirection = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical'
+      if (lockedDirection === 'vertical') {
+        cleanup()
+        return
+      }
+      isCarouselDragging.value = true
+      didCapture = true
+      ;(e.target as HTMLElement)?.setPointerCapture?.(e.pointerId)
+    }
+
+    if (lockedDirection === 'horizontal') {
+      // Apply resistance when overshooting at the first/last slide so the
+      // drag has weight before triggering memory navigation.
+      let offset = dx
+      const atStart = props.currentSlideIdx === 0
+      const atEnd = props.currentSlideIdx === props.slides.length - 1
+      if ((atStart && offset > 0) || (atEnd && offset < 0)) {
+        offset = offset * 0.4
+      }
+      dragOffsetX.value = offset
+    }
+  }
+
+  const onUp = (ev: PointerEvent) => {
+    cleanup()
+    if (didCapture) {
+      try {
+        ;(e.target as HTMLElement)?.releasePointerCapture?.(ev.pointerId)
+      } catch {
+        /* already released */
+      }
+    }
+    if (lockedDirection !== 'horizontal') return
+
+    const dx = ev.clientX - startX
+    const threshold = Math.max(60, containerWidth * 0.2)
+    const atStart = props.currentSlideIdx === 0
+    const atEnd = props.currentSlideIdx === props.slides.length - 1
+
+    if (dx <= -threshold) {
+      if (atEnd) emit('navigate-memory', 'next')
+      else emit('current-slide-idx', props.currentSlideIdx + 1)
+    } else if (dx >= threshold) {
+      if (atStart) emit('navigate-memory', 'prev')
+      else emit('current-slide-idx', props.currentSlideIdx - 1)
+    }
+    // Reset drag offset — the strip transitions to the new (or same) slide.
+    dragOffsetX.value = 0
+    isCarouselDragging.value = false
+  }
+
+  function cleanup() {
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('pointercancel', onUp)
+  }
+
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp)
+  window.addEventListener('pointercancel', onUp)
 }
 
 async function downloadMedia() {

@@ -216,18 +216,18 @@
           class="absolute inset-0"
         >
           <!-- Photo region fills viewport above the drawer.
-               touch-action 'none' on single-photo lets usePointerSwipe see
-               the full horizontal pointer stream (for swipe-to-next-memory).
-               On multi-photo, 'pan-x' lets the inner carousel scroll natively
-               via touch — memory navigation moves to the chevron buttons in
-               the chrome row instead. Vertical-down dismiss works in both
-               modes since neither pan-x nor none allow native vertical pan. -->
+               touch-action 'none' makes usePointerSwipe see the full
+               pointer stream — important for single-photo swipe-to-next-
+               memory and for vertical swipe-down dismiss. On multi-photo,
+               the inner MemoryViewer's JS-controlled carousel handles
+               within-memory swipes and emits navigate-memory when the
+               user swipes past the first/last slide. -->
           <div
             ref="photoRegionEl"
             class="absolute inset-x-0 top-0 z-10 overflow-hidden"
             :style="{
               bottom: `${drawer.heightPx.value}px`,
-              touchAction: isMultiPhoto ? 'pan-x' : 'none',
+              touchAction: 'none',
               transition: drawer.isDragging.value
                 ? 'none'
                 : 'bottom 280ms cubic-bezier(0.32, 0.72, 0, 1)',
@@ -248,6 +248,7 @@
                 :current-slide-idx="currentSlideIdx"
                 fill-container
                 @current-slide-idx="currentSlideIdx = $event"
+                @navigate-memory="navigate($event)"
               />
             </Transition>
           </div>
@@ -444,30 +445,17 @@ function onPhotoClick() {
 }
 
 // ── Swipe gestures on the photo region (mobile) ────────────
-// On single-photo: horizontal swipe = memory navigation.
-// On multi-photo: horizontal swipe normally drives the inner carousel's
-// native scroll. At the carousel boundaries, the browser has nothing to
-// scroll, so the gesture surfaces here — swipe-left past the last slide
-// goes to next memory, swipe-right past the first slide goes to prev.
-// (The chevron buttons in the chrome row also work regardless of slide
-// position, as a tap-to-navigate alternative.)
+// Single-photo: horizontal swipe = memory navigation.
+// Multi-photo: horizontal swipes are owned by the inner MemoryViewer
+// carousel (which emits 'navigate-memory' when swiped past an edge).
+// Vertical swipe-down dismisses on both.
 usePointerSwipe(photoRegionEl, {
   threshold: 60,
   onSwipeEnd(_, direction) {
     if (isDesktop.value) return
     if (direction === 'down') {
       close()
-      return
-    }
-    if (direction !== 'left' && direction !== 'right') return
-
-    if (isMultiPhoto.value) {
-      const atStart = currentSlideIdx.value === 0
-      const atEnd = currentSlideIdx.value >= slides.value.length - 1
-      if (direction === 'left' && atEnd) navigate('next')
-      else if (direction === 'right' && atStart) navigate('prev')
-      // otherwise: carousel handles it within
-    } else {
+    } else if (!isMultiPhoto.value) {
       if (direction === 'left') navigate('next')
       else if (direction === 'right') navigate('prev')
     }
