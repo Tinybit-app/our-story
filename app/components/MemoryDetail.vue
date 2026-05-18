@@ -527,8 +527,6 @@ const { t, locale } = useI18n()
 const activeTab = ref<'caption' | 'comments'>('caption')
 const editing = ref(false)
 
-const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
-
 const formattedDate = computed(() =>
   new Date(props.memory.memory_date).toLocaleDateString(locale.value, {
     month: 'long',
