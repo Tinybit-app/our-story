@@ -1,10 +1,204 @@
 <template>
   <div class="flex h-full flex-col">
-    <!-- Content moves in over Tasks 2-6 -->
+    <!-- Caption section: tab bar + independent scroll panels -->
+    <div class="flex min-h-0 flex-1 flex-col">
+      <!-- Tab bar -->
+      <div class="flex flex-shrink-0 border-b border-border px-3">
+        <button
+          class="tab-btn border-b-2 px-3 py-2.5 text-[11px] font-semibold tracking-[.06em] transition-colors"
+          :class="
+            activeTab === 'caption'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          "
+          @click="activeTab = 'caption'"
+        >
+          {{ t('modal.tabCaption') }}
+        </button>
+        <button
+          class="tab-btn border-b-2 px-3 py-2.5 text-[11px] font-semibold tracking-[.06em] transition-colors"
+          :class="
+            activeTab === 'comments'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          "
+          @click="activeTab = 'comments'"
+        >
+          {{ t('modal.tabComments') }}
+        </button>
+      </div>
+
+      <!-- Caption tab -->
+      <div
+        v-show="activeTab === 'caption'"
+        class="scroll-styled min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3"
+      >
+        <!-- View mode -->
+        <template v-if="!editing">
+          <div class="group/meta flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div
+                v-if="memory.milestone_label"
+                class="group/milestone mb-1.5 flex items-center gap-1.5"
+              >
+                <p
+                  class="text-[10px] font-bold uppercase leading-none tracking-[.2em] text-accent"
+                >
+                  ✦ {{ memory.milestone_label }}
+                </p>
+                <button
+                  class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded text-accent/60 transition-all hover:bg-accent/10 hover:text-accent"
+                  :title="t('milestone.shareTitle')"
+                  @click="emit('open-share-card')"
+                >
+                  <svg
+                    width="10"
+                    height="10"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                </button>
+              </div>
+              <p
+                v-if="memory.note"
+                class="mb-2 overflow-auto break-all text-[15px] leading-relaxed text-foreground"
+              >
+                {{ memory.note }}
+              </p>
+              <p
+                v-else
+                class="mb-2 text-[13px] italic text-muted-foreground/50"
+              >
+                {{ isOwner ? t('modal.noNoteOwner') : t('modal.noNote') }}
+              </p>
+            </div>
+            <button
+              v-if="isOwner"
+              class="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              :title="t('modal.editNote')"
+              @click="editing = true"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                />
+                <path
+                  d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                />
+              </svg>
+            </button>
+          </div>
+          <p class="mb-1 text-[12px]">
+            <span class="text-muted-foreground">{{ formattedDate }}</span>
+            <template v-if="authorName">
+              <span class="text-muted-foreground"> · </span>
+              <span
+                :class="
+                  isFormerMember
+                    ? 'text-muted-foreground/40'
+                    : 'text-muted-foreground'
+                "
+                >{{ authorName }}</span
+              >
+            </template>
+          </p>
+          <div v-if="childAges.length" class="mt-2 flex flex-wrap gap-1.5">
+            <span
+              v-for="child in childAges"
+              :key="child.name"
+              class="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[11px] font-medium leading-none"
+              style="
+                background: hsl(var(--accent) / 0.13);
+                color: hsl(var(--accent));
+              "
+            >
+              <span style="font-size: 10px; flex-shrink: 0; line-height: 1"
+                >👶</span
+              >
+              <span>{{ child.name }}</span>
+              <template v-if="child.age">
+                <span style="opacity: 0.45">·</span>
+                <span style="opacity: 0.85">{{ child.age }}</span>
+              </template>
+            </span>
+          </div>
+          <div
+            v-if="memory.memory_members?.length"
+            class="mt-2 flex flex-wrap items-center gap-2"
+          >
+            <span
+              class="text-[10px] font-semibold uppercase tracking-[.08em]"
+              style="color: hsl(var(--muted-foreground) / 0.55)"
+              >with</span
+            >
+            <div
+              v-for="mm in memory.memory_members"
+              :key="mm.user_id"
+              class="flex items-center gap-1"
+            >
+              <div
+                class="flex h-5 w-5 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[8px] font-bold text-foreground"
+              >
+                <img
+                  v-if="mm.user?.avatar_url"
+                  :src="mm.user.avatar_url"
+                  class="h-full w-full object-cover"
+                />
+                <span v-else>{{
+                  (
+                    (mm.user?.first_name?.[0] ?? '') +
+                    (mm.user?.last_name?.[0] ?? '')
+                  ).toUpperCase() || '?'
+                }}</span>
+              </div>
+              <span class="text-[11px] text-muted-foreground">{{
+                mm.user?.first_name ?? t('common.someone')
+              }}</span>
+            </div>
+          </div>
+          <div class="mb-3" />
+        </template>
+
+        <!-- Edit mode placeholder — filled in Task 5 -->
+        <div v-else>
+          <p class="p-4 text-sm text-muted-foreground">Edit mode coming in Task 5.</p>
+        </div>
+
+        <!-- Reactions placeholder — filled in Task 3 -->
+        <div class="px-4 pb-4">
+          <!-- Reactions row -->
+        </div>
+      </div>
+
+      <!-- Comments tab placeholder — filled in Task 4 -->
+      <div
+        v-show="activeTab === 'comments'"
+        class="flex-1 overflow-y-auto"
+      >
+        <p class="p-4 text-sm text-muted-foreground">Comments tab coming in Task 4.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import { computeBabyAge } from '~/composables/useBabyAge'
 import type { Memory } from '~/composables/useTimeline'
 import type { Slide } from '~/types/memory'
 
@@ -20,7 +214,7 @@ interface CircleMember {
   avatarUrl: string | null
 }
 
-defineProps<{
+const props = defineProps<{
   memory: Memory
   children: ChildProfile[]
   members: CircleMember[]
@@ -31,13 +225,51 @@ defineProps<{
   currentSlideIdx: number
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   update: [Pick<Memory, 'id'> & Partial<Memory>]
   'slides-update': [
     { slides: Slide[]; currentSlideIdx?: number; coverMediaId?: string | null },
   ]
   'open-share-card': []
 }>()
+
+const { t, locale } = useI18n()
+
+const activeTab = ref<'caption' | 'comments'>('caption')
+const editing = ref(false)
+
+const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
+
+const formattedDate = computed(() =>
+  new Date(props.memory.memory_date).toLocaleDateString(locale.value, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }),
+)
+
+const childAges = computed(() =>
+  (props.memory.memory_children ?? []).map((mc) => ({
+    name: mc.childprofile.name,
+    age: computeBabyAge(
+      mc.childprofile.date_of_birth,
+      props.memory.memory_date,
+    ),
+  })),
+)
+
+const isFormerMember = computed(() => props.memory.owner_user_id === null)
+const authorName = computed(() => {
+  if (props.memory.user?.first_name) return props.memory.user.first_name
+  if (isFormerMember.value && props.memory.former_owner_name)
+    return props.memory.former_owner_name
+  return null
+})
+
+const isOwner = computed(
+  () =>
+    !!props.currentUserId && props.memory.owner_user_id === props.currentUserId,
+)
 
 async function canClose(): Promise<boolean> {
   return true
