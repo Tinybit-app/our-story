@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getMilestoneKeyForAge, getAnniversaryYear } from '../utils/milestoneCron'
 import { signedThumbnailUrl } from '../utils/storageUrls'
 
-const YEAR_LIMIT_DEFAULT = 156 // 12 per month × 13 months (main timeline cap)
+const YEAR_LIMIT_DEFAULT = 312 // 24 per month × 13 months (main timeline cap)
 const YEAR_LIMIT_MAX = 1000 // hard ceiling for picker use-cases
 
 const querySchema = z.object({
@@ -311,17 +311,32 @@ export default defineEventHandler(async (event) => {
   const from = new Date(Date.UTC(targetYear, 0, 1)).toISOString()
   const to = new Date(Date.UTC(targetYear + 1, 0, 1)).toISOString()
 
-  const [{ data: memories, error }, prevYear] = await Promise.all([
+  const [{ data: memories, error }, prevYear, monthCountsResult] = await Promise.all([
     baseQuery()
       .gte('memory_date', from)
       .lt('memory_date', to)
       .limit(yearLimit + 1),
     getPrevYear(supabase, circleId, targetYear),
+    supabase.rpc('get_month_counts', {
+      p_circle_id: circleId,
+      p_year_start: from,
+      p_year_end: to,
+    }),
   ])
 
   if (error) {
     console.error('[timeline] year query failed:', error.message)
     throw createError({ statusCode: 500, message: 'Failed to load timeline.' })
+  }
+
+  if (monthCountsResult.error) {
+    console.error('[timeline] get_month_counts failed:', monthCountsResult.error.message)
+  }
+
+  const monthCounts: Record<string, number> = {}
+  for (const row of monthCountsResult.data ?? []) {
+    const key = `${row.year}-${String(row.month).padStart(2, '0')}`
+    monthCounts[key] = Number(row.count)
   }
 
   const raw = memories ?? []
@@ -331,6 +346,7 @@ export default defineEventHandler(async (event) => {
   return {
     memories: withUrls,
     prevYear,
+    monthCounts,
     truncated,
     children,
     members,
