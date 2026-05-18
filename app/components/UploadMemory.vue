@@ -48,11 +48,20 @@
             <div>
               <h2 class="text-sm font-semibold text-foreground">
                 {{
-                  items.length === 1
+                  totalCount === 1
                     ? t('upload.addMemory')
-                    : t('upload.addMemories', items.length)
+                    : t('upload.addMemories', { n: totalCount })
                 }}
               </h2>
+              <p
+                v-if="totalCount > 0"
+                class="mt-0.5 text-[11px] text-muted-foreground"
+              >
+                <template v-for="(part, idx) in breakdownParts" :key="part.key">
+                  <span v-if="idx > 0" class="text-border"> · </span>
+                  <span>{{ part.label }}</span>
+                </template>
+              </p>
               <button
                 class="mt-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                 :disabled="isUploading"
@@ -1033,6 +1042,10 @@ function cancelAddTextSlide() {
 
 function confirmAddTextSlide() {
   if (!newTextContent.value.trim()) return
+  if (totalCount.value + 1 > MAX_BATCH_ITEMS) {
+    globalError.value = t('upload.errorTooManyItems', { max: MAX_BATCH_ITEMS })
+    return
+  }
   textSlides.value.push({
     tempId: crypto.randomUUID(),
     textContent: newTextContent.value.trim(),
@@ -1053,6 +1066,33 @@ const MAX_PHOTO_BYTES = 50 * 1024 * 1024
 const MAX_VIDEO_BYTES = 500 * 1024 * 1024
 // Matches the server cap in /api/memories/upload-batch.
 const MAX_BATCH_ITEMS = 30
+
+const photoCount = computed(() => items.value.filter((i) => !i.isVideo).length)
+const videoCount = computed(() => items.value.filter((i) => i.isVideo).length)
+const noteCount = computed(() => textSlides.value.length)
+const totalCount = computed(
+  () => items.value.length + textSlides.value.length,
+)
+
+const breakdownParts = computed(() => {
+  const parts: Array<{ key: string; label: string }> = []
+  if (photoCount.value > 0)
+    parts.push({
+      key: 'photo',
+      label: t('upload.countPhotos', photoCount.value),
+    })
+  if (videoCount.value > 0)
+    parts.push({
+      key: 'video',
+      label: t('upload.countVideos', videoCount.value),
+    })
+  if (noteCount.value > 0)
+    parts.push({
+      key: 'note',
+      label: t('upload.countNotes', noteCount.value),
+    })
+  return parts
+})
 
 function today(): string {
   return dateFromTimestamp(Date.now())
@@ -1089,7 +1129,7 @@ async function onFilesSelected(e: Event) {
   if (!files.length) return
   globalError.value = ''
 
-  if (items.value.length + files.length > MAX_BATCH_ITEMS) {
+  if (totalCount.value + files.length > MAX_BATCH_ITEMS) {
     globalError.value = t('upload.errorTooManyItems', { max: MAX_BATCH_ITEMS })
     if (fileInput.value) fileInput.value.value = ''
     return
