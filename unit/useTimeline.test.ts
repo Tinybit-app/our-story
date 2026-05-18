@@ -43,9 +43,9 @@ describe('useTimeline', () => {
     expect(monthGroups.value[1].month).toBe(1)
   })
 
-  it('caps each month at 12 memories and sets hasMore = true when exceeded', () => {
+  it('caps each month at 24 memories and sets hasMore = true when exceeded', () => {
     const memories = ref<Memory[]>(
-      Array.from({ length: 15 }, (_, i) =>
+      Array.from({ length: 28 }, (_, i) =>
         makeMemory(
           `id-${i}`,
           `2025-06-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
@@ -54,13 +54,13 @@ describe('useTimeline', () => {
     )
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value).toHaveLength(1)
-    expect(monthGroups.value[0].memories).toHaveLength(12)
+    expect(monthGroups.value[0].memories).toHaveLength(24)
     expect(monthGroups.value[0].hasMore).toBe(true)
   })
 
-  it('sets hasMore = false when month has exactly 12 memories (all visible)', () => {
+  it('sets hasMore = false when month has exactly 24 memories (all visible)', () => {
     const memories = ref<Memory[]>(
-      Array.from({ length: 12 }, (_, i) =>
+      Array.from({ length: 24 }, (_, i) =>
         makeMemory(
           `id-${i}`,
           `2025-07-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
@@ -68,11 +68,11 @@ describe('useTimeline', () => {
       ),
     )
     const { monthGroups } = useTimeline(memories)
-    expect(monthGroups.value[0].memories).toHaveLength(12)
+    expect(monthGroups.value[0].memories).toHaveLength(24)
     expect(monthGroups.value[0].hasMore).toBe(false)
   })
 
-  it('sets hasMore = false when month has fewer than 12 memories', () => {
+  it('sets hasMore = false when month has fewer than 24 memories', () => {
     const memories = ref<Memory[]>([
       makeMemory('1', '2025-04-01T10:00:00Z'),
       makeMemory('2', '2025-04-02T10:00:00Z'),
@@ -121,6 +121,56 @@ describe('useTimeline', () => {
     const { monthGroups } = useTimeline(memories)
     expect(monthGroups.value[0].anchorId).toBe('anchor-2025')
     expect(monthGroups.value[1].anchorId).toBe('anchor-2025')
+  })
+})
+
+describe('useTimeline · monthCounts integration', () => {
+  it('group.totalCount reads from monthCounts when provided', () => {
+    const memories = ref<Memory[]>([
+      makeMemory('a', '2026-04-01T10:00:00Z'),
+      makeMemory('b', '2026-04-15T10:00:00Z'),
+    ])
+    const monthCounts = ref<Record<string, number>>({ '2026-04': 47 })
+    const { monthGroups } = useTimeline(memories, monthCounts)
+
+    const aprilGroup = monthGroups.value.find(
+      (g) => g.year === 2026 && g.month === 4,
+    )
+    expect(aprilGroup?.totalCount).toBe(47)
+    expect(aprilGroup?.memories.length).toBe(2)
+    expect(aprilGroup?.hasMore).toBe(true) // 47 > 24 = MONTH_CAP
+  })
+
+  it('falls back to bucket length when monthCounts is empty', () => {
+    const memories = ref<Memory[]>([
+      makeMemory('a', '2026-04-01T10:00:00Z'),
+      makeMemory('b', '2026-04-15T10:00:00Z'),
+    ])
+    const monthCounts = ref<Record<string, number>>({})
+    const { monthGroups } = useTimeline(memories, monthCounts)
+
+    const aprilGroup = monthGroups.value.find(
+      (g) => g.year === 2026 && g.month === 4,
+    )
+    expect(aprilGroup?.totalCount).toBe(2)
+  })
+
+  it('month with 25 memories displays 24, sets hasMore, and exposes true totalCount=25', () => {
+    const memories = ref<Memory[]>(
+      Array.from({ length: 25 }, (_, i) =>
+        makeMemory(
+          `m${i}`,
+          `2026-04-${String((i % 28) + 1).padStart(2, '0')}T10:00:00Z`,
+        ),
+      ),
+    )
+    const monthCounts = ref<Record<string, number>>({ '2026-04': 25 })
+    const { monthGroups } = useTimeline(memories, monthCounts)
+
+    const aprilGroup = monthGroups.value.find((g) => g.month === 4)
+    expect(aprilGroup?.memories.length).toBe(24)
+    expect(aprilGroup?.totalCount).toBe(25)
+    expect(aprilGroup?.hasMore).toBe(true)
   })
 })
 

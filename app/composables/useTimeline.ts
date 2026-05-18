@@ -66,9 +66,12 @@ export interface YearInfo {
   months: number[]
 }
 
-const MONTH_CAP = 12
+const MONTH_CAP = 24
 
-export function useTimeline(memoriesRef: Ref<Memory[]>): {
+export function useTimeline(
+  memoriesRef: Ref<Memory[]>,
+  monthCountsRef?: Ref<Record<string, number>>,
+): {
   monthGroups: ComputedRef<MonthGroup[]>
   yearInfos: ComputedRef<YearInfo[]>
 } {
@@ -91,8 +94,13 @@ export function useTimeline(memoriesRef: Ref<Memory[]>): {
       }
 
       const group = map.get(key)!
-      group.total++
       group.memories.push(memory)
+    }
+
+    // Canonical per-month totals come from the RPC; fall back to bucket size.
+    const counts = monthCountsRef?.value ?? {}
+    for (const [key, group] of map.entries()) {
+      group.total = counts[key] ?? group.memories.length
     }
 
     return Array.from(map.entries())

@@ -926,6 +926,7 @@ interface CircleMember {
 }
 
 const memoriesFlat = ref<Memory[]>([])
+const monthCounts = ref<Record<string, number>>({})
 const prevYear = ref<number | null>(null)
 const children = ref<ChildProfile[]>([])
 const members = ref<CircleMember[]>([])
@@ -950,6 +951,7 @@ async function fetchTimeline(year?: number) {
     const data = await $fetch<{
       memories: Memory[]
       prevYear: number | null
+      monthCounts?: Record<string, number>
       children: ChildProfile[]
       members: CircleMember[]
       upcomingMilestone?: UpcomingMilestone | null
@@ -960,6 +962,9 @@ async function fetchTimeline(year?: number) {
     memoriesFlat.value = year
       ? [...memoriesFlat.value, ...data.memories]
       : data.memories
+    monthCounts.value = year
+      ? { ...monthCounts.value, ...(data.monthCounts ?? {}) }
+      : (data.monthCounts ?? {})
     prevYear.value = data.prevYear
     if (!year) {
       children.value = data.children ?? []
@@ -981,7 +986,7 @@ function onUploaded() {
 
 onMounted(() => fetchTimeline())
 
-const { monthGroups, yearInfos } = useTimeline(memoriesFlat)
+const { monthGroups, yearInfos } = useTimeline(memoriesFlat, monthCounts)
 
 // ── Year badge ─────────────────────────────────────────────
 const currentYear = ref<number | null>(null)
@@ -1039,6 +1044,7 @@ function roleLabel(role: string): string {
 function switchCircle(id: string) {
   circleSwitcherOpen.value = false
   memoriesFlat.value = []
+  monthCounts.value = {}
   prevYear.value = null
   // Only put ?circle= in the URL when it's not the default first circle,
   // so single-circle users see a clean /timeline URL.
@@ -1056,6 +1062,7 @@ function startNewCircle() {
 watch(circleId, (newId, oldId) => {
   if (newId && newId !== oldId) {
     memoriesFlat.value = []
+    monthCounts.value = {}
     prevYear.value = null
     currentYear.value = null
     fetchTimeline()
