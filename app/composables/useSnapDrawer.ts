@@ -78,29 +78,31 @@ export function useSnapDrawer(options: SnapDrawerOptions) {
   function onDragEnd() {
     if (!isDragging.value) return
     isDragging.value = false
+    // Resolve the "current" snap from where the drawer is right now, not from
+    // the last resting snap — a slow drag past one snap followed by a flick
+    // would otherwise jump from the stale base instead of the visible position.
+    let nearestIdx = 0
+    let minDistance = Infinity
+    for (let i = 0; i < snaps.length; i++) {
+      const d = Math.abs(heightPx.value - heights[snaps[i]!])
+      if (d < minDistance) {
+        minDistance = d
+        nearestIdx = i
+      }
+    }
     if (Math.abs(velocityPxPerMs) > velocityThreshold) {
-      const currentIdx = snaps.indexOf(snap.value)
       const dir = velocityPxPerMs > 0 ? 1 : -1
       const jumpDistance =
         Math.abs(velocityPxPerMs) > velocityThreshold * 2 ? 2 : 1
       const targetIdx = clamp(
-        currentIdx + dir * jumpDistance,
+        nearestIdx + dir * jumpDistance,
         0,
         snaps.length - 1,
       )
       snapTo(snaps[targetIdx]!)
       return
     }
-    let nearest: SnapPoint = snaps[0]!
-    let minDistance = Infinity
-    for (const s of snaps) {
-      const d = Math.abs(heightPx.value - heights[s])
-      if (d < minDistance) {
-        minDistance = d
-        nearest = s
-      }
-    }
-    snapTo(nearest)
+    snapTo(snaps[nearestIdx]!)
   }
 
   const translateY = computed(() => -(heightPx.value - heights[snaps[0]!]))
