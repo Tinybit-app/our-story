@@ -194,7 +194,7 @@
                     ? 'border-accent/25 bg-accent/15 font-medium text-foreground'
                     : 'border-transparent bg-secondary text-muted-foreground hover:border-border'
                 "
-                @click="toggleReaction(emoji as string)"
+                @click.stop="toggleReaction(emoji as string)"
               >
                 {{ emoji }}<span class="text-[11px]">{{ group.count }}</span>
               </button>
