@@ -114,7 +114,10 @@
     </div>
 
     <div v-else-if="visible && !isDesktop" class="fixed inset-0 z-50 bg-background">
-      <!-- Floating chrome — close + counter -->
+      <!-- Floating chrome — close + counter (with inline prev/next chevrons
+           when there are multiple memories — important affordance for
+           multi-photo memories where horizontal swipe drives the carousel
+           and can't double as memory navigation). -->
       <div
         class="absolute left-3 right-3 top-3 z-30 flex items-center justify-between transition-opacity duration-200"
         :class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
@@ -135,106 +138,159 @@
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
-        <span
+        <div
           v-if="memories.length > 1"
-          class="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md"
+          class="flex items-center gap-0.5 rounded-full bg-black/55 py-0.5 pl-0.5 pr-0.5 backdrop-blur-md"
         >
-          {{ currentIndex + 1 }} / {{ memories.length }}
-        </span>
-        <span class="h-9 w-9" /><!-- spacer; right-side share button is a future enhancement -->
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 disabled:pointer-events-none disabled:text-white/25"
+            :disabled="!hasPrev"
+            :aria-label="t('modal.swipeHintPrev')"
+            @click="navigate('prev')"
+          >
+            <svg
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <span class="select-none px-1 text-[11px] font-semibold text-white">
+            {{ currentIndex + 1 }} / {{ memories.length }}
+          </span>
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 disabled:pointer-events-none disabled:text-white/25"
+            :disabled="!hasNext"
+            :aria-label="t('modal.swipeHintNext')"
+            @click="navigate('next')"
+          >
+            <svg
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+        <span class="h-9 w-9" /><!-- spacer to balance the close button -->
       </div>
 
-      <!-- Quick-note path: legacy QuickNoteModal in a full-screen container -->
-      <div
-        v-if="currentMemory && isQuickNote"
-        class="absolute inset-0 z-20 flex items-center justify-center p-4"
+      <!-- Outer Transition fires only on type swap (photo↔quicknote). For
+           same-type navigation the outer key is stable and the inner photo
+           Transition handles animating the photo region. -->
+      <Transition
+        :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
+        mode="out-in"
       >
-        <QuickNoteModal
-          :key="currentMemory.id"
-          :memory="currentMemory"
-          :children="children"
-          :members="members"
-          :current-user-id="currentUserId"
-          :self-avatar-url="selfAvatarUrl"
-          :self-initials="selfInitials"
-          @update="emit('update', $event)"
-        />
-      </div>
-
-      <!-- Media path: viewer top + drawer bottom -->
-      <template v-else-if="currentMemory && !isQuickNote">
-        <!-- Photo region fills viewport above the drawer.
-             touchAction: 'none' overrides VueUse usePointerSwipe's default
-             pan-y, which would otherwise let the browser cancel horizontal
-             touch sequences (suppressing the prev/next-memory swipe). -->
+        <!-- Quick-note path -->
         <div
-          ref="photoRegionEl"
-          class="absolute inset-x-0 top-0 z-10 overflow-hidden"
-          :style="{
-            bottom: `${drawer.heightPx.value}px`,
-            touchAction: 'none',
-            transition: drawer.isDragging.value
-              ? 'none'
-              : 'bottom 280ms cubic-bezier(0.32, 0.72, 0, 1)',
-          }"
-          @pointerdown="onPhotoPointerDown"
-          @pointermove="onPhotoPointerMove"
-          @click="onPhotoClick"
+          v-if="currentMemory && isQuickNote"
+          key="qn"
+          class="absolute inset-0 z-20 flex items-center justify-center p-4"
         >
-          <Transition
-            :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
-            mode="out-in"
-          >
-            <MemoryViewer
-              :key="currentMemory.id"
-              :memory="currentMemory"
-              :slides="slides"
-              :slides-loading="slidesLoading"
-              :current-slide-idx="currentSlideIdx"
-              fill-container
-              @current-slide-idx="currentSlideIdx = $event"
-            />
-          </Transition>
+          <QuickNoteModal
+            :key="currentMemory.id"
+            :memory="currentMemory"
+            :children="children"
+            :members="members"
+            :current-user-id="currentUserId"
+            :self-avatar-url="selfAvatarUrl"
+            :self-initials="selfInitials"
+            @update="emit('update', $event)"
+          />
         </div>
 
-        <!-- Drawer surface -->
+        <!-- Media path: photo region + drawer wrapped so Transition has a
+             single root for the type-swap animation. -->
         <div
-          class="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[22px] bg-background shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
-          :style="{
-            height: `${drawer.heightPx.value}px`,
-            transition: drawer.isDragging.value
-              ? 'none'
-              : 'height 280ms cubic-bezier(0.32, 0.72, 0, 1)',
-          }"
+          v-else-if="currentMemory && !isQuickNote"
+          key="media"
+          class="absolute inset-0"
         >
-          <!-- Grabber — generous 36px hit zone above the visible 4px pill. -->
+          <!-- Photo region fills viewport above the drawer.
+               touch-action 'none' on single-photo lets usePointerSwipe see
+               the full horizontal pointer stream (for swipe-to-next-memory).
+               On multi-photo, 'pan-x' lets the inner carousel scroll natively
+               via touch — memory navigation moves to the chevron buttons in
+               the chrome row instead. Vertical-down dismiss works in both
+               modes since neither pan-x nor none allow native vertical pan. -->
           <div
-            class="flex h-9 flex-shrink-0 cursor-grab items-center justify-center touch-none"
-            :class="drawer.isDragging.value && 'cursor-grabbing'"
-            @pointerdown="onGrabberPointerDown"
+            ref="photoRegionEl"
+            class="absolute inset-x-0 top-0 z-10 overflow-hidden"
+            :style="{
+              bottom: `${drawer.heightPx.value}px`,
+              touchAction: isMultiPhoto ? 'pan-x' : 'none',
+              transition: drawer.isDragging.value
+                ? 'none'
+                : 'bottom 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+            }"
+            @pointerdown="onPhotoPointerDown"
+            @pointermove="onPhotoPointerMove"
+            @click="onPhotoClick"
           >
-            <div class="h-1 w-9 rounded-full bg-foreground/30" />
+            <Transition
+              :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
+              mode="out-in"
+            >
+              <MemoryViewer
+                :key="currentMemory.id"
+                :memory="currentMemory"
+                :slides="slides"
+                :slides-loading="slidesLoading"
+                :current-slide-idx="currentSlideIdx"
+                fill-container
+                @current-slide-idx="currentSlideIdx = $event"
+              />
+            </Transition>
           </div>
 
-          <div class="min-h-0 flex-1 overflow-hidden">
-            <MemoryDetail
-              ref="memoryModalRef"
-              :memory="currentMemory"
-              :children="children ?? []"
-              :members="members ?? []"
-              :current-user-id="currentUserId"
-              :self-avatar-url="selfAvatarUrl"
-              :self-initials="selfInitials"
-              :slides="slides"
-              :current-slide-idx="currentSlideIdx"
-              @update="emit('update', $event)"
-              @slides-update="onMobileSlidesUpdate"
-              @open-share-card="onMobileOpenShareCard"
-              @milestone-share-prompt="mobileShareCardData = $event"
-            />
+          <!-- Drawer surface -->
+          <div
+            class="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[22px] bg-background shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
+            :style="{
+              height: `${drawer.heightPx.value}px`,
+              transition: drawer.isDragging.value
+                ? 'none'
+                : 'height 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+            }"
+          >
+            <!-- Grabber — generous 36px hit zone above the visible 4px pill. -->
+            <div
+              class="flex h-9 flex-shrink-0 cursor-grab items-center justify-center touch-none"
+              :class="drawer.isDragging.value && 'cursor-grabbing'"
+              @pointerdown="onGrabberPointerDown"
+            >
+              <div class="h-1 w-9 rounded-full bg-foreground/30" />
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-hidden">
+              <MemoryDetail
+                ref="memoryModalRef"
+                :memory="currentMemory"
+                :children="children ?? []"
+                :members="members ?? []"
+                :current-user-id="currentUserId"
+                :self-avatar-url="selfAvatarUrl"
+                :self-initials="selfInitials"
+                :slides="slides"
+                :current-slide-idx="currentSlideIdx"
+                @update="emit('update', $event)"
+                @slides-update="onMobileSlidesUpdate"
+                @open-share-card="onMobileOpenShareCard"
+                @milestone-share-prompt="mobileShareCardData = $event"
+              />
+            </div>
           </div>
         </div>
-      </template>
+      </Transition>
 
       <!-- Mobile-only milestone share card teleport -->
       <MilestoneShareModal
@@ -388,13 +444,20 @@ function onPhotoClick() {
 }
 
 // ── Swipe gestures on the photo region (mobile) ────────────
+// On multi-photo memories, horizontal touches are consumed by the inner
+// carousel's native scroll (we set touch-action: pan-x there); memory
+// navigation happens via the chevron buttons in the chrome row instead.
+// Vertical swipe-down still dismisses on both single + multi.
 usePointerSwipe(photoRegionEl, {
   threshold: 60,
   onSwipeEnd(_, direction) {
     if (isDesktop.value) return
-    if (direction === 'left') navigate('next')
-    else if (direction === 'right') navigate('prev')
-    else if (direction === 'down') close()
+    if (direction === 'down') {
+      close()
+    } else if (!isMultiPhoto.value) {
+      if (direction === 'left') navigate('next')
+      else if (direction === 'right') navigate('prev')
+    }
   },
 })
 
@@ -408,6 +471,9 @@ async function confirmCloseIfNeeded(): Promise<boolean> {
 const currentMemory = computed(() => props.memories[currentIndex.value] ?? null)
 const hasPrev = computed(() => currentIndex.value > 0)
 const hasNext = computed(() => currentIndex.value < props.memories.length - 1)
+const isMultiPhoto = computed(
+  () => (currentMemory.value?.media_count ?? 1) > 1,
+)
 const isQuickNote = computed(() => {
   const m = currentMemory.value
   return !!m && !m.memorymedia.length && !!m.note
