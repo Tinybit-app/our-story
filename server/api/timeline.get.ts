@@ -187,7 +187,7 @@ export default defineEventHandler(async (event) => {
       .from('memory')
       .select(MEMORY_SELECT)
       .eq('circle_id', circleId)
-      .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`)
+      .eq('visibility', 'circle')
       .order('memory_date', { ascending: false })
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
@@ -226,12 +226,11 @@ export default defineEventHandler(async (event) => {
     if (cursor) {
       memoryResult = await q
     } else {
-      const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
       const countQuery = supabase
         .from('memory')
         .select('id', { count: 'exact', head: true })
         .eq('circle_id', circleId)
-        .or(visibilityFilter)
+        .eq('visibility', 'circle')
         .gte('memory_date', from)
         .lt('memory_date', to)
       const [m, c] = await Promise.all([q, countQuery])
@@ -296,7 +295,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // ── Branch 3: Main timeline (year-at-a-time) ───────────────
-  const targetYear = year ?? (await getLatestYear(supabase, circleId, user.sub))
+  const targetYear = year ?? (await getLatestYear(supabase, circleId))
 
   if (!targetYear) {
     return {
@@ -317,7 +316,7 @@ export default defineEventHandler(async (event) => {
       .gte('memory_date', from)
       .lt('memory_date', to)
       .limit(yearLimit + 1),
-    getPrevYear(supabase, circleId, user.sub, targetYear),
+    getPrevYear(supabase, circleId, targetYear),
   ])
 
   if (error) {
@@ -365,13 +364,12 @@ function humanizeMilestoneKey(key: string): string {
 async function getLatestYear(
   supabase: any,
   circleId: string,
-  userId: string,
 ): Promise<number | null> {
   const { data } = await supabase
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`)
+    .eq('visibility', 'circle')
     .order('memory_date', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -381,7 +379,6 @@ async function getLatestYear(
 async function getPrevYear(
   supabase: any,
   circleId: string,
-  userId: string,
   currentYear: number,
 ): Promise<number | null> {
   const before = new Date(Date.UTC(currentYear, 0, 1)).toISOString()
@@ -389,7 +386,7 @@ async function getPrevYear(
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(`visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${userId})`)
+    .eq('visibility', 'circle')
     .lt('memory_date', before)
     .order('memory_date', { ascending: false })
     .limit(1)

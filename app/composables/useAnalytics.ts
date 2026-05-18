@@ -37,7 +37,7 @@ export type AnalyticsEvent =
       props: {
         circle_id: string
         memory_type: 'photo' | 'video' | 'note' | 'mixed'
-        visibility: 'circle' | 'private'
+        visibility: 'circle'
         media_count: number
       }
     }

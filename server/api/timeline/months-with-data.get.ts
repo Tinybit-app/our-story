@@ -31,8 +31,6 @@ export default defineEventHandler(async (event) => {
 
   if (!membership) throw createError({ statusCode: 403 })
 
-  const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
-
   // Start of the current month (UTC) — used as the cutoff for prev/next walks
   const currentStart = new Date(Date.UTC(year, month - 1, 1)).toISOString()
   const currentEnd = new Date(Date.UTC(year, month, 1)).toISOString()
@@ -42,7 +40,7 @@ export default defineEventHandler(async (event) => {
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(visibilityFilter)
+    .eq('visibility', 'circle')
     .lt('memory_date', currentStart)
     .order('memory_date', { ascending: false })
     .limit(1)
@@ -53,7 +51,7 @@ export default defineEventHandler(async (event) => {
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(visibilityFilter)
+    .eq('visibility', 'circle')
     .gte('memory_date', currentEnd)
     .order('memory_date', { ascending: true })
     .limit(1)
