@@ -26,14 +26,12 @@ export default defineEventHandler(async (event) => {
 
   if (!membership) throw createError({ statusCode: 403 })
 
-  const visibilityFilter = `visibility.eq.circle,and(visibility.eq.private,owner_user_id.eq.${user.sub})`
-
   // Latest memory — starting point for the year walk
   const firstRow = await supabase
     .from('memory')
     .select('memory_date')
     .eq('circle_id', circleId)
-    .or(visibilityFilter)
+    .eq('visibility', 'circle')
     .order('memory_date', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -51,7 +49,7 @@ export default defineEventHandler(async (event) => {
       .from('memory')
       .select('memory_date')
       .eq('circle_id', circleId)
-      .or(visibilityFilter)
+      .eq('visibility', 'circle')
       .lt('memory_date', before)
       .order('memory_date', { ascending: false })
       .limit(1)

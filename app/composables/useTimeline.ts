@@ -15,7 +15,7 @@ export interface Memory {
   owner_user_id: string | null
   former_owner_name: string | null
   former_owner_user_id: string | null
-  visibility: 'private' | 'circle'
+  visibility: 'circle'
   note: string | null
   memory_date: string
   milestone_label: string | null
