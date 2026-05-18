@@ -149,7 +149,10 @@
     "discard": "丢弃",
     "keepEditing": "继续编辑",
     "addReaction": "添加表情",
-    "add": "添加"
+    "add": "添加",
+    "closeAriaLabel": "关闭",
+    "swipeHintPrev": "上一条",
+    "swipeHintNext": "下一条"
   },
   "upload": {
     "addMemory": "添加记忆",
