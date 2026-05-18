@@ -113,7 +113,21 @@
       </div>
     </div>
 
-    <div v-else-if="visible && !isDesktop" class="fixed inset-0 z-50 bg-background">
+    <div
+      v-else-if="visible && !isDesktop"
+      ref="mobileContainerEl"
+      class="fixed inset-0 z-50 bg-background"
+      :style="{
+        transform: dismissOffsetY > 0 ? `translateY(${dismissOffsetY}px)` : '',
+        opacity:
+          dismissOffsetY > 0
+            ? Math.max(0, 1 - dismissOffsetY / (mobileViewportHeight * 0.7))
+            : 1,
+        transition: isVerticalDragging
+          ? 'none'
+          : 'transform 280ms cubic-bezier(0.4, 0, 1, 1), opacity 280ms ease',
+      }"
+    >
       <!-- Floating chrome — close + counter (with inline prev/next chevrons
            when there are multiple memories — important affordance for
            multi-photo memories where horizontal swipe drives the carousel
@@ -216,12 +230,12 @@
           class="absolute inset-0"
         >
           <!-- Photo region fills viewport above the drawer.
-               touch-action 'none' makes usePointerSwipe see the full
-               pointer stream — important for single-photo swipe-to-next-
-               memory and for vertical swipe-down dismiss. On multi-photo,
-               the inner MemoryViewer's JS-controlled carousel handles
-               within-memory swipes and emits navigate-memory when the
-               user swipes past the first/last slide. -->
+               touch-action 'none' makes JS own the pointer stream — needed
+               for single-photo swipe-to-next-memory and the vertical-down
+               parallax dismiss. On multi-photo, the inner MemoryViewer's
+               JS-controlled carousel handles within-memory swipes and emits
+               navigate-memory when the user swipes past the first/last
+               slide. -->
           <div
             ref="photoRegionEl"
             class="absolute inset-x-0 top-0 z-10 overflow-hidden"
@@ -308,7 +322,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMediaQuery, usePointerSwipe } from '@vueuse/core'
+import { useMediaQuery } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 import type { Slide } from '~/types/memory'
 import { useSnapDrawer } from '~/composables/useSnapDrawer'
@@ -377,8 +391,19 @@ supabaseClient.auth.getSession().then(async ({ data }) => {
 // ── Core state ─────────────────────────────────────────────
 const cardEl = ref<HTMLElement>()
 const backdropEl = ref<HTMLElement>()
+const mobileContainerEl = ref<HTMLElement>()
 const visible = ref(false)
 const navigating = ref(false)
+
+// Mobile vertical-down dismiss parallax. dismissOffsetY tracks how far the
+// finger has dragged down; the mobile container translates by that amount
+// with proportional opacity. isVerticalDragging gates the CSS transition
+// so real-time drag is 1:1 and release animates smoothly.
+const dismissOffsetY = ref(0)
+const isVerticalDragging = ref(false)
+const mobileViewportHeight = ref(
+  typeof window !== 'undefined' ? window.innerHeight : 800,
+)
 // Direction of the in-flight navigation, used by the mobile photo-region
 // <Transition> to pick which slide animation plays (next = slide right→left,
 // prev = slide left→right). Null when no navigation is in flight.
@@ -418,49 +443,93 @@ const chromeVisible = ref(true)
 // Photo region element ref (used in Tasks 4-5 for swipe gestures).
 const photoRegionEl = ref<HTMLElement>()
 
-// ── Tap-vs-swipe tracking ──────────────────────────────────
-// A pointer movement > 10px in any direction qualifies the interaction as a
-// gesture. The @click handler checks this flag so it skips toggling chrome
-// when the user actually swiped.
-const pointerStartX = ref(0)
-const pointerStartY = ref(0)
+// ── Photo region gestures (mobile) ────────────────────────
+// One unified pointer handler that distinguishes tap / horizontal swipe /
+// vertical-down parallax. Multi-photo memories have their own carousel
+// handler that consumes horizontal touches first (vertical falls through
+// to here for the parallax dismiss).
 const pointerMoved = ref(false)
 
 function onPhotoPointerDown(e: PointerEvent) {
-  pointerStartX.value = e.clientX
-  pointerStartY.value = e.clientY
+  if (isDesktop.value) return
+  const startX = e.clientX
+  const startY = e.clientY
+  let lockedDirection: 'horizontal' | 'vertical-down' | null = null
   pointerMoved.value = false
+
+  const onMove = (ev: PointerEvent) => {
+    const dx = ev.clientX - startX
+    const dy = ev.clientY - startY
+
+    if (!pointerMoved.value && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      pointerMoved.value = true
+    }
+
+    if (lockedDirection === null) {
+      // Wait for 12px of movement before committing to a direction.
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return
+      if (Math.abs(dy) > Math.abs(dx) && dy > 0) {
+        // Vertical down → parallax dismiss
+        lockedDirection = 'vertical-down'
+        isVerticalDragging.value = true
+      } else if (Math.abs(dx) > Math.abs(dy) && !isMultiPhoto.value) {
+        // Horizontal on single-photo → memory navigation (tracked on release)
+        lockedDirection = 'horizontal'
+      } else {
+        // Multi-photo horizontal (owned by carousel) or vertical-up (no-op):
+        // detach and let other handlers continue.
+        cleanup()
+        return
+      }
+    }
+
+    if (lockedDirection === 'vertical-down' && dy > 0) {
+      dismissOffsetY.value = dy
+    }
+  }
+
+  const onUp = (ev: PointerEvent) => {
+    cleanup()
+
+    if (lockedDirection === 'vertical-down') {
+      isVerticalDragging.value = false
+      const dy = ev.clientY - startY
+      const dismissThreshold = Math.max(120, mobileViewportHeight.value * 0.18)
+      if (dy >= dismissThreshold) {
+        // Commit dismiss — close() will animate the rest of the way out
+        // by setting dismissOffsetY to viewport height.
+        close()
+      } else {
+        // Snap back to resting position via CSS transition.
+        dismissOffsetY.value = 0
+      }
+    } else if (lockedDirection === 'horizontal' && !isMultiPhoto.value) {
+      const dx = ev.clientX - startX
+      if (dx <= -60) navigate('next')
+      else if (dx >= 60) navigate('prev')
+    }
+  }
+
+  function cleanup() {
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('pointercancel', onUp)
+  }
+
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp)
+  window.addEventListener('pointercancel', onUp)
 }
 
-function onPhotoPointerMove(e: PointerEvent) {
-  if (pointerMoved.value) return
-  const dx = Math.abs(e.clientX - pointerStartX.value)
-  const dy = Math.abs(e.clientY - pointerStartY.value)
-  if (dx > 10 || dy > 10) pointerMoved.value = true
-}
+// onPhotoPointerMove kept as a no-op alias so the existing @pointermove
+// template binding doesn't error — all real handling now lives in the
+// window listeners attached by onPhotoPointerDown.
+function onPhotoPointerMove(_e: PointerEvent) {}
 
 function onPhotoClick() {
   if (pointerMoved.value) return // gesture in progress; skip the toggle
   chromeVisible.value = !chromeVisible.value
 }
-
-// ── Swipe gestures on the photo region (mobile) ────────────
-// Single-photo: horizontal swipe = memory navigation.
-// Multi-photo: horizontal swipes are owned by the inner MemoryViewer
-// carousel (which emits 'navigate-memory' when swiped past an edge).
-// Vertical swipe-down dismisses on both.
-usePointerSwipe(photoRegionEl, {
-  threshold: 60,
-  onSwipeEnd(_, direction) {
-    if (isDesktop.value) return
-    if (direction === 'down') {
-      close()
-    } else if (!isMultiPhoto.value) {
-      if (direction === 'left') navigate('next')
-      else if (direction === 'right') navigate('prev')
-    }
-  },
-})
 
 async function confirmCloseIfNeeded(): Promise<boolean> {
   const guard = memoryModalRef.value?.canClose
@@ -604,11 +673,19 @@ async function close() {
   const bd = backdropEl.value
 
   if (el) {
+    // Desktop close animation
     el.style.transition =
       'transform 280ms cubic-bezier(0.4, 0, 1, 1), opacity 220ms ease, box-shadow 220ms ease'
     el.style.transform = 'scale(0.88) rotate(-1.5deg)'
     el.style.opacity = '0'
     el.style.boxShadow = '0 4px 8px rgba(44,36,32,.08)'
+  } else if (!isDesktop.value) {
+    // Mobile close animation — finish whatever parallax was already in
+    // flight by sliding the container the rest of the way off-screen.
+    // isVerticalDragging is false here, so the :style binding's CSS
+    // transition is active and the change tweens smoothly.
+    isVerticalDragging.value = false
+    dismissOffsetY.value = mobileViewportHeight.value
   }
   if (bd) {
     bd.style.transition = 'background 220ms ease, backdrop-filter 220ms ease'
@@ -618,6 +695,8 @@ async function close() {
 
   await new Promise((r) => setTimeout(r, 290))
   visible.value = false
+  // Reset dismiss state so a future open starts from a clean baseline.
+  dismissOffsetY.value = 0
   emit('close')
 }
 
@@ -725,9 +804,17 @@ watch(visible, (v) => {
   document.body.style.overflow = v ? 'hidden' : ''
 })
 
-onMounted(() => document.addEventListener('keydown', onKeydown))
+function onWindowResize() {
+  mobileViewportHeight.value = window.innerHeight
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+  window.addEventListener('resize', onWindowResize)
+})
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('resize', onWindowResize)
   document.body.style.overflow = ''
 })
 </script>
