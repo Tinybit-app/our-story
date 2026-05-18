@@ -490,10 +490,14 @@ watch(
 )
 
 // ── Mobile-only slide loading + handlers ───────────────────
+// Trigger on BOTH visibility flips and memory navigation so we fetch on
+// every open (including the very first open of the initially-selected
+// memory, where id alone doesn't change). The isDesktop / !visible guard
+// suppresses the initial-mount fire.
 watch(
-  () => currentMemory.value?.id,
-  async (id) => {
-    if (isDesktop.value) return
+  [() => visible.value, () => currentMemory.value?.id],
+  async ([isVisible, id]) => {
+    if (isDesktop.value || !isVisible) return
     currentSlideIdx.value = 0
     if (!id || (currentMemory.value?.media_count ?? 1) <= 1) {
       slides.value = []
