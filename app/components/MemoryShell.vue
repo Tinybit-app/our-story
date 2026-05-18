@@ -114,7 +114,113 @@
     </div>
 
     <div v-else-if="visible && !isDesktop" class="fixed inset-0 z-50 bg-background">
-      <!-- TODO: Mobile drawer layout (Task 3) -->
+      <!-- Floating chrome — close + counter -->
+      <div
+        class="absolute left-3 right-3 top-3 z-30 flex items-center justify-between transition-opacity duration-200"
+        :class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+      >
+        <button
+          class="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md"
+          :aria-label="t('modal.closeAriaLabel')"
+          @click="close"
+        >
+          <svg
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <span
+          v-if="memories.length > 1"
+          class="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md"
+        >
+          {{ currentIndex + 1 }} / {{ memories.length }}
+        </span>
+        <span class="h-9 w-9" /><!-- spacer; right-side share button is a future enhancement -->
+      </div>
+
+      <!-- Quick-note path: legacy QuickNoteModal in a full-screen container -->
+      <div
+        v-if="currentMemory && isQuickNote"
+        class="absolute inset-0 z-20 flex items-center justify-center p-4"
+      >
+        <QuickNoteModal
+          :key="currentMemory.id"
+          :memory="currentMemory"
+          :children="children"
+          :members="members"
+          :current-user-id="currentUserId"
+          :self-avatar-url="selfAvatarUrl"
+          :self-initials="selfInitials"
+          @update="emit('update', $event)"
+        />
+      </div>
+
+      <!-- Media path: viewer top + drawer bottom -->
+      <template v-else-if="currentMemory && !isQuickNote">
+        <!-- Photo region fills viewport above the drawer -->
+        <div
+          ref="photoRegionEl"
+          class="absolute inset-x-0 top-0 z-10 overflow-hidden"
+          :style="{ bottom: `${drawer.heightPx.value}px` }"
+        >
+          <MemoryViewer
+            :memory="currentMemory"
+            :slides="slides"
+            :slides-loading="slidesLoading"
+            :current-slide-idx="currentSlideIdx"
+            @current-slide-idx="currentSlideIdx = $event"
+          />
+        </div>
+
+        <!-- Drawer surface -->
+        <div
+          class="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[22px] bg-background shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
+          :style="{ height: `${drawer.heightPx.value}px` }"
+        >
+          <div
+            class="flex h-7 flex-shrink-0 cursor-grab items-center justify-center touch-none"
+            :class="drawer.isDragging.value && 'cursor-grabbing'"
+            @pointerdown="onGrabberPointerDown"
+          >
+            <div class="h-1 w-9 rounded-full bg-foreground/30" />
+          </div>
+
+          <div class="min-h-0 flex-1 overflow-hidden">
+            <MemoryDetail
+              ref="memoryModalRef"
+              :memory="currentMemory"
+              :children="children ?? []"
+              :members="members ?? []"
+              :current-user-id="currentUserId"
+              :self-avatar-url="selfAvatarUrl"
+              :self-initials="selfInitials"
+              :slides="slides"
+              :current-slide-idx="currentSlideIdx"
+              @update="emit('update', $event)"
+              @slides-update="onMobileSlidesUpdate"
+              @open-share-card="onMobileOpenShareCard"
+              @milestone-share-prompt="mobileShareCardData = $event"
+            />
+          </div>
+        </div>
+      </template>
+
+      <!-- Mobile-only milestone share card teleport -->
+      <MilestoneShareModal
+        v-if="mobileShareCardData"
+        :photo-url="mobileShareCardData.photoUrl"
+        :milestone-label="mobileShareCardData.milestoneLabel"
+        :memory-date="mobileShareCardData.memoryDate"
+        :child-ages="mobileShareCardData.childAges"
+        :on-demand="mobileShareCardData.onDemand"
+        @close="mobileShareCardData = null"
+      />
     </div>
   </Teleport>
 </template>
@@ -122,6 +228,9 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
+import type { Slide } from '~/types/memory'
+import { useSnapDrawer } from '~/composables/useSnapDrawer'
+import { computeBabyAge } from '~/composables/useBabyAge'
 
 interface ChildProfile {
   id: string
@@ -150,6 +259,7 @@ const emit = defineEmits<{
 }>()
 
 const isDesktop = useMediaQuery('(min-width: 768px)')
+const { t } = useI18n()
 
 // ── Auth + profile (fetched once, passed down to content) ──
 const supabaseClient = useSupabaseClient()
@@ -191,6 +301,36 @@ const currentIndex = ref(0)
 // The active child modal can expose a canClose() guard so we can prompt the
 // user before discarding unsaved edits via backdrop / X / arrow navigation.
 const memoryModalRef = ref<{ canClose?: () => Promise<boolean> } | null>(null)
+
+// ── Mobile-only state (parallels MemoryModal's for desktop) ───
+// MemoryShell composes <MemoryViewer> + <MemoryDetail> directly on mobile
+// (bypassing MemoryModal which still owns the desktop slide state), so it
+// takes on the slide-load duplicate. This goes away in sub-plan #3d.
+const slides = ref<Slide[]>([])
+const slidesLoading = ref(false)
+const currentSlideIdx = ref(0)
+
+// Mobile-only share card state (parallels MemoryModal's).
+interface ShareCardData {
+  photoUrl: string
+  milestoneLabel: string
+  memoryDate: string
+  childAges: Array<{ name: string; age: string }>
+  onDemand?: boolean
+}
+const mobileShareCardData = ref<ShareCardData | null>(null)
+
+// Snap drawer state (initialized lazily; viewportHeight needs window).
+const drawer = useSnapDrawer({
+  viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 800,
+  snaps: ['peek', 'default', 'full'],
+})
+
+// Chrome visibility (for Task 6 tap-to-toggle). Start visible.
+const chromeVisible = ref(true)
+
+// Photo region element ref (used in Tasks 4-5 for swipe gestures).
+const photoRegionEl = ref<HTMLElement>()
 
 async function confirmCloseIfNeeded(): Promise<boolean> {
   const guard = memoryModalRef.value?.canClose
@@ -348,6 +488,85 @@ watch(
     }
   },
 )
+
+// ── Mobile-only slide loading + handlers ───────────────────
+watch(
+  () => currentMemory.value?.id,
+  async (id) => {
+    if (isDesktop.value) return
+    currentSlideIdx.value = 0
+    if (!id || (currentMemory.value?.media_count ?? 1) <= 1) {
+      slides.value = []
+      return
+    }
+    slidesLoading.value = true
+    try {
+      const data = await $fetch<{ slides: Slide[] }>(
+        `/api/memories/${id}/slides`,
+      )
+      slides.value = data.slides
+    } finally {
+      slidesLoading.value = false
+    }
+  },
+  { immediate: true },
+)
+
+function onMobileSlidesUpdate(payload: {
+  slides: Slide[]
+  currentSlideIdx?: number
+  coverMediaId?: string | null
+}) {
+  slides.value = payload.slides
+  if (payload.currentSlideIdx !== undefined)
+    currentSlideIdx.value = payload.currentSlideIdx
+  // coverMediaId is propagated by MemoryDetail's emit('update', ...) to the
+  // page handler; nothing to do at the carousel-state level.
+}
+
+function onMobileOpenShareCard() {
+  const m = currentMemory.value
+  if (!m?.milestone_label) return
+  const firstPhoto = m.memorymedia.find((mm) => mm.media_type !== 'video')
+  if (!firstPhoto?.url) return
+  const ages = (m.memory_children ?? [])
+    .map((mc) => {
+      const age = computeBabyAge(mc.childprofile.date_of_birth, m.memory_date)
+      return age ? { name: mc.childprofile.name, age } : null
+    })
+    .filter(Boolean) as Array<{ name: string; age: string }>
+  mobileShareCardData.value = {
+    photoUrl: firstPhoto.thumbnailUrl ?? firstPhoto.url,
+    milestoneLabel: m.milestone_label,
+    memoryDate: m.memory_date,
+    childAges: ages,
+    onDemand: true,
+  }
+}
+
+// Grabber drag handler using pointer events.
+function onGrabberPointerDown(e: PointerEvent) {
+  if (drawer.isDragging.value) return
+  drawer.onDragStart(e.clientY)
+  const target = e.currentTarget as HTMLElement
+  target.setPointerCapture(e.pointerId)
+
+  const onMove = (ev: PointerEvent) => drawer.onDragMove(ev.clientY)
+  const onUp = (ev: PointerEvent) => {
+    drawer.onDragEnd()
+    try {
+      target.releasePointerCapture(ev.pointerId)
+    } catch {
+      /* already released */
+    }
+    target.removeEventListener('pointermove', onMove)
+    target.removeEventListener('pointerup', onUp)
+    target.removeEventListener('pointercancel', onUp)
+  }
+  target.addEventListener('pointermove', onMove)
+  target.addEventListener('pointerup', onUp)
+  target.addEventListener('pointercancel', onUp)
+}
 
 // ── Keyboard ───────────────────────────────────────────────
 function onKeydown(e: KeyboardEvent) {
