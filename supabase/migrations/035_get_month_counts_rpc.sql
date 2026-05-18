@@ -1,16 +1,15 @@
 -- 035_get_month_counts_rpc.sql
--- Returns the count of memories visible to a user in each month within a
--- date window for a given circle. Used by /api/timeline year-branch to
--- show accurate "See all N memories →" overflow counts on the main
--- timeline overview without serializing the whole year of rows.
+-- Returns the count of memories in each month within a date window for a
+-- given circle. Used by /api/timeline year-branch to show accurate
+-- "See all N memories →" overflow counts on the main timeline overview
+-- without serializing the whole year of rows.
 --
--- Visibility: a memory is visible to the user if it is circle-visibility
--- OR private+owned-by-the-user. Mirrors the .or() filter in
--- /api/timeline.get.ts.
+-- Visibility: all user-created memories are circle-visible (retired
+-- 'private' in migration 036), so the count is simply "all memories in
+-- this circle, in this window."
 
 CREATE OR REPLACE FUNCTION public.get_month_counts(
   p_circle_id   UUID,
-  p_user_id     UUID,
   p_year_start  TIMESTAMPTZ,
   p_year_end    TIMESTAMPTZ
 )
@@ -32,13 +31,10 @@ AS $$
   WHERE m.circle_id = p_circle_id
     AND m.memory_date >= p_year_start
     AND m.memory_date <  p_year_end
-    AND (
-      m.visibility = 'circle'
-      OR (m.visibility = 'private' AND m.owner_user_id = p_user_id)
-    )
+    AND m.visibility = 'circle'
   GROUP BY date_trunc('month', m.memory_date)
   ORDER BY date_trunc('month', m.memory_date) DESC
 $$;
 
-GRANT EXECUTE ON FUNCTION public.get_month_counts(UUID, UUID, TIMESTAMPTZ, TIMESTAMPTZ)
+GRANT EXECUTE ON FUNCTION public.get_month_counts(UUID, TIMESTAMPTZ, TIMESTAMPTZ)
   TO authenticated;
