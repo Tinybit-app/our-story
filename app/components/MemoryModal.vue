@@ -319,21 +319,7 @@ const emit = defineEmits<{
   update: [Pick<Memory, 'id'> & Partial<Memory>]
 }>()
 
-const PRESET_EMOJIS = [
-  '❤️',
-  '😂',
-  '😍',
-  '🥹',
-  '👏',
-  '🔥',
-  '😮',
-  '🥰',
-  '😭',
-  '✨',
-  '🎉',
-  '👍',
-]
-
+const supabaseClient = useSupabaseClient()
 const modalImgLoaded = ref(false)
 
 // MemoryDetail ref (exposes canClose for the shell)
@@ -1141,95 +1127,6 @@ async function shareMedia() {
     if (err instanceof DOMException && err.name === 'AbortError') return
     // CORS blocked the canvas draw — fall back to plain download
     await downloadMedia()
-  }
-}
-
-// ── Reactions ──────────────────────────────────────────────
-type Reaction = {
-  id: string
-  emoji: string
-  user_id: string | null
-  guest_name: string | null
-  user: { first_name: string | null; last_name: string | null } | null
-}
-const supabaseClient = useSupabaseClient()
-
-// Initialized from prop — :key on this component resets it per-memory
-const localReactions = ref<Reaction[]>([
-  ...(props.memory.memoryreaction ?? []),
-] as Reaction[])
-
-const reactionGroups = computed(() => {
-  const groups: Record<
-    string,
-    { count: number; mine: boolean; names: string[] }
-  > = {}
-  for (const r of localReactions.value) {
-    if (!r.emoji) continue
-    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, mine: false, names: [] }
-    const g = groups[r.emoji]!
-    g.count++
-    if (r.user_id === props.currentUserId) {
-      g.mine = true
-      g.names.unshift(t('common.you'))
-    } else if (!r.user_id) g.names.push(r.guest_name ?? t('common.someone'))
-    else g.names.push(r.user?.first_name ?? t('common.someone'))
-  }
-  return groups
-})
-
-const hasAnyReaction = computed(
-  () => Object.keys(reactionGroups.value).length > 0,
-)
-
-function reactionTooltip(names: string[]): string {
-  if (names.length <= 3) return names.join(', ')
-  return `${names.slice(0, 2).join(', ')} +${names.length - 2} more`
-}
-
-async function toggleReaction(emoji: string) {
-  const userId =
-    props.currentUserId ??
-    (await supabaseClient.auth.getSession()).data.session?.user?.id
-  if (!userId) return
-  const existing = localReactions.value.find(
-    (r) => r.emoji === emoji && r.user_id === userId,
-  )
-  if (existing)
-    localReactions.value = localReactions.value.filter((r) => r !== existing)
-  else
-    localReactions.value = [
-      ...localReactions.value,
-      {
-        id: 'optimistic',
-        emoji,
-        user_id: userId,
-        guest_name: null,
-        user: null,
-      },
-    ]
-
-  const memoryId = props.memory.id
-  const wasAdding = !existing
-  try {
-    const { reactions } = await $fetch<{ reactions: any[] }>(
-      `/api/memories/${memoryId}/reactions`,
-      { method: 'POST', body: { emoji } },
-    )
-    localReactions.value = reactions
-    emit('update', { id: memoryId, memoryreaction: reactions })
-    if (wasAdding) {
-      track('reaction_added', {
-        circle_id: props.memory.circle_id,
-        memory_id: memoryId,
-        emoji,
-      })
-    }
-  } catch (err) {
-    console.error('[MemoryModal] reaction error:', err)
-    localReactions.value = [
-      ...(props.memory.memoryreaction ?? []),
-    ] as Reaction[]
   }
 }
 

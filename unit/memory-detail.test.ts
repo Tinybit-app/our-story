@@ -6,6 +6,10 @@ import MemoryDetail from '~/components/MemoryDetail.vue'
 import type { Memory } from '~/composables/useTimeline'
 
 vi.stubGlobal('useI18n', () => ({ locale: ref('en'), t: (k: string) => k }))
+vi.stubGlobal('useNuxtApp', () => ({ $posthog: null }))
+vi.stubGlobal('useSupabaseClient', () => ({
+  auth: { getSession: async () => ({ data: { session: null } }) },
+}))
 
 function makeMemory(): Memory {
   return {

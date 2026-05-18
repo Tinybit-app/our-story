@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex h-full flex-col" @click="pickerOpen = false">
     <!-- Caption section: tab bar + independent scroll panels -->
     <div class="flex min-h-0 flex-1 flex-col">
       <!-- Tab bar -->
@@ -179,9 +179,98 @@
           <p class="p-4 text-sm text-muted-foreground">Edit mode coming in Task 5.</p>
         </div>
 
-        <!-- Reactions placeholder — filled in Task 3 -->
+        <!-- Reactions -->
         <div class="px-4 pb-4">
-          <!-- Reactions row -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <div
+              v-for="(group, emoji) in reactionGroups"
+              :key="emoji"
+              class="group/rxn relative"
+            >
+              <button
+                class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] transition-all duration-150"
+                :class="
+                  group.mine
+                    ? 'border-accent/25 bg-accent/15 font-medium text-foreground'
+                    : 'border-transparent bg-secondary text-muted-foreground hover:border-border'
+                "
+                @click="toggleReaction(emoji as string)"
+              >
+                {{ emoji }}<span class="text-[11px]">{{ group.count }}</span>
+              </button>
+              <div
+                class="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-[10px] text-background opacity-0 shadow-md transition-opacity duration-150 group-hover/rxn:opacity-100"
+              >
+                {{ reactionTooltip(group.names) }}
+                <div
+                  class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-foreground"
+                />
+              </div>
+            </div>
+            <div class="relative">
+              <!-- Add-reaction trigger. Expands to a labelled button when the
+                   memory has no reactions yet (clear first-time affordance);
+                   collapses to just the smiley-plus icon once chips above it
+                   already teach what the button does. -->
+              <button
+                class="group inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-border bg-secondary/30 text-muted-foreground transition-all hover:border-accent/50 hover:bg-secondary hover:text-foreground"
+                :class="hasAnyReaction ? 'w-8 px-0' : 'px-3'"
+                :title="t('modal.addReaction')"
+                :aria-label="t('modal.addReaction')"
+                @click.stop="pickerOpen = !pickerOpen"
+              >
+                <!-- Smiley face with a "+" in the corner — the standard
+                     add-reaction glyph across modern social apps. -->
+                <svg
+                  class="h-4 w-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="10.5" cy="13.5" r="7.5" />
+                  <circle cx="8" cy="12.5" r="0.6" fill="currentColor" stroke="none" />
+                  <circle cx="13" cy="12.5" r="0.6" fill="currentColor" stroke="none" />
+                  <path d="M7.8 16s.9 1.4 2.7 1.4 2.7-1.4 2.7-1.4" />
+                  <path d="M18.5 3.5h4M20.5 1.5v4" />
+                </svg>
+                <span
+                  v-if="!hasAnyReaction"
+                  class="whitespace-nowrap text-[12px] font-medium"
+                >
+                  {{ t('modal.addReaction') }}
+                </span>
+              </button>
+              <Transition
+                enter-active-class="transition duration-100 ease-out"
+                enter-from-class="opacity-0 scale-90 translate-y-1"
+                enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-75 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-90 translate-y-1"
+              >
+                <div
+                  v-if="pickerOpen"
+                  class="absolute bottom-full left-0 z-30 mb-1.5 grid gap-0.5 rounded-xl border border-border bg-card px-2 py-1.5 shadow-xl"
+                  style="grid-template-columns: repeat(6, 1fr)"
+                  @click.stop
+                >
+                  <button
+                    v-for="e in PRESET_EMOJIS"
+                    :key="e"
+                    class="flex h-7 w-7 items-center justify-center rounded-lg text-base transition-colors hover:bg-secondary"
+                    :class="reactionGroups[e]?.mine ? 'bg-accent/15' : ''"
+                    @click.stop="(toggleReaction(e), (pickerOpen = false))"
+                  >
+                    {{ e }}
+                  </button>
+                </div>
+              </Transition>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -199,6 +288,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { computeBabyAge } from '~/composables/useBabyAge'
+import { useAnalytics } from '~/composables/useAnalytics'
 import type { Memory } from '~/composables/useTimeline'
 import type { Slide } from '~/types/memory'
 
@@ -270,6 +360,103 @@ const isOwner = computed(
   () =>
     !!props.currentUserId && props.memory.owner_user_id === props.currentUserId,
 )
+
+const { track } = useAnalytics()
+
+// ── Reactions ──────────────────────────────────────────────
+const PRESET_EMOJIS = [
+  '❤️', '😂', '😍', '🥹', '👏', '🔥', '😮', '🥰', '😭', '✨', '🎉', '👍',
+]
+
+const pickerOpen = ref(false)
+
+type Reaction = {
+  id: string
+  emoji: string
+  user_id: string | null
+  guest_name: string | null
+  user: { first_name: string | null; last_name: string | null } | null
+}
+const supabaseClient = useSupabaseClient()
+
+// Initialized from prop — :key on this component resets it per-memory
+const localReactions = ref<Reaction[]>([
+  ...(props.memory.memoryreaction ?? []),
+] as Reaction[])
+
+const reactionGroups = computed(() => {
+  const groups: Record<
+    string,
+    { count: number; mine: boolean; names: string[] }
+  > = {}
+  for (const r of localReactions.value) {
+    if (!r.emoji) continue
+    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, mine: false, names: [] }
+    const g = groups[r.emoji]!
+    g.count++
+    if (r.user_id === props.currentUserId) {
+      g.mine = true
+      g.names.unshift(t('common.you'))
+    } else if (!r.user_id) g.names.push(r.guest_name ?? t('common.someone'))
+    else g.names.push(r.user?.first_name ?? t('common.someone'))
+  }
+  return groups
+})
+
+const hasAnyReaction = computed(
+  () => Object.keys(reactionGroups.value).length > 0,
+)
+
+function reactionTooltip(names: string[]): string {
+  if (names.length <= 3) return names.join(', ')
+  return `${names.slice(0, 2).join(', ')} +${names.length - 2} more`
+}
+
+async function toggleReaction(emoji: string) {
+  const userId =
+    props.currentUserId ??
+    (await supabaseClient.auth.getSession()).data.session?.user?.id
+  if (!userId) return
+  const existing = localReactions.value.find(
+    (r) => r.emoji === emoji && r.user_id === userId,
+  )
+  if (existing)
+    localReactions.value = localReactions.value.filter((r) => r !== existing)
+  else
+    localReactions.value = [
+      ...localReactions.value,
+      {
+        id: 'optimistic',
+        emoji,
+        user_id: userId,
+        guest_name: null,
+        user: null,
+      },
+    ]
+
+  const memoryId = props.memory.id
+  const wasAdding = !existing
+  try {
+    const { reactions } = await $fetch<{ reactions: any[] }>(
+      `/api/memories/${memoryId}/reactions`,
+      { method: 'POST', body: { emoji } },
+    )
+    localReactions.value = reactions
+    emit('update', { id: memoryId, memoryreaction: reactions })
+    if (wasAdding) {
+      track('reaction_added', {
+        circle_id: props.memory.circle_id,
+        memory_id: memoryId,
+        emoji,
+      })
+    }
+  } catch (err) {
+    console.error('[MemoryDetail] reaction error:', err)
+    localReactions.value = [
+      ...(props.memory.memoryreaction ?? []),
+    ] as Reaction[]
+  }
+}
 
 async function canClose(): Promise<boolean> {
   return true
