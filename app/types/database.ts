@@ -962,6 +962,14 @@ export type Database = {
         Args: { required_roles: string[] }
         Returns: string[]
       }
+      get_month_counts: {
+        Args: {
+          p_circle_id: string
+          p_year_start: string
+          p_year_end: string
+        }
+        Returns: { year: number; month: number; count: number }[]
+      }
     }
     Enums: {
       [_ in never]: never
