@@ -1023,6 +1023,7 @@ const emit = defineEmits<{
       milestoneLabel: string
       memoryDate: string
       childAges: Array<{ name: string; age: string }>
+      onDemand: boolean
     },
   ]
 }>()
@@ -1917,6 +1918,7 @@ async function saveEdit() {
           milestoneLabel: updated.milestone_label,
           memoryDate: props.memory.memory_date,
           childAges: ages,
+          onDemand: true,
         })
       }
     }
