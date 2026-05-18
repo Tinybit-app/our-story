@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
-import type { Slide } from './MemoryModal.vue'
+import type { Slide } from '~/types/memory'
 
 interface ChildProfile {
   id: string

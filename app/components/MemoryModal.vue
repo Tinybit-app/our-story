@@ -1236,6 +1236,7 @@
 
 <script setup lang="ts">
 import type { Memory } from '~/composables/useTimeline'
+import type { Slide } from '~/types/memory'
 import { computeBabyAge } from '~/composables/useBabyAge'
 import { useAnalytics, classifyMilestone } from '~/composables/useAnalytics'
 const { t, locale } = useI18n()
@@ -1288,14 +1289,6 @@ const memory = computed(() => props.memory)
 const firstMedia = computed(() => props.memory.memorymedia[0] ?? null)
 
 // ── Multi-item carousel ────────────────────────────────────
-export interface Slide {
-  id: string
-  mediaType: 'photo' | 'video' | 'text'
-  url?: string | null
-  textContent?: string
-  displayOrder: number
-}
-
 const slides = ref<Slide[]>([])
 const slidesLoading = ref(false)
 const currentSlideIdx = ref(0)
