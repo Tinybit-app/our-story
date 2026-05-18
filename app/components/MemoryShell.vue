@@ -181,14 +181,20 @@
           @pointermove="onPhotoPointerMove"
           @click="onPhotoClick"
         >
-          <MemoryViewer
-            :memory="currentMemory"
-            :slides="slides"
-            :slides-loading="slidesLoading"
-            :current-slide-idx="currentSlideIdx"
-            fill-container
-            @current-slide-idx="currentSlideIdx = $event"
-          />
+          <Transition
+            :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
+            mode="out-in"
+          >
+            <MemoryViewer
+              :key="currentMemory.id"
+              :memory="currentMemory"
+              :slides="slides"
+              :slides-loading="slidesLoading"
+              :current-slide-idx="currentSlideIdx"
+              fill-container
+              @current-slide-idx="currentSlideIdx = $event"
+            />
+          </Transition>
         </div>
 
         <!-- Drawer surface -->
@@ -316,6 +322,10 @@ const cardEl = ref<HTMLElement>()
 const backdropEl = ref<HTMLElement>()
 const visible = ref(false)
 const navigating = ref(false)
+// Direction of the in-flight navigation, used by the mobile photo-region
+// <Transition> to pick which slide animation plays (next = slide right→left,
+// prev = slide left→right). Null when no navigation is in flight.
+const navDirection = ref<'next' | 'prev' | null>(null)
 const currentIndex = ref(0)
 // The active child modal can expose a canClose() guard so we can prompt the
 // user before discarding unsaved edits via backdrop / X / arrow navigation.
@@ -480,6 +490,7 @@ async function navigate(dir: 'prev' | 'next') {
   if (!(await confirmCloseIfNeeded())) return
 
   navigating.value = true
+  navDirection.value = dir
 
   const el = cardEl.value
   if (el) {
@@ -506,9 +517,15 @@ async function navigate(dir: 'prev' | 'next') {
     el.style.transform = 'none'
     el.style.opacity = '1'
     await new Promise((r) => setTimeout(r, 290))
+  } else if (!isDesktop.value) {
+    // Mobile: wait for the photo-region <Transition> to play (out 200ms +
+    // in 220ms with mode="out-in") before clearing navigating, so a rapid
+    // double-swipe doesn't interrupt the in-flight animation.
+    await new Promise((r) => setTimeout(r, 440))
   }
 
   navigating.value = false
+  navDirection.value = null
 }
 
 // ── Close ──────────────────────────────────────────────────
@@ -647,3 +664,33 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 </script>
+
+<style scoped>
+/* Mobile photo-region navigation animation. mode="out-in" plays leave
+   first, then enter. 'next' (swipe left): old slides out to the left,
+   new slides in from the right. 'prev' (swipe right): mirror. */
+.mshell-next-enter-active,
+.mshell-next-leave-active,
+.mshell-prev-enter-active,
+.mshell-prev-leave-active {
+  transition:
+    transform 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 200ms ease;
+}
+.mshell-next-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.mshell-next-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.mshell-prev-enter-from {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.mshell-prev-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+</style>
