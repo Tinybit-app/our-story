@@ -168,6 +168,9 @@
           ref="photoRegionEl"
           class="absolute inset-x-0 top-0 z-10 overflow-hidden"
           :style="{ bottom: `${drawer.heightPx.value}px` }"
+          @pointerdown="onPhotoPointerDown"
+          @pointermove="onPhotoPointerMove"
+          @click="onPhotoClick"
         >
           <MemoryViewer
             :memory="currentMemory"
@@ -226,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core'
+import { useMediaQuery, usePointerSwipe } from '@vueuse/core'
 import type { Memory } from '~/composables/useTimeline'
 import type { Slide } from '~/types/memory'
 import { useSnapDrawer } from '~/composables/useSnapDrawer'
@@ -332,6 +335,43 @@ const chromeVisible = ref(true)
 // Photo region element ref (used in Tasks 4-5 for swipe gestures).
 const photoRegionEl = ref<HTMLElement>()
 
+// ── Tap-vs-swipe tracking ──────────────────────────────────
+// A pointer movement > 10px in any direction qualifies the interaction as a
+// gesture. The @click handler checks this flag so it skips toggling chrome
+// when the user actually swiped.
+const pointerStartX = ref(0)
+const pointerStartY = ref(0)
+const pointerMoved = ref(false)
+
+function onPhotoPointerDown(e: PointerEvent) {
+  pointerStartX.value = e.clientX
+  pointerStartY.value = e.clientY
+  pointerMoved.value = false
+}
+
+function onPhotoPointerMove(e: PointerEvent) {
+  if (pointerMoved.value) return
+  const dx = Math.abs(e.clientX - pointerStartX.value)
+  const dy = Math.abs(e.clientY - pointerStartY.value)
+  if (dx > 10 || dy > 10) pointerMoved.value = true
+}
+
+function onPhotoClick() {
+  if (pointerMoved.value) return // gesture in progress; skip the toggle
+  chromeVisible.value = !chromeVisible.value
+}
+
+// ── Swipe gestures on the photo region (mobile) ────────────
+usePointerSwipe(photoRegionEl, {
+  threshold: 60,
+  onSwipeEnd(_, direction) {
+    if (isDesktop.value) return
+    if (direction === 'left') navigate('next')
+    else if (direction === 'right') navigate('prev')
+    else if (direction === 'down') close()
+  },
+})
+
 async function confirmCloseIfNeeded(): Promise<boolean> {
   const guard = memoryModalRef.value?.canClose
   if (!guard) return true
@@ -410,6 +450,13 @@ async function runEnterAnimation() {
 // ── Navigation (unified — works for both photo↔note transitions) ──
 async function navigate(dir: 'prev' | 'next') {
   if (navigating.value) return
+
+  // Reset drawer to default snap on every navigation so a drawer left at
+  // 'full' on memory A doesn't carry over to memory B (mobile only).
+  if (!isDesktop.value) {
+    drawer.snapTo('default')
+  }
+
   const newIdx =
     dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
   if (newIdx < 0 || newIdx >= props.memories.length) return
