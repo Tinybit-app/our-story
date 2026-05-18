@@ -1,7 +1,7 @@
 <template>
   <!-- Fills the shell's flex-col card. -->
   <div class="flex min-h-0 flex-1 flex-col">
-    <!-- Photo / video — single item (rendered by MemoryViewer) -->
+    <!-- Photo region (single item + multi-item carousel) -->
     <MemoryViewer
       :memory="memory"
       :slides="slides"
