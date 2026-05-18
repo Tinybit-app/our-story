@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(61);
+SELECT plan(58);
 
 -- ============================================================
 -- FIXTURES
@@ -22,10 +22,10 @@ VALUES
   ('00000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'owner'),
   ('00000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'member');
 
--- Private memory owned by user_a
+-- Circle memory owned by user_a (formerly 'private'; retired in migration 036)
 INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility)
 VALUES ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001', 'private');
+        '10000000-0000-0000-0000-000000000001', 'circle');
 
 -- Circle memory owned by user_a
 INSERT INTO public.Memory (id, owner_user_id, circle_id, visibility)
@@ -75,21 +75,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================================
--- TEST 1: user_b cannot read user_a's private memory
+-- TEST 2: user_b can read circle memory in their circle
 -- ============================================================
 SELECT set_auth('00000000-0000-0000-0000-000000000002');
 SET LOCAL ROLE authenticated;
-
-SELECT is(
-  (SELECT count(*)::int FROM public.Memory
-   WHERE id = '20000000-0000-0000-0000-000000000001' AND visibility = 'private'),
-  0,
-  'user_b cannot read user_a private memory'
-);
-
--- ============================================================
--- TEST 2: user_b can read circle memory in their circle
--- ============================================================
 SELECT is(
   (SELECT count(*)::int FROM public.Memory
    WHERE id = '20000000-0000-0000-0000-000000000002' AND visibility = 'circle'),
@@ -105,18 +94,6 @@ SELECT is(
    WHERE id = '10000000-0000-0000-0000-000000000002'),
   0,
   'user_b cannot read a circle they are not a member of'
-);
-
--- ============================================================
--- TEST 4: user_a can read their own private memory
--- ============================================================
-SELECT set_auth('00000000-0000-0000-0000-000000000001');
-
-SELECT is(
-  (SELECT count(*)::int FROM public.Memory
-   WHERE id = '20000000-0000-0000-0000-000000000001' AND visibility = 'private'),
-  1,
-  'user_a can read their own private memory'
 );
 
 -- ============================================================
@@ -184,25 +161,14 @@ SELECT is(
 );
 
 -- ============================================================
--- TEST 10: caregiver cannot read private memories (RESTRICTIVE policy)
--- ============================================================
+-- TEST 11: caregiver CAN read circle-visibility memories
 SELECT set_auth('00000000-0000-0000-0000-000000000004');
 SET LOCAL ROLE authenticated;
-
-SELECT is(
-  (SELECT count(*)::int FROM public.Memory
-   WHERE circle_id = '10000000-0000-0000-0000-000000000001' AND visibility = 'private'),
-  0,
-  'caregiver cannot read private memories in their circle'
-);
-
--- ============================================================
--- TEST 11: caregiver CAN read circle-visibility memories
 -- ============================================================
 SELECT is(
   (SELECT count(*)::int FROM public.Memory
    WHERE circle_id = '10000000-0000-0000-0000-000000000001' AND visibility = 'circle'),
-  1,
+  2,
   'caregiver can read circle-visibility memories'
 );
 
