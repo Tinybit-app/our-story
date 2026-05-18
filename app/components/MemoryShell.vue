@@ -444,17 +444,30 @@ function onPhotoClick() {
 }
 
 // ── Swipe gestures on the photo region (mobile) ────────────
-// On multi-photo memories, horizontal touches are consumed by the inner
-// carousel's native scroll (we set touch-action: pan-x there); memory
-// navigation happens via the chevron buttons in the chrome row instead.
-// Vertical swipe-down still dismisses on both single + multi.
+// On single-photo: horizontal swipe = memory navigation.
+// On multi-photo: horizontal swipe normally drives the inner carousel's
+// native scroll. At the carousel boundaries, the browser has nothing to
+// scroll, so the gesture surfaces here — swipe-left past the last slide
+// goes to next memory, swipe-right past the first slide goes to prev.
+// (The chevron buttons in the chrome row also work regardless of slide
+// position, as a tap-to-navigate alternative.)
 usePointerSwipe(photoRegionEl, {
   threshold: 60,
   onSwipeEnd(_, direction) {
     if (isDesktop.value) return
     if (direction === 'down') {
       close()
-    } else if (!isMultiPhoto.value) {
+      return
+    }
+    if (direction !== 'left' && direction !== 'right') return
+
+    if (isMultiPhoto.value) {
+      const atStart = currentSlideIdx.value === 0
+      const atEnd = currentSlideIdx.value >= slides.value.length - 1
+      if (direction === 'left' && atEnd) navigate('next')
+      else if (direction === 'right' && atStart) navigate('prev')
+      // otherwise: carousel handles it within
+    } else {
       if (direction === 'left') navigate('next')
       else if (direction === 'right') navigate('prev')
     }
