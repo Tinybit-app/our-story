@@ -183,6 +183,7 @@
             :slides="slides"
             :slides-loading="slidesLoading"
             :current-slide-idx="currentSlideIdx"
+            fill-container
             @current-slide-idx="currentSlideIdx = $event"
           />
         </div>

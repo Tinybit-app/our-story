@@ -1,9 +1,12 @@
 <template>
-  <div>
+  <div :class="fillContainer ? 'h-full w-full' : undefined">
     <!-- Photo / video — single item -->
     <div
       v-if="(memory.media_count ?? 1) <= 1"
-      class="relative aspect-[4/3] flex-shrink-0 overflow-hidden bg-border"
+      :class="[
+        'relative overflow-hidden bg-border',
+        fillContainer ? 'h-full w-full' : 'aspect-[4/3] flex-shrink-0',
+      ]"
     >
       <template v-if="firstMedia && firstMedia.media_type !== 'video'">
         <div v-if="!modalImgLoaded" class="skeleton-shimmer absolute inset-0" />
@@ -111,23 +114,43 @@
     <!-- Photo / video — multi-item carousel (moved from MemoryModal in Task 3) -->
     <div
       v-if="(memory.media_count ?? 1) > 1"
-      class="relative flex-shrink-0 bg-border"
+      :class="[
+        'relative bg-border',
+        fillContainer ? 'h-full w-full' : 'flex-shrink-0',
+      ]"
     >
       <!-- Loading skeleton -->
-      <div v-if="slidesLoading" class="skeleton-shimmer aspect-[4/3]" />
+      <div
+        v-if="slidesLoading"
+        :class="[
+          'skeleton-shimmer',
+          fillContainer ? 'h-full w-full' : 'aspect-[4/3]',
+        ]"
+      />
       <!-- Carousel -->
       <template v-else-if="slides.length > 0">
         <div
           ref="carouselRef"
-          class="no-scrollbar flex w-full snap-x snap-mandatory overflow-x-auto scroll-smooth"
+          :class="[
+            'no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth',
+            fillContainer ? 'h-full w-full' : 'w-full',
+          ]"
           @scroll="onCarouselScroll"
         >
           <div
             v-for="slide in slides"
             :key="slide.id"
-            class="w-full min-w-full shrink-0 snap-center"
+            :class="[
+              'min-w-full shrink-0 snap-center',
+              fillContainer ? 'h-full w-full' : 'w-full',
+            ]"
           >
-            <div class="relative aspect-[4/3] w-full overflow-hidden bg-border">
+            <div
+              :class="[
+                'relative w-full overflow-hidden bg-border',
+                fillContainer ? 'h-full' : 'aspect-[4/3]',
+              ]"
+            >
               <img
                 v-if="slide.mediaType === 'photo'"
                 :src="slide.url ?? undefined"
@@ -252,12 +275,18 @@ import { ref, computed } from 'vue'
 import type { Memory } from '~/composables/useTimeline'
 import type { Slide } from '~/types/memory'
 
-const props = defineProps<{
-  memory: Memory
-  slides: Slide[]
-  slidesLoading: boolean
-  currentSlideIdx: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    memory: Memory
+    slides: Slide[]
+    slidesLoading: boolean
+    currentSlideIdx: number
+    // When true, the photo wrapper fills its parent container (mobile shell)
+    // instead of the desktop card's 4:3 aspect ratio. Spec §6.7 fitMode='cover'.
+    fillContainer?: boolean
+  }>(),
+  { fillContainer: false },
+)
 
 const emit = defineEmits<{
   'current-slide-idx': [number]
