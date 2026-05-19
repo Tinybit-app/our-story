@@ -80,13 +80,22 @@
            reactive conflicts. -->
       <div
         ref="cardEl"
-        class="relative z-10 flex max-h-[85vh] gap-3 opacity-0 will-change-transform"
+        :class="[
+          'relative z-10 flex max-h-[85vh] gap-3 opacity-0 will-change-transform',
+          isQuickNote
+            ? 'w-[min(90vw,460px)]'
+            : 'w-full max-w-[1280px]',
+        ]"
         @click.stop
       >
-        <!-- Photo column — omitted for quick-note memories -->
+        <!-- Photo column — omitted for quick-note memories.
+             flex-1 with max-w gives the photo whatever remains after the
+             detail column, capped at 800px on wide screens. min-w-0 lets
+             the column shrink below its content's intrinsic size. -->
         <div
           v-if="currentMemory && !isQuickNote"
-          class="flex h-[80vh] w-[min(70vw,800px)] items-center justify-center overflow-hidden rounded-xl bg-card"
+          class="flex h-[80vh] min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-card"
+          style="max-width: 800px"
         >
           <Transition
             :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
@@ -112,8 +121,8 @@
           :class="[
             'flex flex-col overflow-hidden rounded-xl bg-background',
             isQuickNote
-              ? 'h-[min(80vh,640px)] w-[min(90vw,460px)]'
-              : 'h-[80vh] w-[min(40vw,440px)] min-w-[320px]',
+              ? 'h-[min(80vh,640px)] w-full'
+              : 'h-[80vh] w-[min(38vw,440px)] min-w-[320px] flex-shrink-0',
           ]"
         >
           <MemoryDetail
@@ -624,44 +633,21 @@ async function navigate(dir: 'prev' | 'next') {
     dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
   if (newIdx < 0 || newIdx >= props.memories.length) return
 
-  // Navigating swaps the modal's :key and remounts the child, which would
-  // silently discard in-progress edits. Let the child guard prompt first.
+  // The :memory prop change discards any in-progress edit silently — let
+  // MemoryDetail's canClose guard prompt the user first.
   if (!(await confirmCloseIfNeeded())) return
 
   navigating.value = true
   navDirection.value = dir
 
-  const el = cardEl.value
-  if (el) {
-    const xOut = dir === 'next' ? -50 : 50
-    el.style.transition = 'transform 180ms ease-in, opacity 160ms ease-in'
-    el.style.transform = `translateX(${xOut}px)`
-    el.style.opacity = '0'
-    await new Promise((r) => setTimeout(r, 190))
-  }
-
-  // Switch index — card size and content component may both change here.
-  // Since opacity is 0, the layout shift is invisible.
+  // Both viewports drive the photo navigation via the inner <Transition>
+  // wrapping MemoryViewer (mshell-next / mshell-prev keyframes). We just
+  // swap the index and wait for the Transition to play (out 220ms + in
+  // 220ms with mode="out-in") before clearing the navigating flag so a
+  // rapid second swipe doesn't interrupt the in-flight animation.
   currentIndex.value = newIdx
   await nextTick()
-
-  if (el) {
-    const xIn = dir === 'next' ? 50 : -50
-    el.style.transition = 'none'
-    el.style.transform = `translateX(${xIn}px)`
-    el.style.opacity = '0'
-    el.getBoundingClientRect() // force reflow
-    el.style.transition =
-      'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease'
-    el.style.transform = 'none'
-    el.style.opacity = '1'
-    await new Promise((r) => setTimeout(r, 290))
-  } else if (!isDesktop.value) {
-    // Mobile: wait for the photo-region <Transition> to play (out 200ms +
-    // in 220ms with mode="out-in") before clearing navigating, so a rapid
-    // double-swipe doesn't interrupt the in-flight animation.
-    await new Promise((r) => setTimeout(r, 440))
-  }
+  await new Promise((r) => setTimeout(r, 440))
 
   navigating.value = false
   navDirection.value = null
@@ -724,7 +710,7 @@ watch(
 watch(
   [() => visible.value, () => currentMemory.value?.id],
   async ([isVisible, id]) => {
-    if (isDesktop.value || !isVisible) return
+    if (!isVisible) return
     currentSlideIdx.value = 0
     if (!id || (currentMemory.value?.media_count ?? 1) <= 1) {
       slides.value = []
