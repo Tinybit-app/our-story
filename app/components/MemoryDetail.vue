@@ -1015,7 +1015,7 @@ const emit = defineEmits<{
     { slides: Slide[]; currentSlideIdx?: number; coverMediaId?: string | null },
   ]
   'open-share-card': []
-  // After a successful edit, when a milestone was newly added, MemoryModal
+  // After a successful edit, when a milestone was newly added, MemoryShell
   // owns the share card teleport — so we emit the payload it should render.
   'milestone-share-prompt': [
     {
@@ -1670,8 +1670,8 @@ async function cancelEditing() {
   editing.value = false
 }
 
-// Asked by MemoryShell (via MemoryModal forwarder) before backdrop/X/navigation
-// closes the modal. If edits are pending, prompt for discard confirmation.
+// Asked by MemoryShell before backdrop/X/navigation closes the modal.
+// If edits are pending, prompt for discard confirmation.
 async function canClose(): Promise<boolean> {
   if (!editing.value || !hasUnsavedChanges.value) return true
   const ok = await askDiscardConfirm()
@@ -1802,7 +1802,7 @@ async function saveEdit() {
         `/api/memories/${props.memory.id}/slides`,
       )
       slidesEdit.value = refreshed
-      // Push the refreshed carousel state up to MemoryModal (which owns the
+      // Push the refreshed carousel state up to MemoryShell (which owns the
       // carousel) and forward the new cover so the page-level handler can
       // patch the timeline cover thumbnail.
       emit('slides-update', {
@@ -1910,7 +1910,7 @@ async function saveEdit() {
             return age ? { name: mc.childprofile.name, age } : null
           })
           .filter(Boolean) as Array<{ name: string; age: string }>
-        // MemoryModal owns the share card modal — emit the payload up so it
+        // MemoryShell owns the share card modal — emit the payload up so it
         // can render. (saveEdit auto-triggers; openShareCard handles the
         // on-demand share button.)
         emit('milestone-share-prompt', {

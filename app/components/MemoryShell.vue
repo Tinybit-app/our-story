@@ -235,21 +235,27 @@
         :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
         mode="out-in"
       >
-        <!-- Quick-note path -->
+        <!-- Quick-note path: MemoryDetail fills the full mobile screen
+             (no photo region above, no drawer beneath). Spec §6.2 default. -->
         <div
           v-if="currentMemory && isQuickNote"
           key="qn"
-          class="absolute inset-0 z-20 flex items-center justify-center p-4"
+          class="absolute inset-x-0 bottom-0 top-12 z-20 flex flex-col overflow-hidden rounded-t-[22px] bg-background"
         >
-          <QuickNoteModal
-            :key="currentMemory.id"
+          <MemoryDetail
+            ref="memoryModalRef"
             :memory="currentMemory"
-            :children="children"
-            :members="members"
+            :children="children ?? []"
+            :members="members ?? []"
             :current-user-id="currentUserId"
             :self-avatar-url="selfAvatarUrl"
             :self-initials="selfInitials"
+            :slides="slides"
+            :current-slide-idx="currentSlideIdx"
             @update="emit('update', $event)"
+            @slides-update="onSlidesUpdate"
+            @open-share-card="openShareCard"
+            @milestone-share-prompt="shareCardData = $event"
           />
         </div>
 
@@ -446,15 +452,14 @@ const currentIndex = ref(0)
 // user before discarding unsaved edits via backdrop / X / arrow navigation.
 const memoryModalRef = ref<{ canClose?: () => Promise<boolean> } | null>(null)
 
-// ── Mobile-only state (parallels MemoryModal's for desktop) ───
-// MemoryShell composes <MemoryViewer> + <MemoryDetail> directly on mobile
-// (bypassing MemoryModal which still owns the desktop slide state), so it
-// takes on the slide-load duplicate. This goes away in sub-plan #3d.
+// ── Slide state (shared across viewports) ─────────────────
+// Both branches compose <MemoryViewer> + <MemoryDetail> directly; this
+// shell owns the per-memory slide-load watcher + share-card teleport.
 const slides = ref<Slide[]>([])
 const slidesLoading = ref(false)
 const currentSlideIdx = ref(0)
 
-// Mobile-only share card state (parallels MemoryModal's).
+// Share card state (rendered for both viewports via MemoryShell).
 interface ShareCardData {
   photoUrl: string
   milestoneLabel: string
