@@ -13,15 +13,21 @@
         <img
           :src="firstMedia.url ?? firstMedia.thumbnailUrl ?? ''"
           :alt="memory.note ?? t('card.photoAlt')"
-          class="absolute inset-0 block h-full w-full object-cover transition-opacity duration-300"
-          :class="modalImgLoaded ? 'opacity-100' : 'opacity-0'"
+          :class="[
+            'absolute inset-0 block h-full w-full transition-opacity duration-300',
+            fitMode === 'contain' ? 'object-contain' : 'object-cover',
+            modalImgLoaded ? 'opacity-100' : 'opacity-0',
+          ]"
           @load="modalImgLoaded = true"
         />
       </template>
       <video
         v-else-if="firstMedia?.media_type === 'video' && firstMedia.url"
         :src="firstMedia.url"
-        class="absolute inset-0 block h-full w-full object-cover"
+        :class="[
+          'absolute inset-0 block h-full w-full',
+          fitMode === 'contain' ? 'object-contain' : 'object-cover',
+        ]"
         controls
         playsinline
         autoplay
@@ -162,12 +168,18 @@
               <img
                 v-if="slide.mediaType === 'photo'"
                 :src="slide.url ?? undefined"
-                class="absolute inset-0 block h-full w-full object-cover"
+                :class="[
+                  'absolute inset-0 block h-full w-full',
+                  fitMode === 'contain' ? 'object-contain' : 'object-cover',
+                ]"
               />
               <video
                 v-else-if="slide.mediaType === 'video'"
                 :src="slide.url ?? undefined"
-                class="absolute inset-0 block h-full w-full object-cover"
+                :class="[
+                  'absolute inset-0 block h-full w-full',
+                  fitMode === 'contain' ? 'object-contain' : 'object-cover',
+                ]"
                 controls
                 playsinline
                 preload="auto"
@@ -292,8 +304,11 @@ const props = withDefaults(
     // When true, the photo wrapper fills its parent container (mobile shell)
     // instead of the desktop card's 4:3 aspect ratio. Spec §6.7 fitMode='cover'.
     fillContainer?: boolean
+    /** 'cover' (default, fills wrapper, crops to fit — mobile) vs 'contain'
+     *  (letterboxes portrait photos — desktop). Spec §6.7. */
+    fitMode?: 'cover' | 'contain'
   }>(),
-  { fillContainer: false },
+  { fillContainer: false, fitMode: 'cover' },
 )
 
 const emit = defineEmits<{
