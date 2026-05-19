@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div
       v-if="visible && isDesktop"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6"
     >
       <!-- Backdrop -->
       <div
@@ -17,13 +17,12 @@
         @click="close"
       />
 
-      <!-- Prev arrow — hidden on mobile where the card takes full viewport
-           width and the arrows would overlap modal content. Mobile users
-           close the modal and tap another card. -->
+      <!-- Prev arrow — outside the card, vertically centered -->
       <button
         v-if="hasPrev"
-        class="absolute left-3 z-20 hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:left-6 sm:flex"
+        class="absolute left-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
         style="top: 50%; transform: translateY(-50%)"
+        :aria-label="t('modal.swipeHintPrev')"
         @click.stop="navigate('prev')"
       >
         <svg
@@ -38,11 +37,12 @@
         </svg>
       </button>
 
-      <!-- Next arrow — hidden on mobile (see prev-arrow comment). -->
+      <!-- Next arrow — outside the card, vertically centered -->
       <button
         v-if="hasNext"
-        class="absolute right-3 z-20 hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:right-6 sm:flex"
+        class="absolute right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
         style="top: 50%; transform: translateY(-50%)"
+        :aria-label="t('modal.swipeHintNext')"
         @click.stop="navigate('next')"
       >
         <svg
@@ -57,59 +57,90 @@
         </svg>
       </button>
 
-      <!-- Card — opacity-0 via Tailwind so JS animation owns opacity without reactive conflicts -->
+      <!-- Close — top-right, outside the card -->
+      <button
+        class="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
+        :aria-label="t('modal.closeAriaLabel')"
+        @click="close"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Card: two-column composition (or single-column for quick-note).
+           opacity-0 via Tailwind so JS animation owns opacity without
+           reactive conflicts. -->
       <div
         ref="cardEl"
-        class="relative z-10 flex flex-col bg-card opacity-0 will-change-transform"
-        :style="cardSizeStyle"
+        :class="[
+          'relative z-10 flex max-h-[85vh] gap-3 opacity-0 will-change-transform',
+          isQuickNote
+            ? 'w-[min(90vw,460px)]'
+            : 'w-full max-w-[1280px]',
+        ]"
         @click.stop
       >
-        <!-- Pin -->
+        <!-- Photo column — omitted for quick-note memories.
+             flex-1 with max-w gives the photo whatever remains after the
+             detail column, capped at 800px on wide screens. min-w-0 lets
+             the column shrink below its content's intrinsic size. -->
         <div
-          class="absolute -top-3 left-1/2 z-20 h-4 w-4 -translate-x-1/2 rounded-full bg-[#d64040] opacity-90 shadow-[0_2px_8px_rgba(214,64,64,.5)] dark:bg-[#e05454]"
-        />
-
-        <!-- Close -->
-        <button
-          class="absolute right-0 top-0 z-20 flex h-7 w-7 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-80"
-          @click="close"
-        >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        <!-- Content — :key resets all local state on navigation -->
-        <MemoryModal
           v-if="currentMemory && !isQuickNote"
-          ref="memoryModalRef"
-          :key="currentMemory.id"
-          :memory="currentMemory"
-          :children="children"
-          :members="members"
-          :current-user-id="currentUserId"
-          :self-avatar-url="selfAvatarUrl"
-          :self-initials="selfInitials"
-          @update="emit('update', $event)"
-        />
-        <QuickNoteModal
-          v-else-if="currentMemory && isQuickNote"
-          :key="currentMemory.id"
-          :memory="currentMemory"
-          :children="children"
-          :members="members"
-          :current-user-id="currentUserId"
-          :self-avatar-url="selfAvatarUrl"
-          :self-initials="selfInitials"
-          @update="emit('update', $event)"
-        />
+          class="flex h-[80vh] min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-card"
+          style="max-width: 800px"
+        >
+          <Transition
+            :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
+            mode="out-in"
+          >
+            <MemoryViewer
+              :key="currentMemory.id"
+              :memory="currentMemory"
+              :slides="slides"
+              :slides-loading="slidesLoading"
+              :current-slide-idx="currentSlideIdx"
+              fit-mode="contain"
+              fill-container
+              @current-slide-idx="currentSlideIdx = $event"
+              @navigate-memory="navigate($event)"
+            />
+          </Transition>
+        </div>
+
+        <!-- Detail column -->
+        <div
+          v-if="currentMemory"
+          :class="[
+            'flex flex-col overflow-hidden rounded-xl bg-background',
+            isQuickNote
+              ? 'h-[min(80vh,640px)] w-full'
+              : 'h-[80vh] w-[min(38vw,440px)] min-w-[320px] flex-shrink-0',
+          ]"
+        >
+          <MemoryDetail
+            ref="memoryModalRef"
+            :memory="currentMemory"
+            :children="children ?? []"
+            :members="members ?? []"
+            :current-user-id="currentUserId"
+            :self-avatar-url="selfAvatarUrl"
+            :self-initials="selfInitials"
+            :slides="slides"
+            :current-slide-idx="currentSlideIdx"
+            @update="emit('update', $event)"
+            @slides-update="onSlidesUpdate"
+            @open-share-card="openShareCard"
+            @milestone-share-prompt="shareCardData = $event"
+          />
+        </div>
       </div>
     </div>
 
@@ -134,7 +165,7 @@
            and can't double as memory navigation). -->
       <div
         class="absolute left-3 right-3 top-3 z-30 flex items-center justify-between transition-opacity duration-200"
-        :class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+        :class="effectiveChromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
       >
         <button
           class="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md"
@@ -204,21 +235,27 @@
         :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
         mode="out-in"
       >
-        <!-- Quick-note path -->
+        <!-- Quick-note path: MemoryDetail fills the full mobile screen
+             (no photo region above, no drawer beneath). Spec §6.2 default. -->
         <div
           v-if="currentMemory && isQuickNote"
           key="qn"
-          class="absolute inset-0 z-20 flex items-center justify-center p-4"
+          class="absolute inset-x-0 bottom-0 top-12 z-20 flex flex-col overflow-hidden rounded-t-[22px] bg-background"
         >
-          <QuickNoteModal
-            :key="currentMemory.id"
+          <MemoryDetail
+            ref="memoryModalRef"
             :memory="currentMemory"
-            :children="children"
-            :members="members"
+            :children="children ?? []"
+            :members="members ?? []"
             :current-user-id="currentUserId"
             :self-avatar-url="selfAvatarUrl"
             :self-initials="selfInitials"
+            :slides="slides"
+            :current-slide-idx="currentSlideIdx"
             @update="emit('update', $event)"
+            @slides-update="onSlidesUpdate"
+            @open-share-card="openShareCard"
+            @milestone-share-prompt="shareCardData = $event"
           />
         </div>
 
@@ -298,26 +335,28 @@
                 :slides="slides"
                 :current-slide-idx="currentSlideIdx"
                 @update="emit('update', $event)"
-                @slides-update="onMobileSlidesUpdate"
-                @open-share-card="onMobileOpenShareCard"
-                @milestone-share-prompt="mobileShareCardData = $event"
+                @slides-update="onSlidesUpdate"
+                @open-share-card="openShareCard"
+                @milestone-share-prompt="shareCardData = $event"
               />
             </div>
           </div>
         </div>
       </Transition>
-
-      <!-- Mobile-only milestone share card teleport -->
-      <MilestoneShareModal
-        v-if="mobileShareCardData"
-        :photo-url="mobileShareCardData.photoUrl"
-        :milestone-label="mobileShareCardData.milestoneLabel"
-        :memory-date="mobileShareCardData.memoryDate"
-        :child-ages="mobileShareCardData.childAges"
-        :on-demand="mobileShareCardData.onDemand"
-        @close="mobileShareCardData = null"
-      />
     </div>
+
+    <!-- Milestone share card — rendered for both viewports; self-teleports
+         to body via its own internal <Teleport>, so position is independent
+         of the modal layout. -->
+    <MilestoneShareModal
+      v-if="shareCardData"
+      :photo-url="shareCardData.photoUrl"
+      :milestone-label="shareCardData.milestoneLabel"
+      :memory-date="shareCardData.memoryDate"
+      :child-ages="shareCardData.childAges"
+      :on-demand="shareCardData.onDemand"
+      @close="shareCardData = null"
+    />
   </Teleport>
 </template>
 
@@ -413,15 +452,14 @@ const currentIndex = ref(0)
 // user before discarding unsaved edits via backdrop / X / arrow navigation.
 const memoryModalRef = ref<{ canClose?: () => Promise<boolean> } | null>(null)
 
-// ── Mobile-only state (parallels MemoryModal's for desktop) ───
-// MemoryShell composes <MemoryViewer> + <MemoryDetail> directly on mobile
-// (bypassing MemoryModal which still owns the desktop slide state), so it
-// takes on the slide-load duplicate. This goes away in sub-plan #3d.
+// ── Slide state (shared across viewports) ─────────────────
+// Both branches compose <MemoryViewer> + <MemoryDetail> directly; this
+// shell owns the per-memory slide-load watcher + share-card teleport.
 const slides = ref<Slide[]>([])
 const slidesLoading = ref(false)
 const currentSlideIdx = ref(0)
 
-// Mobile-only share card state (parallels MemoryModal's).
+// Share card state (rendered for both viewports via MemoryShell).
 interface ShareCardData {
   photoUrl: string
   milestoneLabel: string
@@ -429,7 +467,7 @@ interface ShareCardData {
   childAges: Array<{ name: string; age: string }>
   onDemand?: boolean
 }
-const mobileShareCardData = ref<ShareCardData | null>(null)
+const shareCardData = ref<ShareCardData | null>(null)
 
 // Snap drawer state (initialized lazily; viewportHeight needs window).
 const drawer = useSnapDrawer({
@@ -439,6 +477,15 @@ const drawer = useSnapDrawer({
 
 // Chrome visibility (for Task 6 tap-to-toggle). Start visible.
 const chromeVisible = ref(true)
+
+// When the drawer is at 'full' snap on mobile, the floating chrome row
+// sits where the grabber's hit zone is — touches meant to drag the drawer
+// down would land on the close / chevron buttons instead. Hide the chrome
+// in that mode so the grabber is reachable; the user can drag down to a
+// shallower snap to bring the chrome back.
+const effectiveChromeVisible = computed(
+  () => drawer.snap.value !== 'full' && chromeVisible.value,
+)
 
 // Photo region element ref (used in Tasks 4-5 for swipe gestures).
 const photoRegionEl = ref<HTMLElement>()
@@ -549,25 +596,6 @@ const isQuickNote = computed(() => {
   return !!m && !m.memorymedia.length && !!m.note
 })
 
-// Sizing changes between quick note and photo/video card types.
-// The switch happens while opacity is 0 (mid-navigation), so it's invisible.
-const cardSizeStyle = computed(() =>
-  isQuickNote.value
-    ? {
-        width: '100%',
-        maxWidth: '520px',
-        minHeight: '420px',
-        maxHeight: '82vh',
-      }
-    : {
-        width: '100%',
-        height: '100%',
-        maxWidth: '750px',
-        maxHeight: '75vh',
-        padding: '12px 12px 0',
-      },
-)
-
 // ── Enter animation ────────────────────────────────────────
 async function runEnterAnimation() {
   const el = cardEl.value
@@ -621,44 +649,21 @@ async function navigate(dir: 'prev' | 'next') {
     dir === 'prev' ? currentIndex.value - 1 : currentIndex.value + 1
   if (newIdx < 0 || newIdx >= props.memories.length) return
 
-  // Navigating swaps the modal's :key and remounts the child, which would
-  // silently discard in-progress edits. Let the child guard prompt first.
+  // The :memory prop change discards any in-progress edit silently — let
+  // MemoryDetail's canClose guard prompt the user first.
   if (!(await confirmCloseIfNeeded())) return
 
   navigating.value = true
   navDirection.value = dir
 
-  const el = cardEl.value
-  if (el) {
-    const xOut = dir === 'next' ? -50 : 50
-    el.style.transition = 'transform 180ms ease-in, opacity 160ms ease-in'
-    el.style.transform = `translateX(${xOut}px)`
-    el.style.opacity = '0'
-    await new Promise((r) => setTimeout(r, 190))
-  }
-
-  // Switch index — card size and content component may both change here.
-  // Since opacity is 0, the layout shift is invisible.
+  // Both viewports drive the photo navigation via the inner <Transition>
+  // wrapping MemoryViewer (mshell-next / mshell-prev keyframes). We just
+  // swap the index and wait for the Transition to play (out 220ms + in
+  // 220ms with mode="out-in") before clearing the navigating flag so a
+  // rapid second swipe doesn't interrupt the in-flight animation.
   currentIndex.value = newIdx
   await nextTick()
-
-  if (el) {
-    const xIn = dir === 'next' ? 50 : -50
-    el.style.transition = 'none'
-    el.style.transform = `translateX(${xIn}px)`
-    el.style.opacity = '0'
-    el.getBoundingClientRect() // force reflow
-    el.style.transition =
-      'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease'
-    el.style.transform = 'none'
-    el.style.opacity = '1'
-    await new Promise((r) => setTimeout(r, 290))
-  } else if (!isDesktop.value) {
-    // Mobile: wait for the photo-region <Transition> to play (out 200ms +
-    // in 220ms with mode="out-in") before clearing navigating, so a rapid
-    // double-swipe doesn't interrupt the in-flight animation.
-    await new Promise((r) => setTimeout(r, 440))
-  }
+  await new Promise((r) => setTimeout(r, 440))
 
   navigating.value = false
   navDirection.value = null
@@ -721,7 +726,7 @@ watch(
 watch(
   [() => visible.value, () => currentMemory.value?.id],
   async ([isVisible, id]) => {
-    if (isDesktop.value || !isVisible) return
+    if (!isVisible) return
     currentSlideIdx.value = 0
     if (!id || (currentMemory.value?.media_count ?? 1) <= 1) {
       slides.value = []
@@ -740,7 +745,7 @@ watch(
   { immediate: true },
 )
 
-function onMobileSlidesUpdate(payload: {
+function onSlidesUpdate(payload: {
   slides: Slide[]
   currentSlideIdx?: number
   coverMediaId?: string | null
@@ -752,7 +757,7 @@ function onMobileSlidesUpdate(payload: {
   // page handler; nothing to do at the carousel-state level.
 }
 
-function onMobileOpenShareCard() {
+function openShareCard() {
   const m = currentMemory.value
   if (!m?.milestone_label) return
   const firstPhoto = m.memorymedia.find((mm) => mm.media_type !== 'video')
@@ -763,7 +768,7 @@ function onMobileOpenShareCard() {
       return age ? { name: mc.childprofile.name, age } : null
     })
     .filter(Boolean) as Array<{ name: string; age: string }>
-  mobileShareCardData.value = {
+  shareCardData.value = {
     photoUrl: firstPhoto.thumbnailUrl ?? firstPhoto.url,
     milestoneLabel: m.milestone_label,
     memoryDate: m.memory_date,
