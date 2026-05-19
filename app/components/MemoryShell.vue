@@ -136,9 +136,9 @@
             :slides="slides"
             :current-slide-idx="currentSlideIdx"
             @update="emit('update', $event)"
-            @slides-update="onMobileSlidesUpdate"
-            @open-share-card="onMobileOpenShareCard"
-            @milestone-share-prompt="mobileShareCardData = $event"
+            @slides-update="onSlidesUpdate"
+            @open-share-card="openShareCard"
+            @milestone-share-prompt="shareCardData = $event"
           />
         </div>
       </div>
@@ -329,26 +329,28 @@
                 :slides="slides"
                 :current-slide-idx="currentSlideIdx"
                 @update="emit('update', $event)"
-                @slides-update="onMobileSlidesUpdate"
-                @open-share-card="onMobileOpenShareCard"
-                @milestone-share-prompt="mobileShareCardData = $event"
+                @slides-update="onSlidesUpdate"
+                @open-share-card="openShareCard"
+                @milestone-share-prompt="shareCardData = $event"
               />
             </div>
           </div>
         </div>
       </Transition>
-
-      <!-- Mobile-only milestone share card teleport -->
-      <MilestoneShareModal
-        v-if="mobileShareCardData"
-        :photo-url="mobileShareCardData.photoUrl"
-        :milestone-label="mobileShareCardData.milestoneLabel"
-        :memory-date="mobileShareCardData.memoryDate"
-        :child-ages="mobileShareCardData.childAges"
-        :on-demand="mobileShareCardData.onDemand"
-        @close="mobileShareCardData = null"
-      />
     </div>
+
+    <!-- Milestone share card — rendered for both viewports; self-teleports
+         to body via its own internal <Teleport>, so position is independent
+         of the modal layout. -->
+    <MilestoneShareModal
+      v-if="shareCardData"
+      :photo-url="shareCardData.photoUrl"
+      :milestone-label="shareCardData.milestoneLabel"
+      :memory-date="shareCardData.memoryDate"
+      :child-ages="shareCardData.childAges"
+      :on-demand="shareCardData.onDemand"
+      @close="shareCardData = null"
+    />
   </Teleport>
 </template>
 
@@ -460,7 +462,7 @@ interface ShareCardData {
   childAges: Array<{ name: string; age: string }>
   onDemand?: boolean
 }
-const mobileShareCardData = ref<ShareCardData | null>(null)
+const shareCardData = ref<ShareCardData | null>(null)
 
 // Snap drawer state (initialized lazily; viewportHeight needs window).
 const drawer = useSnapDrawer({
@@ -729,7 +731,7 @@ watch(
   { immediate: true },
 )
 
-function onMobileSlidesUpdate(payload: {
+function onSlidesUpdate(payload: {
   slides: Slide[]
   currentSlideIdx?: number
   coverMediaId?: string | null
@@ -741,7 +743,7 @@ function onMobileSlidesUpdate(payload: {
   // page handler; nothing to do at the carousel-state level.
 }
 
-function onMobileOpenShareCard() {
+function openShareCard() {
   const m = currentMemory.value
   if (!m?.milestone_label) return
   const firstPhoto = m.memorymedia.find((mm) => mm.media_type !== 'video')
@@ -752,7 +754,7 @@ function onMobileOpenShareCard() {
       return age ? { name: mc.childprofile.name, age } : null
     })
     .filter(Boolean) as Array<{ name: string; age: string }>
-  mobileShareCardData.value = {
+  shareCardData.value = {
     photoUrl: firstPhoto.thumbnailUrl ?? firstPhoto.url,
     milestoneLabel: m.milestone_label,
     memoryDate: m.memory_date,
