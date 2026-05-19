@@ -165,7 +165,7 @@
            and can't double as memory navigation). -->
       <div
         class="absolute left-3 right-3 top-3 z-30 flex items-center justify-between transition-opacity duration-200"
-        :class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+        :class="effectiveChromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
       >
         <button
           class="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md"
@@ -477,6 +477,15 @@ const drawer = useSnapDrawer({
 
 // Chrome visibility (for Task 6 tap-to-toggle). Start visible.
 const chromeVisible = ref(true)
+
+// When the drawer is at 'full' snap on mobile, the floating chrome row
+// sits where the grabber's hit zone is — touches meant to drag the drawer
+// down would land on the close / chevron buttons instead. Hide the chrome
+// in that mode so the grabber is reachable; the user can drag down to a
+// shallower snap to bring the chrome back.
+const effectiveChromeVisible = computed(
+  () => drawer.snap.value !== 'full' && chromeVisible.value,
+)
 
 // Photo region element ref (used in Tasks 4-5 for swipe gestures).
 const photoRegionEl = ref<HTMLElement>()
