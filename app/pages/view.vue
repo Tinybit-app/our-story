@@ -111,212 +111,75 @@
 
     <!-- Timeline view -->
     <template v-else-if="timeline">
-      <div class="mx-auto max-w-[1280px]">
-        <!-- Minimal header -->
-        <header
-          class="sticky top-0 z-20 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-md"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <p
-                class="mb-0.5 text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-accent"
-              >
-                Our Story
-              </p>
-              <p class="truncate text-sm font-semibold text-foreground">
-                {{ timeline.circleName }}
-                <span
-                  v-if="timeline.linkLabel && timeline.mode !== 'full'"
-                  class="font-normal text-muted-foreground"
-                >
-                  · {{ timeline.linkLabel }}</span
-                >
-              </p>
-            </div>
-            <div class="flex flex-shrink-0 items-center gap-2">
-              <LocalePicker guest />
-              <NuxtLink
-                to="/login"
-                class="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {{ t('viewerLink.viewerJoinCta').replace(' →', '') }}
-              </NuxtLink>
-            </div>
-          </div>
-        </header>
+      <ViewerSpreadHeader
+        :circle-name="timeline.circleName"
+        :owner-label="ownerLabel"
+        :link-label="timeline.linkLabel || null"
+        :memory-count="timeline.memories.length"
+        :mode="timeline.mode === 'full' ? 'full' : 'selection'"
+      />
 
-        <main class="px-4 py-6">
-          <!-- Mode banner + guest name -->
-          <div
-            v-if="modeBanner || guestName"
-            class="mb-4 mt-1 flex items-center justify-between"
+      <main class="mx-auto max-w-[1280px] px-4 py-6 sm:px-5">
+        <!-- Guest-name affordance — small button to set/change name -->
+        <div v-if="guestName" class="mb-4 flex justify-end">
+          <button
+            type="button"
+            @click="editGuestName"
+            class="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            :title="t('viewerLink.viewerChangeNameTooltip')"
           >
-            <p v-if="modeBanner" class="text-xs text-muted-foreground">
-              {{ modeBanner }}
-            </p>
-            <button
-              v-if="guestName"
-              type="button"
-              @click="editGuestName"
-              class="ml-auto flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              :title="t('viewerLink.viewerChangeNameTooltip')"
+            <span class="max-w-[120px] truncate">{{ guestName }}</span>
+            <svg
+              class="h-2.5 w-2.5 flex-shrink-0 opacity-50"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
             >
-              <span class="max-w-[120px] truncate">{{ guestName }}</span>
-              <svg
-                class="h-2.5 w-2.5 flex-shrink-0 opacity-50"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Empty state -->
-          <div v-if="timeline.memories.length === 0" class="py-20 text-center">
-            <p class="mb-1 text-sm font-semibold text-foreground">
-              {{ t('viewerLink.emptyState') }}
-            </p>
-            <p class="text-xs text-muted-foreground">
-              {{ t('viewerLink.emptyStateBody') }}
-            </p>
-          </div>
-
-          <!-- Memory list (large text for viewer accessibility) -->
-          <div v-else class="flex flex-col gap-6">
-            <article
-              v-for="(memory, index) in timeline.memories"
-              :key="memory.id"
-              :ref="(el) => observeMemory(el, index)"
-              class="overflow-hidden rounded-2xl border border-border bg-card"
-            >
-              <video
-                v-if="memory.signedUrl && memory.mediaType === 'video'"
-                :src="memory.signedUrl"
-                class="aspect-[4/3] w-full object-cover"
-                controls
-                playsinline
-                preload="metadata"
+              <path
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
-              <img
-                v-else-if="memory.signedUrl"
-                :src="memory.signedUrl"
-                :alt="memory.note ?? t('card.photoAlt')"
-                class="aspect-[4/3] w-full object-cover"
-              />
-              <div class="px-4 py-4">
-                <p class="mb-1 text-xs text-muted-foreground">
-                  {{ formatDate(memory.memory_date) }}
-                </p>
-                <p
-                  v-if="memory.note"
-                  class="text-base leading-relaxed text-foreground"
-                >
-                  {{ memory.note }}
-                </p>
-                <!-- Reaction button -->
-                <div class="mt-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    @click="reactToMemory(memory.id)"
-                    :disabled="reactedIds.has(memory.id)"
-                    class="flex items-center gap-1.5 transition-all active:scale-95"
-                    :class="
-                      reactedIds.has(memory.id)
-                        ? 'cursor-default text-rose-500'
-                        : 'text-muted-foreground hover:scale-110 hover:text-rose-500'
-                    "
-                    :aria-label="
-                      reactedIds.has(memory.id)
-                        ? t('viewerLink.viewerReactSent')
-                        : t('viewerLink.viewerReact')
-                    "
-                  >
-                    <svg
-                      class="h-5 w-5 transition-all"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      :fill="
-                        reactedIds.has(memory.id) ? 'currentColor' : 'none'
-                      "
-                    >
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                      />
-                    </svg>
-                    <span class="text-xs font-medium">
-                      {{
-                        reactedIds.has(memory.id)
-                          ? t('viewerLink.viewerReactSent')
-                          : t('viewerLink.viewerReact')
-                      }}
-                    </span>
-                  </button>
-                  <Transition name="fade">
-                    <span
-                      v-if="justReactedId === memory.id"
-                      class="text-xs font-medium text-rose-500"
-                    >
-                      {{ t('viewerLink.viewerReactionConfirm') }}
-                    </span>
-                  </Transition>
-                </div>
-              </div>
-            </article>
+            </svg>
+          </button>
+        </div>
 
-            <!-- Referral nudge — shown after scrolling past 3 memories -->
-            <Transition name="fade">
-              <div
-                v-if="showReferral"
-                class="flex items-center gap-3 rounded-2xl border border-accent/20 bg-accent/5 px-4 py-3.5"
-              >
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-semibold leading-snug text-foreground">
-                    {{ t('viewerLink.referralHeadline') }}
-                  </p>
-                  <p class="mt-0.5 text-xs text-muted-foreground">
-                    {{ t('viewerLink.referralBody') }}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  @click="shareApp"
-                  :disabled="referralCopied"
-                  class="flex-shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all active:scale-95"
-                  :class="
-                    referralCopied
-                      ? 'bg-green-500 text-white'
-                      : 'bg-accent text-accent-foreground hover:opacity-90'
-                  "
-                >
-                  {{
-                    referralCopied
-                      ? t('viewerLink.copied')
-                      : t('viewerLink.referralCta')
-                  }}
-                </button>
-              </div>
-            </Transition>
-          </div>
+        <!-- Empty state -->
+        <div
+          v-if="timeline.memories.length === 0"
+          class="py-20 text-center"
+        >
+          <p class="mb-1 text-sm font-semibold text-foreground">
+            {{ t('viewerLink.emptyState') }}
+          </p>
+          <p class="text-xs text-muted-foreground">
+            {{ t('viewerLink.emptyStateBody') }}
+          </p>
+        </div>
 
-          <!-- Join CTA -->
-          <div class="mt-10 text-center">
-            <NuxtLink
-              to="/login"
-              class="inline-block rounded-[12px] bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              {{ t('viewerLink.viewerJoinCta') }}
-            </NuxtLink>
-          </div>
-        </main>
-      </div>
+        <!-- Mosaic body -->
+        <TimelineMosaic
+          v-else
+          :month-groups="monthGroups"
+          :loading="false"
+          :has-next-page="false"
+          :circle-type="null"
+          :circle-id="null"
+          viewer-mode
+          @open-memory="onOpenMemory"
+        />
+      </main>
+
+      <!-- Modal — viewer-mode -->
+      <MemoryShell
+        :memories="adaptedMemories"
+        :start-index="selectedIndex"
+        :origin-rect="selectedRect"
+        :tilt="selectedTilt"
+        viewer-mode
+        :viewer-token="token"
+        :guest-name="guestName || undefined"
+        @close="selectedIndex = null"
+      />
     </template>
 
     <!-- Loading -->
@@ -352,19 +215,15 @@
             type="text"
             :placeholder="t('viewerLink.viewerNamePromptPlaceholder')"
             class="mb-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            @keydown.enter="confirmReaction"
+            @keydown.enter="confirmGuestName"
           />
           <button
             type="button"
-            @click="confirmReaction"
+            @click="confirmGuestName"
             :disabled="!guestName.trim()"
             class="w-full rounded-[12px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {{
-              pendingReactionMemoryId
-                ? t('viewerLink.viewerNamePromptCta')
-                : t('viewerLink.viewerSaveName')
-            }}
+            {{ t('viewerLink.viewerSaveName') }}
           </button>
         </div>
       </div>
@@ -373,9 +232,12 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watchEffect, onMounted } from 'vue'
+import type { Memory } from '~/composables/useTimeline'
+
 definePageMeta({ auth: false })
 
-const { t, locale, setLocale } = useI18n()
+const { t, setLocale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const token = computed(() => route.query.token as string | undefined)
@@ -398,114 +260,85 @@ interface ViewerTimeline {
     note: string | null
     signedUrl: string | null
     mediaType: 'image' | 'video' | null
+    media_count?: number
+    cover_text_content?: string | null
   }>
 }
 
 const timeline = ref<ViewerTimeline | null>(null)
 const errorType = ref<'expired' | 'invalid' | null>(null)
 
-// ── Guest reaction ─────────────────────────────────────────────────────────────
+// ── Guest name (used as prop for the in-modal heart reaction) ─────────────────
 const showNamePrompt = ref(false)
 const guestName = ref('')
-const pendingReactionMemoryId = ref<string | null>(null)
-const justReactedId = ref<string | null>(null)
 
-// Persist reacted memory IDs in localStorage so reactions survive page refresh
-const REACTED_STORAGE_KEY = 'viewer_reacted_ids'
-const reactedIds = ref(loadReactedIds())
-
-function loadReactedIds(): Set<string> {
-  if (import.meta.server) return new Set()
-  try {
-    const stored = localStorage.getItem(REACTED_STORAGE_KEY)
-    return stored ? new Set(JSON.parse(stored)) : new Set()
-  } catch {
-    return new Set()
-  }
-}
-
-function saveReactedIds() {
-  try {
-    localStorage.setItem(
-      REACTED_STORAGE_KEY,
-      JSON.stringify([...reactedIds.value]),
-    )
-  } catch {
-    /* quota exceeded — best effort */
-  }
-}
-
-// ── Referral ───────────────────────────────────────────────────────────────────
-const memoriesSeenCount = ref(0)
-const referralDismissed = ref(false)
-const referralCopied = ref(false)
-const showReferral = computed(
-  () => memoriesSeenCount.value >= 3 && !referralDismissed.value,
-)
-
-// ── Mode banner ────────────────────────────────────────────────────────────────
-const modeBanner = computed(() => {
-  if (!timeline.value) return null
-  const { mode, selectionDateRange, memories } = timeline.value
-  if (mode === 'selection' && selectionDateRange) {
-    const fmt = (d: string) =>
-      new Intl.DateTimeFormat(locale.value, {
-        month: 'short',
-        year: 'numeric',
-      }).format(new Date(d))
-    return t('viewerLink.selectionBanner', {
-      count: memories.length,
-      from: fmt(selectionDateRange.from),
-      to: fmt(selectionDateRange.to),
-    })
-  }
-  return null
+// ── Adapter: thin viewer-endpoint memories → Memory-compatible shape ──────────
+const adaptedMemories = computed<Memory[]>(() => {
+  if (!timeline.value) return []
+  return timeline.value.memories.map((m) => ({
+    id: m.id,
+    circle_id: '',
+    owner_user_id: null,
+    former_owner_name: null,
+    former_owner_user_id: null,
+    visibility: 'circle' as const,
+    note: m.note,
+    memory_date: m.memory_date,
+    milestone_label: null,
+    created_at: m.memory_date,
+    memory_children: [],
+    memory_members: [],
+    memorymedia: m.signedUrl
+      ? [
+          {
+            id: `view-${m.id}`,
+            media_type: m.mediaType === 'video' ? 'video' : 'photo',
+            url: m.signedUrl,
+            thumbnailUrl: m.signedUrl,
+            file_size: 0,
+          },
+        ]
+      : [],
+    user: null,
+    memoryreaction: [],
+    memorycomment: [],
+    media_count: m.media_count ?? 1,
+    cover_text_content: m.cover_text_content ?? null,
+  }))
 })
 
-// ── IntersectionObserver for referral trigger ──────────────────────────────────
-let observer: IntersectionObserver | null = null
+// Reactive copy for the composable's Ref<Memory[]> signature
+const adaptedMemoriesRef = ref<Memory[]>([])
+watchEffect(() => {
+  adaptedMemoriesRef.value = adaptedMemories.value
+})
 
-function observeMemory(
-  el: Element | ComponentPublicInstance | null,
-  index: number,
-) {
-  if (!(el instanceof Element) || index < 2) return // only observe 3rd memory (index 2)
-  if (observer) return
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        memoriesSeenCount.value = Math.max(memoriesSeenCount.value, 3)
-        observer?.disconnect()
-        observer = null
-      }
-    },
-    { threshold: 0.5 },
+const monthCountsRef = ref<Record<string, number>>({})
+const { monthGroups } = useTimeline(adaptedMemoriesRef, monthCountsRef)
+
+// ── Modal state ────────────────────────────────────────────────────────────────
+const selectedIndex = ref<number | null>(null)
+const selectedRect = ref<DOMRect | null>(null)
+const selectedTilt = ref(0)
+
+function onOpenMemory({
+  memory,
+  tilt,
+  rect,
+}: {
+  memory: Memory
+  tilt: number
+  rect: DOMRect | null
+}) {
+  selectedRect.value = rect
+  selectedTilt.value = tilt
+  selectedIndex.value = adaptedMemories.value.findIndex(
+    (m) => m.id === memory.id,
   )
-  observer.observe(el)
 }
 
-async function shareApp() {
-  const shareData = { title: 'Our Story', url: 'https://ourstory.tinybit.app' }
-  if (navigator.share) {
-    try {
-      await navigator.share(shareData)
-      referralDismissed.value = true // only dismiss on successful share
-    } catch {
-      // User cancelled the share sheet — keep CTA visible
-    }
-  } else {
-    await navigator.clipboard.writeText(shareData.url).catch(() => {})
-    referralCopied.value = true
-    setTimeout(() => {
-      referralDismissed.value = true
-    }, 1500)
-  }
-}
-
-onUnmounted(() => {
-  observer?.disconnect()
-  observer = null
-})
+// ── Owner label for the spread header ─────────────────────────────────────────
+const ownerLabel = computed(() => timeline.value?.ownerFirstName ?? null)
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -557,70 +390,23 @@ function dismissSplash() {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(locale.value, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
 function sendReminder() {
   const text = encodeURIComponent(t('viewerLink.reminderSmsBody'))
   window.open(`sms:?body=${text}`, '_blank')
 }
 
-// ── Reactions ──────────────────────────────────────────────────────────────────
+// ── Guest-name modal handlers ──────────────────────────────────────────────────
 function editGuestName() {
   showNamePrompt.value = true
-  pendingReactionMemoryId.value = null
 }
 
-async function reactToMemory(memoryId: string) {
-  const savedName = useCookie('viewer_guest_name')
-  if (!savedName.value) {
-    // First reaction — prompt for name
-    pendingReactionMemoryId.value = memoryId
-    showNamePrompt.value = true
-    return
-  }
-  await submitReaction(memoryId, savedName.value)
-}
-
-async function confirmReaction() {
+function confirmGuestName() {
   if (!guestName.value.trim()) return
   const savedName = useCookie('viewer_guest_name', {
     maxAge: 365 * 24 * 60 * 60,
   })
   savedName.value = guestName.value.trim()
   showNamePrompt.value = false
-  // If opened from a reaction tap, submit it; if editing name only, just save
-  if (pendingReactionMemoryId.value) {
-    await submitReaction(pendingReactionMemoryId.value, guestName.value.trim())
-    pendingReactionMemoryId.value = null
-  }
-}
-
-async function submitReaction(memoryId: string, name: string) {
-  try {
-    await $fetch('/api/reactions/guest', {
-      method: 'POST',
-      body: {
-        viewerToken: token.value,
-        memoryId,
-        emoji: '❤️',
-        guestName: name,
-      },
-    })
-    reactedIds.value = new Set([...reactedIds.value, memoryId])
-    saveReactedIds()
-    justReactedId.value = memoryId
-    setTimeout(() => {
-      justReactedId.value = null
-    }, 2000)
-  } catch {
-    // Best-effort — silently swallow errors on the viewer page
-  }
 }
 </script>
 
@@ -645,3 +431,5 @@ async function submitReaction(memoryId: string, name: string) {
   opacity: 0;
 }
 </style>
+</content>
+</invoke>
