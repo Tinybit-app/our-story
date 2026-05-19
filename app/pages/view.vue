@@ -16,27 +16,29 @@
       >
         <div class="w-full max-w-sm">
           <p
-            class="mb-8 text-xs font-bold uppercase tracking-widest text-foreground"
+            class="mb-8 text-[10px] font-bold uppercase tracking-[.2em] text-muted-foreground"
           >
             Our Story
           </p>
-          <div
-            class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-secondary"
-          >
+          <template v-if="errorType === 'expired'">
+            <!-- Clock icon -->
             <svg
-              class="h-6 w-6 text-muted-foreground"
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               stroke-width="1.5"
-              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="mx-auto mb-6 text-muted-foreground/60"
             >
-              <path
-                d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-              />
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
-          </div>
-          <template v-if="errorType === 'expired'">
-            <h1 class="mb-2 text-xl font-bold text-foreground">
+            <h1
+              class="mb-3 font-serif text-[28px] italic leading-tight text-foreground sm:text-[32px]"
+            >
               {{ t('viewerLink.viewerExpiredTitle') }}
             </h1>
             <p class="mb-8 text-sm text-muted-foreground">
@@ -45,13 +47,33 @@
             <button
               type="button"
               @click="sendReminder"
-              class="w-full rounded-[12px] bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              class="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               {{ t('viewerLink.viewerExpiredCta') }}
             </button>
           </template>
           <template v-else>
-            <h1 class="mb-2 text-xl font-bold text-foreground">
+            <!-- Alert triangle icon -->
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="mx-auto mb-6 text-muted-foreground/60"
+            >
+              <path
+                d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <h1
+              class="mb-3 font-serif text-[28px] italic leading-tight text-foreground sm:text-[32px]"
+            >
               {{ t('viewerLink.viewerInvalidTitle') }}
             </h1>
             <p class="mb-8 text-sm text-muted-foreground">
@@ -60,7 +82,7 @@
           </template>
           <NuxtLink
             to="/login"
-            class="mt-4 block text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
+            class="mt-6 block text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
           >
             {{ t('viewerLink.viewerSignIn') }}
           </NuxtLink>
@@ -81,27 +103,29 @@
             v-if="timeline.memories[0]?.signedUrl"
             :src="timeline.memories[0].signedUrl"
             alt=""
-            class="h-full w-full object-cover opacity-50"
+            class="h-full w-full object-cover opacity-45"
           />
         </div>
         <!-- Overlay content -->
         <div class="relative z-10 w-full max-w-sm text-center">
           <p
-            class="mb-6 text-xs font-bold uppercase tracking-widest text-white/70"
+            class="mb-6 text-[10px] font-bold uppercase tracking-[.2em] text-white/70"
           >
             Our Story
           </p>
-          <h1 class="mb-3 text-2xl font-bold leading-snug text-white">
+          <h1
+            class="mb-3 font-serif text-[36px] italic leading-[1.05] text-white sm:text-[44px]"
+          >
             {{ timeline.ownerFirstName || t('common.someone') }}
             {{ t('viewerLink.viewerSplashTitle') }}
           </h1>
-          <p class="mb-10 text-sm text-white/70">
+          <p class="mb-10 font-serif text-sm italic text-white/70">
             {{ t('viewerLink.viewerSplashSubtitle') }}
           </p>
           <button
             type="button"
             @click="dismissSplash"
-            class="w-full rounded-[12px] bg-white py-3.5 text-sm font-semibold text-stone-900 transition-opacity hover:opacity-90"
+            class="rounded-full bg-white px-6 py-3 text-sm font-semibold text-foreground transition-opacity hover:opacity-90"
           >
             {{ t('viewerLink.viewerSplashCta') }}
           </button>
