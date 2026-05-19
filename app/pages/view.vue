@@ -447,5 +447,3 @@ function confirmGuestName() {
   transform: translateY(16px);
 }
 </style>
-</content>
-</invoke>
