@@ -135,6 +135,9 @@
             :self-initials="selfInitials"
             :slides="slides"
             :current-slide-idx="currentSlideIdx"
+            :viewer-mode="viewerMode"
+            :viewer-token="viewerToken"
+            :guest-name="guestName"
             @update="emit('update', $event)"
             @slides-update="onSlidesUpdate"
             @open-share-card="openShareCard"
@@ -252,6 +255,9 @@
             :self-initials="selfInitials"
             :slides="slides"
             :current-slide-idx="currentSlideIdx"
+            :viewer-mode="viewerMode"
+            :viewer-token="viewerToken"
+            :guest-name="guestName"
             @update="emit('update', $event)"
             @slides-update="onSlidesUpdate"
             @open-share-card="openShareCard"
@@ -334,6 +340,9 @@
                 :self-initials="selfInitials"
                 :slides="slides"
                 :current-slide-idx="currentSlideIdx"
+                :viewer-mode="viewerMode"
+                :viewer-token="viewerToken"
+                :guest-name="guestName"
                 @update="emit('update', $event)"
                 @slides-update="onSlidesUpdate"
                 @open-share-card="openShareCard"
@@ -349,7 +358,7 @@
          to body via its own internal <Teleport>, so position is independent
          of the modal layout. -->
     <MilestoneShareModal
-      v-if="shareCardData"
+      v-if="!viewerMode && shareCardData"
       :photo-url="shareCardData.photoUrl"
       :milestone-label="shareCardData.milestoneLabel"
       :memory-date="shareCardData.memoryDate"
@@ -379,14 +388,23 @@ interface CircleMember {
   avatarUrl: string | null
 }
 
-const props = defineProps<{
-  memories: Memory[]
-  startIndex: number | null
-  originRect: DOMRect | null
-  tilt: number
-  children?: ChildProfile[]
-  members?: CircleMember[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    memories: Memory[]
+    startIndex: number | null
+    originRect: DOMRect | null
+    tilt: number
+    children?: ChildProfile[]
+    members?: CircleMember[]
+    // Viewer-mode plumbing — passed through to MemoryDetail. When set,
+    // MemoryDetail hides owner-only affordances and routes a single
+    // heart-react through /api/reactions/guest.
+    viewerMode?: boolean
+    viewerToken?: string
+    guestName?: string
+  }>(),
+  { viewerMode: false, viewerToken: undefined, guestName: undefined },
+)
 
 const emit = defineEmits<{
   close: []
