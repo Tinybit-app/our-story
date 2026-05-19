@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div
       v-if="visible && isDesktop"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6"
     >
       <!-- Backdrop -->
       <div
@@ -17,13 +17,12 @@
         @click="close"
       />
 
-      <!-- Prev arrow — hidden on mobile where the card takes full viewport
-           width and the arrows would overlap modal content. Mobile users
-           close the modal and tap another card. -->
+      <!-- Prev arrow — outside the card, vertically centered -->
       <button
         v-if="hasPrev"
-        class="absolute left-3 z-20 hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:left-6 sm:flex"
+        class="absolute left-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
         style="top: 50%; transform: translateY(-50%)"
+        :aria-label="t('modal.swipeHintPrev')"
         @click.stop="navigate('prev')"
       >
         <svg
@@ -38,11 +37,12 @@
         </svg>
       </button>
 
-      <!-- Next arrow — hidden on mobile (see prev-arrow comment). -->
+      <!-- Next arrow — outside the card, vertically centered -->
       <button
         v-if="hasNext"
-        class="absolute right-3 z-20 hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:right-6 sm:flex"
+        class="absolute right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
         style="top: 50%; transform: translateY(-50%)"
+        :aria-label="t('modal.swipeHintNext')"
         @click.stop="navigate('next')"
       >
         <svg
@@ -57,59 +57,81 @@
         </svg>
       </button>
 
-      <!-- Card — opacity-0 via Tailwind so JS animation owns opacity without reactive conflicts -->
+      <!-- Close — top-right, outside the card -->
+      <button
+        class="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
+        :aria-label="t('modal.closeAriaLabel')"
+        @click="close"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Card: two-column composition (or single-column for quick-note).
+           opacity-0 via Tailwind so JS animation owns opacity without
+           reactive conflicts. -->
       <div
         ref="cardEl"
-        class="relative z-10 flex flex-col bg-card opacity-0 will-change-transform"
-        :style="cardSizeStyle"
+        class="relative z-10 flex max-h-[85vh] gap-3 opacity-0 will-change-transform"
         @click.stop
       >
-        <!-- Pin -->
+        <!-- Photo column — omitted for quick-note memories -->
         <div
-          class="absolute -top-3 left-1/2 z-20 h-4 w-4 -translate-x-1/2 rounded-full bg-[#d64040] opacity-90 shadow-[0_2px_8px_rgba(214,64,64,.5)] dark:bg-[#e05454]"
-        />
-
-        <!-- Close -->
-        <button
-          class="absolute right-0 top-0 z-20 flex h-7 w-7 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-80"
-          @click="close"
-        >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        <!-- Content — :key resets all local state on navigation -->
-        <MemoryModal
           v-if="currentMemory && !isQuickNote"
-          ref="memoryModalRef"
-          :key="currentMemory.id"
-          :memory="currentMemory"
-          :children="children"
-          :members="members"
-          :current-user-id="currentUserId"
-          :self-avatar-url="selfAvatarUrl"
-          :self-initials="selfInitials"
-          @update="emit('update', $event)"
-        />
-        <QuickNoteModal
-          v-else-if="currentMemory && isQuickNote"
-          :key="currentMemory.id"
-          :memory="currentMemory"
-          :children="children"
-          :members="members"
-          :current-user-id="currentUserId"
-          :self-avatar-url="selfAvatarUrl"
-          :self-initials="selfInitials"
-          @update="emit('update', $event)"
-        />
+          class="flex h-[80vh] w-[min(70vw,800px)] items-center justify-center overflow-hidden rounded-xl bg-card"
+        >
+          <Transition
+            :name="navDirection === 'prev' ? 'mshell-prev' : 'mshell-next'"
+            mode="out-in"
+          >
+            <MemoryViewer
+              :key="currentMemory.id"
+              :memory="currentMemory"
+              :slides="slides"
+              :slides-loading="slidesLoading"
+              :current-slide-idx="currentSlideIdx"
+              fit-mode="contain"
+              fill-container
+              @current-slide-idx="currentSlideIdx = $event"
+              @navigate-memory="navigate($event)"
+            />
+          </Transition>
+        </div>
+
+        <!-- Detail column -->
+        <div
+          v-if="currentMemory"
+          :class="[
+            'flex flex-col overflow-hidden rounded-xl bg-background',
+            isQuickNote
+              ? 'h-[min(80vh,640px)] w-[min(90vw,460px)]'
+              : 'h-[80vh] w-[min(40vw,440px)] min-w-[320px]',
+          ]"
+        >
+          <MemoryDetail
+            ref="memoryModalRef"
+            :memory="currentMemory"
+            :children="children ?? []"
+            :members="members ?? []"
+            :current-user-id="currentUserId"
+            :self-avatar-url="selfAvatarUrl"
+            :self-initials="selfInitials"
+            :slides="slides"
+            :current-slide-idx="currentSlideIdx"
+            @update="emit('update', $event)"
+            @slides-update="onMobileSlidesUpdate"
+            @open-share-card="onMobileOpenShareCard"
+            @milestone-share-prompt="mobileShareCardData = $event"
+          />
+        </div>
       </div>
     </div>
 
@@ -548,25 +570,6 @@ const isQuickNote = computed(() => {
   const m = currentMemory.value
   return !!m && !m.memorymedia.length && !!m.note
 })
-
-// Sizing changes between quick note and photo/video card types.
-// The switch happens while opacity is 0 (mid-navigation), so it's invisible.
-const cardSizeStyle = computed(() =>
-  isQuickNote.value
-    ? {
-        width: '100%',
-        maxWidth: '520px',
-        minHeight: '420px',
-        maxHeight: '82vh',
-      }
-    : {
-        width: '100%',
-        height: '100%',
-        maxWidth: '750px',
-        maxHeight: '75vh',
-        padding: '12px 12px 0',
-      },
-)
 
 // ── Enter animation ────────────────────────────────────────
 async function runEnterAnimation() {
