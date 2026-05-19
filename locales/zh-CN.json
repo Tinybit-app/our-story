@@ -42,13 +42,34 @@
     "language": "语言"
   },
   "circleType": {
-    "parents": { "label": "新手父母", "description": "宝宝成长里程碑" },
-    "couple": { "label": "情侣", "description": "感情里程碑" },
-    "family": { "label": "家庭", "description": "家庭回忆" },
-    "friends": { "label": "朋友圈", "description": "旅行、聚会、精彩时刻" },
-    "caregiving": { "label": "照护日记", "description": "健康与生活事件" },
-    "travel": { "label": "旅行团", "description": "一起探险" },
-    "solo": { "label": "只有我", "description": "个人时间线" }
+    "parents": {
+      "label": "新手父母",
+      "description": "宝宝成长里程碑"
+    },
+    "couple": {
+      "label": "情侣",
+      "description": "感情里程碑"
+    },
+    "family": {
+      "label": "家庭",
+      "description": "家庭回忆"
+    },
+    "friends": {
+      "label": "朋友圈",
+      "description": "旅行、聚会、精彩时刻"
+    },
+    "caregiving": {
+      "label": "照护日记",
+      "description": "健康与生活事件"
+    },
+    "travel": {
+      "label": "旅行团",
+      "description": "一起探险"
+    },
+    "solo": {
+      "label": "只有我",
+      "description": "个人时间线"
+    }
   },
   "nav": {
     "addMemory": "添加记忆",
@@ -523,7 +544,7 @@
     "modeSelection": "选择记忆",
     "selectAll": "全选",
     "clearAll": "清除",
-    "memoriesCount": "{count} 条记忆",
+    "memoriesCount": "{n} 条记忆",
     "truncatedWarning": "该年份有超过 {count} 条记忆，仅显示前 {count} 条，部分记忆可能未包含在选择中。",
     "loadAll": "加载全部记忆",
     "tapToSelect": "点击选择",
@@ -574,7 +595,14 @@
     "close": "关闭",
     "createErrorGeneric": "出错了，请重试。",
     "redirecting": "重定向中…",
-    "reminderSmsBody": "嘿！你分享的链接已过期——能重新发一个给我吗？😊"
+    "reminderSmsBody": "嘿！你分享的链接已过期——能重新发一个给我吗？😊",
+    "privateCollection": "私人收藏",
+    "selectedCollection": "精选收藏",
+    "signoff": "— {owners}  ·  {n} 条记忆",
+    "fromCircle": "来自 {circle}",
+    "signIn": "登录",
+    "forRecipient": "给 {recipient}",
+    "forYou": "给你"
   },
   "notificationSettings": {
     "title": "通知设置",

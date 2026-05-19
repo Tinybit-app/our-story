@@ -74,7 +74,7 @@
             class="text-[11px] text-muted-foreground"
           >
             {{
-              t('viewerLink.memoriesCount', { count: group.memories.length })
+              t('viewerLink.memoriesCount', { n: group.memories.length }, group.memories.length)
             }}
           </span>
         </div>
@@ -145,7 +145,7 @@
                 }}</span>
                 <span class="text-[10px] tabular-nums text-muted-foreground">
                   {{
-                    t('viewerLink.memoriesCount', { count: mg.memories.length })
+                    t('viewerLink.memoriesCount', { n: mg.memories.length }, mg.memories.length)
                   }}
                 </span>
               </div>
