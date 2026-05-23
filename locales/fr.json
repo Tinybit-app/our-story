@@ -549,7 +549,20 @@
       "restoreCircle": "Restaurer",
       "restoring": "Restauration en cours…",
       "restoreSuccess": "{name} a été restauré.",
-      "restoreError": "Échec de la restauration du cercle. Veuillez réessayer."
+      "restoreError": "Échec de la restauration du cercle. Veuillez réessayer.",
+      "displayTitle": "Vous",
+      "displaySubtitle": "Comment vous apparaissez sur Our Story.",
+      "sectionProfile": "Profil",
+      "sectionLanguage": "Langue",
+      "sectionAccount": "Compte",
+      "firstNameLabel": "Prénom",
+      "firstNamePlaceholder": "Prénom",
+      "lastNameLabel": "Nom",
+      "lastNamePlaceholder": "Nom",
+      "emailLabel": "E-mail",
+      "logOutLabel": "Se déconnecter",
+      "logOutAction": "Déconnecter",
+      "deleteAction": "Supprimer"
     }
   },
   "quickNote": {

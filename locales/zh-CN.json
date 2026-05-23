@@ -357,7 +357,20 @@
       "restoreCircle": "恢复",
       "restoring": "恢复中…",
       "restoreSuccess": "「{name}」已恢复。",
-      "restoreError": "恢复圈子失败，请重试。"
+      "restoreError": "恢复圈子失败，请重试。",
+      "displayTitle": "你",
+      "displaySubtitle": "你在 Our Story 中的样子。",
+      "sectionProfile": "个人资料",
+      "sectionLanguage": "语言",
+      "sectionAccount": "账户",
+      "firstNameLabel": "名",
+      "firstNamePlaceholder": "名",
+      "lastNameLabel": "姓",
+      "lastNamePlaceholder": "姓",
+      "emailLabel": "邮箱",
+      "logOutLabel": "退出登录",
+      "logOutAction": "退出",
+      "deleteAction": "删除"
     }
   },
   "quickNote": {

@@ -549,7 +549,20 @@
       "restoreCircle": "Restore",
       "restoring": "Restoring…",
       "restoreSuccess": "{name} has been restored.",
-      "restoreError": "Failed to restore circle. Please try again."
+      "restoreError": "Failed to restore circle. Please try again.",
+      "displayTitle": "You",
+      "displaySubtitle": "How you show up on Our Story.",
+      "sectionProfile": "Profile",
+      "sectionLanguage": "Language",
+      "sectionAccount": "Account",
+      "firstNameLabel": "First name",
+      "firstNamePlaceholder": "First name",
+      "lastNameLabel": "Last name",
+      "lastNamePlaceholder": "Last name",
+      "emailLabel": "Email",
+      "logOutLabel": "Log out",
+      "logOutAction": "Log out",
+      "deleteAction": "Delete"
     }
   },
   "quickNote": {
