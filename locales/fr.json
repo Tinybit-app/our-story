@@ -311,7 +311,7 @@
     "sectionActive": "Actifs",
     "sectionPending": "En attente",
     "inviteCta": "Inviter quelqu'un",
-    "joinedMeta": "Rejoint {date} · {n} souvenirs",
+    "joinedMeta": "Rejoint {date}",
     "invitedMeta": "Invité il y a {ago}"
   },
   "member": {

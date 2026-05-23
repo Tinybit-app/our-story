@@ -92,7 +92,7 @@
                 <span v-if="m.userId === authUser?.sub" class="ml-1 font-mono text-[10px] tracking-[.16em] text-muted-foreground">YOU</span>
               </p>
               <p class="mt-0.5 text-[11px] text-muted-foreground">
-                {{ t('members.joinedMeta', { date: joinedLabel(m.joinedAt), n: 0 }) }}
+                {{ t('members.joinedMeta', { date: joinedLabel(m.joinedAt) }) }}
               </p>
             </div>
             <!-- Role chip -->

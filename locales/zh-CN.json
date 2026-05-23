@@ -311,7 +311,7 @@
     "sectionActive": "成员",
     "sectionPending": "待邀",
     "inviteCta": "邀请新成员",
-    "joinedMeta": "加入于 {date} · {n} 条记忆",
+    "joinedMeta": "加入于 {date}",
     "invitedMeta": "{ago}前邀请"
   },
   "member": {

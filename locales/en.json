@@ -311,7 +311,7 @@
     "sectionActive": "Active",
     "sectionPending": "Pending",
     "inviteCta": "Invite someone",
-    "joinedMeta": "Joined {date} · {n} memories",
+    "joinedMeta": "Joined {date}",
     "invitedMeta": "Invited {ago}"
   },
   "member": {
