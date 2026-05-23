@@ -86,20 +86,37 @@ export default defineEventHandler(async (event) => {
 
   if (config.resendApiKey) {
     const resend = new Resend(config.resendApiKey)
-    await resend.emails.send({
-      from: 'Our Story <hello@our-story.tinybit.app>',
-      to: email,
-      subject: `${senderName} invited you to ${circle?.name ?? 'a circle'} on Our Story`,
-      html: buildInviteEmail({
-        senderName,
-        circleName: circle?.name ?? 'a circle',
-        inviteUrl: `${config.appUrl}/invite/${invite.token}`,
-        locale: sender?.locale ?? 'en',
-      }),
-    })
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'Our Story <hello@our-story.tinybit.app>',
+        to: email,
+        subject: `${senderName} invited you to ${circle?.name ?? 'a circle'} on Our Story`,
+        html: buildInviteEmail({
+          senderName,
+          circleName: circle?.name ?? 'a circle',
+          inviteUrl: `${config.appUrl}/invite/${invite.token}`,
+          locale: sender?.locale ?? 'en',
+        }),
+      })
+      if (error) {
+        console.error(
+          `[invite] Resend rejected send to ${email} (circle ${circleId}):`,
+          error,
+        )
+      } else {
+        console.log(
+          `[invite] sent to ${email} (id: ${data?.id}, circle ${circleId})`,
+        )
+      }
+    } catch (err) {
+      console.error(
+        `[invite] threw while sending to ${email} (circle ${circleId}):`,
+        err,
+      )
+    }
   } else {
     console.log(
-      `[dev] invite link for ${email}: ${config.appUrl}/invite/${invite.token}`,
+      `[invite] RESEND_API_KEY missing; invite link for ${email}: ${config.appUrl}/invite/${invite.token}`,
     )
   }
 

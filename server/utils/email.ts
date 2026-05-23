@@ -11,14 +11,29 @@ export async function sendEmail(opts: {
 }) {
   const config = useRuntimeConfig()
   if (!config.resendApiKey) {
-    console.log(`[dev] email to ${opts.to}: ${opts.subject}`)
+    console.log(`[email] RESEND_API_KEY missing; skipping send to ${opts.to}: ${opts.subject}`)
     return
   }
   const resend = new Resend(config.resendApiKey as string)
-  await resend.emails.send({
-    from: 'Our Story <hello@our-story.tinybit.app>',
-    ...opts,
-  })
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'Our Story <hello@our-story.tinybit.app>',
+      ...opts,
+    })
+    if (error) {
+      console.error(
+        `[email] Resend rejected send to ${opts.to} (subject: "${opts.subject}"):`,
+        error,
+      )
+      return
+    }
+    console.log(`[email] sent to ${opts.to} (id: ${data?.id}): ${opts.subject}`)
+  } catch (err) {
+    console.error(
+      `[email] threw while sending to ${opts.to} (subject: "${opts.subject}"):`,
+      err,
+    )
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
