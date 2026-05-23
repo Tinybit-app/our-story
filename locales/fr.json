@@ -305,7 +305,14 @@
     "deleteCircleConfirm": "Supprimer le cercle",
     "deleteCircleNameMismatch": "Le nom du cercle ne correspond pas. Veuillez le saisir exactement.",
     "deleteCircleError": "Échec de la suppression du cercle. Veuillez réessayer.",
-    "deleteCircleRestoreHint": "Vous avez changé d'avis? Vous avez 30 jours pour le restaurer depuis les paramètres du compte."
+    "deleteCircleRestoreHint": "Vous avez changé d'avis? Vous avez 30 jours pour le restaurer depuis les paramètres du compte.",
+    "displayTitle": "Notre cercle",
+    "meta": "{active} membres · {pending} en attente · Depuis {since}",
+    "sectionActive": "Actifs",
+    "sectionPending": "En attente",
+    "inviteCta": "Inviter quelqu'un",
+    "joinedMeta": "Rejoint {date} · {n} souvenirs",
+    "invitedMeta": "Invité il y a {ago}"
   },
   "member": {
     "joined": "Rejoint le {date}",

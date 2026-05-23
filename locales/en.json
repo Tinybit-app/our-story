@@ -305,7 +305,14 @@
     "deleteCircleConfirm": "Delete circle",
     "deleteCircleNameMismatch": "Circle name doesn't match. Please type it exactly.",
     "deleteCircleError": "Failed to delete circle. Please try again.",
-    "deleteCircleRestoreHint": "Changed your mind? You have 30 days to restore it from Account settings."
+    "deleteCircleRestoreHint": "Changed your mind? You have 30 days to restore it from Account settings.",
+    "displayTitle": "Our circle",
+    "meta": "{active} active · {pending} pending · Since {since}",
+    "sectionActive": "Active",
+    "sectionPending": "Pending",
+    "inviteCta": "Invite someone",
+    "joinedMeta": "Joined {date} · {n} memories",
+    "invitedMeta": "Invited {ago}"
   },
   "member": {
     "joined": "Joined {date}",
