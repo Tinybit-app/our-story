@@ -3,7 +3,7 @@
     <!-- Caption section: tab bar + independent scroll panels -->
     <div class="flex min-h-0 flex-1 flex-col">
       <!-- Tab bar -->
-      <div class="flex flex-shrink-0 border-b border-border px-3">
+      <div v-if="!viewerMode" class="flex flex-shrink-0 border-b border-border px-3">
         <button
           class="tab-btn border-b-2 px-3 py-2.5 text-[11px] font-semibold tracking-[.06em] transition-colors"
           :class="
@@ -86,7 +86,7 @@
               </p>
             </div>
             <button
-              v-if="isOwner"
+              v-if="isOwner && !viewerMode"
               class="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               :title="t('modal.editNote')"
               @click="startEditing"
@@ -670,8 +670,8 @@
           <div class="mb-3" />
         </template>
 
-        <!-- Reactions -->
-        <div class="px-4 pb-4">
+        <!-- Reactions (owner / circle-member mode) -->
+        <div v-if="!viewerMode" class="px-4 pb-4">
           <div class="flex flex-wrap items-center gap-1.5">
             <div
               v-for="(group, emoji) in reactionGroups"
@@ -763,10 +763,45 @@
             </div>
           </div>
         </div>
+
+        <!-- Viewer mode: single ❤ react -->
+        <div v-else class="px-4 pb-4">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-secondary/30 px-3 py-1.5 text-[12px] font-medium transition-all hover:border-accent/40 active:scale-95"
+            :class="
+              viewerReacted
+                ? 'cursor-default text-rose-500'
+                : 'text-muted-foreground hover:text-rose-500'
+            "
+            :disabled="viewerReacted || viewerReactPending"
+            @click.stop="onViewerReact"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              :fill="viewerReacted ? 'currentColor' : 'none'"
+            >
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              />
+            </svg>
+            {{
+              viewerReacted
+                ? t('viewerLink.viewerReactSent')
+                : t('viewerLink.viewerReact')
+            }}
+          </button>
+        </div>
       </div>
 
       <!-- Comments tab -->
       <div
+        v-if="!viewerMode"
         v-show="activeTab === 'comments'"
         class="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
@@ -998,16 +1033,25 @@ interface CircleMember {
   avatarUrl: string | null
 }
 
-const props = defineProps<{
-  memory: Memory
-  children: ChildProfile[]
-  members: CircleMember[]
-  currentUserId: string | null
-  selfAvatarUrl: string | null
-  selfInitials: string
-  slides: Slide[]
-  currentSlideIdx: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    memory: Memory
+    children: ChildProfile[]
+    members: CircleMember[]
+    currentUserId: string | null
+    selfAvatarUrl: string | null
+    selfInitials: string
+    slides: Slide[]
+    currentSlideIdx: number
+    // ── New: viewer-mode plumbing ──
+    /** When true: hide owner-only affordances; route single heart-react
+     *  through the public guest endpoint. */
+    viewerMode?: boolean
+    viewerToken?: string
+    guestName?: string
+  }>(),
+  { viewerMode: false, viewerToken: undefined, guestName: undefined },
+)
 
 const emit = defineEmits<{
   update: [Pick<Memory, 'id'> & Partial<Memory>]
@@ -1322,7 +1366,56 @@ function timeAgo(iso: string): string {
   })
 }
 
-onMounted(() => loadComments())
+onMounted(() => {
+  if (!props.viewerMode) loadComments()
+})
+
+// ── Viewer-mode single ❤ react ─────────────────────────────
+// When the modal is rendered for a public viewer-link visitor we hide the
+// 12-emoji picker and the comments thread entirely. The one affordance we
+// keep is a single heart react that POSTs through the public guest endpoint.
+const viewerReacted = ref(false)
+const viewerReactPending = ref(false)
+
+async function onViewerReact() {
+  if (viewerReacted.value || viewerReactPending.value) return
+  if (!props.viewerToken) return
+  viewerReactPending.value = true
+  try {
+    await $fetch('/api/reactions/guest', {
+      method: 'POST',
+      body: {
+        viewerToken: props.viewerToken,
+        memoryId: props.memory.id,
+        emoji: '❤️',
+        guestName: props.guestName || undefined,
+      },
+    })
+    viewerReacted.value = true
+  } catch (err) {
+    console.error('[MemoryDetail] viewer react failed:', err)
+  } finally {
+    viewerReactPending.value = false
+  }
+}
+
+// Reset on memory change (the parent doesn't remount per memory).
+watch(
+  () => props.memory.id,
+  () => {
+    viewerReacted.value = false
+  },
+)
+
+// Force the caption pane visible when viewer-mode is on — the tab bar is
+// hidden, so `activeTab` cannot be flipped manually.
+watch(
+  () => props.viewerMode,
+  (vm) => {
+    if (vm) activeTab.value = 'caption'
+  },
+  { immediate: true },
+)
 
 // ── Edit ───────────────────────────────────────────────────
 const editing = ref(false)
@@ -1673,6 +1766,7 @@ async function cancelEditing() {
 // Asked by MemoryShell before backdrop/X/navigation closes the modal.
 // If edits are pending, prompt for discard confirmation.
 async function canClose(): Promise<boolean> {
+  if (props.viewerMode) return true
   if (!editing.value || !hasUnsavedChanges.value) return true
   const ok = await askDiscardConfirm()
   if (ok) {

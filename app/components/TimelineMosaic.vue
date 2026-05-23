@@ -121,6 +121,7 @@ const props = defineProps<{
   hasNextPage: boolean
   circleType: string | null
   circleId: string | null
+  viewerMode?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -201,7 +202,7 @@ watch(
         const { stop } = useIntersectionObserver(
           el,
           ([entry]) => {
-            if (entry?.isIntersecting) emit('yearChange', s.year)
+            if (entry?.isIntersecting && !props.viewerMode) emit('yearChange', s.year)
           },
           { threshold: 0.4 },
         )

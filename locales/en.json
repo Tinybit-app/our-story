@@ -46,8 +46,14 @@
       "label": "New parents",
       "description": "Baby milestones & growth"
     },
-    "couple": { "label": "Couple", "description": "Relationship milestones" },
-    "family": { "label": "Family", "description": "General family memories" },
+    "couple": {
+      "label": "Couple",
+      "description": "Relationship milestones"
+    },
+    "family": {
+      "label": "Family",
+      "description": "General family memories"
+    },
     "friends": {
       "label": "Friend group",
       "description": "Trips, reunions, moments"
@@ -56,8 +62,14 @@
       "label": "Caregiving",
       "description": "Health & life events"
     },
-    "travel": { "label": "Travel group", "description": "Adventures together" },
-    "solo": { "label": "Just me", "description": "Personal timeline" }
+    "travel": {
+      "label": "Travel group",
+      "description": "Adventures together"
+    },
+    "solo": {
+      "label": "Just me",
+      "description": "Personal timeline"
+    }
   },
   "nav": {
     "addMemory": "Add memory",
@@ -396,7 +408,11 @@
     },
     "privacy": {
       "title": "Your photos never leave your circle.",
-      "items": ["No ads", "No algorithm", "No AI training on your memories"],
+      "items": [
+        "No ads",
+        "No algorithm",
+        "No AI training on your memories"
+      ],
       "sub": "Invite-only. Private by design."
     },
     "vision": {
@@ -720,7 +736,7 @@
     "modeSelection": "Select memories",
     "selectAll": "Select all",
     "clearAll": "Clear",
-    "memoriesCount": "{count} memories",
+    "memoriesCount": "{n} memory | {n} memories",
     "truncatedWarning": "This year has more than {count} memories. Only the first {count} are shown — some may be missing from the selection.",
     "loadAll": "Load all memories",
     "tapToSelect": "Tap to select",
@@ -771,7 +787,14 @@
     "close": "Close",
     "createErrorGeneric": "Something went wrong. Please try again.",
     "redirecting": "Redirecting…",
-    "reminderSmsBody": "Hey! The link you shared has expired — could you send me a new one? 😊"
+    "reminderSmsBody": "Hey! The link you shared has expired — could you send me a new one? 😊",
+    "privateCollection": "A private collection",
+    "selectedCollection": "A selected collection",
+    "signoff": "— {owners}  ·  {n} memory | — {owners}  ·  {n} memories",
+    "fromCircle": "From {circle}",
+    "signIn": "Sign in",
+    "forRecipient": "For {recipient}",
+    "forYou": "For you"
   },
   "notificationSettings": {
     "title": "Notification settings",
