@@ -1125,7 +1125,10 @@ type Reaction = {
 }
 const supabaseClient = useSupabaseClient()
 
-// Initialized from prop — :key on this component resets it per-memory
+// Initialized from the prop's snapshot, then re-seeded by the
+// `watch(() => props.memory.id, ...)` below whenever the user navigates
+// to a different memory (MemoryShell reuses this component instance, so
+// there's no :key remount to do it automatically).
 const localReactions = ref<Reaction[]>([
   ...(props.memory.memoryreaction ?? []),
 ] as Reaction[])
@@ -1399,10 +1402,35 @@ async function onViewerReact() {
   }
 }
 
-// Reset on memory change (the parent doesn't remount per memory).
+// Reset per-memory state when the user navigates between memories.
+// MemoryShell reuses this instance across navigation (no :key remount)
+// so reactions, comments, inline-edit state, and the viewer's heart-tap
+// gate all need to be re-initialized from the new memory's prop snapshot.
 watch(
   () => props.memory.id,
-  () => {
+  (newId, oldId) => {
+    if (newId === oldId) return
+    // Reactions — re-seed from the new prop's snapshot.
+    localReactions.value = [
+      ...(props.memory.memoryreaction ?? []),
+    ] as Reaction[]
+    pickerOpen.value = false
+    // Comments — clear current state, reload for the new memory (skipped
+    // in viewer mode since the comments section isn't rendered there).
+    editingCommentId.value = null
+    commentEditDraft.value = ''
+    confirmDeleteId.value = null
+    commentDraft.value = ''
+    if (!props.viewerMode) {
+      comments.value = []
+      loadComments()
+    }
+    // Caption edit state — exiting edit mode triggers the existing
+    // `watch(editing, ...)` cleanup which clears slidesEdit, stagedItems,
+    // editNote, etc. Navigation already passes the canClose discard guard,
+    // so any unsaved-edit confirmation has happened by the time we get here.
+    if (editing.value) editing.value = false
+    // Viewer heart-tap gate resets so the user can react to the new memory.
     viewerReacted.value = false
   },
 )
