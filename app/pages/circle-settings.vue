@@ -1,427 +1,349 @@
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
-    >
-      <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
+    <!-- Page strip header -->
+    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div class="mx-auto flex h-14 max-w-[640px] items-center gap-3 px-5">
         <button
-          class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          class="-ml-1 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
           @click="router.back()"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6" />
           </svg>
           {{ t('common.back') }}
         </button>
-
-        <p class="flex-1 text-center text-sm font-semibold text-foreground">
-          {{ t('nav.circleSettings') }}
-        </p>
-
-        <!-- spacer to balance the back button -->
+        <span class="flex-1 text-center">
+          <span class="text-[9px] font-bold uppercase tracking-[.18em] text-accent">Our Story</span>
+          <span class="mx-1 text-muted-foreground">·</span>
+          <span class="text-[12px] font-medium text-foreground">{{ t('nav.circleSettings') }}</span>
+        </span>
         <div class="w-12" />
       </div>
     </header>
 
-    <main class="mx-auto max-w-[1280px] px-5 py-8">
-      <div class="max-w-lg space-y-8">
-        <!-- Loading -->
-        <div v-if="!circle" class="flex justify-center py-24">
-          <div
-            class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
-          />
+    <main class="mx-auto max-w-[640px] px-5 py-8">
+      <!-- Loading -->
+      <div v-if="!circle" class="flex justify-center py-24">
+        <div class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+      </div>
+
+      <template v-else>
+        <!-- Italic display title -->
+        <div class="mb-8 px-[4px]">
+          <h1 class="font-serif text-[32px] italic leading-[1.05] text-foreground sm:text-[34px]">
+            {{ circle.name }}
+          </h1>
+          <p class="mt-2 text-[12.5px] leading-[1.5] text-muted-foreground">
+            {{ t('circleSettings.displaySubtitle') }}
+          </p>
         </div>
 
-        <template v-else>
-          <!-- Circle info -->
-          <div>
-            <div class="flex items-center gap-4 py-2">
-              <div
-                class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-secondary"
-              >
-                <svg
-                  class="h-5 w-5 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </div>
-              <div class="min-w-0">
-                <p
-                  class="truncate text-base font-semibold leading-tight text-foreground"
-                >
-                  {{ circle.name }}
-                </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ circleTypeLabel }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="h-px bg-border" />
-
-          <!-- Circle name — owner only -->
-          <div v-if="isOwner">
-            <h2
-              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-            >
-              {{ t('circleSettings.circleName') }}
-            </h2>
-            <div class="flex gap-2">
+        <!-- ── ABOUT ──────────────────────────────────────── -->
+        <SettingsSection :label="t('circleSettings.sectionAbout')">
+          <!-- Circle name -->
+          <SettingsRow>
+            {{ t('circleSettings.circleName') }}
+            <template #hint>
+              <span v-if="circleNameError" class="text-destructive">{{ circleNameError }}</span>
+            </template>
+            <template #control>
               <input
                 v-model="circleNameInput"
                 type="text"
                 maxlength="100"
                 :placeholder="t('circleSettings.circleNamePlaceholder')"
-                class="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                :disabled="!isOwner"
+                class="w-[160px] rounded-lg border border-transparent bg-foreground/[.05] px-3 py-1.5 text-right text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:border-ring focus:outline-none focus:ring-0 disabled:opacity-40"
+                @blur="saveCircleName"
                 @keyup.enter="saveCircleName"
               />
-              <button
-                :disabled="
-                  savingCircleName ||
-                  !circleNameInput.trim() ||
-                  circleNameInput.trim() === circle.name
-                "
-                class="flex-shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-                @click="saveCircleName"
-              >
-                {{ savingCircleName ? '…' : t('modal.save') }}
-              </button>
-            </div>
-            <p v-if="circleNameError" class="mt-2 text-xs text-destructive">
-              {{ circleNameError }}
-            </p>
-          </div>
+            </template>
+          </SettingsRow>
 
-          <div v-if="isOwner" class="h-px bg-border" />
-
-          <!-- Circle type picker — owner only -->
-          <div v-if="isOwner">
-            <h2
-              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-            >
+          <!-- Circle type — full-width segmented grid -->
+          <div class="px-[14px] pb-[13px] pt-[10px]">
+            <p class="mb-2 text-[11px] font-medium text-muted-foreground">
               {{ t('circleSettings.circleType') }}
-            </h2>
-            <p class="mb-4 text-xs text-muted-foreground">
-              {{ t('circleSettings.circleTypeDesc') }}
             </p>
-
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-4 gap-0.5 rounded-[10px] bg-foreground/[.06] p-0.5">
               <button
-                v-for="type in circleTypeOptions"
-                :key="type.value"
-                class="rounded-xl border px-4 py-3.5 text-left transition-colors"
+                v-for="ct in circleTypeOptions"
+                :key="ct.value"
+                type="button"
+                :disabled="!isOwner || savingCircleType"
+                class="rounded-[8px] px-2 py-1.5 text-[11px] font-medium transition-colors disabled:opacity-40"
                 :class="
-                  selectedCircleType === type.value
-                    ? 'border-foreground bg-secondary'
-                    : 'border-border bg-card hover:border-foreground/30'
+                  selectedCircleType === ct.value
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 "
-                @click="selectedCircleType = type.value"
+                @click="setCircleType(ct.value)"
               >
-                <p class="text-sm font-medium leading-snug text-foreground">
-                  {{ type.label }}
-                </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ type.description }}
-                </p>
+                {{ ct.label }}
               </button>
             </div>
-
-            <div class="mt-3 flex items-center gap-2">
-              <button
-                :disabled="
-                  savingCircleType || selectedCircleType === circle.circle_type
-                "
-                class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-                @click="saveCircleType"
-              >
-                {{ savingCircleType ? '…' : t('modal.save') }}
-              </button>
-            </div>
-            <p v-if="circleTypeError" class="mt-2 text-xs text-destructive">
+            <p v-if="circleTypeError" class="mt-1.5 text-[11px] text-destructive">
               {{ circleTypeError }}
             </p>
           </div>
 
-          <div v-if="isOwner" class="h-px bg-border" />
-
-          <!-- Children (baby age stamps) — owner only -->
-          <div v-if="isOwner">
-            <h2
-              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-            >
-              {{ t('circleSettings.children') }}
-            </h2>
-            <p class="mb-4 text-xs text-muted-foreground">
-              {{ t('circleSettings.childrenDesc') }}
-            </p>
-
-            <!-- Existing children list -->
-            <div v-if="children.length" class="mb-4 space-y-2">
-              <div
-                v-for="child in children"
-                :key="child.id"
-                class="overflow-hidden rounded-xl border border-border bg-secondary/40"
-              >
-                <!-- View row -->
-                <div
-                  v-if="editingChildId !== child.id"
-                  class="flex items-center justify-between gap-3 px-4 py-2.5"
-                >
-                  <div class="min-w-0">
-                    <p class="truncate text-sm font-medium text-foreground">
-                      {{ child.name }}
-                    </p>
-                    <p class="text-xs text-muted-foreground">
-                      {{ formatDob(child.date_of_birth) }}
-                    </p>
-                  </div>
-                  <div class="flex flex-shrink-0 items-center gap-1">
-                    <!-- Edit -->
-                    <button
-                      class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                      @click="startEditChild(child)"
-                    >
-                      <svg
-                        class="h-3.5 w-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                        />
-                        <path
-                          d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                        />
-                      </svg>
-                    </button>
-                    <!-- Remove -->
-                    <button
-                      class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      :disabled="removingChildId === child.id"
-                      @click="removeChild(child.id)"
-                    >
-                      <svg
-                        v-if="removingChildId !== child.id"
-                        class="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                      <div
-                        v-else
-                        class="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Edit row -->
-                <div v-else class="flex flex-col gap-2 px-4 py-3">
-                  <div class="flex gap-2">
-                    <input
-                      v-model="editChildName"
-                      type="text"
-                      :placeholder="t('circleSettings.childNamePlaceholder')"
-                      maxlength="100"
-                      class="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
-                      @keydown.enter="saveEditChild(child.id)"
-                      @keydown.escape="cancelEditChild"
-                    />
-                    <input
-                      v-model="editChildDob"
-                      type="date"
-                      aria-label="Date of birth"
-                      class="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      :style="{ colorScheme: isDark ? 'dark' : 'light' }"
-                      @keydown.enter="saveEditChild(child.id)"
-                      @keydown.escape="cancelEditChild"
-                    />
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <button
-                      :disabled="
-                        savingChildId === child.id ||
-                        !editChildName.trim() ||
-                        !editChildDob
-                      "
-                      class="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-                      @click="saveEditChild(child.id)"
-                    >
-                      {{ savingChildId === child.id ? '…' : t('modal.save') }}
-                    </button>
-                    <button
-                      class="rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                      @click="cancelEditChild"
-                    >
-                      {{ t('modal.cancel') }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Add child form -->
-            <div v-if="children.length < 10" class="flex flex-col gap-2">
-              <div class="flex gap-2">
-                <input
-                  v-model="newChildName"
-                  type="text"
-                  :placeholder="t('circleSettings.childNamePlaceholder')"
-                  maxlength="100"
-                  class="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <input
-                  v-model="newChildDob"
-                  type="date"
-                  aria-label="Date of birth"
-                  class="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  :style="{ colorScheme: isDark ? 'dark' : 'light' }"
-                />
-              </div>
-              <button
-                :disabled="addingChild || !newChildName.trim() || !newChildDob"
-                class="self-start rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-                @click="addChild"
-              >
-                {{ addingChild ? '…' : t('circleSettings.addChild') }}
-              </button>
-            </div>
-            <p v-else class="text-xs text-muted-foreground">
-              {{ t('circleSettings.childrenMax') }}
-            </p>
-
-            <p v-if="childrenError" class="mt-2 text-xs text-destructive">
-              {{ childrenError }}
-            </p>
-          </div>
-
-          <div
-            v-if="
-              isOwner &&
-              ['couple', 'friends', 'travel'].includes(circle.circle_type)
-            "
-            class="h-px bg-border"
-          />
-
-          <!-- Anniversary / Trip date — couple/friends/travel circles, owner only -->
-          <div
-            v-if="
-              isOwner &&
-              ['couple', 'friends', 'travel'].includes(circle.circle_type)
-            "
+          <!-- Anniversary / Trip date — couple/friends/travel circles only -->
+          <SettingsRow
+            v-if="['couple', 'friends', 'travel'].includes(circle.circle_type)"
           >
-            <h2
-              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-            >
-              {{
-                circle.circle_type === 'couple'
-                  ? t('circleSettings.anniversary')
-                  : t('circleSettings.tripDate')
-              }}
-            </h2>
-            <p class="mb-4 text-xs text-muted-foreground">
+            {{
+              circle.circle_type === 'couple'
+                ? t('circleSettings.anniversary')
+                : t('circleSettings.tripDate')
+            }}
+            <template #hint>
               {{
                 circle.circle_type === 'couple'
                   ? t('circleSettings.anniversaryDesc')
                   : t('circleSettings.tripDateDesc')
               }}
-            </p>
-            <div class="flex items-start gap-2">
+              <span v-if="anniversaryError" class="block text-destructive">{{ anniversaryError }}</span>
+            </template>
+            <template #control>
+              <div class="flex items-center gap-1">
+                <input
+                  v-model="anniversaryDateInput"
+                  type="date"
+                  :aria-label="circle.circle_type === 'couple' ? 'Anniversary date' : 'Trip date'"
+                  :disabled="!isOwner || savingAnniversary"
+                  class="rounded-lg border border-transparent bg-foreground/[.05] px-2 py-1.5 text-[13px] text-foreground focus:border-ring focus:outline-none disabled:opacity-40"
+                  :style="{ colorScheme: isDark ? 'dark' : 'light' }"
+                  @change="saveAnniversary"
+                />
+                <button
+                  v-if="circle.anniversary_date && isOwner"
+                  :disabled="savingAnniversary"
+                  class="rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-40"
+                  :title="t('circleSettings.clearAnniversary')"
+                  @click="clearAnniversary"
+                >
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+          </SettingsRow>
+        </SettingsSection>
+
+        <!-- ── MEMBERS ─────────────────────────────────────── -->
+        <SettingsSection :label="t('circleSettings.sectionMembers')">
+          <!-- Member count drill → /members -->
+          <SettingsRow :to="circleId ? `/members?circle=${circleId}` : '/members'">
+            {{ t('circleSettings.sectionMembers') }}
+            <template #hint>
+              {{
+                t('circleSettings.membersCount', {
+                  n: membersData?.members?.length ?? 0,
+                })
+              }}
+            </template>
+          </SettingsRow>
+
+          <!-- Invite someone -->
+          <SettingsRow v-if="isOwner" @click="inviteOpen = true" class="cursor-pointer transition-colors hover:bg-foreground/[.03]">
+            {{ t('nav.inviteSomeone') }}
+            <template #hint>{{ t('nav.inviteDesc', { circle: circle.name }) }}</template>
+            <template #control>
+              <!-- chevron-like plus -->
+              <svg class="h-3 w-3 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </template>
+          </SettingsRow>
+        </SettingsSection>
+
+        <!-- ── CHILDREN ────────────────────────────────────── -->
+        <SettingsSection
+          v-if="isOwner"
+          :label="t('circleSettings.sectionChildren')"
+        >
+          <!-- Existing children -->
+          <template v-if="children.length">
+            <div
+              v-for="child in children"
+              :key="child.id"
+            >
+              <!-- View mode -->
+              <div
+                v-if="editingChildId !== child.id"
+                class="flex items-center gap-[14px] px-[14px] py-[13px]"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="text-[14px] font-medium leading-tight text-foreground">{{ child.name }}</p>
+                  <p class="mt-0.5 text-[11px] leading-[1.35] text-muted-foreground">{{ formatDob(child.date_of_birth) }}</p>
+                </div>
+                <div class="flex flex-shrink-0 items-center gap-1">
+                  <button
+                    class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[.05] hover:text-foreground"
+                    @click="startEditChild(child)"
+                  >
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                  <button
+                    :disabled="removingChildId === child.id"
+                    class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+                    @click="removeChild(child.id)"
+                  >
+                    <svg v-if="removingChildId !== child.id" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                    <div v-else class="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Edit mode -->
+              <div v-else class="flex flex-col gap-2 px-[14px] py-3">
+                <div class="flex gap-2">
+                  <input
+                    v-model="editChildName"
+                    type="text"
+                    :placeholder="t('circleSettings.childNamePlaceholder')"
+                    maxlength="100"
+                    class="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                    @keydown.enter="saveEditChild(child.id)"
+                    @keydown.escape="cancelEditChild"
+                  />
+                  <input
+                    v-model="editChildDob"
+                    type="date"
+                    aria-label="Date of birth"
+                    class="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    :style="{ colorScheme: isDark ? 'dark' : 'light' }"
+                    @keydown.enter="saveEditChild(child.id)"
+                    @keydown.escape="cancelEditChild"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    :disabled="savingChildId === child.id || !editChildName.trim() || !editChildDob"
+                    class="rounded-lg bg-primary px-3 py-1.5 text-[12px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                    @click="saveEditChild(child.id)"
+                  >
+                    {{ savingChildId === child.id ? '…' : t('modal.save') }}
+                  </button>
+                  <button
+                    class="rounded-lg px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+                    @click="cancelEditChild"
+                  >
+                    {{ t('modal.cancel') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Add child row -->
+          <div v-if="children.length < 10" class="px-[14px] py-3">
+            <p class="mb-2 text-[11px] font-medium text-muted-foreground">{{ t('circleSettings.addChild') }}</p>
+            <div class="flex gap-2">
               <input
-                v-model="anniversaryDateInput"
+                v-model="newChildName"
+                type="text"
+                :placeholder="t('circleSettings.childNamePlaceholder')"
+                maxlength="100"
+                class="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <input
+                v-model="newChildDob"
                 type="date"
-                :aria-label="
-                  circle.circle_type === 'couple'
-                    ? 'Anniversary date'
-                    : 'Trip date'
-                "
-                class="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label="Date of birth"
+                class="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 :style="{ colorScheme: isDark ? 'dark' : 'light' }"
               />
               <button
-                :disabled="
-                  savingAnniversary ||
-                  anniversaryDateInput === (circle.anniversary_date ?? '')
-                "
-                class="flex-shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-                @click="saveAnniversary"
+                :disabled="addingChild || !newChildName.trim() || !newChildDob"
+                class="flex-shrink-0 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                @click="addChild"
               >
-                {{ savingAnniversary ? '…' : t('modal.save') }}
-              </button>
-              <button
-                v-if="circle.anniversary_date"
-                :disabled="savingAnniversary"
-                class="flex-shrink-0 rounded-xl border border-border px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
-                :title="t('circleSettings.clearAnniversary')"
-                @click="clearAnniversary"
-              >
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
+                {{ addingChild ? '…' : '+' }}
               </button>
             </div>
-            <p v-if="anniversaryError" class="mt-2 text-xs text-destructive">
-              {{ anniversaryError }}
-            </p>
+          </div>
+          <div v-else class="px-[14px] py-[13px]">
+            <p class="text-[11px] text-muted-foreground">{{ t('circleSettings.childrenMax') }}</p>
           </div>
 
-          <!-- Danger zone (owner only) -->
-          <div v-if="isOwner">
-            <h2
-              class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-            >
-              {{ t('members.dangerZone') }}
-            </h2>
-            <div
-              class="flex items-center justify-between gap-4 rounded-xl border border-destructive/20 p-4"
-            >
-              <div>
-                <p class="text-sm font-medium text-foreground">
-                  {{ t('members.deleteCircleTitle') }}
-                </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ t('members.deleteCircleDesc') }}
-                </p>
-              </div>
-              <button
-                class="hover:bg-destructive/8 flex-shrink-0 rounded-xl border border-destructive/40 px-4 py-2 text-sm font-semibold text-destructive transition-colors"
-                @click="openDeleteDialog"
-              >
-                {{ t('members.deleteCircle') }}
-              </button>
-            </div>
+          <div v-if="childrenError" class="px-[14px] pb-3">
+            <p class="text-[11px] text-destructive">{{ childrenError }}</p>
           </div>
-        </template>
-      </div>
+        </SettingsSection>
+
+        <!-- ── DANGER ──────────────────────────────────────── -->
+        <SettingsSection v-if="isOwner" :label="t('circleSettings.sectionDanger')">
+          <SettingsRow :destructive="true" @click="openDeleteDialog" class="cursor-pointer transition-colors hover:bg-foreground/[.03]">
+            {{ t('members.deleteCircle') }}
+            <template #hint>{{ t('members.deleteCircleDesc') }}</template>
+          </SettingsRow>
+        </SettingsSection>
+      </template>
     </main>
 
-    <!-- Circle deletion dialog (2-step) -->
+    <!-- ── Invite sheet ─────────────────────────────────────── -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="inviteOpen"
+        class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
+      >
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
+        <div class="relative w-full max-w-sm rounded-[20px] border border-border bg-card p-6 shadow-2xl">
+          <h2 class="mb-1 font-display text-lg font-bold text-foreground">
+            {{ t('nav.inviteSomeone') }}
+          </h2>
+          <p class="mb-5 text-xs text-muted-foreground">
+            {{ t('nav.inviteDesc', { circle: circle?.name ?? '' }) }}
+          </p>
+          <form @submit.prevent="sendInvite">
+            <input
+              v-model="inviteEmail"
+              type="email"
+              placeholder="their@email.com"
+              required
+              :disabled="inviteSending"
+              class="mb-3 w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            />
+            <p v-if="inviteError" class="mb-3 text-xs text-destructive">{{ inviteError }}</p>
+            <p v-if="inviteSentTo" class="mb-3 text-xs text-green-600 dark:text-green-400">
+              {{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
+            </p>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="flex-1 rounded-[10px] border border-border py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                @click="closeInvite"
+              >
+                {{ t('nav.cancel') }}
+              </button>
+              <button
+                type="submit"
+                :disabled="inviteSending || !inviteEmail"
+                class="flex-1 rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {{ inviteSending ? t('nav.sending') : t('nav.sendInvite') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ── Circle deletion dialog (2-step) ─────────────────── -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
       enter-from-class="opacity-0"
@@ -444,9 +366,7 @@
           <!-- Step 1: Warning -->
           <template v-if="deleteStep === 1">
             <div class="border-b border-border px-6 pb-4 pt-6">
-              <p
-                class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive"
-              >
+              <p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive">
                 {{ t('members.deleteCircle') }}
               </p>
               <h2 class="text-base font-bold leading-snug text-foreground">
@@ -454,19 +374,9 @@
               </h2>
             </div>
             <div class="space-y-3 px-6 py-4">
-              <div
-                class="bg-destructive/8 flex items-start gap-2 rounded-xl border border-destructive/20 px-3.5 py-3"
-              >
-                <svg
-                  class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-destructive"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-                  />
+              <div class="bg-destructive/8 flex items-start gap-2 rounded-xl border border-destructive/20 px-3.5 py-3">
+                <svg class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-destructive" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
@@ -502,20 +412,14 @@
           <!-- Step 2: Type-to-confirm -->
           <template v-else>
             <div class="border-b border-border px-6 pb-4 pt-6">
-              <p
-                class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive"
-              >
+              <p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive">
                 {{ t('members.deleteCircle') }}
               </p>
               <h2 class="text-base font-bold leading-snug text-foreground">
                 {{ t('members.deleteCircleConfirmTitle') }}
               </h2>
               <p class="mt-1 text-xs text-muted-foreground">
-                {{
-                  t('members.deleteCircleConfirmDesc', {
-                    name: circle?.name ?? '',
-                  })
-                }}
+                {{ t('members.deleteCircleConfirmDesc', { name: circle?.name ?? '' }) }}
               </p>
             </div>
             <div class="px-6 py-4">
@@ -526,9 +430,7 @@
                 class="w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-destructive/40"
                 @keyup.enter="confirmDeleteCircle"
               />
-              <p v-if="deleteError" class="mt-2 text-xs text-destructive">
-                {{ deleteError }}
-              </p>
+              <p v-if="deleteError" class="mt-2 text-xs text-destructive">{{ deleteError }}</p>
             </div>
             <div class="flex gap-2 px-6 pb-6">
               <button
@@ -595,11 +497,6 @@ const CIRCLE_TYPE_KEYS: Record<string, string> = {
   travel: 'circleType.travel.label',
   solo: 'circleType.solo.label',
 }
-
-const circleTypeLabel = computed(() => {
-  const key = circle.value?.circle_type
-  return key && CIRCLE_TYPE_KEYS[key] ? t(CIRCLE_TYPE_KEYS[key]) : ''
-})
 
 const circleTypeOptions = computed(() => [
   {
@@ -686,6 +583,12 @@ watch(circle, (c) => {
     selectedCircleType.value = c?.circle_type ?? ''
   }
 })
+
+async function setCircleType(value: string) {
+  if (!isOwner.value || value === selectedCircleType.value) return
+  selectedCircleType.value = value
+  await saveCircleType()
+}
 
 async function saveCircleType() {
   if (!circleId.value || savingCircleType.value) return
@@ -874,6 +777,45 @@ async function saveAnniversary() {
 async function clearAnniversary() {
   anniversaryDateInput.value = ''
   await saveAnniversary()
+}
+
+// ── Invite sheet ───────────────────────────────────────────
+const inviteOpen = ref(false)
+const inviteEmail = ref('')
+const inviteSending = ref(false)
+const inviteError = ref('')
+const inviteSentTo = ref('')
+
+function closeInvite() {
+  inviteOpen.value = false
+  inviteEmail.value = ''
+  inviteError.value = ''
+  inviteSentTo.value = ''
+}
+
+async function sendInvite() {
+  if (!circleId.value || !inviteEmail.value) return
+  inviteSending.value = true
+  inviteError.value = ''
+  inviteSentTo.value = ''
+  try {
+    await $fetch('/api/circles/invite', {
+      method: 'POST',
+      body: { circleId: circleId.value, email: inviteEmail.value },
+    })
+    inviteSentTo.value = inviteEmail.value
+    inviteEmail.value = ''
+    await refreshNuxtData()
+  } catch (err: any) {
+    const msg = err?.data?.message ?? ''
+    if (msg.includes('already been sent'))
+      inviteError.value = t('nav.inviteAlreadySent')
+    else if (msg.includes('Max 10'))
+      inviteError.value = t('nav.inviteMaxPending')
+    else inviteError.value = t('nav.inviteFailed')
+  } finally {
+    inviteSending.value = false
+  }
 }
 
 // ── Circle deletion ────────────────────────────────────────

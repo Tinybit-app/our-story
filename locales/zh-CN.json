@@ -305,7 +305,14 @@
     "deleteCircleConfirm": "删除圈子",
     "deleteCircleNameMismatch": "圈子名称不匹配，请完整输入。",
     "deleteCircleError": "删除圈子失败，请重试。",
-    "deleteCircleRestoreHint": "改变主意了？你有 30 天时间在账户设置中恢复它。"
+    "deleteCircleRestoreHint": "改变主意了？你有 30 天时间在账户设置中恢复它。",
+    "displayTitle": "我们的圈子",
+    "meta": "{active} 位成员 · {pending} 待邀 · {since}",
+    "sectionActive": "成员",
+    "sectionPending": "待邀",
+    "inviteCta": "邀请新成员",
+    "joinedMeta": "加入于 {date}",
+    "invitedMeta": "{ago}前邀请"
   },
   "member": {
     "joined": "加入于 {date}",
@@ -357,7 +364,20 @@
       "restoreCircle": "恢复",
       "restoring": "恢复中…",
       "restoreSuccess": "「{name}」已恢复。",
-      "restoreError": "恢复圈子失败，请重试。"
+      "restoreError": "恢复圈子失败，请重试。",
+      "displayTitle": "你",
+      "displaySubtitle": "你在 Our Story 中的样子。",
+      "sectionProfile": "个人资料",
+      "sectionLanguage": "语言",
+      "sectionAccount": "账户",
+      "firstNameLabel": "名",
+      "firstNamePlaceholder": "名",
+      "lastNameLabel": "姓",
+      "lastNamePlaceholder": "姓",
+      "emailLabel": "邮箱",
+      "logOutLabel": "退出登录",
+      "logOutAction": "退出",
+      "deleteAction": "删除"
     }
   },
   "quickNote": {
@@ -423,6 +443,12 @@
     "skip": "跳过"
   },
   "circleSettings": {
+    "displaySubtitle": "成员、孩子，以及你的记忆方式。",
+    "sectionAbout": "关于",
+    "sectionMembers": "成员",
+    "sectionChildren": "孩子",
+    "sectionDanger": "危险区",
+    "membersCount": "{n} 名成员",
     "circleName": "圈子名称",
     "circleNamePlaceholder": "圈子名称",
     "circleType": "圈子类型",
@@ -620,6 +646,11 @@
     "digestMonthly": "每月",
     "digestOff": "关闭",
     "milestoneNudges": "里程碑提醒",
-    "milestoneNudgesDesc": "在生日、纪念日等里程碑临近时收到提醒。"
+    "milestoneNudgesDesc": "在生日、纪念日等里程碑临近时收到提醒。",
+    "displayTitle": "通知方式",
+    "displaySubtitle": "什么时候找你，什么时候让你清净。",
+    "sectionPush": "推送",
+    "sectionEmail": "邮件",
+    "sectionPerCircle": "按圈子"
   }
 }

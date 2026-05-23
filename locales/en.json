@@ -305,7 +305,14 @@
     "deleteCircleConfirm": "Delete circle",
     "deleteCircleNameMismatch": "Circle name doesn't match. Please type it exactly.",
     "deleteCircleError": "Failed to delete circle. Please try again.",
-    "deleteCircleRestoreHint": "Changed your mind? You have 30 days to restore it from Account settings."
+    "deleteCircleRestoreHint": "Changed your mind? You have 30 days to restore it from Account settings.",
+    "displayTitle": "Our circle",
+    "meta": "{active} active · {pending} pending · Since {since}",
+    "sectionActive": "Active",
+    "sectionPending": "Pending",
+    "inviteCta": "Invite someone",
+    "joinedMeta": "Joined {date}",
+    "invitedMeta": "Invited {ago}"
   },
   "member": {
     "joined": "Joined {date}",
@@ -549,7 +556,20 @@
       "restoreCircle": "Restore",
       "restoring": "Restoring…",
       "restoreSuccess": "{name} has been restored.",
-      "restoreError": "Failed to restore circle. Please try again."
+      "restoreError": "Failed to restore circle. Please try again.",
+      "displayTitle": "You",
+      "displaySubtitle": "How you show up on Our Story.",
+      "sectionProfile": "Profile",
+      "sectionLanguage": "Language",
+      "sectionAccount": "Account",
+      "firstNameLabel": "First name",
+      "firstNamePlaceholder": "First name",
+      "lastNameLabel": "Last name",
+      "lastNamePlaceholder": "Last name",
+      "emailLabel": "Email",
+      "logOutLabel": "Log out",
+      "logOutAction": "Log out",
+      "deleteAction": "Delete"
     }
   },
   "quickNote": {
@@ -615,6 +635,12 @@
     "skip": "Skip"
   },
   "circleSettings": {
+    "displaySubtitle": "Members, children, and the way you remember.",
+    "sectionAbout": "About",
+    "sectionMembers": "Members",
+    "sectionChildren": "Children",
+    "sectionDanger": "Danger",
+    "membersCount": "{n} members",
     "circleName": "Circle name",
     "circleNamePlaceholder": "Circle name",
     "circleType": "Circle type",
@@ -812,6 +838,11 @@
     "digestMonthly": "Monthly",
     "digestOff": "Off",
     "milestoneNudges": "Milestone reminders",
-    "milestoneNudgesDesc": "Get nudged about upcoming birthdays, anniversaries, and milestones."
+    "milestoneNudgesDesc": "Get nudged about upcoming birthdays, anniversaries, and milestones.",
+    "displayTitle": "How we find you",
+    "displaySubtitle": "When to ping, when to leave you alone.",
+    "sectionPush": "Push",
+    "sectionEmail": "Email",
+    "sectionPerCircle": "Per circle"
   }
 }

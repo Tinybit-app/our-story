@@ -1,183 +1,138 @@
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
-    >
-      <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
+    <!-- Page strip header -->
+    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div class="mx-auto flex h-14 max-w-[640px] items-center gap-3 px-5">
         <button
-          class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          class="-ml-1 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
           @click="router.back()"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6" />
           </svg>
           {{ t('common.back') }}
         </button>
-
-        <p class="flex-1 text-center text-sm font-semibold text-foreground">
-          {{ t('notificationSettings.title') }}
-        </p>
-
-        <!-- spacer to balance the back button -->
+        <span class="flex-1 text-center">
+          <span class="text-[9px] font-bold uppercase tracking-[.18em] text-accent">Our Story</span>
+          <span class="mx-1 text-muted-foreground">·</span>
+          <span class="text-[12px] font-medium text-foreground">{{ t('notificationSettings.title') }}</span>
+        </span>
         <div class="w-12" />
       </div>
     </header>
 
-    <main class="mx-auto max-w-[1280px] px-5 py-8">
-      <div class="max-w-lg space-y-6">
-        <!-- Loading -->
-        <div v-if="!circles.length" class="flex justify-center py-24">
-          <div
-            class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
-          />
+    <main class="mx-auto max-w-[640px] px-5 py-8">
+      <!-- Loading circles -->
+      <div v-if="!circles.length" class="flex justify-center py-24">
+        <div class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+      </div>
+
+      <template v-else>
+        <!-- Italic display title -->
+        <div class="mb-8 px-[4px]">
+          <h1 class="font-serif text-[32px] italic leading-[1.05] text-foreground sm:text-[34px]">
+            {{ t('notificationSettings.displayTitle') }}
+          </h1>
+          <p class="mt-2 text-[12.5px] leading-[1.5] text-muted-foreground">
+            {{ t('notificationSettings.displaySubtitle') }}
+          </p>
+        </div>
+
+        <!-- Scope indicator -->
+        <div class="mb-6 flex items-end justify-between gap-3 px-[4px]">
+          <div>
+            <p class="mb-1 select-none text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
+              {{ t('notificationSettings.scopeLabel') }}
+            </p>
+            <p class="text-base font-semibold text-foreground">
+              {{ selectedCircle?.name ?? '—' }}
+            </p>
+          </div>
+          <NuxtLink
+            v-if="circles.length > 1"
+            :to="selectedCircleId ? `/timeline?circle=${selectedCircleId}` : '/timeline'"
+            class="flex-shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {{ t('notificationSettings.switchCircle') }}
+          </NuxtLink>
+        </div>
+
+        <!-- Loading prefs -->
+        <div v-if="!prefsLoaded" class="flex justify-center py-8">
+          <div class="h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
         </div>
 
         <template v-else>
-          <!-- Scope indicator: these settings apply to the active circle only.
-               Users with multiple circles switch contexts by going back to the
-               timeline, picking the circle, then re-entering this page — same
-               pattern as Circle Settings, Members, etc. -->
-          <div class="flex items-end justify-between gap-3">
-            <div>
-              <p
-                class="mb-1 select-none text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground"
-              >
-                {{ t('notificationSettings.scopeLabel') }}
-              </p>
-              <p class="text-base font-semibold text-foreground">
-                {{ selectedCircle?.name ?? '—' }}
-              </p>
-            </div>
-            <NuxtLink
-              v-if="circles.length > 1"
-              :to="
-                selectedCircleId
-                  ? `/timeline?circle=${selectedCircleId}`
-                  : '/timeline'
-              "
-              class="flex-shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {{ t('notificationSettings.switchCircle') }}
-            </NuxtLink>
-          </div>
+          <!-- PUSH section -->
+          <SettingsSection :label="t('notificationSettings.sectionPush')">
+            <!-- Push notifications -->
+            <SettingsRow>
+              {{ t('notificationSettings.pushNotifications') }}
+              <template #hint>{{ t('notificationSettings.pushNotificationsDesc') }}</template>
+              <template #control>
+                <SettingsToggle :model-value="pushEnabled" @update:model-value="togglePush" />
+              </template>
+            </SettingsRow>
 
-          <div class="h-px bg-border" />
+            <!-- Mute this circle -->
+            <SettingsRow>
+              {{ t('notificationSettings.muteCircle') }}
+              <template #hint>
+                {{ circleMuted ? t('notificationSettings.muteActiveNote') : t('notificationSettings.muteCircleDesc') }}
+              </template>
+              <template #control>
+                <SettingsToggle :model-value="circleMuted" @update:model-value="toggleMute" />
+              </template>
+            </SettingsRow>
 
-          <!-- Loading prefs -->
-          <div v-if="!prefsLoaded" class="flex justify-center py-8">
-            <div
-              class="h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent"
-            />
-          </div>
+            <!-- Milestone reminders -->
+            <SettingsRow>
+              {{ t('notificationSettings.milestoneNudges') }}
+              <template #hint>{{ t('notificationSettings.milestoneNudgesDesc') }}</template>
+              <template #control>
+                <SettingsToggle :model-value="milestoneNudgesEnabled" @update:model-value="toggleMilestoneNudges" />
+              </template>
+            </SettingsRow>
+          </SettingsSection>
 
-          <template v-else>
-            <!-- Push toggle -->
-            <label
-              class="flex cursor-pointer items-center justify-between gap-3"
-            >
-              <div>
-                <p class="text-sm font-medium text-foreground">
-                  {{ t('notificationSettings.pushNotifications') }}
-                </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ t('notificationSettings.pushNotificationsDesc') }}
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                :checked="pushEnabled"
-                class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
-                @change="togglePush"
-              />
-            </label>
-
-            <!-- Mute toggle -->
-            <label
-              class="flex cursor-pointer items-center justify-between gap-3"
-            >
-              <div>
-                <p class="text-sm font-medium text-foreground">
-                  {{ t('notificationSettings.muteCircle') }}
-                </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ t('notificationSettings.muteCircleDesc') }}
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                :checked="circleMuted"
-                class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
-                @change="toggleMute"
-              />
-            </label>
-
-            <!-- Mute active note -->
-            <p
-              v-if="circleMuted"
-              class="-mt-2 pl-0.5 text-xs text-muted-foreground/70"
-            >
-              {{ t('notificationSettings.muteActiveNote') }}
-            </p>
-
-            <!-- Milestone reminders toggle -->
-            <label
-              class="flex cursor-pointer items-center justify-between gap-3"
-            >
-              <div>
-                <p class="text-sm font-medium text-foreground">
-                  {{ t('notificationSettings.milestoneNudges') }}
-                </p>
-                <p class="mt-0.5 text-xs text-muted-foreground">
-                  {{ t('notificationSettings.milestoneNudgesDesc') }}
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                :checked="milestoneNudgesEnabled"
-                class="h-5 w-5 cursor-pointer rounded border-border accent-primary"
-                @change="toggleMilestoneNudges"
-              />
-            </label>
-
-            <div class="h-px bg-border" />
-
+          <!-- EMAIL section -->
+          <SettingsSection :label="t('notificationSettings.sectionEmail')">
             <!-- Email digest frequency -->
-            <div>
-              <p class="text-sm font-medium text-foreground">
-                {{ t('notificationSettings.emailDigest') }}
-              </p>
-              <p class="mb-3 mt-0.5 text-xs text-muted-foreground">
-                {{ t('notificationSettings.emailDigestDesc') }}
-              </p>
+            <SettingsRow>
+              {{ t('notificationSettings.emailDigest') }}
+              <template #hint>{{ t('notificationSettings.emailDigestDesc') }}</template>
+              <template #control>
+                <div class="inline-flex overflow-hidden rounded-lg border border-border">
+                  <button
+                    v-for="opt in digestOptions"
+                    :key="opt.value"
+                    class="px-3 py-1.5 text-[11px] font-medium transition-colors"
+                    :class="
+                      digestFrequency === opt.value
+                        ? 'bg-foreground text-background'
+                        : 'bg-card text-muted-foreground hover:text-foreground'
+                    "
+                    @click="setDigest(opt.value)"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+              </template>
+            </SettingsRow>
+          </SettingsSection>
 
-              <div
-                class="inline-flex overflow-hidden rounded-lg border border-border"
-              >
-                <button
-                  v-for="opt in digestOptions"
-                  :key="opt.value"
-                  class="px-4 py-2 text-xs font-medium transition-colors"
-                  :class="
-                    digestFrequency === opt.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card text-muted-foreground hover:text-foreground'
-                  "
-                  @click="setDigest(opt.value)"
-                >
-                  {{ opt.label }}
-                </button>
-              </div>
-            </div>
-          </template>
+          <!-- PER-CIRCLE section (multi-circle users) -->
+          <SettingsSection v-if="circles.length > 1" :label="t('notificationSettings.sectionPerCircle')">
+            <SettingsRow
+              v-for="circle in circles"
+              :key="circle.id"
+              :to="`/notification-settings?circle=${circle.id}`"
+            >
+              {{ circle.name }}
+            </SettingsRow>
+          </SettingsSection>
         </template>
-      </div>
+      </template>
     </main>
   </div>
 </template>

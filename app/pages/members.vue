@@ -1,282 +1,186 @@
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md"
-    >
-      <div class="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-5">
+    <!-- Page strip header -->
+    <header class="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div class="mx-auto flex h-14 max-w-[640px] items-center gap-3 px-5">
         <button
-          class="-ml-1 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          class="-ml-1 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
           @click="router.back()"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6" />
           </svg>
           {{ t('common.back') }}
         </button>
-
-        <p class="flex-1 text-center text-sm font-semibold text-foreground">
-          {{ t('members.title') }}
-        </p>
-
-        <!-- Right side: invite + settings (owner/admin only) -->
-        <div class="flex items-center gap-2">
-          <button
-            v-if="canManage"
-            class="flex items-center gap-1.5 text-sm font-medium text-foreground transition-opacity hover:opacity-70"
-            @click="inviteOpen = true"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <line x1="19" y1="8" x2="19" y2="14" />
-              <line x1="22" y1="11" x2="16" y2="11" />
-            </svg>
-            {{ t('members.invite') }}
-          </button>
-          <!-- Circle settings link (owner only) — preserves the active circle -->
+        <span class="flex-1 text-center">
+          <span class="text-[9px] font-bold uppercase tracking-[.18em] text-accent">{{ circleName }}</span>
+          <span class="mx-1 text-muted-foreground">·</span>
+          <span class="text-[12px] font-medium text-foreground">{{ t('members.title') }}</span>
+        </span>
+        <!-- Right side: settings icon (owner only) -->
+        <div class="flex w-12 items-center justify-end">
           <NuxtLink
             v-if="data?.myRole === 'owner'"
             :to="circleId ? `/circle-settings?circle=${circleId}` : '/circle-settings'"
             class="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             :title="t('nav.circleSettings')"
           >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </NuxtLink>
-          <div v-if="!canManage" class="w-12" />
         </div>
       </div>
     </header>
 
-    <main class="mx-auto max-w-[1280px] space-y-8 px-5 py-6">
+    <main class="mx-auto max-w-[640px] px-5 py-8">
       <!-- Loading -->
       <div v-if="pending" class="flex justify-center py-24">
-        <div
-          class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent"
-        />
+        <div class="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
       </div>
 
       <template v-else-if="data">
         <!-- Remove error -->
-        <p v-if="removeError" class="-mb-4 text-xs text-destructive">
+        <p v-if="removeError && !removeDialog" class="-mt-4 mb-4 text-xs text-destructive">
           {{ removeError }}
         </p>
 
-        <!-- Active members -->
-        <section>
-          <p
-            class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-          >
-            {{ t('members.count', data.members.length) }}
+        <!-- Hero card -->
+        <div class="mb-8 overflow-hidden rounded-[18px] border border-border bg-card p-[16px_18px]">
+          <!-- Kicker -->
+          <p class="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-muted-foreground">
+            {{ circleName }}
           </p>
-          <ul class="space-y-1">
-            <li
-              v-for="member in data.members"
-              :key="member.id"
-              class="-mx-3 flex cursor-pointer items-center gap-4 rounded-xl px-3 py-3 transition-colors hover:bg-secondary/60"
-              @click="
-                router.push(
-                  circleId
-                    ? `/member/${member.userId}?circle=${circleId}`
-                    : `/member/${member.userId}`,
-                )
-              "
-            >
-              <!-- Avatar -->
-              <div
-                class="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border"
-              >
-                <img
-                  v-if="member.avatarUrl"
-                  :src="member.avatarUrl"
-                  class="h-full w-full object-cover"
-                />
-                <span v-else class="text-xs font-bold text-foreground">{{
-                  initials(member)
-                }}</span>
-              </div>
+          <!-- Display title -->
+          <h1 class="mt-1 font-serif text-[30px] italic leading-[1.1] text-foreground">
+            {{ t('members.displayTitle') }}
+          </h1>
+          <!-- Meta line -->
+          <p class="mt-2 font-mono text-[11px] text-muted-foreground">
+            {{ metaText }}
+          </p>
+          <!-- Invite CTA -->
+          <button
+            v-if="canManage"
+            class="mt-4 w-full rounded-full bg-foreground py-2.5 text-[13px] font-semibold text-background transition-opacity hover:opacity-80"
+            @click="inviteOpen = true"
+          >
+            + {{ t('members.inviteCta') }}
+          </button>
+        </div>
 
-              <!-- Name + role -->
-              <div class="flex min-w-0 flex-1 items-center gap-3">
-                <div class="min-w-0">
-                  <p
-                    class="truncate text-sm font-medium leading-none text-foreground"
-                  >
-                    {{ displayName(member) }}
-                    <span
-                      v-if="member.userId === authUser?.sub"
-                      class="font-normal text-muted-foreground"
-                    >
-                      {{ t('members.you') }}</span
-                    >
-                  </p>
-                </div>
-                <span
-                  :class="roleBadgeClass(member.role)"
-                  class="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide"
-                >
-                  {{ roleLabel(member.role) }}
-                </span>
-              </div>
-
-              <!-- Role action button (owner only, non-self, non-owner targets) -->
+        <!-- ACTIVE section -->
+        <SettingsSection :label="t('members.sectionActive')">
+          <component
+            :is="canManage ? 'NuxtLink' : 'div'"
+            v-for="m in data.members"
+            :key="m.userId"
+            :to="canManage ? (circleId ? `/member/${m.userId}?circle=${circleId}` : `/member/${m.userId}`) : undefined"
+            class="flex items-center gap-3 px-[14px] py-[12px]"
+            :class="canManage ? 'cursor-pointer transition-colors hover:bg-foreground/[.03]' : ''"
+          >
+            <!-- Avatar -->
+            <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[11px] font-bold text-foreground">
+              <img v-if="m.avatarUrl" :src="m.avatarUrl" class="h-full w-full object-cover" />
+              <span v-else>{{ initials(m) }}</span>
+            </div>
+            <!-- Name + hint -->
+            <div class="min-w-0 flex-1">
+              <p class="text-[14px] font-semibold text-foreground">
+                <span class="truncate">{{ displayName(m) }}</span>
+                <span v-if="m.userId === authUser?.sub" class="ml-1 font-mono text-[10px] tracking-[.16em] text-muted-foreground">YOU</span>
+              </p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                {{ t('members.joinedMeta', { date: joinedLabel(m.joinedAt) }) }}
+              </p>
+            </div>
+            <!-- Role chip -->
+            <span
+              v-if="m.role === 'owner'"
+              class="rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-[.14em] text-background"
+            >{{ t('members.roleOwner') }}</span>
+            <span
+              v-else-if="m.role === 'admin'"
+              class="rounded-full border border-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-[.14em] text-foreground"
+            >{{ t('members.roleAdmin') }}</span>
+            <span
+              v-else
+              class="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground"
+            >{{ t('members.roleMember') }}</span>
+            <!-- Chevron for owner-viewer rows or action buttons -->
+            <div v-if="canManage" class="flex flex-shrink-0 items-center gap-1">
+              <!-- Role action (owner only, non-self, non-owner target) -->
               <button
-                v-if="
-                  data?.myRole === 'owner' &&
-                  member.role !== 'owner' &&
-                  member.userId !== authUser?.sub
-                "
-                class="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-foreground"
-                @click.stop="openRoleDialog(member)"
-                :title="
-                  member.role === 'admin'
-                    ? t('members.removeAdmin')
-                    : t('members.makeAdmin')
-                "
+                v-if="data?.myRole === 'owner' && m.role !== 'owner' && m.userId !== authUser?.sub"
+                class="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-foreground"
+                :title="m.role === 'admin' ? t('members.removeAdmin') : t('members.makeAdmin')"
+                @click.prevent.stop="openRoleDialog(m)"
               >
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                  />
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
               </button>
-
-              <!-- Remove button -->
+              <!-- Remove button (admin/owner, non-self, non-owner target) -->
               <button
-                v-if="
-                  canManage &&
-                  member.role !== 'owner' &&
-                  !(member.userId === authUser?.sub)
-                "
-                class="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-destructive"
-                @click.stop="openRemoveDialog(member)"
+                v-if="m.role !== 'owner' && m.userId !== authUser?.sub"
+                class="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-destructive"
+                @click.prevent.stop="openRemoveDialog(m)"
               >
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <polyline points="3 6 5 6 21 6" />
                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                   <path d="M10 11v6M14 11v6" />
                   <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                 </svg>
               </button>
-            </li>
-          </ul>
-        </section>
+              <svg class="h-3 w-3 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </div>
+          </component>
+        </SettingsSection>
 
-        <!-- Pending invites (owner/admin only) -->
-        <section v-if="canManage && data.invites.length > 0">
-          <p
-            class="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+        <!-- PENDING section (owner/admin only, only if there are pending invites) -->
+        <SettingsSection v-if="canManage && data.invites.length > 0" :label="t('members.sectionPending')">
+          <div
+            v-for="inv in data.invites"
+            :key="inv.id"
+            class="flex items-center gap-3 px-[14px] py-[12px] opacity-70"
           >
-            {{ t('members.pendingInvites') }}
-          </p>
-          <ul class="space-y-1">
-            <li
-              v-for="invite in data.invites"
-              :key="invite.id"
-              class="-mx-3 flex items-center gap-4 rounded-xl px-3 py-3 transition-colors hover:bg-secondary/60"
-            >
-              <!-- Placeholder avatar -->
-              <div
-                class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border bg-secondary"
+            <!-- Dashed placeholder avatar -->
+            <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-dashed border-foreground/30 text-[14px] text-muted-foreground">
+              +
+            </div>
+            <!-- Email + hint -->
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[14px] text-foreground">{{ inv.email }}</p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                {{ t('members.invitedMeta', { ago: timeAgo(inv.created_at) }) }}
+              </p>
+            </div>
+            <!-- Resend + cancel -->
+            <div class="flex flex-shrink-0 items-center gap-1.5">
+              <button
+                class="text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                :disabled="resendingEmail === inv.email"
+                @click.stop="resendInvite(inv)"
               >
-                <svg
-                  class="h-4 w-4 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
+                {{ resendingEmail === inv.email ? '…' : t('members.resend') }}
+              </button>
+              <button
+                class="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-destructive disabled:opacity-40"
+                :disabled="cancellingId === inv.id"
+                @click="cancelInvite(inv)"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
-              </div>
-
-              <!-- Email + expiry -->
-              <div class="min-w-0 flex-1">
-                <p
-                  class="truncate text-sm font-medium leading-none text-foreground"
-                >
-                  {{ invite.email }}
-                </p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{
-                    t('members.invited', { time: timeAgo(invite.created_at) })
-                  }}
-                  ·
-                  {{
-                    t('members.expires', {
-                      time: timeAgo(invite.expires_at, true),
-                    })
-                  }}
-                </p>
-              </div>
-
-              <!-- Resend + cancel -->
-              <div class="flex flex-shrink-0 items-center gap-1.5">
-                <button
-                  class="rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-border disabled:opacity-50"
-                  :disabled="resendingEmail === invite.email"
-                  @click="resendInvite(invite)"
-                >
-                  {{
-                    resendingEmail === invite.email ? '…' : t('members.resend')
-                  }}
-                </button>
-                <button
-                  class="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-secondary hover:text-destructive"
-                  :disabled="cancellingId === invite.id"
-                  @click="cancelInvite(invite)"
-                >
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-            </li>
-          </ul>
-        </section>
+              </button>
+            </div>
+          </div>
+        </SettingsSection>
       </template>
     </main>
 
@@ -293,21 +197,12 @@
         v-if="roleDialog"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          @click="roleDialog = null"
-        />
-        <div
-          class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl"
-        >
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="roleDialog = null" />
+        <div class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl">
           <!-- Header -->
           <div class="border-b border-border px-6 pb-4 pt-6">
-            <p class="text-sm font-semibold text-foreground">
-              {{ displayName(roleDialog) }}
-            </p>
-            <p class="mt-0.5 text-xs text-muted-foreground">
-              {{ roleLabel(roleDialog.role) }}
-            </p>
+            <p class="text-sm font-semibold text-foreground">{{ displayName(roleDialog) }}</p>
+            <p class="mt-0.5 text-xs text-muted-foreground">{{ roleLabel(roleDialog.role) }}</p>
           </div>
 
           <!-- Actions -->
@@ -343,22 +238,11 @@
                   {{ t('members.transferOwnership') }}
                 </button>
               </div>
-              <div
-                v-else
-                class="space-y-3 rounded-xl border border-border bg-secondary p-4 pt-1"
-              >
-                <p
-                  class="text-sm font-semibold text-foreground"
-                >
-                  {{
-                    t('members.transferOwnershipTitle', {
-                      name: roleDialog.firstName,
-                    })
-                  }}
+              <div v-else class="space-y-3 rounded-xl border border-border bg-secondary p-4 pt-1">
+                <p class="text-sm font-semibold text-foreground">
+                  {{ t('members.transferOwnershipTitle', { name: roleDialog.firstName }) }}
                 </p>
-                <p class="text-xs text-muted-foreground">
-                  {{ t('members.transferOwnershipDesc') }}
-                </p>
+                <p class="text-xs text-muted-foreground">{{ t('members.transferOwnershipDesc') }}</p>
                 <div class="flex gap-2 pt-1">
                   <button
                     class="flex-1 rounded-lg border border-border py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
@@ -380,9 +264,7 @@
 
           <!-- Footer -->
           <div class="px-6 pb-5">
-            <p v-if="roleChangeError" class="mb-3 text-xs text-destructive">
-              {{ roleChangeError }}
-            </p>
+            <p v-if="roleChangeError" class="mb-3 text-xs text-destructive">{{ roleChangeError }}</p>
             <button
               class="w-full rounded-[10px] border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
               @click="roleDialog = null"
@@ -407,79 +289,43 @@
         v-if="removeDialog"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          @click="removeDialog = null"
-        />
-        <div
-          class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl"
-        >
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="removeDialog = null" />
+        <div class="relative w-full max-w-sm overflow-hidden rounded-[20px] border border-border bg-card shadow-2xl">
           <!-- Header -->
           <div class="border-b border-border px-6 pb-4 pt-6">
-            <p
-              class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive"
-            >
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-destructive">
               {{ t('members.removeAction') }}
             </p>
             <h2 class="text-base font-bold leading-snug text-foreground">
               {{ t('members.removeTitle', { name: removeDialog.firstName }) }}
             </h2>
-            <p class="mt-1 text-xs text-muted-foreground">
-              {{ t('members.removeContentQuestion') }}
-            </p>
+            <p class="mt-1 text-xs text-muted-foreground">{{ t('members.removeContentQuestion') }}</p>
           </div>
 
           <!-- Choices -->
           <div class="space-y-2 px-6 py-4">
             <label
               class="flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all"
-              :class="
-                keepContent
-                  ? 'border-foreground bg-secondary'
-                  : 'border-border hover:border-foreground/30'
-              "
+              :class="keepContent ? 'border-foreground bg-secondary' : 'border-border hover:border-foreground/30'"
             >
-              <input
-                type="radio"
-                :value="true"
-                v-model="keepContent"
-                class="mt-0.5 accent-foreground"
-              />
+              <input type="radio" :value="true" v-model="keepContent" class="mt-0.5 accent-foreground" />
               <div>
-                <p class="text-sm font-medium text-foreground">
-                  {{ t('members.removeKeepLabel') }}
-                </p>
-                <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  {{ t('members.removeKeepDesc') }}
-                </p>
+                <p class="text-sm font-medium text-foreground">{{ t('members.removeKeepLabel') }}</p>
+                <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{{ t('members.removeKeepDesc') }}</p>
               </div>
             </label>
 
             <label
               class="flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all"
-              :class="
-                !keepContent
-                  ? 'border-destructive/50 bg-destructive/5'
-                  : 'border-border hover:border-foreground/30'
-              "
+              :class="!keepContent ? 'border-destructive/50 bg-destructive/5' : 'border-border hover:border-foreground/30'"
             >
-              <input
-                type="radio"
-                :value="false"
-                v-model="keepContent"
-                class="mt-0.5 accent-foreground"
-              />
+              <input type="radio" :value="false" v-model="keepContent" class="mt-0.5 accent-foreground" />
               <div>
-                <p class="text-sm font-medium text-foreground">
-                  {{ t('members.removeDeleteLabel') }}
-                </p>
-                <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  {{ t('members.removeDeleteDesc') }}
-                </p>
+                <p class="text-sm font-medium text-foreground">{{ t('members.removeDeleteLabel') }}</p>
+                <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{{ t('members.removeDeleteDesc') }}</p>
               </div>
             </label>
 
-            <!-- Irreversibility warning shown when "remove" is selected -->
             <Transition
               enter-active-class="transition duration-150 ease-out"
               enter-from-class="opacity-0 -translate-y-1"
@@ -489,34 +335,20 @@
                 v-if="!keepContent"
                 class="bg-destructive/8 flex items-start gap-2 rounded-xl border border-destructive/20 px-3.5 py-3"
               >
-                <svg
-                  class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-destructive"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-                  />
+                <svg class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-destructive" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
-                <p class="text-xs leading-relaxed text-destructive">
-                  {{ t('members.removeDeleteWarning') }}
-                </p>
+                <p class="text-xs leading-relaxed text-destructive">{{ t('members.removeDeleteWarning') }}</p>
               </div>
             </Transition>
           </div>
 
           <!-- Footer -->
           <div class="space-y-2.5 px-6 pb-6">
-            <p class="text-xs text-muted-foreground">
-              {{ t('members.removeNotification') }}
-            </p>
-            <p v-if="removeError" class="text-xs text-destructive">
-              {{ removeError }}
-            </p>
+            <p class="text-xs text-muted-foreground">{{ t('members.removeNotification') }}</p>
+            <p v-if="removeError" class="text-xs text-destructive">{{ removeError }}</p>
             <div class="flex gap-2 pt-1">
               <button
                 type="button"
@@ -530,11 +362,7 @@
                 class="flex-1 rounded-[10px] bg-destructive py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 @click="removeMember(removeDialog)"
               >
-                {{
-                  removingId
-                    ? t('members.removing')
-                    : t('members.removeConfirm')
-                }}
+                {{ removingId ? t('members.removing') : t('members.removeConfirm') }}
               </button>
             </div>
           </div>
@@ -555,13 +383,8 @@
         v-if="inviteOpen"
         class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-0"
       >
-        <div
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          @click="closeInvite"
-        />
-        <div
-          class="relative w-full max-w-sm rounded-[20px] border border-border bg-card p-6 shadow-2xl"
-        >
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeInvite" />
+        <div class="relative w-full max-w-sm rounded-[20px] border border-border bg-card p-6 shadow-2xl">
           <h2 class="mb-1 font-display text-lg font-bold text-foreground">
             {{ t('nav.inviteSomeone') }}
           </h2>
@@ -578,13 +401,8 @@
               :disabled="inviteSending"
               class="mb-3 w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             />
-            <p v-if="inviteError" class="mb-3 text-xs text-destructive">
-              {{ inviteError }}
-            </p>
-            <p
-              v-if="inviteSentTo"
-              class="mb-3 text-xs text-green-600 dark:text-green-400"
-            >
+            <p v-if="inviteError" class="mb-3 text-xs text-destructive">{{ inviteError }}</p>
+            <p v-if="inviteSentTo" class="mb-3 text-xs text-green-600 dark:text-green-400">
               {{ t('nav.inviteSentTo', { email: inviteSentTo }) }}
             </p>
 
@@ -660,6 +478,29 @@ const canManage = computed(
   () => data.value?.myRole === 'owner' || data.value?.myRole === 'admin',
 )
 
+// ── Meta line helpers ──────────────────────────────────────
+function sinceLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+}
+
+/** Earliest joinedAt across all members = circle creation date */
+const sinceText = computed(() => {
+  const members = data.value?.members ?? []
+  if (!members.length) return ''
+  const earliest = members.reduce((min: string, m: any) =>
+    m.joinedAt < min ? m.joinedAt : min, members[0].joinedAt)
+  return sinceLabel(earliest)
+})
+
+const metaText = computed(() => {
+  return t('members.meta', {
+    active: data.value?.members.length ?? 0,
+    pending: data.value?.invites.length ?? 0,
+    since: sinceText.value,
+  })
+})
+
 // ── Display helpers ────────────────────────────────────────
 function displayName(member: any): string {
   const parts = [member.firstName, member.lastName].filter(Boolean)
@@ -674,17 +515,10 @@ function initials(member: any): string {
   return (first + last).toUpperCase() || '?'
 }
 
-function roleBadgeClass(role: string): string {
-  switch (role) {
-    case 'owner':
-      return 'bg-secondary text-foreground'
-    case 'admin':
-      return 'bg-secondary text-foreground'
-    case 'caregiver':
-      return 'bg-sky-100/60 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400'
-    default:
-      return 'bg-border/60 text-muted-foreground'
-  }
+function joinedLabel(dateStr: string): string {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString(undefined, { month: 'short', year: '2-digit' })
 }
 
 function roleLabel(role: string): string {

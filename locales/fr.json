@@ -305,7 +305,14 @@
     "deleteCircleConfirm": "Supprimer le cercle",
     "deleteCircleNameMismatch": "Le nom du cercle ne correspond pas. Veuillez le saisir exactement.",
     "deleteCircleError": "Échec de la suppression du cercle. Veuillez réessayer.",
-    "deleteCircleRestoreHint": "Vous avez changé d'avis? Vous avez 30 jours pour le restaurer depuis les paramètres du compte."
+    "deleteCircleRestoreHint": "Vous avez changé d'avis? Vous avez 30 jours pour le restaurer depuis les paramètres du compte.",
+    "displayTitle": "Notre cercle",
+    "meta": "{active} membres · {pending} en attente · Depuis {since}",
+    "sectionActive": "Actifs",
+    "sectionPending": "En attente",
+    "inviteCta": "Inviter quelqu'un",
+    "joinedMeta": "Rejoint {date}",
+    "invitedMeta": "Invité il y a {ago}"
   },
   "member": {
     "joined": "Rejoint le {date}",
@@ -549,7 +556,20 @@
       "restoreCircle": "Restaurer",
       "restoring": "Restauration en cours…",
       "restoreSuccess": "{name} a été restauré.",
-      "restoreError": "Échec de la restauration du cercle. Veuillez réessayer."
+      "restoreError": "Échec de la restauration du cercle. Veuillez réessayer.",
+      "displayTitle": "Vous",
+      "displaySubtitle": "Comment vous apparaissez sur Our Story.",
+      "sectionProfile": "Profil",
+      "sectionLanguage": "Langue",
+      "sectionAccount": "Compte",
+      "firstNameLabel": "Prénom",
+      "firstNamePlaceholder": "Prénom",
+      "lastNameLabel": "Nom",
+      "lastNamePlaceholder": "Nom",
+      "emailLabel": "E-mail",
+      "logOutLabel": "Se déconnecter",
+      "logOutAction": "Déconnecter",
+      "deleteAction": "Supprimer"
     }
   },
   "quickNote": {
@@ -615,6 +635,12 @@
     "skip": "Ignorer"
   },
   "circleSettings": {
+    "displaySubtitle": "Membres, enfants, et la façon dont vous gardez les souvenirs.",
+    "sectionAbout": "À propos",
+    "sectionMembers": "Membres",
+    "sectionChildren": "Enfants",
+    "sectionDanger": "Zone à risque",
+    "membersCount": "{n} membres",
     "circleName": "Nom du cercle",
     "circleNamePlaceholder": "Nom du cercle",
     "circleType": "Type de cercle",
@@ -812,6 +838,11 @@
     "digestMonthly": "Mensuel",
     "digestOff": "Désactivé",
     "milestoneNudges": "Rappels de jalons",
-    "milestoneNudgesDesc": "Recevez un rappel pour les anniversaires et autres jalons à venir."
+    "milestoneNudgesDesc": "Recevez un rappel pour les anniversaires et autres jalons à venir.",
+    "displayTitle": "Comment vous joindre",
+    "displaySubtitle": "Quand vous notifier, quand vous laisser tranquille.",
+    "sectionPush": "Notifications push",
+    "sectionEmail": "Email",
+    "sectionPerCircle": "Par cercle"
   }
 }
