@@ -28,15 +28,17 @@ export default defineNuxtConfig({
           href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=Hanken+Grotesk:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap',
         },
         { rel: 'manifest', href: '/manifest.json' },
-        // Favicons. Modern browsers pick the SVG (scales to any DPR);
-        // legacy fallbacks remain. iOS uses apple-touch-icon for the
-        // home-screen tile. Regenerate via `pnpm build:favicons`.
-        // ?v= bumps cache-bust any time the design changes — browsers and the
-        // service worker key static assets by full URL, so a new query string
-        // forces a fresh fetch even past their aggressive favicon caching.
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=5' },
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=5' },
-        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png?v=5' },
+        // Favicons. ?v= cache-busts past the browser's aggressive favicon
+        // caching when the design changes — bump it whenever you replace
+        // /public/favicon.ico (or any other icon asset).
+        // NOTE: favicon.svg is still the OLD design and is left commented
+        // so SVG-preferring browsers don't show a mismatched icon. Re-enable
+        // it once the SVG is regenerated to match. apple-touch-icon.png is
+        // also the old design but is kept enabled so iOS home-screen tile
+        // shows *something* — accept the mismatch until it's regenerated.
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=6' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png?v=6' },
+        // { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=6' },
       ],
     },
   },
