@@ -628,6 +628,12 @@
     "skip": "Skip"
   },
   "circleSettings": {
+    "displaySubtitle": "Members, children, and the way you remember.",
+    "sectionAbout": "About",
+    "sectionMembers": "Members",
+    "sectionChildren": "Children",
+    "sectionDanger": "Danger",
+    "membersCount": "{n} members",
     "circleName": "Circle name",
     "circleNamePlaceholder": "Circle name",
     "circleType": "Circle type",

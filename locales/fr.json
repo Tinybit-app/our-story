@@ -628,6 +628,12 @@
     "skip": "Ignorer"
   },
   "circleSettings": {
+    "displaySubtitle": "Membres, enfants, et la façon dont vous gardez les souvenirs.",
+    "sectionAbout": "À propos",
+    "sectionMembers": "Membres",
+    "sectionChildren": "Enfants",
+    "sectionDanger": "Zone à risque",
+    "membersCount": "{n} membres",
     "circleName": "Nom du cercle",
     "circleNamePlaceholder": "Nom du cercle",
     "circleType": "Type de cercle",

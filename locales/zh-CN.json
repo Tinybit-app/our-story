@@ -436,6 +436,12 @@
     "skip": "跳过"
   },
   "circleSettings": {
+    "displaySubtitle": "成员、孩子，以及你的记忆方式。",
+    "sectionAbout": "关于",
+    "sectionMembers": "成员",
+    "sectionChildren": "孩子",
+    "sectionDanger": "危险区",
+    "membersCount": "{n} 名成员",
     "circleName": "圈子名称",
     "circleNamePlaceholder": "圈子名称",
     "circleType": "圈子类型",
