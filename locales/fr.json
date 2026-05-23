@@ -812,6 +812,11 @@
     "digestMonthly": "Mensuel",
     "digestOff": "Désactivé",
     "milestoneNudges": "Rappels de jalons",
-    "milestoneNudgesDesc": "Recevez un rappel pour les anniversaires et autres jalons à venir."
+    "milestoneNudgesDesc": "Recevez un rappel pour les anniversaires et autres jalons à venir.",
+    "displayTitle": "Comment vous joindre",
+    "displaySubtitle": "Quand vous notifier, quand vous laisser tranquille.",
+    "sectionPush": "Notifications push",
+    "sectionEmail": "Email",
+    "sectionPerCircle": "Par cercle"
   }
 }

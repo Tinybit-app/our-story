@@ -620,6 +620,11 @@
     "digestMonthly": "每月",
     "digestOff": "关闭",
     "milestoneNudges": "里程碑提醒",
-    "milestoneNudgesDesc": "在生日、纪念日等里程碑临近时收到提醒。"
+    "milestoneNudgesDesc": "在生日、纪念日等里程碑临近时收到提醒。",
+    "displayTitle": "通知方式",
+    "displaySubtitle": "什么时候找你，什么时候让你清净。",
+    "sectionPush": "推送",
+    "sectionEmail": "邮件",
+    "sectionPerCircle": "按圈子"
   }
 }

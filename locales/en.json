@@ -812,6 +812,11 @@
     "digestMonthly": "Monthly",
     "digestOff": "Off",
     "milestoneNudges": "Milestone reminders",
-    "milestoneNudgesDesc": "Get nudged about upcoming birthdays, anniversaries, and milestones."
+    "milestoneNudgesDesc": "Get nudged about upcoming birthdays, anniversaries, and milestones.",
+    "displayTitle": "How we find you",
+    "displaySubtitle": "When to ping, when to leave you alone.",
+    "sectionPush": "Push",
+    "sectionEmail": "Email",
+    "sectionPerCircle": "Per circle"
   }
 }
