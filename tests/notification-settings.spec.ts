@@ -158,15 +158,16 @@ test.describe('Notification settings (10.3)', () => {
       timeout: 10_000,
     })
 
-    // Push toggle visible
+    // Push toggle visible — SettingsToggle is a button[role=switch], not a
+    // checkbox input, since the redesign.
     await expect(page.getByText('Push notifications')).toBeVisible()
-    const pushCheckbox = page.locator('input[type="checkbox"]').first()
-    await expect(pushCheckbox).toBeVisible()
+    const pushSwitch = page.getByRole('switch').first()
+    await expect(pushSwitch).toBeVisible()
 
     // Mute toggle visible
     await expect(page.getByText('Mute this circle')).toBeVisible()
-    const muteCheckbox = page.locator('input[type="checkbox"]').nth(1)
-    await expect(muteCheckbox).toBeVisible()
+    const muteSwitch = page.getByRole('switch').nth(1)
+    await expect(muteSwitch).toBeVisible()
 
     // Email digest segmented control visible
     await expect(page.getByText('Email digest')).toBeVisible()
@@ -185,8 +186,9 @@ test.describe('Notification settings (10.3)', () => {
 
     await page.goto('/notification-settings')
 
-    // The active circle's name is shown as a scope label, not a pill
-    await expect(page.getByText('Smith Family')).toBeVisible({
+    // The active circle's name is shown as a scope label. It may also appear
+    // elsewhere on the page (e.g. as nav metadata) so scope to the scope-label.
+    await expect(page.getByText('Smith Family').first()).toBeVisible({
       timeout: 10_000,
     })
     // The escape hatch link to /timeline is present
@@ -306,16 +308,16 @@ test.describe('Notification settings (10.3)', () => {
       timeout: 10_000,
     })
 
-    // Click the push checkbox to toggle it off (currently on). Set up the
+    // Click the push switch to toggle it off (currently on). Set up the
     // response listener BEFORE the click so we don't race past the PATCH.
-    const pushCheckbox = page.locator('input[type="checkbox"]').first()
+    const pushSwitch = page.getByRole('switch').first()
     await Promise.all([
       page.waitForResponse(
         (r) =>
           r.url().includes('/api/notification-preferences') &&
           r.request().method() === 'PATCH',
       ),
-      pushCheckbox.click(),
+      pushSwitch.click(),
     ])
 
     expect(patchBody).toMatchObject({
@@ -355,16 +357,16 @@ test.describe('Notification settings (10.3)', () => {
       timeout: 10_000,
     })
 
-    // Click the mute checkbox to toggle it on (currently off). Listener
+    // Click the mute switch to toggle it on (currently off). Listener
     // before click — see push test for rationale.
-    const muteCheckbox = page.locator('input[type="checkbox"]').nth(1)
+    const muteSwitch = page.getByRole('switch').nth(1)
     await Promise.all([
       page.waitForResponse(
         (r) =>
           r.url().includes('/api/notification-preferences') &&
           r.request().method() === 'PATCH',
       ),
-      muteCheckbox.click(),
+      muteSwitch.click(),
     ])
 
     expect(patchBody).toMatchObject({ circleId: CIRCLE_ID, circle_muted: true })

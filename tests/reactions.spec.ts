@@ -139,142 +139,14 @@ function mockComments(page: any, memoryId: string) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Emoji reactions (8.2)', () => {
-  test('existing reaction chip renders on photo mosaic cell when hovered', async ({
-    page,
-  }) => {
-    await mockMembership(page)
-    await mockCircles(page)
-    await mockTimeline(page, [
-      makePhotoMemory([
-        {
-          id: 'r1',
-          emoji: '❤️',
-          user_id: OTHER_USER_ID,
-          guest_name: null,
-          user: { first_name: 'Alice', last_name: 'S' },
-        },
-      ]),
-    ])
+  // The mosaic cell no longer carries reaction UI — chips and the add-reaction
+  // picker live exclusively inside MemoryDetail (see "MemoryModal shows
+  // reaction chips and picker" below for the photo case, and "QuickNoteModal
+  // shows reaction chips and picker" further down for the quick-note case).
+  // The single non-redundant scenario kept from the old card-surface suite is
+  // toggling an own reaction *off* — covered here against the modal.
 
-    await page.goto('/timeline')
-    await expect(
-      page.getByRole('button', { name: 'Smith Family' }),
-    ).toBeVisible({
-      timeout: 15_000,
-    })
-
-    // Reaction overlay on the mosaic cell is shown on hover only (v-if="isHovered")
-    const card = page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
-      .first()
-    await card.hover()
-
-    // Chip with heart emoji should appear on the hovered card
-    await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({
-      timeout: 5_000,
-    })
-  })
-
-  test('+ button opens emoji picker on photo mosaic cell', async ({ page }) => {
-    await mockMembership(page)
-    await mockCircles(page)
-    await mockTimeline(page, [makePhotoMemory()])
-
-    await page.goto('/timeline')
-    await expect(
-      page.getByRole('button', { name: 'Smith Family' }),
-    ).toBeVisible({
-      timeout: 15_000,
-    })
-
-    // Hover the card to reveal the picker button
-    const card = page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
-      .first()
-    await card.hover()
-
-    // The add-reaction button is now a smiley icon with aria-label
-    // "Add reaction" (no visible "+" text since the redesign).
-    const pickerBtn = card.getByRole('button', { name: /add reaction/i })
-    await expect(pickerBtn).toBeVisible({ timeout: 5_000 })
-
-    // Click to open picker
-    await pickerBtn.click()
-
-    // Heart emoji should appear in the picker
-    await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible(
-      { timeout: 3_000 },
-    )
-  })
-
-  test('picking an emoji calls POST and chip appears on card', async ({
-    page,
-  }) => {
-    await mockMembership(page)
-    await mockCircles(page)
-    await mockTimeline(page, [makePhotoMemory()])
-
-    let postEmoji: string | null = null
-    await page.route(
-      `**/api/memories/${MEMORY_ID}/reactions**`,
-      async (route) => {
-        if (route.request().method() === 'POST') {
-          const body = JSON.parse(route.request().postData() ?? '{}')
-          postEmoji = body.emoji
-          await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-              reactions: [
-                {
-                  id: 'r-new',
-                  emoji: body.emoji,
-                  user_id: MY_USER_ID,
-                  guest_name: null,
-                  user: { first_name: 'Dao', last_name: 'Z' },
-                },
-              ],
-            }),
-          })
-        } else {
-          await route.continue()
-        }
-      },
-    )
-
-    await page.goto('/timeline')
-    await expect(
-      page.getByRole('button', { name: 'Smith Family' }),
-    ).toBeVisible({
-      timeout: 15_000,
-    })
-
-    const card = page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
-      .first()
-    await card.hover()
-
-    const pickerBtn = card.getByRole('button', { name: /add reaction/i })
-    await expect(pickerBtn).toBeVisible({ timeout: 5_000 })
-    await pickerBtn.evaluate((btn: HTMLButtonElement) => btn.click())
-
-    // Click the heart emoji in the picker
-    await expect(page.locator('button', { hasText: '❤️' }).first()).toBeVisible(
-      { timeout: 3_000 },
-    )
-    await page
-      .locator('button', { hasText: '❤️' })
-      .first()
-      .evaluate((btn: HTMLButtonElement) => btn.click())
-
-    await page.waitForTimeout(500)
-    expect(postEmoji).toBe('❤️')
-  })
-
-  test('clicking own reaction chip calls POST to toggle it off', async ({
+  test('clicking own reaction chip in modal calls POST to toggle it off', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -290,6 +162,7 @@ test.describe('Emoji reactions (8.2)', () => {
         },
       ]),
     ])
+    await mockComments(page, MEMORY_ID)
 
     let postCalled = false
     await page.route(
@@ -316,21 +189,18 @@ test.describe('Emoji reactions (8.2)', () => {
       timeout: 15_000,
     })
 
-    const card = page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
-      .first()
-    await card.hover()
+    // Open the modal — reactions are only rendered there now.
+    await page.locator('.mosaic-cell').first().click()
+
+    const modal = page.locator('.fixed.inset-0')
 
     // The heart chip should be visible (own reaction, highlighted)
-    await expect(card.locator('button', { hasText: '❤️' })).toBeVisible({
-      timeout: 5_000,
-    })
+    await expect(modal.locator('button', { hasText: '❤️' }).first()).toBeVisible(
+      { timeout: 5_000 },
+    )
 
-    // Click to toggle off
-    await card
-      .locator('button', { hasText: '❤️' })
-      .evaluate((btn: HTMLButtonElement) => btn.click())
+    // Click the chip to toggle off
+    await modal.locator('button', { hasText: '❤️' }).first().click()
 
     await page.waitForTimeout(500)
     expect(postCalled).toBe(true)
@@ -388,11 +258,7 @@ test.describe('Emoji reactions (8.2)', () => {
     )
 
     await page.goto('/timeline')
-    await page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
-      .first()
-      .click()
+    await page.locator('.mosaic-cell').first().click()
 
     // Existing reaction chip should be visible in modal
     // (mosaic cell reaction overlay hidden - v-if="isHovered" is false when modal is open)
@@ -415,32 +281,6 @@ test.describe('Emoji reactions (8.2)', () => {
 
     await page.waitForTimeout(500)
     expect(postEmoji).toBe('🎉')
-  })
-
-  test('quick-note mosaic cell shows existing reaction chip', async ({ page }) => {
-    await mockMembership(page)
-    await mockCircles(page)
-    await mockTimeline(page, [
-      makeQuickNoteMemory([
-        {
-          id: 'r1',
-          emoji: '🥹',
-          user_id: OTHER_USER_ID,
-          guest_name: null,
-          user: { first_name: 'Alice', last_name: 'S' },
-        },
-      ]),
-    ])
-
-    await page.goto('/timeline')
-    await expect(
-      page.getByRole('button', { name: 'Smith Family' }),
-    ).toBeVisible({
-      timeout: 15_000,
-    })
-
-    // Reaction chip should appear on the quick-note mosaic cell
-    await expect(page.getByText('🥹').first()).toBeVisible({ timeout: 5_000 })
   })
 
   test('QuickNoteModal shows reaction chips and picker', async ({ page }) => {
@@ -506,7 +346,7 @@ test.describe('Emoji reactions (8.2)', () => {
 
     await page.goto('/timeline')
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First steps today!' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()

@@ -166,8 +166,7 @@ test.describe('Comments (8.1)', () => {
     await page.goto('/timeline')
     // Open the memory modal
     await page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
+      .locator('.mosaic-cell')
       .first()
       .click()
 
@@ -189,8 +188,7 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     await page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
+      .locator('.mosaic-cell')
       .first()
       .click()
     await page.getByRole('button', { name: /comments/i }).click()
@@ -242,8 +240,7 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     await page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
+      .locator('.mosaic-cell')
       .first()
       .click()
     await page.getByRole('button', { name: /comments/i }).click()
@@ -288,8 +285,7 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     await page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
+      .locator('.mosaic-cell')
       .first()
       .click()
     await page.getByRole('button', { name: /comments/i }).click()
@@ -351,8 +347,7 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     await page
-      .locator('article')
-      .filter({ hasText: 'A birthday moment' })
+      .locator('.mosaic-cell')
       .first()
       .click()
     await page.getByRole('button', { name: /comments/i }).click()
@@ -401,12 +396,13 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First steps today!' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    // QuickNoteModal shows comments at the bottom
+    // Quick-note now uses the unified MemoryDetail with a Comments tab
+    await page.getByRole('button', { name: /comments/i }).click()
     await expect(page.getByText('So sweet!')).toBeVisible({ timeout: 5_000 })
   })
 
@@ -448,11 +444,13 @@ test.describe('Comments (8.1)', () => {
 
     await page.goto('/timeline')
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First steps today!' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
+    // Quick-note now uses the unified MemoryDetail with a Comments tab
+    await page.getByRole('button', { name: /comments/i }).click()
     await page
       .locator('textarea[placeholder*="comment" i]')
       .fill('Amazing milestone!')

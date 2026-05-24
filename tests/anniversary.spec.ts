@@ -258,23 +258,17 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     })
 
     await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
-    await expect(
-      page.locator('input[aria-label="Anniversary date"]'),
-    ).toBeVisible({
-      timeout: 10_000,
-    })
+    const dateInput = page.locator('input[aria-label="Anniversary date"]')
+    await expect(dateInput).toBeVisible({ timeout: 10_000 })
 
-    await page
-      .locator('input[aria-label="Anniversary date"]')
-      .fill('2022-06-15')
-    await page
-      .locator('input[aria-label="Anniversary date"]')
-      .locator('../..')
-      .getByRole('button', { name: 'Save' })
-      .click()
+    // Auto-save: typing into the date input fires @change → PATCH.
+    // No explicit Save button in the redesigned settings (Apple Rows pattern).
+    await dateInput.fill('2022-06-15')
+    await dateInput.blur()
 
-    await page.waitForTimeout(500)
-    expect(patchBody).toMatchObject({ anniversaryDate: '2022-06-15' })
+    await expect
+      .poll(() => patchBody, { timeout: 5_000 })
+      .toMatchObject({ anniversaryDate: '2022-06-15' })
   })
 
   test('circle name field is visible in settings for owner', async ({
@@ -324,13 +318,12 @@ test.describe('Anniversary anchoring (4.10.4)', () => {
     const nameInput = page.locator('input[placeholder="Circle name"]')
     await expect(nameInput).toBeVisible({ timeout: 10_000 })
 
+    // Auto-save: typing then blurring fires @blur → PATCH. No Save button.
     await nameInput.fill('The Smiths')
-    await nameInput
-      .locator('../..')
-      .getByRole('button', { name: 'Save' })
-      .click()
+    await nameInput.blur()
 
-    await page.waitForTimeout(500)
-    expect(patchBody).toMatchObject({ name: 'The Smiths' })
+    await expect
+      .poll(() => patchBody, { timeout: 5_000 })
+      .toMatchObject({ name: 'The Smiths' })
   })
 })

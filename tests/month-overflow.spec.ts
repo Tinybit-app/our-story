@@ -68,6 +68,7 @@ function mockTimelineEmpty(page: any) {
       body: JSON.stringify({
         memories: [],
         nextCursor: null,
+        totalCount: 0,
         children: [],
         members: [],
       }),
@@ -101,6 +102,7 @@ function mockTimelineWithNote(page: any) {
       body: JSON.stringify({
         memories: [QUICK_NOTE_MEMORY],
         nextCursor: null,
+        totalCount: 1,
         children: [],
         members: [],
       }),
@@ -141,9 +143,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
     await page.goto('/timeline/2024/06')
     // Header should show the month label
-    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({
-      timeout: 10_000,
-    })
+    await expect(
+      page.getByRole('heading', { name: 'June', level: 1 }),
+    ).toBeVisible({ timeout: 10_000 })
     // Empty state
     await expect(page.getByText(/no memories/i)).toBeVisible({ timeout: 5_000 })
   })
@@ -156,8 +158,8 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await mockTimelineWithNote(page)
 
     await page.goto('/timeline/2024/06')
-    // Count label: "1 memory" or "X memories"
-    await expect(page.getByText(/1 memory|memories/i)).toBeVisible({
+    // Count label rendered both in header and above the grid — assert it appears at least once.
+    await expect(page.getByText(/1 memory|memories/i).first()).toBeVisible({
       timeout: 10_000,
     })
   })
@@ -173,13 +175,13 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await page.goto('/timeline/2024/06')
 
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'She said mama for the first time today' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
     // MemoryShell renders the card with inline max-width: 520px for quick notes
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).toBeVisible({
       timeout: 5_000,
     })
     // Note content is shown inside the modal
@@ -199,18 +201,18 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await page.goto('/timeline/2024/06')
 
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'She said mama for the first time today' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).toBeVisible({
       timeout: 5_000,
     })
 
     await page.keyboard.press('Escape')
 
-    await expect(page.locator('[style*="max-width: 520px"]')).not.toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).not.toBeVisible({
       timeout: 3_000,
     })
   })
@@ -221,9 +223,9 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     await mockTimelineEmpty(page)
 
     await page.goto('/timeline/2024/06')
-    await expect(page.getByText('June 2024', { exact: true })).toBeVisible({
-      timeout: 10_000,
-    })
+    await expect(
+      page.getByRole('heading', { name: 'June', level: 1 }),
+    ).toBeVisible({ timeout: 10_000 })
 
     // The back link uses NuxtLink to /timeline?circle=<id> — preserves the
     // active circle so the user returns to where they were.
@@ -234,7 +236,7 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
   // ── Load-more pagination ─────────────────────────────────────────────────────
 
-  test('clicking "Load more" button loads the next page and appends memories', async ({
+  test('scrolling to the bottom loads the next page and appends memories', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -291,18 +293,20 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
           body: JSON.stringify({
             memories: page2Memories,
             nextCursor: null,
+            totalCount: 27,
             children: [],
             members: [],
           }),
         })
       }
-      // First page — returns a cursor so the Load more button appears
+      // First page — returns a cursor so the load-more sentinel keeps watching
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           memories: page1Memories,
           nextCursor: 'cursor-page-2',
+          totalCount: 27,
           children: [],
           members: [],
         }),
@@ -311,21 +315,17 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
 
     await page.goto('/timeline/2024/06')
 
-    // Wait for first page to render — count label shows 24
-    await expect(page.getByText(/24 memories/i)).toBeVisible({
+    // Wait for first page to render — count label shows 27
+    await expect(page.getByText(/27 memories/i).first()).toBeVisible({
       timeout: 10_000,
     })
 
-    // "Load more" button should be visible (nextCursor is set)
-    const loadMoreBtn = page.getByRole('button', { name: /load more/i })
-    await expect(loadMoreBtn).toBeVisible({ timeout: 5_000 })
-
-    // Click it
-    await loadMoreBtn.click()
+    // Page now uses IntersectionObserver on a sentinel — scroll to trigger it.
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
     // Wait for second-page memories to append
     await page.waitForFunction(
-      () => document.querySelectorAll('article').length >= 27,
+      () => document.querySelectorAll('.mosaic-cell').length >= 27,
       {
         timeout: 10_000,
       },
@@ -334,8 +334,5 @@ test.describe('Month overflow page (/timeline/[year]/[month])', () => {
     // Verify second-page memories were appended
     expect(page2Fetched).toBe(true)
     await expect(page.getByText(/Extra note 0/)).toBeVisible({ timeout: 5_000 })
-
-    // "Load more" button gone — nextCursor is now null
-    await expect(loadMoreBtn).not.toBeVisible({ timeout: 3_000 })
   })
 })

@@ -150,7 +150,10 @@ function makeQuickNoteMemory() {
 }
 
 async function openMemoryModal(page: any, cardText: string) {
-  const card = page.locator('article').filter({ hasText: cardText })
+  // Photo cells render <img alt="..."> only — hasText cannot match alt text.
+  // Each test mocks a single memory, so `.first()` is sufficient.
+  void cardText
+  const card = page.locator('.mosaic-cell').first()
   await expect(card).toBeVisible({ timeout: 15_000 })
   await card.click()
 }
@@ -200,7 +203,7 @@ test.describe('Media download & share (7.5)', () => {
 
     await page.goto('/timeline')
     // Video card shows a play overlay — click the article to open modal
-    const card = page.locator('article').first()
+    const card = page.locator('.mosaic-cell').first()
     await expect(card).toBeVisible({ timeout: 15_000 })
     await card.click()
 

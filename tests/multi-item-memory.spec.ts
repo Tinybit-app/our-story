@@ -152,7 +152,7 @@ function mockComments(page: any) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Multi-item memories (5.4)', () => {
-  test('mosaic cell shows count badge for multi-item memory', async ({
+  test('multi-item memory shows carousel "X / N" counter inside MemoryViewer', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -163,18 +163,17 @@ test.describe('Multi-item memories (5.4)', () => {
 
     await page.goto('/timeline')
 
-    // The cover card should be visible
-    await expect(page.getByText('Birthday party')).toBeVisible({
-      timeout: 10_000,
-    })
+    // Multi-item count is no longer rendered on the mosaic cell; it lives in
+    // MemoryViewer's carousel controls inside the modal.
+    await page.locator('.mosaic-cell').first().click()
 
-    // The count badge has aria-label="5 items" and renders a stack icon
-    // alongside the count. Match the accessible name rather than the visual
-    // text, since the visual is just "5" without a glyph prefix now.
-    await expect(page.getByLabel('5 items')).toBeVisible({ timeout: 10_000 })
+    const modal = page.locator('.fixed.inset-0')
+    await expect(modal.getByText('1 / 5')).toBeVisible({ timeout: 10_000 })
   })
 
-  test('Single-item memories do not show count badge', async ({ page }) => {
+  test('single-item memory has no carousel counter (carousel branch is not rendered)', async ({
+    page,
+  }) => {
     const singleItem = {
       ...MULTI_ITEM_MEMORY,
       id: 'cccccccc-3333-4333-8333-aaaaaaaaaaaa',
@@ -187,11 +186,11 @@ test.describe('Multi-item memories (5.4)', () => {
     await mockComments(page)
 
     await page.goto('/timeline')
-    await expect(page.getByText('Birthday party')).toBeVisible({
-      timeout: 10_000,
-    })
-    // Single-item memories don't render a count badge (no aria-labelled
-    // "N items" badge attached).
-    await expect(page.getByLabel(/^\d+ items$/)).not.toBeVisible()
+    await page.locator('.mosaic-cell').first().click()
+
+    const modal = page.locator('.fixed.inset-0')
+    // MemoryViewer renders the carousel branch only when media_count > 1;
+    // single-item memories use the still-photo branch with no slide counter.
+    await expect(modal.getByText(/^\d+ \/ \d+$/)).not.toBeVisible()
   })
 })

@@ -2,16 +2,16 @@
  * Circle type picker E2E tests (build plan §4.10.5)
  *
  * Feature: owner can change circle_type from /circle-settings at any time.
- * A 2-column grid of all types is shown; the current type is pre-selected;
- * Save is disabled until a different type is chosen.
+ * A segmented 4-column grid of all types is shown; the current type is
+ * pre-selected. Selecting a different type auto-saves via PATCH (no Save
+ * button — settings page uses Apple Rows pattern).
  *
  * Tests:
  *  1. Circle type picker is visible to owners in circle settings
- *  2. Current circle type is pre-selected
- *  3. Save button is disabled when selection matches the current type
- *  4. Save button enables when a different type is selected
- *  5. Saving calls PATCH /api/circles/:id with circleType
- *  6. Circle type picker is not shown to non-owners
+ *  2. Current circle type is pre-selected (active class)
+ *  3. Clicking the already-selected type does not fire PATCH
+ *  4. Selecting a different type fires PATCH immediately
+ *  5. Circle type picker is not shown to non-owners (redirect to /members)
  */
 
 import { test, expect } from '@playwright/test'
@@ -114,7 +114,9 @@ function mockChildrenApi(page: any) {
 async function goToSettings(page: any) {
   await page.goto(`/circle-settings?circle=${CIRCLE_ID}`)
   // The circle type section heading is always present for owners
-  await expect(page.getByText('Circle type')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText('Circle type').first()).toBeVisible({
+    timeout: 10_000,
+  })
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -160,12 +162,14 @@ test.describe('Circle type picker (4.10.5)', () => {
     await mockChildrenApi(page)
 
     await goToSettings(page)
-    // The "Couple" button should carry the active class (border-foreground bg-secondary)
+    // Selected segmented-control button carries `bg-background text-foreground shadow-sm`.
+    // We assert `bg-background` — it uniquely identifies the active state inside the
+    // rounded segment group (unselected siblings have only text-muted-foreground).
     const coupleBtn = page.getByRole('button', { name: /^Couple/i })
-    await expect(coupleBtn).toHaveClass(/border-foreground/)
+    await expect(coupleBtn).toHaveClass(/bg-background/)
   })
 
-  test('Save button is disabled when selection matches the current type', async ({
+  test('clicking the already-selected type does not fire PATCH', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -174,30 +178,28 @@ test.describe('Circle type picker (4.10.5)', () => {
     await mockCircleMembers(page)
     await mockChildrenApi(page)
 
+    let patchCount = 0
+    await page.route(`**/api/circles/${CIRCLE_ID}`, async (route) => {
+      if (route.request().method() === 'PATCH') {
+        patchCount += 1
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ id: CIRCLE_ID, circle_type: 'parents' }),
+        })
+      } else {
+        await route.continue()
+      }
+    })
+
     await goToSettings(page)
-    // "New parents" is pre-selected; Save should be disabled
-    const saveBtn = page.locator('button', { hasText: 'Save' }).first()
-    await expect(saveBtn).toBeDisabled()
+    // "New parents" is already selected — clicking it should be a no-op
+    await page.getByRole('button', { name: /New parents/i }).click()
+    await page.waitForTimeout(500)
+    expect(patchCount).toBe(0)
   })
 
-  test('Save button enables when a different type is selected', async ({
-    page,
-  }) => {
-    await mockMembership(page)
-    await mockCirclesList(page, 'owner', 'parents')
-    await mockCircleDetail(page, 'owner', 'parents')
-    await mockCircleMembers(page)
-    await mockChildrenApi(page)
-
-    await goToSettings(page)
-    // Select a different type
-    await page.getByRole('button', { name: /Family/i }).click()
-    // .nth(1) because index 0 is the circle-name Save, index 1 is the circle-type Save
-    const saveBtn = page.locator('button', { hasText: 'Save' }).nth(1)
-    await expect(saveBtn).toBeEnabled()
-  })
-
-  test('saving calls PATCH /api/circles/:id with circleType', async ({
+  test('selecting a different type fires PATCH /api/circles/:id with circleType', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -224,12 +226,12 @@ test.describe('Circle type picker (4.10.5)', () => {
     })
 
     await goToSettings(page)
+    // Auto-save: clicking a new type fires PATCH immediately, no Save button.
     await page.getByRole('button', { name: /Friend group/i }).click()
-    // .nth(1) because index 0 is the circle-name Save, index 1 is the circle-type Save
-    await page.locator('button', { hasText: 'Save' }).nth(1).click()
 
-    await page.waitForTimeout(500)
-    expect(patchBody).toMatchObject({ circleType: 'friends' })
+    await expect.poll(() => patchBody, { timeout: 5_000 }).toMatchObject({
+      circleType: 'friends',
+    })
   })
 
   test('circle type picker is not shown to non-owners', async ({ page }) => {

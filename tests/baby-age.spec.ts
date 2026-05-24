@@ -127,24 +127,9 @@ function mockChildrenApi(page: any, children: (typeof CHILD)[]) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Baby age stamp (4.10.1)', () => {
-  test('age stamp appears on mosaic cell when children are tagged on the memory', async ({
-    page,
-  }) => {
-    await mockMembership(page)
-    await mockCircles(page)
-    // Tag CHILD on this specific memory — age stamp derives from memory_children
-    await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
-
-    // Register waitForResponse BEFORE goto so it captures the circles fetch on page init
-    const circlesReady = page.waitForResponse('**/api/circles**')
-    await page.goto('/timeline')
-    await circlesReady
-    // The computed age for Jan 1 → Apr 15 is "3 months, 2 weeks", labeled with the child's name
-    await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('3 months, 2 weeks')).toBeVisible({
-      timeout: 10_000,
-    })
-  })
+  // Age stamps no longer render on the mosaic cell — they live in the
+  // MemoryDetail caption tab. See the "modal caption tab shows child age pill
+  // when memory is opened" test below for the modal-side assertion.
 
   test('age stamp is not shown when no children are tagged on the memory', async ({
     page,
@@ -263,22 +248,6 @@ test.describe('Baby age stamp (4.10.1)', () => {
     await expect(page.getByText('Emma')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('age stamp pill shows child name and age together on the mosaic cell', async ({
-    page,
-  }) => {
-    await mockMembership(page)
-    await mockCircles(page)
-    await mockTimeline(page, [makeMemory('mem-1', [CHILD])], [CHILD])
-
-    await page.goto('/timeline')
-    // Both name and age appear in the pill badge — they must both be visible simultaneously
-    await expect(page.getByText('Emma')).toBeVisible({ timeout: 10_000 })
-    const agePill = page
-      .locator('span', { hasText: 'Emma' })
-      .filter({ hasText: '3 months, 2 weeks' })
-    await expect(agePill).toBeVisible()
-  })
-
   test('modal caption tab shows child age pill when memory is opened', async ({
     page,
   }) => {
@@ -303,12 +272,15 @@ test.describe('Baby age stamp (4.10.1)', () => {
     )
 
     await page.goto('/timeline')
-    // Open the memory by clicking its card — use first() since the note text can appear in multiple locations
-    await page.getByText('A cute moment').first().click()
+    // Open the memory by clicking its mosaic cell — photo cards don't render
+    // the note as visible text (alt only) so a text-based selector won't match.
+    await page.locator('.mosaic-cell').first().click()
 
-    // Wait for modal to open — the caption tab is default
-    // Both name and age must be visible in the modal caption area
-    await expect(page.getByText('Emma').nth(1)).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByText('3 months, 2 weeks').nth(1)).toBeVisible()
+    // Modal renders the child-age pill inside MemoryDetail's caption tab.
+    const modal = page.locator('.fixed.inset-0')
+    await expect(modal.getByText('Emma').first()).toBeVisible({
+      timeout: 5_000,
+    })
+    await expect(modal.getByText('3 months, 2 weeks').first()).toBeVisible()
   })
 })

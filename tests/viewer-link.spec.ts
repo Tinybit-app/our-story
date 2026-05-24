@@ -282,7 +282,7 @@ test.describe('Viewer link management — owner dashboard', () => {
     // The viewer page shows a splash screen first — dismiss it
     await page.getByRole('button', { name: /see the memories/i }).click()
     // Verify at least one memory card is shown
-    await expect(page.locator('article').first()).toBeVisible()
+    await expect(page.locator('.mosaic-cell').first()).toBeVisible()
   })
 
   // ── 5. Revoke link → DELETE called for correct link ID ─────────────────────
@@ -486,8 +486,11 @@ test.describe('Viewer link management — public viewer page', () => {
       timeout: 5_000,
     })
 
-    // Selection banner (count + date range) should appear
-    await expect(page.getByText(/selected memories/i)).toBeVisible()
+    // ViewerSpreadHeader marks selection-mode links as "A selected collection"
+    // (full-mode links show "A private collection") and renders the count
+    // separately in the hero meta line.
+    await expect(page.getByText(/selected collection/i)).toBeVisible()
+    await expect(page.getByText(/2 memories/i).first()).toBeVisible()
   })
 
   // ── 5b. Revoked token → /view shows invalid error ─────────────────────────
@@ -511,7 +514,10 @@ test.describe('Viewer link management — public viewer page', () => {
 
   // ── 6. Referral CTA appears after scrolling 3+ memories ──────────────────
 
-  test('referral CTA appears after scrolling 3+ memories', async ({ page }) => {
+  // The c858056 view-page rewrite (ViewerSpreadHeader + TimelineMosaic +
+  // MemoryShell) dropped the in-timeline referral CTA. If/when it returns,
+  // unskip this and update selectors against the new copy.
+  test.skip('referral CTA appears after scrolling 3+ memories', async ({ page }) => {
     const token = makeViewerToken(LINK_ID_FULL)
 
     await page.route('**/api/viewer/timeline**', (route) =>
@@ -568,7 +574,7 @@ test.describe('Viewer link management — public viewer page', () => {
     // Use evaluate to call scrollIntoView directly — more reliable than Playwright's
     // scrollIntoViewIfNeeded for triggering threshold-based IntersectionObserver.
     await page
-      .locator('article')
+      .locator('.mosaic-cell')
       .nth(2)
       .evaluate((el) =>
         el.scrollIntoView({ behavior: 'instant', block: 'center' }),

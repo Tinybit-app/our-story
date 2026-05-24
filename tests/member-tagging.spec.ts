@@ -127,7 +127,7 @@ function mockTimeline(
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test.describe('Member tagging (4.10.6)', () => {
-  test('avatar bubble appears on mosaic cell when a member is tagged', async ({
+  test('avatar bubble appears in MemoryDetail when a member is tagged', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -137,11 +137,28 @@ test.describe('Member tagging (4.10.6)', () => {
       [makeMemory('mem-1', { memoryMembers: [MEMBER] })],
       [MEMBER],
     )
+    // Stub reactions and comments so the modal can render
+    await page.route('**/api/memories/mem-1/reactions', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ reactions: [] }),
+      }),
+    )
+    await page.route('**/api/memories/mem-1/comments', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ comments: [] }),
+      }),
+    )
 
     await page.goto('/timeline')
-    // The avatar bubble for Sarah should be rendered (via title or initials)
-    // The mosaic cell shows initials "SL" when no avatar_url is set
-    await expect(page.getByText('SL')).toBeVisible({ timeout: 10_000 })
+    // Member avatar bubbles render inside MemoryDetail's caption tab, not on
+    // the mosaic cell (cards now show img/note only).
+    await page.locator('.mosaic-cell').first().click()
+    const modal = page.locator('.fixed.inset-0')
+    await expect(modal.getByText('SL').first()).toBeVisible({ timeout: 5_000 })
   })
 
   test('no avatar bubbles when memory_members is empty', async ({ page }) => {
@@ -246,7 +263,7 @@ test.describe('Member tagging (4.10.6)', () => {
     expect(membersBody).toMatchObject({ userIds: [MEMBER.userId] })
   })
 
-  test('"with" label appears before avatar bubbles when a member is tagged', async ({
+  test('"with" label appears before avatar bubbles inside MemoryDetail', async ({
     page,
   }) => {
     await mockMembership(page)
@@ -256,12 +273,30 @@ test.describe('Member tagging (4.10.6)', () => {
       [makeMemory('mem-1', { memoryMembers: [MEMBER] })],
       [MEMBER],
     )
+    await page.route('**/api/memories/mem-1/reactions', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ reactions: [] }),
+      }),
+    )
+    await page.route('**/api/memories/mem-1/comments', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ comments: [] }),
+      }),
+    )
 
     await page.goto('/timeline')
-    // The "with" label is rendered immediately before the avatar row on the mosaic cell
-    await expect(page.getByText('with')).toBeVisible({ timeout: 10_000 })
-    // Initials "SL" (Sarah Lee) appear alongside the label
-    await expect(page.getByText('SL')).toBeVisible()
+    // The "with" label + avatar row render inside MemoryDetail's caption tab
+    // (above the comment area), not on the mosaic cell.
+    await page.locator('.mosaic-cell').first().click()
+    const modal = page.locator('.fixed.inset-0')
+    await expect(modal.getByText('with').first()).toBeVisible({
+      timeout: 5_000,
+    })
+    await expect(modal.getByText('SL').first()).toBeVisible()
   })
 
   test('"with" label is absent when no members are tagged', async ({

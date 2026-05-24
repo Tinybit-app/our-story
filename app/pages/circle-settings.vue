@@ -262,6 +262,7 @@
               />
               <button
                 :disabled="addingChild || !newChildName.trim() || !newChildDob"
+                :aria-label="t('circleSettings.addChild')"
                 class="flex-shrink-0 rounded-lg bg-primary px-3 py-2 text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                 @click="addChild"
               >

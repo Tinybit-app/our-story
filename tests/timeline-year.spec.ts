@@ -190,7 +190,7 @@ test.describe('Main timeline — year-at-a-time loading', () => {
 
     // Wait for 2024 memories to be appended
     await page.waitForFunction(
-      () => document.querySelectorAll('article').length >= 6,
+      () => document.querySelectorAll('.mosaic-cell').length >= 6,
       {
         timeout: 10_000,
       },

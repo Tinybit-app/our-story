@@ -281,13 +281,13 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
 
     // Wait for the card to appear and click it
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
     // Modal should appear
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).toBeVisible({
       timeout: 5_000,
     })
   })
@@ -303,19 +303,15 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
     await goToTimeline(page)
 
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    // Note text appears in the editorial quote area
+    // Note text appears in the modal's caption tab
     await expect(page.getByText('First word today: dada').first()).toBeVisible({
       timeout: 5_000,
     })
-    // "Quick note" label in top-right of quote area
-    await expect(
-      page.getByText('Quick note', { exact: true }).first(),
-    ).toBeVisible()
   })
 
   test('Escape key closes QuickNoteModal', async ({ page }) => {
@@ -327,18 +323,18 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
     await goToTimeline(page)
 
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
 
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).toBeVisible({
       timeout: 5_000,
     })
 
     await page.keyboard.press('Escape')
 
-    await expect(page.locator('[style*="max-width: 520px"]')).not.toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).not.toBeVisible({
       timeout: 3_000,
     })
   })
@@ -353,22 +349,24 @@ test.describe('QuickNoteModal (7.3 — detail view)', () => {
 
     await goToTimeline(page)
     const card = page
-      .locator('article')
+      .locator('.mosaic-cell')
       .filter({ hasText: 'First word today: dada' })
     await expect(card).toBeVisible({ timeout: 10_000 })
     await card.click()
-    await expect(page.locator('[style*="max-width: 520px"]')).toBeVisible({
+    await expect(page.locator('.fixed.inset-0.z-50').first()).toBeVisible({
       timeout: 5_000,
     })
 
     // If the authenticated user owns this memory, an edit pencil is shown.
-    // Click it if present and verify the NOTE field label appears.
+    // Click it if present and verify the Note field label appears.
     const editBtnCount = await page.locator('[title="Edit note"]').count()
     if (editBtnCount > 0) {
       await page.locator('[title="Edit note"]').click()
-      await expect(page.getByText('NOTE', { exact: true })).toBeVisible({
-        timeout: 3_000,
-      })
+      await expect(page.getByText('Note', { exact: true }).first()).toBeVisible(
+        {
+          timeout: 3_000,
+        },
+      )
     } else {
       // Non-owner: verify the modal at minimum shows the note text
       await expect(
