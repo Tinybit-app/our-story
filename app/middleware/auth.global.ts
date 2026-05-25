@@ -29,8 +29,18 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Check membership state for authenticated users. useUserState caches the
   // result so this adds no extra requests on subsequent navigations.
   if (session) {
-    // Routes that don't require an active circle membership
-    const noMembershipPrefixes = ['/onboarding', '/settings/account', '/invite']
+    // Routes that don't require an active circle membership.
+    // /confirm MUST be here: this middleware races against the Supabase
+    // code-exchange plugin during magic-link callback, and when the session
+    // gets populated before getSession() returns, an unwary !hasMembership
+    // check would yank the user off /confirm to /onboarding before the page
+    // ever renders — so the invite cookie pickup in /confirm never runs.
+    const noMembershipPrefixes = [
+      '/onboarding',
+      '/settings/account',
+      '/invite',
+      '/confirm',
+    ]
     const noMembershipExact = ['/', '/pricing', '/privacy', '/terms']
     const needsMembership =
       !noMembershipPrefixes.some((r) => to.path.startsWith(r)) &&
