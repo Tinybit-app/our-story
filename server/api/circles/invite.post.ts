@@ -105,17 +105,39 @@ export default defineEventHandler(async (event) => {
 
   if (config.resendApiKey) {
     const resend = new Resend(config.resendApiKey)
+    const inviteUrl = `${config.appUrl}/invite/${invite.token}`
+    const safeCircleName = circle?.name ?? 'a circle'
+    const safeLocale = sender?.locale ?? 'en'
     try {
       const { data, error } = await resend.emails.send({
         from: 'Our Story <hello@ourstory.tinybit.app>',
+        // A real reply-to (vs. unmonitored 'noreply@…') is a deliverability
+        // signal — many spam filters dock points when replies bounce.
+        replyTo: 'hello@ourstory.tinybit.app',
         to: email,
-        subject: `${senderName} invited you to ${circle?.name ?? 'a circle'} on Our Story`,
+        subject: `${senderName} invited you to ${safeCircleName} on Our Story`,
+        // Plain-text alternative bundled with HTML (multipart/alternative).
+        // Gmail in particular rewards this over HTML-only emails.
+        text: buildInviteEmailText({
+          senderName,
+          circleName: safeCircleName,
+          inviteUrl,
+          locale: safeLocale,
+        }),
         html: buildInviteEmail({
           senderName,
-          circleName: circle?.name ?? 'a circle',
-          inviteUrl: `${config.appUrl}/invite/${invite.token}`,
-          locale: sender?.locale ?? 'en',
+          circleName: safeCircleName,
+          inviteUrl,
+          locale: safeLocale,
         }),
+        // Gmail's bulk-sender requirements (Feb 2024) prefer this header
+        // even on transactional sends. Provides a mailto-only fallback —
+        // when there's a real unsubscribe endpoint, add the https variant.
+        headers: {
+          'List-Unsubscribe':
+            '<mailto:hello@ourstory.tinybit.app?subject=unsubscribe>',
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       })
       if (error) {
         console.error(
@@ -188,4 +210,44 @@ function buildInviteEmail({
       </p>
     </div>
   `
+}
+
+// Plain-text alternative bundled into the multipart/alternative email.
+// Most users never see this — but spam filters (especially Gmail) actively
+// reward emails that include both parts, and rendering the same content
+// in plain text helps screen readers and minimal clients.
+function buildInviteEmailText({
+  senderName,
+  circleName,
+  inviteUrl,
+  locale,
+}: {
+  senderName: string
+  circleName: string
+  inviteUrl: string
+  locale: string
+}) {
+  if (locale === 'zh-CN') {
+    return [
+      `${senderName} 邀请你加入 ${circleName}`,
+      '',
+      `${senderName} 在 Our Story 上创建了 ${circleName} — 一个私密的空间，用来分享记忆、里程碑和珍贵时刻。`,
+      '',
+      `加入 ${circleName}: ${inviteUrl}`,
+      '',
+      '无需账号即可浏览。加入后可添加你自己的记忆。',
+      '私密、仅限邀请 · 无广告',
+    ].join('\n')
+  }
+
+  return [
+    `${senderName} invited you to ${circleName} on Our Story.`,
+    '',
+    `${senderName} has created ${circleName} on Our Story — a private space to share memories, milestones, and moments together.`,
+    '',
+    `Join ${circleName}: ${inviteUrl}`,
+    '',
+    'No account needed to look. Join to add your own memories.',
+    'Private, invite-only · No ads.',
+  ].join('\n')
 }
