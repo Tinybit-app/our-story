@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
   let memoryQuery = supabase
     .from('memory')
     .select(
-      'id, memory_date, note, cover_media_id, memorymedia!memory_id(id, storage_path, media_type, text_content, display_order)',
+      'id, memory_date, note, cover_media_id, memorymedia!memory_id(id, storage_path, thumbnail_path, media_type, text_content, display_order)',
     )
     .eq('circle_id', circleId)
     .eq('visibility', 'circle')
@@ -123,11 +123,13 @@ export default defineEventHandler(async (event) => {
         supabase.storage.from('memories-private').createSignedUrl(coverRow.storage_path, 3600),
         isVideo
           ? Promise.resolve(null)
-          : signedThumbnailUrl(supabase, coverRow.storage_path, 86400, {
-              width: 800,
-              format: 'webp',
-              quality: 85,
-            }),
+          : signedThumbnailUrl(
+              supabase,
+              coverRow.storage_path,
+              86400,
+              { width: 800, format: 'webp', quality: 85 },
+              coverRow.thumbnail_path,
+            ),
       ])
 
       const fullUrl =

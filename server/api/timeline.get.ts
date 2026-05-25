@@ -23,7 +23,7 @@ const MEMORY_SELECT = `
   cover_media_id,
   memory_children(child_id, childprofile(id, name, date_of_birth)),
   memory_members(user_id, user:user_id(id, first_name, last_name, avatar_url)),
-  memorymedia!memory_id(id, storage_path, media_type, file_size, text_content, display_order),
+  memorymedia!memory_id(id, storage_path, thumbnail_path, media_type, file_size, text_content, display_order),
   user!owner_user_id(first_name, last_name, avatar_url),
   memoryreaction(id, emoji, user_id, guest_name, user!user_id(first_name, last_name)),
   memorycomment(id)
@@ -437,7 +437,7 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
       let memorymedia: any[] = []
 
       if (coverRow) {
-        const { storage_path, ...safeMedia } = coverRow
+        const { storage_path, thumbnail_path, ...safeMedia } = coverRow
         if (!storage_path) {
           memorymedia = [{ ...safeMedia, url: null, thumbnailUrl: null }]
         } else {
@@ -446,11 +446,13 @@ async function attachSignedUrls(supabase: any, memories: any[]) {
             supabase.storage.from('memories-private').createSignedUrl(storage_path, 3600),
             isVideo
               ? Promise.resolve(null)
-              : signedThumbnailUrl(supabase, storage_path, 86400, {
-                  width: 800,
-                  format: 'webp',
-                  quality: 85,
-                }),
+              : signedThumbnailUrl(
+                  supabase,
+                  storage_path,
+                  86400,
+                  { width: 800, format: 'webp', quality: 85 },
+                  thumbnail_path,
+                ),
           ])
           const url =
             fullResult.status === 'fulfilled' ? (fullResult.value.data?.signedUrl ?? null) : null
