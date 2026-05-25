@@ -912,6 +912,7 @@
 import exifr from 'exifr'
 import { computeBabyAge } from '~/composables/useBabyAge'
 import { useAnalytics, classifyMilestone } from '~/composables/useAnalytics'
+import { resizeImage } from '~/utils/resizeImage'
 const { t } = useI18n()
 
 interface ChildProfile {
@@ -1214,6 +1215,11 @@ async function uploadItem(item: UploadItem): Promise<void> {
 
   const formData = new FormData()
   formData.append('file', item.file)
+  // Client-side thumbnail. If resize fails or is skipped, the edge function
+  // simply stores no thumbnail_path and the read path falls back to the
+  // original. Never blocks upload.
+  const thumb = await resizeImage(item.file)
+  if (thumb) formData.append('thumbnail', thumb, 'thumb.webp')
   formData.append('circleId', props.circleId)
   formData.append('note', item.note)
   if (item.milestoneLabel.trim())
@@ -1321,6 +1327,8 @@ async function uploadItemDeferred(
 
   const formData = new FormData()
   formData.append('file', item.file)
+  const thumb = await resizeImage(item.file)
+  if (thumb) formData.append('thumbnail', thumb, 'thumb.webp')
   formData.append('circleId', props.circleId)
   formData.append('memoryDate', `${groupDate.value}T00:00:00Z`)
 
