@@ -557,6 +557,7 @@ export type Database = {
           still_path: string | null
           storage_path: string | null
           text_content: string | null
+          thumbnail_path: string | null
         }
         Insert: {
           created_at?: string
@@ -574,6 +575,7 @@ export type Database = {
           still_path?: string | null
           storage_path?: string | null
           text_content?: string | null
+          thumbnail_path?: string | null
         }
         Update: {
           created_at?: string
@@ -591,6 +593,7 @@ export type Database = {
           still_path?: string | null
           storage_path?: string | null
           text_content?: string | null
+          thumbnail_path?: string | null
         }
         Relationships: [
           {
@@ -957,18 +960,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_month_counts: {
+        Args: { p_circle_id: string; p_year_end: string; p_year_start: string }
+        Returns: {
+          count: number
+          month: number
+          year: number
+        }[]
+      }
       get_my_circle_ids: { Args: never; Returns: string[] }
       get_my_circle_ids_as_role: {
         Args: { required_roles: string[] }
         Returns: string[]
-      }
-      get_month_counts: {
-        Args: {
-          p_circle_id: string
-          p_year_start: string
-          p_year_end: string
-        }
-        Returns: { year: number; month: number; count: number }[]
       }
     }
     Enums: {
