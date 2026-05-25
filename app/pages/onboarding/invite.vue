@@ -26,7 +26,7 @@
       <input
         v-model="email"
         type="email"
-        placeholder="their@email.com"
+        :placeholder="t('nav.inviteEmailPlaceholder')"
         class="mb-4 w-full rounded-[12px] border border-border bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         autofocus
         @keyup.enter="email && !loading && sendInvite()"

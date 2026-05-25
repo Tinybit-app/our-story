@@ -98,7 +98,6 @@ async function save() {
 
     const { refresh } = useUserState()
     const { hasMembership } = await refresh()
-    console.log('lskdf', hasMembership)
     router.push(hasMembership ? '/timeline' : '/onboarding')
   } catch (err: any) {
     errorMsg.value = err?.data?.message ?? t('common.errorGeneric')

@@ -104,9 +104,19 @@ async function acceptInvite() {
       circle_id: result.circleId,
       joined_via: 'invite',
     })
-    // Refresh user state so the index page guard sees hasMembership: true
+    // Refresh user state so the index page guard sees hasMembership: true.
+    // Brand-new invitees (account created via the magic-link sign-in we just
+    // bounced through) still have needsProfile=true at this point — bypassing
+    // /onboarding/profile would drop them on /timeline with no name, where
+    // every author byline reads "Unknown". Route them through the profile
+    // step; once it completes, profile.vue pushes them to /timeline because
+    // hasMembership is now true from this accept call.
     const { refresh } = useUserState()
-    await refresh()
+    const state = await refresh()
+    if (state.needsProfile) {
+      router.push('/onboarding/profile')
+      return
+    }
     router.push(`/timeline?circle=${result.circleId}&welcome=1`)
   } catch (err: any) {
     // Always clear the cookie — a stale token must not trap the user here on retry
