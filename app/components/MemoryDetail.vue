@@ -1377,7 +1377,39 @@ onMounted(() => {
 // When the modal is rendered for a public viewer-link visitor we hide the
 // 12-emoji picker and the comments thread entirely. The one affordance we
 // keep is a single heart react that POSTs through the public guest endpoint.
-const viewerReacted = ref(false)
+// Per-browser memory of which memories this viewer has already reacted to.
+// The server dedups same-guest-same-emoji-same-memory reactions silently
+// (see reactions/guest.post.ts), but the client UI also needs to remember
+// across modal open/close + memory navigation so the heart stays filled.
+// Stored as a JSON array of memory UUIDs in localStorage.
+const VIEWER_REACTED_KEY = 'viewer_reacted_memories'
+
+function readReactedSet(): Set<string> {
+  if (typeof localStorage === 'undefined') return new Set()
+  try {
+    const raw = localStorage.getItem(VIEWER_REACTED_KEY)
+    if (!raw) return new Set()
+    const parsed = JSON.parse(raw)
+    return new Set(Array.isArray(parsed) ? parsed : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function rememberReacted(memoryId: string) {
+  if (typeof localStorage === 'undefined') return
+  try {
+    const set = readReactedSet()
+    set.add(memoryId)
+    localStorage.setItem(VIEWER_REACTED_KEY, JSON.stringify([...set]))
+  } catch {
+    // Quota or storage disabled — fail open (next open will say "React" again)
+  }
+}
+
+const viewerReacted = ref(
+  props.viewerMode ? readReactedSet().has(props.memory.id) : false,
+)
 const viewerReactPending = ref(false)
 
 async function onViewerReact() {
@@ -1395,6 +1427,7 @@ async function onViewerReact() {
       },
     })
     viewerReacted.value = true
+    rememberReacted(props.memory.id)
   } catch (err) {
     console.error('[MemoryDetail] viewer react failed:', err)
   } finally {
@@ -1430,8 +1463,11 @@ watch(
     // editNote, etc. Navigation already passes the canClose discard guard,
     // so any unsaved-edit confirmation has happened by the time we get here.
     if (editing.value) editing.value = false
-    // Viewer heart-tap gate resets so the user can react to the new memory.
-    viewerReacted.value = false
+    // Viewer heart-tap gate — re-seed from localStorage so a memory the
+    // guest already reacted to keeps its filled-heart state on revisit.
+    viewerReacted.value = props.viewerMode
+      ? readReactedSet().has(newId)
+      : false
   },
 )
 
