@@ -18,7 +18,18 @@ export async function signedThumbnailUrl(
   storagePath: string,
   ttlSeconds: number,
   transform: TransformOpts,
+  thumbnailPath?: string | null,
 ): Promise<string | null> {
+  // If a pre-generated thumbnail exists (uploaded at memory-create time),
+  // serve it directly. No transform call needed — works on every tier and
+  // is the cheapest path even on Pro.
+  if (thumbnailPath) {
+    const { data } = await supabase.storage
+      .from('memories-private')
+      .createSignedUrl(thumbnailPath, ttlSeconds)
+    return data?.signedUrl ?? null
+  }
+
   if (!transformsEnabled) {
     const { data } = await supabase.storage
       .from('memories-private')
