@@ -106,12 +106,15 @@ export default defineEventHandler(async (event) => {
     // Fetch storage paths before cascade-deleting memory rows
     const { data: media } = await supabase
       .from('memorymedia')
-      .select('storage_path')
+      .select('storage_path, thumbnail_path')
       .in('memory_id', memoryIds)
 
-    // Delete storage objects
+    // Delete storage objects (original + thumbnail when present)
     for (const m of media ?? []) {
-      await supabase.storage.from('memories-private').remove([m.storage_path])
+      const paths = m.thumbnail_path
+        ? [m.storage_path, m.thumbnail_path]
+        : [m.storage_path]
+      await supabase.storage.from('memories-private').remove(paths)
     }
 
     // Delete memory rows (cascades to memorymedia, memorycomment, memoryreaction)
