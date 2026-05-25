@@ -73,7 +73,7 @@
         <!-- ACTIVE section -->
         <SettingsSection :label="t('members.sectionActive')">
           <component
-            :is="canManage ? 'NuxtLink' : 'div'"
+            :is="canManage ? NuxtLinkComponent : 'div'"
             v-for="m in data.members"
             :key="m.userId"
             :to="canManage ? (circleId ? `/member/${m.userId}?circle=${circleId}` : `/member/${m.userId}`) : undefined"
@@ -439,6 +439,13 @@ const { toast } = useToast()
 
 const router = useRouter()
 const authUser = useSupabaseUser()
+
+// Resolved component reference for the active-member row wrapper. Using a
+// string `<component :is="'NuxtLink'">` doesn't reliably resolve the
+// auto-registered NuxtLink — Vue ends up rendering an inert <nuxtlink>
+// element and clicks silently do nothing. Passing the component itself
+// sidesteps the name lookup.
+const NuxtLinkComponent = resolveComponent('NuxtLink')
 
 // ── Circle ─────────────────────────────────────────────────
 const { data: circlesData } = await useFetch<{ circles: any[] }>('/api/circles')
