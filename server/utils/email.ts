@@ -17,7 +17,7 @@ export async function sendEmail(opts: {
   const resend = new Resend(config.resendApiKey as string)
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Our Story <hello@our-story.tinybit.app>',
+      from: 'Our Story <hello@ourstory.tinybit.app>',
       ...opts,
     })
     if (error) {

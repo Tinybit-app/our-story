@@ -107,7 +107,7 @@ export default defineEventHandler(async (event) => {
     const resend = new Resend(config.resendApiKey)
     try {
       const { data, error } = await resend.emails.send({
-        from: 'Our Story <hello@our-story.tinybit.app>',
+        from: 'Our Story <hello@ourstory.tinybit.app>',
         to: email,
         subject: `${senderName} invited you to ${circle?.name ?? 'a circle'} on Our Story`,
         html: buildInviteEmail({

@@ -13,11 +13,11 @@ import webpush from 'https://esm.sh/web-push@3.6.7'
 //   )$$
 // );
 
-const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://ourstory.tinybit.app'
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
 const VAPID_SUBJECT =
-  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@our-story.tinybit.app'
+  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@ourstory.tinybit.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
@@ -261,7 +261,7 @@ async function sendEmail(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Our Story <hello@our-story.tinybit.app>',
+        from: 'Our Story <hello@ourstory.tinybit.app>',
         to,
         subject,
         html,

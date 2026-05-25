@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     .gt('deletion_requested_at', warnCutoffStart)
 
   const resendKey = Deno.env.get('RESEND_API_KEY')
-  const appUrl = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
+  const appUrl = Deno.env.get('APP_URL') ?? 'https://ourstory.tinybit.app'
 
   for (const u of warningUsers ?? []) {
     if (!u.email) continue
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Our Story <hello@our-story.tinybit.app>',
+            from: 'Our Story <hello@ourstory.tinybit.app>',
             to: u.email,
             subject,
             html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;padding:40px 24px;background:#fffdf8;color:#1a1a1a;">${body}</div>`,

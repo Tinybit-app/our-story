@@ -111,7 +111,7 @@ async function sendTagNotifications(
   const config = useRuntimeConfig()
   const appUrl =
     (config.public.appUrl as string | undefined) ??
-    'https://our-story.tinybit.app'
+    'https://ourstory.tinybit.app'
 
   // Fetch tagger name and circle name in parallel
   const [taggerResult, circleResult] = await Promise.all([

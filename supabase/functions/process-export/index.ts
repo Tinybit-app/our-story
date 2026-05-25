@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     if (userEmail && signedUrlData?.signedUrl) {
       const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
       await resend.emails.send({
-        from: 'Our Story <hello@our-story.tinybit.app>',
+        from: 'Our Story <hello@ourstory.tinybit.app>',
         to: userEmail,
         subject: `Your "${circleName}" export is ready`,
         html: `<p>Your export of <strong>${circleName}</strong> is ready. <a href="${signedUrlData.signedUrl}">Download your memories</a> — link expires in 24 hours.</p>`,

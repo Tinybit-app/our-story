@@ -9,7 +9,7 @@ import {
 // curl -X POST '<project-url>/functions/v1/send-digest?frequency=weekly' \
 //   -H 'Authorization: Bearer <service-role-key>'
 
-const APP_URL = Deno.env.get('APP_URL') ?? 'https://our-story.tinybit.app'
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://ourstory.tinybit.app'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -189,7 +189,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Our Story <hello@our-story.tinybit.app>',
+        from: 'Our Story <hello@ourstory.tinybit.app>',
         to,
         subject,
         html,
