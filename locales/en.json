@@ -289,6 +289,7 @@
     "removeKeepDesc": "Photos stay on the timeline. You can delete individual photos later.",
     "removeDeleteLabel": "Remove their memories from the circle",
     "removeDeleteDesc": "Their photos and videos are permanently deleted from this circle. This cannot be undone.",
+    "removeDeleteWarning": "This permanently deletes every photo, video, and note this member contributed to this circle. Other members lose access to that content too.",
     "removeNotification": "They'll receive an email letting them know.",
     "cancelInviteError": "Failed to cancel invite.",
     "resendInviteError": "Failed to resend invite.",

@@ -289,6 +289,7 @@
     "removeKeepDesc": "Les photos restent dans la chronologie. Vous pouvez supprimer des photos individuelles plus tard.",
     "removeDeleteLabel": "Supprimer leurs souvenirs du cercle",
     "removeDeleteDesc": "Leurs photos et vidéos sont définitivement supprimées de ce cercle. Cette action est irréversible.",
+    "removeDeleteWarning": "Cela supprime définitivement toutes les photos, vidéos et notes que ce membre a partagées dans ce cercle. Les autres membres en perdent également l'accès.",
     "removeNotification": "Ils recevront un courriel les informant.",
     "cancelInviteError": "Échec de l'annulation de l'invitation.",
     "resendInviteError": "Échec du renvoi de l'invitation.",

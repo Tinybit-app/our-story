@@ -289,6 +289,7 @@
     "removeKeepDesc": "照片保留在时间线上，你可以之后删除单张照片。",
     "removeDeleteLabel": "从圈子中删除他们的记忆",
     "removeDeleteDesc": "他们的照片和视频将从此圈子中永久删除，无法撤销。",
+    "removeDeleteWarning": "这将永久删除该成员在此圈子中分享的所有照片、视频和笔记，其他成员也将无法再访问这些内容。",
     "removeNotification": "他们将收到一封通知邮件。",
     "cancelInviteError": "取消邀请失败。",
     "resendInviteError": "重新发送邀请失败。",
