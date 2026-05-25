@@ -59,12 +59,16 @@ const inviteCookie = useCookie('pending_invite_token', {
 })
 
 onMounted(async () => {
+  console.log(
+    `[invite-page] mounted (token=${token.slice(0, 8)}…, user=${user.value?.email ?? 'null'})`,
+  )
   // Pre-validate the invite before touching auth — this way someone who
   // clicks a stale link sees the right error immediately, without being
   // forced through a sign-in flow first.
   const status = await $fetch<{
     status: 'pending' | 'expired' | 'circle_deleted'
   }>(`/api/invites/${token}/status`).catch(() => ({ status: 'error' as const }))
+  console.log('[invite-page] status check returned', status)
 
   if (status.status === 'expired') {
     errorMsg.value = 'invite_expired'
@@ -83,11 +87,13 @@ onMounted(async () => {
 
   if (!user.value) {
     // Invite is valid — store token and send to login
+    console.log('[invite-page] no user — storing cookie + redirecting to /login')
     inviteCookie.value = token
     router.push('/login')
     return
   }
 
+  console.log('[invite-page] user present — calling acceptInvite')
   await acceptInvite()
 })
 

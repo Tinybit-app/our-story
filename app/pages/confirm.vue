@@ -65,7 +65,11 @@ const noAuthTimeout = setTimeout(() => {
 let signupTracked = false
 
 watchEffect(() => {
-  if (!user.value) return
+  if (!user.value) {
+    console.log('[confirm] watchEffect: user not yet populated')
+    return
+  }
+  console.log(`[confirm] watchEffect fired (user=${user.value.email})`)
   clearTimeout(noAuthTimeout)
 
   // First sign-in heuristic: user just signed up if created_at and last_sign_in_at
@@ -81,11 +85,16 @@ watchEffect(() => {
 
   // Check for pending invite token
   const inviteToken = useCookie('pending_invite_token')
+  console.log(
+    `[confirm] pending_invite_token cookie value: ${inviteToken.value ? `${String(inviteToken.value).slice(0, 8)}…` : '(empty)'}`,
+  )
   if (inviteToken.value) {
+    console.log('[confirm] redirecting to /invite/[token]')
     router.push(`/invite/${inviteToken.value}`)
     return
   }
 
+  console.log('[confirm] no invite cookie — calling checkMembership')
   checkMembership()
 })
 </script>
