@@ -1,4 +1,17 @@
 /**
+ * Optional translator passed in by the caller. Matches the relevant shape of
+ * Vue I18n v9's `t()` so we don't pull a runtime dependency into a pure
+ * helper. When provided, the function renders fully localized output. When
+ * absent, it falls back to English strings (used by unit tests and any
+ * non-Vue caller).
+ */
+type Translator = (
+  key: string,
+  values?: Record<string, unknown>,
+  choice?: number,
+) => string
+
+/**
  * computeAnniversaryDisplay — returns a human-readable anniversary label.
  *
  * Rules:
@@ -8,11 +21,15 @@
  *   - 1+ years, couple               → "Year N together · Since [date]"
  *   - 1+ years, other types          → "Year N of [circleName] · Since [date]"
  *
+ * When a `t` translator is supplied, the same shapes are looked up under the
+ * `anniversary.*` namespace and respect the active locale.
+ *
  * @param anniversaryDate ISO date string (YYYY-MM-DD) or null/undefined
  * @param now             Reference date (defaults to today; injectable for tests)
  * @param locale          BCP 47 locale tag for date formatting (e.g. 'en', 'zh-CN')
  * @param circleType      Circle type — determines label phrasing
  * @param circleName      Circle name — used in label for non-couple circles
+ * @param t               Optional Vue I18n translator; absent → English fallback
  */
 export function computeAnniversaryDisplay(
   anniversaryDate: string | null | undefined,
@@ -20,6 +37,7 @@ export function computeAnniversaryDisplay(
   locale: string = 'en',
   circleType: string = 'couple',
   circleName: string = '',
+  t?: Translator,
 ): string | null {
   if (!anniversaryDate) return null
 
@@ -57,13 +75,31 @@ export function computeAnniversaryDisplay(
   }
 
   if (years < 1) {
+    if (t) {
+      return t(
+        'anniversary.daysTogether',
+        { n: totalDays, since: sinceLabel },
+        totalDays,
+      )
+    }
     const label = totalDays === 1 ? '1 day' : `${totalDays} days`
     return `${label} together · Since ${sinceLabel}`
   }
 
+  const yearNum = years + 1
   if (circleType === 'couple') {
-    return `Year ${years + 1} together · Since ${sinceLabel}`
+    if (t) {
+      return t('anniversary.yearTogether', { year: yearNum, since: sinceLabel })
+    }
+    return `Year ${yearNum} together · Since ${sinceLabel}`
   }
 
-  return `Year ${years + 1} of ${circleName} · Since ${sinceLabel}`
+  if (t) {
+    return t('anniversary.yearOf', {
+      year: yearNum,
+      circle: circleName,
+      since: sinceLabel,
+    })
+  }
+  return `Year ${yearNum} of ${circleName} · Since ${sinceLabel}`
 }

@@ -82,6 +82,8 @@
     "jumpTo": "跳转到",
     "inviteSomeone": "邀请成员",
     "inviteDesc": "他们将收到一封加入 {circle} 的邮件链接。",
+    "inviteEmailPlaceholder": "对方的邮箱",
+    "yourCircle": "你的圈子",
     "cancel": "取消",
     "sending": "发送中…",
     "sendInvite": "发送邀请",
@@ -122,6 +124,11 @@
   "confirmDialog": {
     "confirm": "确认",
     "cancel": "取消"
+  },
+  "anniversary": {
+    "daysTogether": "在一起 {n} 天 · 自 {since} 起",
+    "yearTogether": "在一起第 {year} 年 · 自 {since} 起",
+    "yearOf": "{circle} 第 {year} 年 · 自 {since} 起"
   },
   "modal": {
     "tabCaption": "标题",

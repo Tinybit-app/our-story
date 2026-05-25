@@ -82,6 +82,8 @@
     "jumpTo": "Aller à",
     "inviteSomeone": "Inviter quelqu'un",
     "inviteDesc": "Ils recevront un courriel avec un lien pour rejoindre {circle}.",
+    "inviteEmailPlaceholder": "leur{'@'}courriel.com",
+    "yourCircle": "votre cercle",
     "cancel": "Annuler",
     "sending": "Envoi en cours…",
     "sendInvite": "Envoyer l'invitation",
@@ -122,6 +124,11 @@
   "confirmDialog": {
     "confirm": "Confirmer",
     "cancel": "Annuler"
+  },
+  "anniversary": {
+    "daysTogether": "{n} jour ensemble · Depuis le {since} | {n} jours ensemble · Depuis le {since}",
+    "yearTogether": "An {year} ensemble · Depuis le {since}",
+    "yearOf": "An {year} de {circle} · Depuis le {since}"
   },
   "modal": {
     "tabCaption": "Légende",

@@ -167,4 +167,55 @@ describe('computeAnniversaryDisplay', () => {
     expect(result).toContain('Sep 14, 2021')
     expect(result).toMatch(/^Year 5 of The Smiths/)
   })
+
+  // ── localized output via injected translator ─────────────────────────────────
+
+  it('uses the t() translator for the daysTogether form when provided', () => {
+    // Stub translator that mirrors the en.json pluralization shape so we can
+    // assert the args flow through correctly without pulling Vue I18n into the
+    // unit test.
+    const t = (key: string, vals?: Record<string, unknown>, choice?: number) =>
+      `${key}|n=${vals?.n}|since=${vals?.since}|choice=${choice}`
+    const result = computeAnniversaryDisplay(
+      '2026-01-11',
+      NOW,
+      'en',
+      'couple',
+      '',
+      t,
+    )
+    expect(result).toBe(
+      'anniversary.daysTogether|n=100|since=Jan 11, 2026|choice=100',
+    )
+  })
+
+  it('uses the t() translator for the yearTogether form (couple)', () => {
+    const t = (key: string, vals?: Record<string, unknown>) =>
+      `${key}|year=${vals?.year}|since=${vals?.since}`
+    const result = computeAnniversaryDisplay(
+      '2024-04-21',
+      NOW,
+      'en',
+      'couple',
+      '',
+      t,
+    )
+    expect(result).toBe('anniversary.yearTogether|year=3|since=Apr 21, 2024')
+  })
+
+  it('uses the t() translator for the yearOf form (non-couple)', () => {
+    const t = (key: string, vals?: Record<string, unknown>) =>
+      `${key}|year=${vals?.year}|circle=${vals?.circle}|since=${vals?.since}`
+    const result = computeAnniversaryDisplay(
+      '2024-04-21',
+      NOW,
+      'en',
+      'family',
+      'The Smiths',
+      t,
+    )
+    expect(result).toBe(
+      'anniversary.yearOf|year=3|circle=The Smiths|since=Apr 21, 2024',
+    )
+  })
 })

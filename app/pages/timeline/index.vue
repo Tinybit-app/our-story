@@ -534,14 +534,18 @@
             {{ t('nav.inviteSomeone') }}
           </h2>
           <p class="mb-5 text-xs text-muted-foreground">
-            {{ t('nav.inviteDesc', { circle: circle?.name ?? 'your circle' }) }}
+            {{
+              t('nav.inviteDesc', {
+                circle: circle?.name ?? t('nav.yourCircle'),
+              })
+            }}
           </p>
 
           <form @submit.prevent="sendInvite">
             <input
               v-model="inviteEmail"
               type="email"
-              placeholder="their@email.com"
+              :placeholder="t('nav.inviteEmailPlaceholder')"
               required
               :disabled="inviteSending"
               class="mb-3 w-full rounded-[10px] border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
@@ -910,6 +914,7 @@ const anniversaryDisplay = computed(() => {
     locale.value,
     c.circle_type,
     c.name,
+    t,
   )
 })
 
