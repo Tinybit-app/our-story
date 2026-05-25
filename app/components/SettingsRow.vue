@@ -1,6 +1,6 @@
 <template>
   <component
-    :is="to ? 'NuxtLink' : 'div'"
+    :is="to ? NuxtLinkComponent : 'div'"
     :to="to"
     class="flex w-full items-center gap-[14px] px-[14px] py-[13px] text-left"
     :class="to ? 'cursor-pointer transition-colors hover:bg-foreground/[.03]' : ''"
@@ -55,4 +55,9 @@ defineProps<{
   /** Render label in destructive color (e.g. "Delete account"). */
   destructive?: boolean
 }>()
+
+// `<component :is="'NuxtLink'">` doesn't reliably resolve via the string
+// name — Vue can render an inert <nuxtlink> instead. Pass the resolved
+// component reference instead so drill rows actually navigate.
+const NuxtLinkComponent = resolveComponent('NuxtLink')
 </script>
