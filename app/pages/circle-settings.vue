@@ -460,7 +460,7 @@
 
 <script setup lang="ts">
 definePageMeta({})
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const colorMode = useColorMode()
 const isDark = computed(() =>
@@ -700,7 +700,7 @@ async function saveEditChild(childId: string) {
 }
 
 function formatDob(dob: string) {
-  return new Date(dob).toLocaleDateString(undefined, {
+  return new Date(dob).toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

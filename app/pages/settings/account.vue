@@ -526,7 +526,7 @@ const pendingDeletionDate = computed(() => {
   if (!profile.value?.deletedAt) return null
   const purgeDate = new Date(profile.value.deletedAt)
   purgeDate.setDate(purgeDate.getDate() + 30)
-  return purgeDate.toLocaleDateString(undefined, {
+  return purgeDate.toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -537,7 +537,7 @@ const pendingDeletionDate = computed(() => {
 const purgePreviewDate = computed(() => {
   const d = new Date()
   d.setDate(d.getDate() + 30)
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -669,7 +669,7 @@ const restoreError = ref('')
 const restoreMsg = ref('')
 
 function formatPurgeDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

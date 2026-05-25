@@ -433,7 +433,7 @@
 import { useAnalytics } from '~/composables/useAnalytics'
 import { useToast } from '~/components/ui/toast'
 definePageMeta({})
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { track } = useAnalytics()
 const { toast } = useToast()
 
@@ -481,7 +481,7 @@ const canManage = computed(
 // ── Meta line helpers ──────────────────────────────────────
 function sinceLabel(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+  return d.toLocaleDateString(locale.value, { month: 'short', year: 'numeric' })
 }
 
 /** Earliest joinedAt across all members = circle creation date */
@@ -518,7 +518,10 @@ function initials(member: any): string {
 function joinedLabel(dateStr: string): string {
   if (!dateStr) return ''
   const d = new Date(dateStr)
-  return d.toLocaleDateString(undefined, { month: 'short', year: '2-digit' })
+  return d.toLocaleDateString(locale.value, {
+    month: 'short',
+    year: '2-digit',
+  })
 }
 
 function roleLabel(role: string): string {
