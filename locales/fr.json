@@ -91,6 +91,7 @@
     "createNewCircle": "Créer un nouveau cercle",
     "inviteSentTo": "Invitation envoyée à {email}.",
     "inviteAlreadySent": "Une invitation a déjà été envoyée à ce courriel.",
+    "inviteAlreadyMember": "Cette personne est déjà membre du cercle.",
     "inviteMaxPending": "Vous avez 10 invitations en attente. Attendez que certaines soient acceptées.",
     "inviteFailed": "Échec de l'envoi de l'invitation. Veuillez réessayer.",
     "circleSettings": "Paramètres du cercle",

@@ -706,7 +706,9 @@ async function sendInvite() {
     await refresh()
   } catch (err: any) {
     const msg = err?.data?.message ?? ''
-    if (msg.includes('already been sent'))
+    if (msg === 'already_member')
+      inviteError.value = t('nav.inviteAlreadyMember')
+    else if (msg.includes('already been sent'))
       inviteError.value = t('nav.inviteAlreadySent')
     else if (msg.includes('Max 10'))
       inviteError.value = t('nav.inviteMaxPending')

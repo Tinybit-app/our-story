@@ -91,6 +91,7 @@
     "createNewCircle": "创建新圈子",
     "inviteSentTo": "邀请已发送至 {email}。",
     "inviteAlreadySent": "此邮箱已收到邀请。",
+    "inviteAlreadyMember": "此人已是该圈子的成员。",
     "inviteMaxPending": "你有 10 个待处理的邀请，请等待部分邀请被接受后再试。",
     "inviteFailed": "邀请发送失败，请重试。",
     "circleSettings": "圈子设置",

@@ -100,7 +100,14 @@ async function sendInvite() {
     })
     sent.value = true
   } catch (err: any) {
-    errorMsg.value = err?.data?.message ?? t('nav.inviteFailed')
+    const msg = err?.data?.message ?? ''
+    if (msg === 'already_member')
+      errorMsg.value = t('nav.inviteAlreadyMember')
+    else if (msg.includes('already been sent'))
+      errorMsg.value = t('nav.inviteAlreadySent')
+    else if (msg.includes('Max 10'))
+      errorMsg.value = t('nav.inviteMaxPending')
+    else errorMsg.value = t('nav.inviteFailed')
   } finally {
     loading.value = false
   }

@@ -46,6 +46,27 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Reject if the email already belongs to a current circle member. Scoped to
+  // THIS circle so the check doesn't leak whether the email has an account in
+  // some other circle (privacy). Uses an !inner join so the row only comes
+  // back when both the circlemember row and the matching email exist.
+  const { data: existingMember } = await (supabase as any)
+    .from('circlemember')
+    .select('user_id, user:user_id!inner(email)')
+    .eq('circle_id', circleId)
+    .eq('user.email', email)
+    .maybeSingle()
+
+  if (existingMember) {
+    console.warn(
+      `[invite] 409 — ${email} is already a member of circle ${circleId}`,
+    )
+    throw createError({
+      statusCode: 409,
+      message: 'already_member',
+    })
+  }
+
   // Check max pending invites (10 per circle)
   const { count } = await supabase
     .from('circleinvite')

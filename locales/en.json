@@ -91,6 +91,7 @@
     "createNewCircle": "Create a new circle",
     "inviteSentTo": "Invite sent to {email}.",
     "inviteAlreadySent": "An invite was already sent to this email.",
+    "inviteAlreadyMember": "This person is already a member of the circle.",
     "inviteMaxPending": "You have 10 pending invites. Wait for some to be accepted first.",
     "inviteFailed": "Failed to send invite. Please try again.",
     "circleSettings": "Circle settings",
