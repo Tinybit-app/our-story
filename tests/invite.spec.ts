@@ -131,6 +131,44 @@ test.describe('Invite flow — authenticated auto-accept', () => {
     expect(url).toContain('welcome=1')
   })
 
+  test('valid invite for needsProfile=true user routes through /onboarding/profile', async ({
+    page,
+  }) => {
+    // Override the default beforeEach mock so this test sees needsProfile=true
+    // (brand-new account just created via the invite-link magic-link flow).
+    await page.route('**/api/auth/membership**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          hasMembership: true,
+          needsProfile: true,
+          deletedAt: null,
+        }),
+      }),
+    )
+    await page.route(`**/api/invites/${VALID_TOKEN}/status**`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ status: 'pending' }),
+      }),
+    )
+    await page.route(`**/api/invites/${VALID_TOKEN}/accept**`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, circleId: TEST_CIRCLE_ID }),
+      }),
+    )
+
+    await page.goto(`/invite/${VALID_TOKEN}`)
+    // Brand-new invitees must be sent through profile setup so their byline
+    // isn't blank everywhere. /onboarding/profile then pushes to /timeline
+    // because the accept call has set hasMembership=true.
+    await page.waitForURL(/\/onboarding\/profile/, { timeout: 10_000 })
+  })
+
   test('accept failure shows an error and clears the invite cookie', async ({
     page,
   }) => {

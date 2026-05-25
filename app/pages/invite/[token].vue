@@ -110,14 +110,20 @@ async function acceptInvite() {
       circle_id: result.circleId,
       joined_via: 'invite',
     })
-    // Refresh user state so the index page guard sees hasMembership: true
+    // Refresh user state so subsequent guards see hasMembership: true and the
+    // profile-needed flag.
     const { refresh } = useUserState()
-    await refresh()
-    // Go directly to the invited circle. A prior attempt to route new users
-    // through /onboarding/profile first (so their byline isn't blank) dropped
-    // them on the circle-creation picker instead of the joined circle — root
-    // cause not yet pinned down. Profile setup is reachable later via
-    // /settings/account; not worth blocking the happy path.
+    const state = await refresh()
+    // Brand-new invitees (account just created via the magic-link sign-in we
+    // bounced through) still have needsProfile=true here — skipping
+    // /onboarding/profile would leave their byline blank on every memory they
+    // post until they discover Settings. Route them through the profile step;
+    // once it completes, profile.vue pushes them to /timeline because the
+    // accept call has already given them hasMembership.
+    if (state.needsProfile) {
+      router.push('/onboarding/profile')
+      return
+    }
     router.push(`/timeline?circle=${result.circleId}&welcome=1`)
   } catch (err: any) {
     // Always clear the cookie — a stale token must not trap the user here on retry
