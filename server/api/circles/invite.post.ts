@@ -8,15 +8,25 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
+  console.log('[invite] received POST /api/circles/invite')
   const supabase = serverSupabaseServiceRole(event)
   const user = await serverSupabaseUser(event)
 
-  if (!user?.sub) throw createError({ statusCode: 401 })
+  if (!user?.sub) {
+    console.warn('[invite] 401 — no authenticated user')
+    throw createError({ statusCode: 401 })
+  }
 
   const result = schema.safeParse(await readBody(event))
-  if (!result.success)
+  if (!result.success) {
+    console.warn(
+      `[invite] 400 — zod rejected body (user ${user.sub}):`,
+      result.error.issues,
+    )
     throw createError({ statusCode: 400, message: 'Invalid request' })
+  }
   const { circleId, email } = result.data
+  console.log(`[invite] user ${user.sub} → ${email} (circle ${circleId})`)
 
   // Verify sender is owner or admin
   const { data: membership } = await supabase
@@ -27,6 +37,9 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    console.warn(
+      `[invite] 403 — user ${user.sub} has role ${membership?.role ?? 'none'} on circle ${circleId}`,
+    )
     throw createError({
       statusCode: 403,
       message: 'Only owners and admins can invite',
@@ -41,6 +54,7 @@ export default defineEventHandler(async (event) => {
     .eq('status', 'pending')
 
   if ((count ?? 0) >= 10) {
+    console.warn(`[invite] 429 — circle ${circleId} already has ${count} pending invites`)
     throw createError({
       statusCode: 429,
       message: 'Max 10 pending invites per circle',
@@ -65,8 +79,13 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (inviteError || !invite) {
+    console.error(
+      `[invite] 500 — circleinvite insert failed (circle ${circleId}, ${email}):`,
+      inviteError,
+    )
     throw createError({ statusCode: 500, message: 'Failed to create invite' })
   }
+  console.log(`[invite] db row created (token ${invite.token.slice(0, 8)}…)`)
 
   // Fetch circle name + sender name for email
   const [{ data: circle }, { data: sender }] = await Promise.all([
