@@ -125,7 +125,7 @@
           <button
             type="button"
             @click="dismissSplash"
-            class="rounded-full bg-white px-6 py-3 text-sm font-semibold text-foreground transition-opacity hover:opacity-90"
+            class="rounded-full bg-white px-6 py-3 text-sm font-semibold text-stone-900 transition-opacity hover:opacity-90"
           >
             {{ t('viewerLink.viewerSplashCta') }}
           </button>
