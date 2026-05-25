@@ -108,6 +108,37 @@ Deno.serve(async (req) => {
     return json({ error: uploadError.message }, { status: 500 })
   }
 
+  // Optional client-generated thumbnail. Failure here is non-fatal — the
+  // original is already saved and the read path will fall back to signing
+  // the original. Same bucket as the original; path = original sans ext +
+  // ".thumb.webp". Thumbnail bytes do NOT count against storage quota
+  // (they're a derived cache, not user data).
+  const thumbnail = formData.get('thumbnail')
+  let thumbnailPath: string | null = null
+  if (thumbnail instanceof File || thumbnail instanceof Blob) {
+    const dot = storagePath.lastIndexOf('.')
+    const base = dot > 0 ? storagePath.slice(0, dot) : storagePath
+    const thumbPath = `${base}.thumb.webp`
+    const thumbBuffer = await thumbnail.arrayBuffer()
+    const { error: thumbErr } = await supabase.storage
+      .from('memories-private')
+      .upload(thumbPath, thumbBuffer, { contentType: 'image/webp' })
+    if (thumbErr) {
+      console.error(
+        `[upload-media] thumb upload failed (${thumbPath}):`,
+        thumbErr.message,
+      )
+    } else {
+      thumbnailPath = thumbPath
+    }
+  }
+
+  // Helper: remove the original AND (if uploaded) the thumbnail in one call.
+  const cleanupStorage = async () => {
+    const paths = thumbnailPath ? [storagePath, thumbnailPath] : [storagePath]
+    await supabase.storage.from('memories-private').remove(paths)
+  }
+
   // Insert Memory row
   const { data: memory, error: memoryError } = await supabase
     .from('memory')
@@ -123,20 +154,20 @@ Deno.serve(async (req) => {
     .single()
 
   if (memoryError || !memory) {
-    // Clean up uploaded file on failure
-    await supabase.storage.from('memories-private').remove([storagePath])
+    await cleanupStorage()
     return json(
       { error: memoryError?.message ?? 'Failed to save memory' },
       { status: 500 },
     )
   }
 
-  // Insert MemoryMedia row (storage_path never leaves the server)
+  // Insert MemoryMedia row (storage_path + thumbnail_path never leave the server)
   const { data: media, error: mediaError } = await supabase
     .from('memorymedia')
     .insert({
       memory_id: memory.id,
       storage_path: storagePath,
+      thumbnail_path: thumbnailPath,
       file_size: file.size,
       media_type: isVideo ? 'video' : 'photo',
       display_order: 0,
@@ -145,8 +176,7 @@ Deno.serve(async (req) => {
     .single()
 
   if (mediaError || !media) {
-    // Clean up storage + memory on failure
-    await supabase.storage.from('memories-private').remove([storagePath])
+    await cleanupStorage()
     await supabase.from('memory').delete().eq('id', memory.id)
     return json(
       { error: mediaError?.message ?? 'Failed to save media' },
