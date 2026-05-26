@@ -1,34 +1,39 @@
 <template>
   <div class="border-b border-border bg-background">
-    <!-- Top strip — sticky, compact -->
+    <!-- Top strip — sticky, compact. Outer spans full width so the border
+         goes edge-to-edge; inner div caps content to match the timeline. -->
     <div
-      class="sticky top-0 z-20 flex items-center justify-between border-b border-border/40 bg-background/95 px-4 py-3 backdrop-blur-md"
+      class="sticky top-0 z-20 border-b border-border/40 bg-background/95 backdrop-blur-md"
     >
-      <div class="min-w-0">
-        <p
-          class="text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-muted-foreground"
-        >
-          Our Story
-        </p>
-        <p
-          class="mt-1 truncate font-serif text-[13px] italic text-foreground/80"
-        >
-          {{ t('viewerLink.fromCircle', { circle: circleName }) }}
-        </p>
-      </div>
-      <div class="flex flex-shrink-0 items-center gap-2">
-        <LocalePicker guest />
-        <NuxtLink
-          to="/login"
-          class="rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {{ t('viewerLink.signIn') }}
-        </NuxtLink>
+      <div
+        class="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-3"
+      >
+        <div class="min-w-0">
+          <p
+            class="text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-muted-foreground"
+          >
+            Our Story
+          </p>
+          <p
+            class="mt-1 truncate font-serif text-[13px] italic text-foreground/80"
+          >
+            {{ t('viewerLink.fromCircle', { circle: circleName }) }}
+          </p>
+        </div>
+        <div class="flex flex-shrink-0 items-center gap-2">
+          <LocalePicker guest />
+          <NuxtLink
+            to="/login"
+            class="rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {{ t('viewerLink.signIn') }}
+          </NuxtLink>
+        </div>
       </div>
     </div>
 
     <!-- Hero block — italic display title -->
-    <div class="px-5 py-7 sm:px-8 sm:py-10">
+    <div class="mx-auto max-w-[1280px] px-5 py-7 sm:px-8 sm:py-10">
       <p
         class="mb-3 text-[10px] font-bold uppercase tracking-[.2em] text-muted-foreground/70 sm:text-[11px]"
       >
